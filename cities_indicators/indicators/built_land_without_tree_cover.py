@@ -1,16 +1,24 @@
-from cities_indicators.indicators.Indicator import Indicator
 from cities_indicators.layers.esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from cities_indicators.layers.tropical_tree_cover import TropicalTreeCover
 
+from xrspatial import zonal_stats
 
-class BuiltLandWithoutTreeCover(Indicator):
+
+class BuiltLandWithTreeCover:
+    RESOLUTION = 0.0001
+
     def calculate(self, city):
-        tree_cover_in_built_up_land = TropicalTreeCover(city)
-        built_up_land = EsaWorldCover(city, land_cover_class=EsaWorldCoverClass.BUILT_UP)
+        tree_cover = TropicalTreeCover().read(city, self.RESOLUTION)
+        built_up_land = EsaWorldCover().read(city, self.RESOLUTION, EsaWorldCoverClass.BUILT_UP)
 
-        #stats = get_zonal_statistics(city, tree_cover, built_up_area)
+        tree_cover_in_built_up_land = tree_cover.where(tree_cover > 10).where(built_up_land)
 
-        city_raster = city.to_raster(0.0001)
-        percent = stats.tree_cover_in_built_up_land / stats.tree_cover_in_built_up_land
+        city_raster = city.to_raster(self.RESOLUTION)
+        built_up_land_count = zonal_stats(zones=city_raster, values=built_up_land, stats_funcs=["count"]).set_index("zone")
+        tree_cover_in_built_up_land_count = zonal_stats(zones=city_raster, values=tree_cover_in_built_up_land, stats_funcs=["count"]).set_index("zone")
 
-        return percent
+
+        percent_tree_cover_in_built_up_land = tree_cover_in_built_up_land_count / built_up_land_count
+
+        return city.boundaries.set_index("index").join(percent_tree_cover_in_built_up_land).rename(columns={"count": "percent_tree_cover_in_built_up_land"})
+

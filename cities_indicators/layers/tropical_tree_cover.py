@@ -1,15 +1,14 @@
 import rioxarray
 
 from cities_indicators.city import City
-from cities_indicators.layers.raster_layer import RasterLayer
+from cities_indicators.io import read_vrt
 
 
-class TropicalTreeCover(RasterLayer):
-    S3_PREFIX = "s3://tropical_tree_cover/2020"
+class TropicalTreeCover:
+    VRT_URI = "s3://cities-indicators/data/tree_cover/tree_mosaic_land/tropical_tree_cover.vrt"
+    NO_DATA_VALUE = 255
 
-    def get_layer_uri(self, city: City):
-        file_name = f"{city.country.capitalize().strip()}.tif"
-        return f"{self.S3_PREFIX}/{file_name}"
-
-
+    def read(self, city: City, resolution: int):
+        data = read_vrt(city, self.VRT_URI, resolution)
+        return data.where(data != self.NO_DATA_VALUE)
 
