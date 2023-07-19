@@ -1,8 +1,25 @@
+from time import sleep
+
+import boto3
+from rasterio.profiles import DefaultGTiffProfile
+from rasterio.transform import from_bounds
+
 from cities_indicators.city import City
 from cities_indicators.io import read_vrt, read_tiles
 import ee
 import geemap
 import rasterio.errors
+import json
+
+import geopandas as gpd
+import shapely.geometry
+from pystac_client import Client
+
+from odc.stac import configure_rio, stac_load
+from shapely.geometry import box
+import coiled
+from distributed import Client
+
 
 
 class Albedo:
@@ -15,11 +32,11 @@ class Albedo:
         try:
             return read_tiles(city, uri, resolution)
         except rasterio.errors.RasterioIOError as e:
-            self.extract(city)
+            self.extract_gee(city)
             return read_tiles(city, uri, resolution)
 
-    def extract(self, city: City):
-        ee.Authenticate()
+    def extract_gee(self, city: City):
+        #ee.Authenticate()
         ee.Initialize()
 
         date_start = '2021-01-01'
@@ -103,28 +120,65 @@ class Albedo:
             }
             return image.expression(S2_ALBEDO_EQN, config).double().rename('albedo')
 
-        boundary_geo = city.boundaries.to_json()
+        boundary_geo = json.loads(city.boundaries.to_json())
         boundary_geo_ee = geemap.geojson_to_ee(boundary_geo)
 
         ## S2 MOSAIC AND ALBEDO
         dataset = get_masked_s2_collection(boundary_geo_ee, date_start, date_end)
         s2_albedo = dataset.map(calc_s2_albedo)
-        mosaic = dataset.mean()
         albedoMean = s2_albedo.reduce(ee.Reducer.mean())
         albedoMean = albedoMean.multiply(
             100).round().toByte()  # .toFloat() # # toByte() or toFloat() to reduce file size of export
         albedoMean = albedoMean.updateMask(albedoMean.gt(0))  # to mask 0/NoData values in toByte() format
-        #albedoMeanThres = albedoMean.updateMask(albedoMean.lt(LowAlbedoMax))
+        albedoMean = albedoMean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
 
-        # Download ee.Image of albedo as GeoTIFF
-        geemap.ee_export_image_to_drive(
-            albedoMean,
-            description=city.city.value + '-S2-albedo',
-            folder='data',
-            scale=10,
-            region=boundary_geo_ee.geometry(),
-            maxPixels=5000000000
+        # TODO hits pixel limit easily, need to just export to GCS and copy to S3
+        albedoMeanNP = geemap.ee_to_numpy(albedoMean, region=boundary_geo_ee.geometry())
+
+        _write_to_s3(albedoMeanNP, city)
+
+
+    def extract_dask(self, city: City):
+        # TODO doesn't seem to be an easy way to access S2 cloud masks outside of GEE
+        # create a remote Dask cluster with Coiled
+        cluster = coiled.Cluster(name=city.name, worker_memory="32GiB", n_workers=100,
+                                 use_best_zone=True,
+                                 compute_purchase_option="spot_with_fallback")
+
+        client = Client(cluster)
+
+        catalog = Client.open("https://earth-search.aws.element84.com/v1")
+        query = catalog.search(
+            collections=["sentinel-2-l2a"], datetime=["2021-01-01", "2022-01-01"], bbox=city.bounds,
+            limit=100
         )
 
-        # move to S3?
+        items = list(query.get_items())
+        s2 = stac_load(
+            items,
+            bands=("red", "green", "blue", "nir", "swir16", "swir22"),
+            crs="epsg:4326",
+            resolution=0.0001,
+            chunks={'latitude': 1024 * 4, 'longitude': 1024 * 4, 'time': 366},
+        )
 
+        Bw, Gw, Rw, NIRw, SWIR1w, SWIR2w = 0.2266, 0.1236, 0.1573, 0.3417, 0.1170, 0.0338
+        albedo = ((s2.blue * Bw) + (s2.green * Gw) + (s2.red * Rw) + (s2.nir * NIRw) + (s2.swir16 * SWIR1w) + (s2.swir22 * SWIR2w))
+        albedoMean = albedo.mean(dim="time").compute()
+
+        _write_to_s3(albedoMean, city)
+
+
+def _write_to_s3(result, city: City):
+    file_name = f"{city.name}-S2-albedo.tif"
+    width, height = result.data.shape[1], result.data.shape[0]
+    transform = from_bounds(*city.bounds, width, height)
+    profile = DefaultGTiffProfile(transform=transform, width=width, height=height, crs=4326, blockxsize=400,
+                                  blockysize=400, count=1, dtype=result.dtype)
+
+    # write tile to file
+    with rasterio.open(file_name, "w", **profile) as dst:
+        dst.write(result.data, 1)
+
+    s3_client = boto3.client("s3")
+    s3_client.upload_file(file_name, "cities-indicators", f"data/albedo/test/{file_name}")
