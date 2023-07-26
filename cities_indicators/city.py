@@ -15,7 +15,6 @@ class City:
     def __init__(self, city: SupportedCity, admin_level: int):
         boundary_uri = f"s3://cities-indicators/data/boundaries/boundary-{city.value}-ADM{admin_level}"
         self.city = city
-        self.name = city.value
         self.admin_level = admin_level
 
         try:
