@@ -3,6 +3,7 @@ from time import sleep
 import boto3
 from rasterio.profiles import DefaultGTiffProfile
 from rasterio.transform import from_bounds
+from google.cloud import storage
 
 from cities_indicators.city import City
 from cities_indicators.io import read_vrt, read_tiles
@@ -10,6 +11,7 @@ import ee
 import geemap
 import rasterio.errors
 import json
+import time
 
 import geopandas as gpd
 import shapely.geometry
@@ -32,7 +34,7 @@ class Albedo:
         try:
             return read_tiles(city, uri, resolution)
         except rasterio.errors.RasterioIOError as e:
-            self.extract_gee(city)
+            uri = self.extract_gee(city)
             return read_tiles(city, uri, resolution)
 
     def extract_gee(self, city: City):
@@ -133,19 +135,32 @@ class Albedo:
         albedoMean = albedoMean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
 
         # TODO hits pixel limit easily, need to just export to GCS and copy to S3
-        file_name = city.name + '-S2-albedo.tif'
-        geemap.ee_export_image(
-            albedoMean,
-            filename=file_name,
-            scale=10,
-            region=boundary_geo_ee.geometry(),
-            format='GEO_TIFF',
-            timeout=900,
-        )
-        albedoMeanNP = geemap.ee_to_numpy(albedoMean, region=boundary_geo_ee.geometry())
+        file_name = city.name + '-S2-albedo'
+        task = ee.batch.Export.image.toCloudStorage(**{
+            'image': albedoMean,
+            'description': file_name,
+            'scale': 10,
+            'region': boundary_geo_ee.geometry(),
+            'fileFormat': 'GeoTIFF',
+            'bucket': 'cities-indicators',
+            'formatOptions': {'cloudOptimized': True}
+        })
+        task.start()
+
+        while task.active():
+            print('Polling for task (id: {}).'.format(task.id))
+            time.sleep(5)
+
+        storage_client = storage.Client(project="Resource Watch")
+
+        bucket = storage_client.bucket('cities-indicators')
+        blob = bucket.blob(f"{file_name}.tif")
+        blob.download_to_filename(f"{file_name}.tif")
 
         s3_client = boto3.client("s3")
-        s3_client.upload_file(file_name, "cities-indicators", f"data/albedo/test/{file_name}")
+        s3_client.upload_file(f"{file_name}.tif", "cities-indicators", f"data/albedo/test/{file_name}.tif")
+
+        return f"{file_name}.tif"
 
 
     def extract_dask(self, city: City):
