@@ -133,9 +133,19 @@ class Albedo:
         albedoMean = albedoMean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
 
         # TODO hits pixel limit easily, need to just export to GCS and copy to S3
+        file_name = city.name + '-S2-albedo.tif'
+        geemap.ee_export_image(
+            albedoMean,
+            filename=file_name,
+            scale=10,
+            region=boundary_geo_ee.geometry(),
+            format='GEO_TIFF',
+            timeout=900,
+        )
         albedoMeanNP = geemap.ee_to_numpy(albedoMean, region=boundary_geo_ee.geometry())
 
-        _write_to_s3(albedoMeanNP, city)
+        s3_client = boto3.client("s3")
+        s3_client.upload_file(file_name, "cities-indicators", f"data/albedo/test/{file_name}")
 
 
     def extract_dask(self, city: City):
