@@ -25,20 +25,20 @@ from distributed import Client
 
 
 class Albedo:
-    DATA_LAKE_PATH = "s3://cities-indicators/data/albedo"
+    DATA_LAKE_PATH = "s3://cities-indicators/data/albedo/test"
 
     def read(self, city: City, resolution: int):
         # if data not in data lake for city, extract
-        uri = f"{self.DATA_LAKE_PATH}/{city.name}"
+        uri = f"{self.DATA_LAKE_PATH}/{city.name}-S2-albedo.tif"
 
         try:
-            return read_tiles(city, uri, resolution)
+            return read_tiles(city, [uri], resolution)
         except rasterio.errors.RasterioIOError as e:
             uri = self.extract_gee(city)
-            return read_tiles(city, uri, resolution)
+            return read_tiles(city, [uri], resolution)
 
     def extract_gee(self, city: City):
-        #ee.Authenticate()
+        ee.Authenticate()
         ee.Initialize()
 
         date_start = '2021-01-01'
@@ -161,7 +161,6 @@ class Albedo:
         s3_client.upload_file(f"{file_name}.tif", "cities-indicators", f"data/albedo/test/{file_name}.tif")
 
         return f"{file_name}.tif"
-
 
     def extract_dask(self, city: City):
         # TODO doesn't seem to be an easy way to access S2 cloud masks outside of GEE
