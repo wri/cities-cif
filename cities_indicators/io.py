@@ -2,6 +2,7 @@ import rioxarray
 import xarray as xr
 from typing import List
 from pystac_client import Client
+import ee
 
 from cities_indicators.city import City
 
@@ -32,3 +33,13 @@ def read_tiles(city: City, tile_uris: List[str], resolution: int):
 
     return aligned_data
 
+
+def read_gee(city: City, asset_id: str):
+    # read imagecollection
+    ImgColl = ee.ImageCollection(asset_id)
+    # reduce image collection to image
+    Img = ImgColl.reduce(ee.Reducer.mean()).rename('b1')
+    # clip to city extent
+    data = Img.clip(ee.Geometry.BBox(*city.bounds))
+    
+    return data
