@@ -1,30 +1,62 @@
+from typing import List
+
 import fiona
 from enum import Enum
 import geopandas as gpd
 from shapely.geometry import box
+from functools import cached_property
+import requests
 
 from geocube.api.core import make_geocube
 
 
-class SupportedCity(Enum):
-    ARG_Buenos_Aires = "ARG-Buenos_Aires"
-    IDN_Jakarta = "IDN-Jakarta"
+API_URI = "https://citiesapi-1-x4387694.deta.app/cities"
+
+
+def get_cities():
+    cities = requests.get(API_URI)["cities"]
+    cities = [City(*city["fields"].values()) for city in cities]
+    return cities
 
 
 class City:
-    def __init__(self, city: SupportedCity, admin_level: int):
-        boundary_uri = f"s3://cities-indicators/data/boundaries/boundary-{city.value}-ADM{admin_level}"
-        self.city = city
-        self.name = city.value
-        self.admin_level = admin_level
+    def __init__(
+            self,
+            id: str,
+            units_boundary_level: str,
+            country_name: str,
+            aoi_boundary_level: str,
+            aoi_boundary_file: str,
+            name: str,
+            project: List[str],
+            unit_boundary_file: str,
+            country_code_iso3: str,
+    ):
+        self.id = id
+        self.units_boundary_level = units_boundary_level
+        self.country_name = country_name
+        self.aoi_boundary_level = aoi_boundary_level
+        self.aoi_boundary_file = aoi_boundary_file
+        self.name = name
+        self.project = project
+        self.unit_boundary_file = unit_boundary_file
+        self.country_code_iso3 = country_code_iso3
 
-        try:
-            self.boundaries = gpd.read_file(f"{boundary_uri}.geojson").reset_index()
-            self.boundaries_union = gpd.read_file(f"{boundary_uri}union.geojson").reset_index()
-            self.bounds = list(self.boundaries_union.total_bounds)
-            self.bounding_box = box(*self.bounds)
-        except fiona.errors.DriverError as e:
-            raise Exception(f"Unable to read boundary files for city {city.value}/{admin_level}:\n {e}")
+    @cached_property
+    def unit_boundaries(self):
+        return gpd.read_file(self.unit_boundary_file).reset_index()
+
+    @cached_property
+    def aoi_boundaries(self):
+        return gpd.read_file(self.aoi_boundary_file).reset_index()
+
+    @cached_property
+    def bounds(self):
+        return self.aoi_boundary_file.total_bounds
+
+    @cached_property
+    def bounding_box(self):
+        return box(*self.bounds)
 
     def to_raster(self, resolution):
         """
