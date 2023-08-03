@@ -17,6 +17,11 @@ city = SupportedCity(geo_name)
 # lst = LandSurfaceTemperature.extract_gee(city ='IDN-Jakarta' , admin_level=4)
 # print(lst)
 
+
+# import os
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"]='C:/Users/Saif.Shabou/OneDrive - World Resources Institute/Documents/cities/keys/wri-gee-358d958ce7c6.json'
+
 lst = LandSurfaceTemperature().extract_gee(city = City(SupportedCity.IDN_Jakarta, admin_level = 4))
 print(lst)
+
 

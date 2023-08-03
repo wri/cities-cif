@@ -1,4 +1,6 @@
+import boto3
 import ee
+from google.cloud import storage
 import pandas as pd
 import geemap
 import requests
@@ -8,15 +10,12 @@ import json
 import time
 from cities_indicators.city import City
 from cities_indicators.io import read_vrt, read_tiles
+from cities_indicators.core import initialize_ee
 
 class LandSurfaceTemperature:
 
-    # TO DO: Change it by using the utils Google cloud permissions settings
-    service_account = 'cities-indicators@wri-gee.iam.gserviceaccount.com'
-    credential_file_path = 'C:/Users/Saif.Shabou/OneDrive - World Resources Institute/Documents/cities/keys/wri-gee-358d958ce7c6.json'
-    credentials = ee.ServiceAccountCredentials(service_account,
-                                               credential_file_path)
-    ee.Initialize(credentials)
+    # TO DO: Change it by using the core Google cloud permissions settings
+    ee.Initialize()
 
 
     def extract_gee(self, city: City):
@@ -441,7 +440,34 @@ class LandSurfaceTemperature:
         # LSTmean = LandSurfaceTemperature().LST(boundary_geo_ee, hottestdate, start, end)
         LSTmean = LST(boundary_geo_ee, hottestdate, start, end)
 
-        # # TODO: Need access to Resource Watch cloud storage
+        # # Using Resource Watch cloud storage
+        file_name = city.name + '-LST'
+        task = ee.batch.Export.image.toCloudStorage(**{
+            'image': LSTmean,
+            'description': file_name,
+            'scale': 30,
+            'region': boundary_geo_ee.geometry(),
+            'fileFormat': 'GeoTIFF',
+            'bucket': 'cities-indicators',
+            'formatOptions': {'cloudOptimized': True}
+        })
+        task.start()
+
+        while task.active():
+            print('Polling for task (id: {}).'.format(task.id))
+            time.sleep(5)
+
+        storage_client = storage.Client(project="Resource Watch")
+
+        bucket = storage_client.bucket('cities-indicators')
+        blob = bucket.blob(f"{file_name}.tif")
+        blob.download_to_filename(f"{file_name}.tif")
+
+        s3_client = boto3.client("s3")
+        s3_client.upload_file(f"{file_name}.tif", "cities-indicators",
+                              f"data/land-surface-temperature/test/{file_name}.tif")
+
+        # # # Using Dynamic World cloud storage
         # file_name = city.name + '-LST'
         # task = ee.batch.Export.image.toCloudStorage(**{
         #     'image': LSTmean,
@@ -449,7 +475,7 @@ class LandSurfaceTemperature:
         #     'scale': 30,
         #     'region': boundary_geo_ee.geometry(),
         #     'fileFormat': 'GeoTIFF',
-        #     'bucket': 'cities-indicators',
+        #     'bucket': 'cities_indicators_data',
         #     'formatOptions': {'cloudOptimized': True}
         # })
         # task.start()
@@ -458,15 +484,15 @@ class LandSurfaceTemperature:
         #     print('Polling for task (id: {}).'.format(task.id))
         #     time.sleep(5)
         #
-        # storage_client = storage.Client(project="Resource Watch")
+        # storage_client = storage.Client(project="DynamicWorld")
         #
-        # bucket = storage_client.bucket('cities-indicators')
+        # bucket = storage_client.bucket('cities_indicators_data')
         # blob = bucket.blob(f"{file_name}.tif")
         # blob.download_to_filename(f"{file_name}.tif")
         #
         # s3_client = boto3.client("s3")
-        # s3_client.upload_file(f"{file_name}.tif", "cities-indicators", f"data/albedo/test/{file_name}.tif")
+        # s3_client.upload_file(f"{file_name}.tif", "cities-indicators", f"data/land-surface-temperature/test/{file_name}.tif")
 
-        return (LSTmean)
+        return f"{file_name}.tif"
 
 
