@@ -14,12 +14,19 @@ from cities_indicators.core import initialize_ee
 
 class LandSurfaceTemperature:
 
-    # TO DO: Change it by using the core Google cloud permissions settings
-    ee.Initialize()
+    # # TO DO: Change it by using the core Google cloud permissions settings
+    # with open('https://cities-indicators.s3.eu-west-3.amazonaws.com/credentials/credentials_RW.json', 'r') as f:
+    #     data = json.load(f)
+    #
+    # GEE_SERVICE_ACCOUNT =
+
+
 
 
     def extract_gee(self, city: City):
         #  METHODS TO CALCULATE MEAN LST MOSAIC FOR HOTTEST PERIOD USING LANDSAT
+        ee.Authenticate()
+        ee.Initialize()
 
         """"
         Derived from
