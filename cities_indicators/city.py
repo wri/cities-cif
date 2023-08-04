@@ -4,7 +4,7 @@ import fiona
 from enum import Enum
 import geopandas as gpd
 from shapely.geometry import box
-from functools import cached_property
+from functools import cached_property, lru_cache
 import requests
 
 from geocube.api.core import make_geocube
@@ -13,10 +13,18 @@ from geocube.api.core import make_geocube
 API_URI = "https://citiesapi-1-x4387694.deta.app/cities"
 
 
+@lru_cache(maxsize=1, typed=False)
 def get_cities():
-    cities = requests.get(API_URI)["cities"]
+    cities = requests.get(API_URI).json()["cities"]
     cities = [City(*city["fields"].values()) for city in cities]
     return cities
+
+
+def get_city(id):
+    cities = get_cities()
+    for city in cities:
+        if city.id == id:
+            return city
 
 
 class City:
@@ -52,7 +60,7 @@ class City:
 
     @cached_property
     def bounds(self):
-        return self.aoi_boundary_file.total_bounds
+        return self.aoi_boundaries.total_bounds
 
     @cached_property
     def bounding_box(self):
@@ -66,7 +74,7 @@ class City:
         """
 
         return make_geocube(
-            vector_data=self.boundaries,
+            vector_data=self.aoi_boundaries,
             measurements=["index"],
             resolution=(-resolution, resolution),
             geom=self.bounding_box
