@@ -13,22 +13,9 @@ from cities_indicators.city import City
 from cities_indicators.io import read_vrt, read_tiles
 from cities_indicators.core import initialize_ee
 
-class LandSurfaceTemperature:
+class BuiltUpHighLandSurfaceTemperatureGEE:
 
-    DATA_LAKE_PATH = "s3://cities-indicators/data/land-surface-temperature/test"
-
-    def read(self, city: City, resolution: int):
-        # if data not in data lake for city, extract
-        uri = f"{self.DATA_LAKE_PATH}/{city.name}-LST.tif"
-
-        try:
-            return read_tiles(city, [uri], resolution)
-        except rasterio.errors.RasterioIOError as e:
-            uri = self.extract_gee(city)
-            return read_tiles(city, [uri], resolution)
-
-
-    def extract_gee(self, city: City):
+    def calculate_gee(self, city: City):
         #  METHODS TO CALCULATE MEAN LST MOSAIC FOR HOTTEST PERIOD USING LANDSAT
         ee.Authenticate()
         ee.Initialize()
@@ -462,61 +449,29 @@ class LandSurfaceTemperature:
         # obtain LSTmeanThres
         LSTmeanThres = HighLST(boundary_geo_ee, LSTmean)
 
-        # Store LST mean geotiff
-        file_name = city.name + '-LST'
-        task = ee.batch.Export.image.toCloudStorage(**{
-            'image': LSTmean,
-            'description': file_name,
-            'scale': 30,
-            'region': boundary_geo_ee.geometry(),
-            'fileFormat': 'GeoTIFF',
-            'bucket': 'gee-exports',
-            'formatOptions': {'cloudOptimized': True}
-        })
-        task.start()
+        # calculate counts
 
-        while task.active():
-            print('Polling for task (id: {}).'.format(task.id))
-            time.sleep(5)
+        byMonthShort = '-' + start_dateYearStr + 'to' + end_dateYearStr + 'meanofmonthwhottestday'
+        mosaicmethod = byMonthShort
 
-        storage_client = storage.Client(project="CitiesIndicators")
+        # reduce images to get vegetation and built-up pixel counts
+        pixelcounts = LSTmeanThres.reduceRegions(boundary_geo_ee, ee.Reducer.count().setOutputs(['HotBuiltPixels']),
+                                                 100)
+        pixelcounts = builtup.reduceRegions(pixelcounts, ee.Reducer.count().setOutputs(['BuiltPixels']),
+                                            100)
 
-        bucket = storage_client.bucket('gee-exports')
-        blob = bucket.blob(f"{file_name}.tif")
-        blob.download_to_filename(f"{file_name}.tif")
+        # convert pixel counts to area percentages and saves to FC as property
+        def toPct(feat):
+            pct = (feat.getNumber('HotBuiltPixels')).divide(feat.getNumber('BuiltPixels'))
+            return feat.set({
+                'PctHighLSTBuilt' + mosaicmethod + '': pct
+            })
 
-        s3_client = boto3.client("s3")
-        s3_client.upload_file(f"{file_name}.tif", "cities-indicators",
-                              f"data/land-surface-temperature/test/{file_name}.tif")
+        pixelcounts = pixelcounts.map(toPct).select(['geo_id', 'PctHighLSTBuilt' + mosaicmethod + ''])
 
+        # store in df and append
+        df = geemap.ee_to_pandas(pixelcounts)
 
-        # Store LST thresh geotiff
-        file_name = city.name + '-LSTmeanThres'
-        task = ee.batch.Export.image.toCloudStorage(**{
-            'image': LSTmeanThres,
-            'description': file_name,
-            'scale': 30,
-            'region': boundary_geo_ee.geometry(),
-            'fileFormat': 'GeoTIFF',
-            'bucket': 'gee-exports',
-            'formatOptions': {'cloudOptimized': True}
-        })
-        task.start()
-
-        while task.active():
-            print('Polling for task (id: {}).'.format(task.id))
-            time.sleep(5)
-
-        storage_client = storage.Client(project="CitiesIndicators")
-
-        bucket = storage_client.bucket('gee-exports')
-        blob = bucket.blob(f"{file_name}.tif")
-        blob.download_to_filename(f"{file_name}.tif")
-
-        s3_client = boto3.client("s3")
-        s3_client.upload_file(f"{file_name}.tif", "cities-indicators",
-                              f"data/land-surface-temperature/test/{file_name}.tif")
-
-        return f"{file_name}.tif"
+        return city.boundaries.set_index("index").merge(df,on='geo_id').rename(columns={'PctHighLSTBuilt': 'HEA_2_percentBuiltupwHighLST'})
 
 
