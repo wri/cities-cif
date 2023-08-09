@@ -1,7 +1,6 @@
 from typing import List
 from enum import Enum
 import ee
-import os
 
 from cities_indicators.city import SupportedCity, City
 from cities_indicators.indicators.built_land_without_tree_cover import BuiltLandWithTreeCover
@@ -28,11 +27,7 @@ def get_indicators(cities: List[SupportedCity], indicators: List[Indicator]):
 
 
 def initialize_ee():
-    # get GEE credentials from env file
-    GEE_JSON = os.environ.get("GEE_JSON")
-    _CREDENTIAL_FILE = 'credentials.json'
-    GEE_SERVICE_ACCOUNT = os.environ.get("GEE_SERVICE_ACCOUNT")
-    with open(_CREDENTIAL_FILE, 'w') as f:
-        f.write(GEE_JSON)
+    _CREDENTIAL_FILE = 'gcsCIFcredential.json'
+    GEE_SERVICE_ACCOUNT = 'developers@citiesindicators.iam.gserviceaccount.com'
     auth = ee.ServiceAccountCredentials(GEE_SERVICE_ACCOUNT, _CREDENTIAL_FILE)
     ee.Initialize(auth)
