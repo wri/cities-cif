@@ -11,11 +11,10 @@ import time
 import rasterio
 from cities_indicators.city import City
 from cities_indicators.io import read_vrt, read_tiles
-from cities_indicators.core import initialize_ee
 
 class BuiltUpHighLandSurfaceTemperatureGEE:
 
-    def calculate_gee(self, city: City):
+    def calculate(self, city: City):
         #  METHODS TO CALCULATE MEAN LST MOSAIC FOR HOTTEST PERIOD USING LANDSAT
         ee.Authenticate()
         ee.Initialize()

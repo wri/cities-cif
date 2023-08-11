@@ -1,4 +1,4 @@
-from cities_indicators.core import get_indicators, Indicator
+#from cities_indicators.core import get_indicators, Indicator
 from cities_indicators.city import SupportedCity, City
 from cities_indicators.layers.albedo import Albedo
 from cities_indicators.layers.land_surface_temperature import LandSurfaceTemperature
@@ -28,9 +28,9 @@ city = SupportedCity(geo_name)
 
 # Read LST
 # lst = BuiltUpHighLandSurfaceTemperature().calculate(city=City(SupportedCity.IDN_Jakarta, admin_level=4))
-# print(lst)
+# print(lst.describe())
 
 # Read LST GEE
-lst = BuiltUpHighLandSurfaceTemperatureGEE().calculate_gee(city=City(SupportedCity.IDN_Jakarta, admin_level=4))
-print(lst)
+# lst = BuiltUpHighLandSurfaceTemperatureGEE().calculate(city=City(SupportedCity.IDN_Jakarta, admin_level=4))
+# print(lst.describe())
 
