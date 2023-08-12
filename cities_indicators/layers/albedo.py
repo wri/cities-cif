@@ -29,7 +29,7 @@ class Albedo:
 
     def read(self, city: City, resolution: int):
         # if data not in data lake for city, extract
-        uri = f"{self.DATA_LAKE_PATH}/{city.name}-S2-albedo.tif"
+        uri = f"{self.DATA_LAKE_PATH}/{city.id}-S2-albedo.tif"
 
         try:
             return read_tiles(city, [uri], resolution)
@@ -122,7 +122,7 @@ class Albedo:
             }
             return image.expression(S2_ALBEDO_EQN, config).double().rename('albedo')
 
-        boundary_geo = json.loads(city.boundaries.to_json())
+        boundary_geo = json.loads(city.unit_boundaries.to_json())
         boundary_geo_ee = geemap.geojson_to_ee(boundary_geo)
 
         ## S2 MOSAIC AND ALBEDO
@@ -135,7 +135,7 @@ class Albedo:
         albedoMean = albedoMean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
 
         # TODO hits pixel limit easily, need to just export to GCS and copy to S3
-        file_name = city.name + '-S2-albedo'
+        file_name = city.id + '-S2-albedo'
         task = ee.batch.Export.image.toCloudStorage(**{
             'image': albedoMean,
             'description': file_name,
@@ -165,7 +165,7 @@ class Albedo:
     def extract_dask(self, city: City):
         # TODO doesn't seem to be an easy way to access S2 cloud masks outside of GEE
         # create a remote Dask cluster with Coiled
-        cluster = coiled.Cluster(name=city.name, worker_memory="32GiB", n_workers=100,
+        cluster = coiled.Cluster(name=city.id, worker_memory="32GiB", n_workers=100,
                                  use_best_zone=True,
                                  compute_purchase_option="spot_with_fallback")
 
@@ -194,7 +194,7 @@ class Albedo:
 
 
 def _write_to_s3(result, city: City):
-    file_name = f"{city.name}-S2-albedo.tif"
+    file_name = f"{city.id}-S2-albedo.tif"
     width, height = result.data.shape[1], result.data.shape[0]
     transform = from_bounds(*city.bounds, width, height)
     profile = DefaultGTiffProfile(transform=transform, width=width, height=height, crs=4326, blockxsize=400,

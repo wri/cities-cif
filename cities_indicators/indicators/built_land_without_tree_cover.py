@@ -20,5 +20,5 @@ class BuiltLandWithTreeCover:
 
         percent_tree_cover_in_built_up_land = tree_cover_in_built_up_land_count / built_up_land_count
 
-        return city.boundaries.set_index("index").join(percent_tree_cover_in_built_up_land).rename(columns={"count": "percent_tree_cover_in_built_up_land"})
+        return city.unit_boundaries.set_index("index").join(percent_tree_cover_in_built_up_land).rename(columns={"count": "percent_tree_cover_in_built_up_land"})
 

@@ -20,5 +20,5 @@ class SurfaceReflectivity:
         # TODO either get average geodesic area of pixels or reproject to equal area projection
         low_albedo_in_built_up_land_area_m2 = low_albedo_in_built_up_land_count * 10
 
-        return city.boundaries.set_index("index").join(low_albedo_in_built_up_land_area_m2).rename(columns={"count": "low_albedo_in_built_up_land_area_m2"})
+        return city.unit_boundaries.set_index("index").join(low_albedo_in_built_up_land_area_m2).rename(columns={"count": "low_albedo_in_built_up_land_area_m2"})
 
