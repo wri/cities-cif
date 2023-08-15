@@ -1,0 +1,15 @@
+name: cities-cif
+channels:
+  - conda-forge
+dependencies:
+  - boto3
+  - coiled
+  - earthengine-api
+  - geemap
+  - geocube
+  - google-cloud-storage
+  - odc-stac
+  - pystac-client
+  - pytest
+  - python=3.10
+  - xarray-spatial
