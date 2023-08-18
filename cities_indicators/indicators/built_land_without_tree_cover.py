@@ -11,14 +11,14 @@ class BuiltLandWithTreeCover:
         tree_cover = TropicalTreeCover().read(city, self.RESOLUTION)
         built_up_land = EsaWorldCover().read(city, self.RESOLUTION, EsaWorldCoverClass.BUILT_UP)
 
-        tree_cover_in_built_up_land = tree_cover.where(tree_cover > 10).where(built_up_land)
+        tree_data_mask = tree_cover != 255
+        tree_cover_in_built_up_land = tree_cover.where(tree_data_mask).where(tree_cover > 0).where(built_up_land)
 
         city_raster = city.to_raster(self.RESOLUTION)
-        built_up_land_count = zonal_stats(zones=city_raster, values=built_up_land, stats_funcs=["count"]).set_index("zone")
+        built_up_land_count = zonal_stats(zones=city_raster, values=built_up_land.where(tree_data_mask), stats_funcs=["count"]).set_index("zone")
         tree_cover_in_built_up_land_count = zonal_stats(zones=city_raster, values=tree_cover_in_built_up_land, stats_funcs=["count"]).set_index("zone")
 
-
-        percent_tree_cover_in_built_up_land = tree_cover_in_built_up_land_count / built_up_land_count
+        percent_tree_cover_in_built_up_land = 1 - (tree_cover_in_built_up_land_count / built_up_land_count)
 
         return city.unit_boundaries.set_index("index").join(percent_tree_cover_in_built_up_land).rename(columns={"count": "percent_tree_cover_in_built_up_land"})
 

@@ -6,7 +6,7 @@ from cities_indicators.city import get_city
 def test_tree_cover_in_built_up_areas():
     jakarta = get_city("IDN-Jakarta")
     indicators = get_indicators(cities=[jakarta], indicators=[Indicator.BUILT_LAND_WITH_TREE_COVER])
-    print(indicators)
+    indicators[0].to_csv("jakarta.csv")
 
 
 def test_surface_reflectivity():
