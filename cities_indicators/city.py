@@ -16,7 +16,6 @@ API_URI = "https://citiesapi-1-x4387694.deta.app/cities"
 @lru_cache(maxsize=1, typed=False)
 def get_cities():
     cities = requests.get(API_URI).json()["cities"]
-<<<<<<< Updated upstream
     fields = [
         "id", "units_boundary_level", "country_name", "aoi_boundary_level",
         "aoi_boundary_file", "name", "project", "unit_boundary_file", "country_code_iso3"
@@ -25,9 +24,6 @@ def get_cities():
         City(*[city["fields"][field] for field in fields])
         for city in cities
     ]
-=======
-    cities = [City(*city["fields"].values()) for city in cities if city["fields"]["id"] == "IDN-Jakarta"]
->>>>>>> Stashed changes
     return cities
 
 
