@@ -81,7 +81,7 @@ class City:
         """
 
         return make_geocube(
-            vector_data=self.aoi_boundaries,
+            vector_data=self.unit_boundaries,
             measurements=["index"],
             resolution=(-resolution, resolution),
             geom=self.bounding_box
