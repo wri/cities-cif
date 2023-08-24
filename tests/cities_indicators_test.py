@@ -1,5 +1,5 @@
 from cities_indicators.core import get_indicators, Indicator
-from cities_indicators.io import export_carto
+from cities_indicators.io import export_results
 from cities_indicators.city import get_city
 
 
@@ -14,3 +14,7 @@ def test_surface_reflectivity():
     indicators = get_indicators(cities=[jakarta], indicators=[Indicator.SURFACE_REFLECTIVTY])
     print(indicators)
 
+def test_tree_cover():
+    jakarta = get_city("IDN-Jakarta")
+    indicators = get_indicators(cities=[jakarta], indicators=[Indicator.TREE_COVER])
+    print(indicators)

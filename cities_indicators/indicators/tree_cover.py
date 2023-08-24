@@ -14,4 +14,4 @@ class TreeCover:
         
         percent_tree_cover = tree_cover_mean * 0.01
 
-        return city.boundaries.set_index("index").join(percent_tree_cover).rename(columns={"mean": "LND_2_percentTreeCover"})
+        return city.unit_boundaries.set_index("index").join(percent_tree_cover).rename(columns={"mean": "LND_2_percentTreeCover"})
