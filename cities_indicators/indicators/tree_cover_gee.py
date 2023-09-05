@@ -8,7 +8,7 @@ class TreeCoverGEE:
 
     def calculate(self, city):
         tree_cover = TropicalTreeCover().read_from_gee(city)
-        boundary_geo_ee = geemap.geopandas_to_ee(city.boundaries)
+        boundary_geo_ee = geemap.geopandas_to_ee(city.unit_boundaries)
 
         # reduce images to get vegetation and built-up pixel counts
         pixelcounts = tree_cover.reduceRegions(boundary_geo_ee, ee.Reducer.mean().setOutputs(['TreeCoverMean']), 10)
@@ -26,5 +26,5 @@ class TreeCoverGEE:
         # store in df and append
         df = geemap.ee_to_pandas(pixelcounts)
 
-        return city.boundaries.set_index("index").merge(df,on='geo_id').rename(columns={'PctTreeCover': 'LND_2_percentTreeCover'})
+        return city.unit_boundaries.set_index("index").merge(df, on='geo_id').rename(columns={'PctTreeCover': 'LND_2_percentTreeCover'})
 

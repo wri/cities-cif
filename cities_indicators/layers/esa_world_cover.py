@@ -40,8 +40,8 @@ class EsaWorldCover:
         return uris
 
     def read(self, city: City, resolution: int, land_cover_class: EsaWorldCoverClass=None):
-        data = read_tiles(city, self.get_tile_uris(city), resolution)
-
+        #data = read_tiles(city, self.get_tile_uris(city), resolution)
+        data = read_tiles(city, ["/Users/jt/Downloads/java-wc0000000000-0000000000.tiff"], resolution)
         if land_cover_class:
             return data.where(data == land_cover_class.value)
 

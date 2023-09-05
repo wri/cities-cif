@@ -37,7 +37,7 @@ def read_tiles(city: City, tile_uris: List[str], resolution: int):
         "y": city_raster.y,
     })
 
-    return aligned_data
+    return unaligned_data
 
 
 def read_gee(city: City, asset_id: str):
