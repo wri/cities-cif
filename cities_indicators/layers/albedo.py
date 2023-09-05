@@ -33,11 +33,11 @@ class Albedo:
 
         try:
             albedo = read_tiles(city, [uri], snap_to)
-            return albedo.where(albedo > 0)
+            return albedo
         except rasterio.errors.RasterioIOError as e:
             uri = self.extract_gee(city)
             albedo = read_tiles(city, [uri], snap_to)
-            return albedo.where(albedo > 0)
+            return albedo
 
 
     def extract_gee(self, city: City):
@@ -134,7 +134,7 @@ class Albedo:
         albedoMean = s2_albedo.reduce(ee.Reducer.mean())
         # albedoMean = albedoMean.multiply(
         #     100).round().toByte()  # .toFloat() # # toByte() or toFloat() to reduce file size of export
-        albedoMean = albedoMean.updateMask(albedoMean.gt(0))  # to mask 0/NoData values in toByte() format
+        #albedoMean = albedoMean.updateMask(albedoMean.gt(0))  # to mask 0/NoData values in toByte() format
         albedoMean = albedoMean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
 
         # TODO hits pixel limit easily, need to just export to GCS and copy to S3

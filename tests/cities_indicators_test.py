@@ -5,10 +5,9 @@ import ee
 
 
 def test_tree_cover_in_built_up_areas():
-#    ee.Initialize()
     jakarta = get_city("IDN-Jakarta")
     indicators = get_indicators(cities=[jakarta], indicators=[Indicator.BUILT_LAND_WITH_TREE_COVER])
-    indicators[0].to_csv("jakarta-tc-built.csv")
+    indicators[0].to_csv("jakarta-tc-built-s3.csv")
 
 
 def test_surface_reflectivity():

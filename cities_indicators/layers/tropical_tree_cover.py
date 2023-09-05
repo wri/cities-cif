@@ -5,7 +5,7 @@ from cities_indicators.io import read_vrt, read_gee
 
 
 class TropicalTreeCover:
-    VRT_URI = "/Users/jt/Downloads/java-ttc.tiff"  #"s3://cities-indicators/data/tree_cover/tree_mosaic_land/tropical_tree_cover.vrt"
+    VRT_URI = "s3://cities-indicators/data/tree_cover/tree_mosaic_land/tropical_tree_cover.vrt"
     NO_DATA_VALUE = -99
     TML = "projects/wri-datalab/TropicalTreeCover"
 
