@@ -13,11 +13,11 @@ from datetime import datetime
 from cities_indicators.city import City
 
 
-def read_vrt(city: City, vrt_uri: str, resolution: int):
-    return read_tiles(city, [vrt_uri], resolution)
+def read_vrt(city: City, vrt_uri: str, snap_to=None, no_data=None):
+    return read_tiles(city, [vrt_uri], snap_to, no_data)
 
 
-def read_tiles(city: City, tile_uris: List[str], resolution: int):
+def read_tiles(city: City, tile_uris: List[str], snap_to=None, no_data=None):
     # read and clip to city extent
     windows = []
     for layer_uri in tile_uris:
@@ -30,12 +30,14 @@ def read_tiles(city: City, tile_uris: List[str], resolution: int):
     else:
         unaligned_data = windows[0].squeeze("band")
 
-    # make sure the boundaries align with city analysis
-    city_raster = city.to_raster(resolution)
-    aligned_data = unaligned_data.rio.reproject_match(city_raster).assign_coords({
-        "x": city_raster.x,
-        "y": city_raster.y,
-    })
+    if no_data is not None:
+        unaligned_data = unaligned_data.where(unaligned_data != no_data)
+
+    if snap_to is not None:
+        return unaligned_data.rio.reproject_match(snap_to).assign_coords({
+            "x": snap_to.x,
+            "y": snap_to.y,
+        })
 
     return unaligned_data
 

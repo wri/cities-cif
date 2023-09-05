@@ -73,7 +73,7 @@ class City:
     def bounding_box(self):
         return box(*self.bounds)
 
-    def to_raster(self, resolution):
+    def to_raster(self, snap_to):
         """
         Rasterize the admin boundaries to the specified resolution.
         :param resolution: resolution in geographic coordinates of the output raster
@@ -83,6 +83,6 @@ class City:
         return make_geocube(
             vector_data=self.unit_boundaries,
             measurements=["index"],
-            resolution=(-resolution, resolution),
+            like=snap_to,
             geom=self.bounding_box
         ).index

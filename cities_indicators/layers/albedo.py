@@ -27,15 +27,18 @@ from distributed import Client
 class Albedo:
     DATA_LAKE_PATH = "s3://cities-indicators/data/albedo/test"
 
-    def read(self, city: City, resolution: int):
+    def read(self, city: City, snap_to=None):
         # if data not in data lake for city, extract
         uri = f"{self.DATA_LAKE_PATH}/{city.id}-S2-albedo.tif"
 
         try:
-            return read_tiles(city, [uri], resolution)
+            albedo = read_tiles(city, [uri], snap_to)
+            return albedo.where(albedo > 0)
         except rasterio.errors.RasterioIOError as e:
             uri = self.extract_gee(city)
-            return read_tiles(city, [uri], resolution)
+            albedo = read_tiles(city, [uri], snap_to)
+            return albedo.where(albedo > 0)
+
 
     def extract_gee(self, city: City):
         ee.Authenticate()
@@ -129,8 +132,8 @@ class Albedo:
         dataset = get_masked_s2_collection(boundary_geo_ee, date_start, date_end)
         s2_albedo = dataset.map(calc_s2_albedo)
         albedoMean = s2_albedo.reduce(ee.Reducer.mean())
-        albedoMean = albedoMean.multiply(
-            100).round().toByte()  # .toFloat() # # toByte() or toFloat() to reduce file size of export
+        # albedoMean = albedoMean.multiply(
+        #     100).round().toByte()  # .toFloat() # # toByte() or toFloat() to reduce file size of export
         albedoMean = albedoMean.updateMask(albedoMean.gt(0))  # to mask 0/NoData values in toByte() format
         albedoMean = albedoMean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
 

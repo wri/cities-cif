@@ -4,12 +4,11 @@ from xrspatial import zonal_stats
 
 
 class TreeCover:
-    RESOLUTION = 0.000089827993394
 
     def calculate(self, city):
-        tree_cover = TropicalTreeCover().read(city, self.RESOLUTION)
-
+        tree_cover = TropicalTreeCover().read(city)
         city_raster = city.to_raster(tree_cover)
+
         tree_cover_mean = \
             zonal_stats(zones=city_raster, values=tree_cover, stats_funcs=["mean"]).set_index("zone")
         
