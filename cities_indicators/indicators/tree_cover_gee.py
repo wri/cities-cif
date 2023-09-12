@@ -27,4 +27,3 @@ class TreeCoverGEE:
         df = geemap.ee_to_pandas(pixelcounts)
 
         return city.unit_boundaries.set_index("index").merge(df, on='geo_id').rename(columns={'PctTreeCover': 'LND_2_percentTreeCover'})
-
