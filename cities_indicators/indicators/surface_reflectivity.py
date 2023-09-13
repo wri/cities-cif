@@ -20,5 +20,7 @@ class SurfaceReflectivity:
 
         low_albedo_in_built_up_land_percent = low_albedo_in_built_up_land_count / built_up_land_count
 
-        return city.unit_boundaries.set_index("index").join(low_albedo_in_built_up_land_percent).rename(columns={"count": "HEA_3_percentBuiltLowAlbedo"})
+        return city.unit_boundaries.set_index("index").join(low_albedo_in_built_up_land_percent).rename(columns={
+            "count": "HEA_3_percentBuiltwLowAlbedo"
+        })
 

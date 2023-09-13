@@ -132,9 +132,6 @@ class Albedo:
         dataset = get_masked_s2_collection(boundary_geo_ee, date_start, date_end)
         s2_albedo = dataset.map(calc_s2_albedo)
         albedoMean = s2_albedo.reduce(ee.Reducer.mean())
-        # albedoMean = albedoMean.multiply(
-        #     100).round().toByte()  # .toFloat() # # toByte() or toFloat() to reduce file size of export
-        #albedoMean = albedoMean.updateMask(albedoMean.gt(0))  # to mask 0/NoData values in toByte() format
         albedoMean = albedoMean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
 
         # TODO hits pixel limit easily, need to just export to GCS and copy to S3
