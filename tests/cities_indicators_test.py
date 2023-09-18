@@ -12,7 +12,7 @@ def get_baseline(indicator_name):
 
 def test_tree_cover_in_built_up_areas():
     jakarta = get_city("IDN-Jakarta")
-    indicators = get_indicators(cities=[jakarta], indicators=[Indicator.BUILT_LAND_WITH_TREE_COVER])
+    indicators = get_indicators(cities=[jakarta], indicators=[Indicator.BUILT_LAND_WITH_TREE_COVER])[0]
     baseline_indicators = get_baseline("HEA_4_percentBuiltupWithoutTreeCover")
 
     for actual, baseline in zip(indicators["HEA_4_percentBuiltupWithoutTreeCover"], baseline_indicators["HEA_4_percentBuiltupWithoutTreeCover"]):
@@ -30,7 +30,7 @@ def test_surface_reflectivity():
 
 def test_tree_cover():
     jakarta = get_city("IDN-Jakarta")
-    indicators = get_indicators(cities=[jakarta], indicators=[Indicator.TREE_COVER])
+    indicators = get_indicators(cities=[jakarta], indicators=[Indicator.TREE_COVER])[0]
     baseline_indicators = get_baseline("LND_2_percentTreeCover")
 
     for actual, baseline in zip(indicators["LND_2_percentTreeCover"], baseline_indicators["LND_2_percentTreeCover"]):
