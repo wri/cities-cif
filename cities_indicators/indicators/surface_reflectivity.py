@@ -2,23 +2,25 @@ from cities_indicators.layers.esa_world_cover import EsaWorldCover, EsaWorldCove
 from cities_indicators.layers.albedo import Albedo
 
 from xrspatial import zonal_stats
+import numpy as np
 
 
 class SurfaceReflectivity:
-    RESOLUTION = 0.0001
     LOW_ALBEDO_MAX = 0.2
 
     def calculate(self, city):
-        albedo = Albedo().read(city, self.RESOLUTION)
-        built_up_land = EsaWorldCover().read(city, self.RESOLUTION, EsaWorldCoverClass.BUILT_UP)
+        albedo = Albedo().read(city)
+        built_up_land = EsaWorldCover().read(city, snap_to=albedo, land_cover_class=EsaWorldCoverClass.BUILT_UP)
+        city_raster = city.to_raster(snap_to=albedo)
 
-        low_albedo_in_built_up_land = albedo.where(albedo < self.LOW_ALBEDO_MAX).where(built_up_land)
+        low_albedo_in_built_up_land = albedo.where(albedo < self.LOW_ALBEDO_MAX).where(~np.isnan(built_up_land))
 
-        city_raster = city.to_raster(self.RESOLUTION)
+        built_up_land_count = zonal_stats(zones=city_raster, values=built_up_land.where(~np.isnan(albedo)), stats_funcs=["count"]).set_index("zone")
         low_albedo_in_built_up_land_count = zonal_stats(zones=city_raster, values=low_albedo_in_built_up_land, stats_funcs=["count"]).set_index("zone")
 
-        # TODO either get average geodesic area of pixels or reproject to equal area projection
-        low_albedo_in_built_up_land_area_m2 = low_albedo_in_built_up_land_count * 10
+        low_albedo_in_built_up_land_percent = low_albedo_in_built_up_land_count / built_up_land_count
 
-        return city.unit_boundaries.set_index("index").join(low_albedo_in_built_up_land_area_m2).rename(columns={"count": "low_albedo_in_built_up_land_area_m2"})
+        return city.unit_boundaries.set_index("index").join(low_albedo_in_built_up_land_percent).rename(columns={
+            "count": "HEA_3_percentBuiltwLowAlbedo"
+        })
 

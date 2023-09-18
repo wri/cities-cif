@@ -39,9 +39,8 @@ class EsaWorldCover:
 
         return uris
 
-    def read(self, city: City, resolution: int, land_cover_class: EsaWorldCoverClass=None):
-        data = read_tiles(city, self.get_tile_uris(city), resolution)
-
+    def read(self, city: City, snap_to=None, land_cover_class: EsaWorldCoverClass=None):
+        data = read_tiles(city, self.get_tile_uris(city), snap_to)
         if land_cover_class:
             return data.where(data == land_cover_class.value)
 
