@@ -15,13 +15,13 @@ class Indicator(Enum):
     TREE_COVER_GEE = TreeCoverGEE
 
 
-def get_indicators(cities: List[City], indicators: List[Indicator]):
+def get_indicators(cities: List[tuple[City, str]], indicators: List[Indicator]):
     results = []
 
     # TODO need to pass admin level and union option
     for city in cities:
         for indicator in indicators:
-            results.append(indicator.value().calculate(city))
+            results.append(indicator.value().calculate(city[0], city[1]))
 
     return results
 
