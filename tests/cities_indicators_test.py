@@ -1,4 +1,4 @@
-from cities_indicators.core import get_indicators, Indicator
+from cities_indicators.core import get_city_indicators, get_indicators, Indicator
 from cities_indicators.city import get_city_admin
 
 import pandas as pd
@@ -12,7 +12,7 @@ def get_baseline(indicator_name):
 
 def test_tree_cover_in_built_up_areas():
     jakarta = get_city_admin("IDN-Jakarta")
-    indicators = get_indicators(cities=jakarta, indicators=[Indicator.BUILT_LAND_WITH_TREE_COVER])
+    indicators = get_city_indicators(cities=jakarta, indicators=[Indicator.BUILT_LAND_WITH_TREE_COVER])
     baseline_indicators = get_baseline("HEA_4_percentBuiltupWithoutTreeCover")
 
     for actual, baseline in zip(indicators["HEA_4_percentBuiltupWithoutTreeCover"], baseline_indicators["HEA_4_percentBuiltupWithoutTreeCover"]):
@@ -20,8 +20,8 @@ def test_tree_cover_in_built_up_areas():
 
 
 def test_surface_reflectivity():
-    jakarta = get_city("IDN-Jakarta")
-    indicators = get_indicators(cities=[jakarta], indicators=[Indicator.SURFACE_REFLECTIVTY])[0]
+    jakarta = get_city_admin("IDN-Jakarta")
+    indicators = get_city_indicators(cities=[jakarta], indicators=[Indicator.SURFACE_REFLECTIVTY])[0]
     baseline_indicators = get_baseline("HEA_3_percentBuiltwLowAlbedo")
 
     for actual, baseline in zip(indicators["HEA_3_percentBuiltwLowAlbedo"], baseline_indicators["HEA_3_percentBuiltwLowAlbedo"]):
@@ -30,7 +30,7 @@ def test_surface_reflectivity():
 
 def test_tree_cover():
     jakarta = get_city_admin("IDN-Jakarta")
-    indicators = get_indicators(cities=jakarta, indicators=[Indicator.TREE_COVER])
+    indicators = get_city_indicators(cities=jakarta, indicators=[Indicator.TREE_COVER])
     baseline_indicators = get_baseline("LND_2_percentTreeCover")
 
     for actual, baseline in zip(indicators["LND_2_percentTreeCover"], baseline_indicators["LND_2_percentTreeCover"]):

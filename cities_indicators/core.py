@@ -17,12 +17,12 @@ class Indicator(Enum):
     TREE_COVER_GEE = TreeCoverGEE
 
 
-def get_indicators(cities: List[tuple[City, str]], indicators: List[Indicator]):
+def get_city_indicators(cities: List[tuple[City, str]], indicators: List[Indicator]):
     results = []
 
-    for city in cities:
+    for city, admin_level in cities:
         for indicator in indicators:
-            gdf = city.get_geom(city[1])
+            gdf = city.get_geom(admin_level)
             results.append(indicator.value().calculate(gdf))
 
     return results

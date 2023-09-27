@@ -110,7 +110,7 @@ def export_results(results: List[gpd.GeoDataFrame], data_to_csv: bool, data_to_c
             to_carto(result_long, "indicators", if_exists='append')
 
 
-def to_raster(gdf: GeoDatFrame, snap_to):
+def to_raster(gdf: GeoDataFrame, snap_to):
     """
     Rasterize the admin boundaries to the specified resolution.
     :param resolution: resolution in geographic coordinates of the output raster
