@@ -23,24 +23,23 @@ import coiled
 from distributed import Client
 
 
-
 class Albedo:
     DATA_LAKE_PATH = "s3://cities-indicators/data/albedo/test"
 
-    def read(self, city: City, snap_to=None):
+    def read(self, gdf: gpd.GeoDataFrame, snap_to=None):
         # if data not in data lake for city, extract
-        uri = f"{self.DATA_LAKE_PATH}/{city.id}-S2-albedo.tif"
+        geo_name = _get_geo_name(gdf)
+        uri = f"{self.DATA_LAKE_PATH}/{geo_name}-S2-albedo.tif"
 
         try:
-            albedo = read_tiles(city, [uri], snap_to)
+            albedo = read_tiles(gdf, [uri], snap_to)
             return albedo
         except rasterio.errors.RasterioIOError as e:
-            uri = self.extract_gee(city)
-            albedo = read_tiles(city, [uri], snap_to)
+            uri = self.extract_gee(gdf)
+            albedo = read_tiles(gdf, [uri], snap_to)
             return albedo
 
-
-    def extract_gee(self, city: City):
+    def extract_gee(self, gdf: gpd.GeoDataFrame):
         ee.Authenticate()
         ee.Initialize()
 
@@ -125,7 +124,7 @@ class Albedo:
             }
             return image.expression(S2_ALBEDO_EQN, config).double().rename('albedo')
 
-        boundary_geo = json.loads(city.unit_boundaries.to_json())
+        boundary_geo = json.loads(gdf.to_json())
         boundary_geo_ee = geemap.geojson_to_ee(boundary_geo)
 
         ## S2 MOSAIC AND ALBEDO
@@ -135,7 +134,7 @@ class Albedo:
         albedoMean = albedoMean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
 
         # TODO hits pixel limit easily, need to just export to GCS and copy to S3
-        file_name = city.id + '-S2-albedo'
+        file_name = _get_geo_name(gdf) + '-S2-albedo'
         task = ee.batch.Export.image.toCloudStorage(**{
             'image': albedoMean,
             'description': file_name,
@@ -206,3 +205,12 @@ def _write_to_s3(result, city: City):
 
     s3_client = boto3.client("s3")
     s3_client.upload_file(file_name, "cities-indicators", f"data/albedo/test/{file_name}")
+
+
+def _get_geo_name(gdf: gpd.GeoDataFrame):
+    if "geo_name" in gdf.columns:
+        geo_name = gdf["geo_name"][0]
+        return geo_name
+    else:
+        loc_string = "__".join([str("{:.1f}".format(b)) for b in gdf.total_bounds]).replace(".", "_")
+        return loc_string
