@@ -208,8 +208,8 @@ def _write_to_s3(result, city: City):
 
 
 def _get_geo_name(gdf: gpd.GeoDataFrame):
-    if "geo_name" in gdf.columns:
-        geo_name = gdf["geo_name"][0]
+    if "geo_parent_name" in gdf.columns:
+        geo_name = gdf["geo_parent_name"][0]
         return geo_name
     else:
         loc_string = "__".join([str("{:.1f}".format(b)) for b in gdf.total_bounds]).replace(".", "_")

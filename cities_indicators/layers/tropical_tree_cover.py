@@ -7,7 +7,7 @@ from geopandas import GeoDataFrame
 
 
 class TropicalTreeCover:
-    VRT_URI = "s3://cities-indicators/data/tree_cover/tree_mosaic_land/tropical_tree_cover.vrt" #"/Users/jt/Downloads/tropical-tree-cover-v20230914.vrt"
+    VRT_URI = "s3://cities-indicators/data/tree_cover/tree_mosaic_land/tropical_tree_cover.vrt"
     NO_DATA_VALUE = -99
     TML = "projects/wri-datalab/TropicalTreeCover"
 
