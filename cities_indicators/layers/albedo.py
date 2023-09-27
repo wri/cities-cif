@@ -27,15 +27,18 @@ from distributed import Client
 class Albedo:
     DATA_LAKE_PATH = "s3://cities-indicators/data/albedo/test"
 
-    def read(self, city: City, resolution: int):
+    def read(self, city: City, snap_to=None):
         # if data not in data lake for city, extract
-        uri = f"{self.DATA_LAKE_PATH}/{city.name}-S2-albedo.tif"
+        uri = f"{self.DATA_LAKE_PATH}/{city.id}-S2-albedo.tif"
 
         try:
-            return read_tiles(city, [uri], resolution)
+            albedo = read_tiles(city, [uri], snap_to)
+            return albedo
         except rasterio.errors.RasterioIOError as e:
             uri = self.extract_gee(city)
-            return read_tiles(city, [uri], resolution)
+            albedo = read_tiles(city, [uri], snap_to)
+            return albedo
+
 
     def extract_gee(self, city: City):
         ee.Authenticate()
@@ -122,20 +125,17 @@ class Albedo:
             }
             return image.expression(S2_ALBEDO_EQN, config).double().rename('albedo')
 
-        boundary_geo = json.loads(city.boundaries.to_json())
+        boundary_geo = json.loads(city.unit_boundaries.to_json())
         boundary_geo_ee = geemap.geojson_to_ee(boundary_geo)
 
         ## S2 MOSAIC AND ALBEDO
         dataset = get_masked_s2_collection(boundary_geo_ee, date_start, date_end)
         s2_albedo = dataset.map(calc_s2_albedo)
         albedoMean = s2_albedo.reduce(ee.Reducer.mean())
-        albedoMean = albedoMean.multiply(
-            100).round().toByte()  # .toFloat() # # toByte() or toFloat() to reduce file size of export
-        albedoMean = albedoMean.updateMask(albedoMean.gt(0))  # to mask 0/NoData values in toByte() format
         albedoMean = albedoMean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
 
         # TODO hits pixel limit easily, need to just export to GCS and copy to S3
-        file_name = city.name + '-S2-albedo'
+        file_name = city.id + '-S2-albedo'
         task = ee.batch.Export.image.toCloudStorage(**{
             'image': albedoMean,
             'description': file_name,
@@ -165,7 +165,7 @@ class Albedo:
     def extract_dask(self, city: City):
         # TODO doesn't seem to be an easy way to access S2 cloud masks outside of GEE
         # create a remote Dask cluster with Coiled
-        cluster = coiled.Cluster(name=city.name, worker_memory="32GiB", n_workers=100,
+        cluster = coiled.Cluster(name=city.id, worker_memory="32GiB", n_workers=100,
                                  use_best_zone=True,
                                  compute_purchase_option="spot_with_fallback")
 
@@ -194,7 +194,7 @@ class Albedo:
 
 
 def _write_to_s3(result, city: City):
-    file_name = f"{city.name}-S2-albedo.tif"
+    file_name = f"{city.id}-S2-albedo.tif"
     width, height = result.data.shape[1], result.data.shape[0]
     transform = from_bounds(*city.bounds, width, height)
     profile = DefaultGTiffProfile(transform=transform, width=width, height=height, crs=4326, blockxsize=400,

@@ -16,15 +16,15 @@ class LandSurfaceTemperature:
 
     DATA_LAKE_PATH = "s3://cities-indicators/data/land-surface-temperature/test"
 
-    def read(self, city: City, resolution: int):
+    def read(self, city: City, snap_to=None):
         # if data not in data lake for city, extract
         uri = f"{self.DATA_LAKE_PATH}/{city.name}-LST.tif"
 
         try:
-            return read_tiles(city, [uri], resolution)
+            return read_tiles(city, [uri], snap_to=snap_to)
         except rasterio.errors.RasterioIOError as e:
             uri = self.extract_gee(city)
-            return read_tiles(city, [uri], resolution)
+            return read_tiles(city, [uri], snap_to=snap_to)
 
 
     def extract_gee(self, city: City):
@@ -449,7 +449,7 @@ class LandSurfaceTemperature:
         end_dateYearStr = str(ee.Date(end_date).get('year').getInfo())
 
 
-        boundary_geo = json.loads(city.boundaries.to_json())
+        boundary_geo = json.loads(city.aoi_boundaries.to_json())
         boundary_geo_ee = geemap.geojson_to_ee(boundary_geo)
 
         # obtain LST for location, time and threshold
@@ -460,6 +460,7 @@ class LandSurfaceTemperature:
 
         # obtain LSTmeanThres
         LSTmeanThres = HighLST(boundary_geo_ee, LSTmean)
+        data = geemap.ee_to_numpy(LSTmeanThres, region=boundary_geo_ee)
 
         # Store LST mean geotiff
         file_name = city.name + '-LST'

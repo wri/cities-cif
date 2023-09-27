@@ -1,19 +1,46 @@
 from cities_indicators.core import get_indicators, Indicator
-from cities_indicators.city import SupportedCity
+from cities_indicators.city import get_city
+
+import pandas as pd
+import pytest
 
 
-# def test_tree_cover_in_built_up_areas():
-#     indicators = get_indicators(cities=[SupportedCity.IDN_Jakarta], indicators=[Indicator.BUILT_LAND_WITH_TREE_COVER])
-#     print(indicators)
+def get_baseline(indicator_name):
+    df = pd.read_csv("tests/fixtures/jakarta_baseline.csv")
+    return df[["geo_id", indicator_name]]
 
-# def test_surface_reflectivity():
-#     indicators = get_indicators(cities=[SupportedCity.IDN_Jakarta], indicators=[Indicator.SURFACE_REFLECTIVTY])
-#     print(indicators)
 
-# def test_land_surface_temperature():
-#     indicators = get_indicators(cities=[SupportedCity.IDN_Jakarta], indicators=[Indicator.BUILT_LAND_WITH_HIGH_LST])
-#     print(indicators)
+def test_tree_cover_in_built_up_areas():
+    jakarta = get_city("IDN-Jakarta")
+    indicators = get_indicators(cities=[jakarta], indicators=[Indicator.BUILT_LAND_WITH_TREE_COVER])[0]
+    baseline_indicators = get_baseline("HEA_4_percentBuiltupWithoutTreeCover")
 
-def test_land_surface_temperature_gee():
-    indicators = get_indicators(cities=[SupportedCity.IDN_Jakarta], indicators=[Indicator.BUILT_LAND_WITH_HIGH_LST_GEE])
-    print(indicators)
+    for actual, baseline in zip(indicators["HEA_4_percentBuiltupWithoutTreeCover"], baseline_indicators["HEA_4_percentBuiltupWithoutTreeCover"]):
+        assert pytest.approx(actual, abs=1) == baseline
+
+
+def test_surface_reflectivity():
+    jakarta = get_city("IDN-Jakarta")
+    indicators = get_indicators(cities=[jakarta], indicators=[Indicator.SURFACE_REFLECTIVTY])[0]
+    baseline_indicators = get_baseline("HEA_3_percentBuiltwLowAlbedo")
+
+    for actual, baseline in zip(indicators["HEA_3_percentBuiltwLowAlbedo"], baseline_indicators["HEA_3_percentBuiltwLowAlbedo"]):
+        assert pytest.approx(actual, abs=1) == baseline
+
+
+def test_high_lst():
+    jakarta = get_city("IDN-Jakarta")
+    indicators = get_indicators(cities=[jakarta], indicators=[Indicator.BUILT_LAND_WITH_HIGH_LST])[0]
+    baseline_indicators = get_baseline("HEA_2_percentBuiltupwHighLST-2013to2022meanofmonthwhottestday")
+
+    for actual, baseline in zip(indicators["HEA_2_percentBuiltupwHighLST-2013to2022meanofmonthwhottestday"], baseline_indicators["HEA_2_percentBuiltupwHighLST-2013to2022meanofmonthwhottestday"]):
+        assert pytest.approx(actual, abs=1) == baseline
+
+
+def test_tree_cover():
+    jakarta = get_city("IDN-Jakarta")
+    indicators = get_indicators(cities=[jakarta], indicators=[Indicator.TREE_COVER])[0]
+    baseline_indicators = get_baseline("LND_2_percentTreeCover")
+
+    for actual, baseline in zip(indicators["LND_2_percentTreeCover"], baseline_indicators["LND_2_percentTreeCover"]):
+        assert pytest.approx(actual, abs=1) == baseline
