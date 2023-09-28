@@ -1,5 +1,6 @@
 from typing import List
 from enum import Enum
+from geopandas import GeoDataFrame
 import ee
 
 from cities_indicators.city import City
@@ -8,6 +9,7 @@ from cities_indicators.indicators.surface_reflectivity import SurfaceReflectivit
 from cities_indicators.indicators.tree_cover import TreeCover
 from cities_indicators.indicators.tree_cover_gee import TreeCoverGEE
 
+
 class Indicator(Enum):
     BUILT_LAND_WITH_TREE_COVER = BuiltLandWithTreeCover
     SURFACE_REFLECTIVTY = SurfaceReflectivity
@@ -15,13 +17,22 @@ class Indicator(Enum):
     TREE_COVER_GEE = TreeCoverGEE
 
 
-def get_indicators(cities: List[tuple[City, str]], indicators: List[Indicator]):
+def get_city_indicators(cities: List[tuple[City, str]], indicators: List[Indicator]):
     results = []
 
-    # TODO need to pass admin level and union option
-    for city in cities:
+    for city, admin_level in cities:
         for indicator in indicators:
-            results.append(indicator.value().calculate(city[0], city[1]))
+            gdf = city.get_geom(admin_level)
+            results.append(indicator.value().calculate(gdf))
+
+    return results
+
+
+def get_indicators(gdf: GeoDataFrame, indicators: List[Indicator]):
+    results = []
+
+    for indicator in indicators:
+        results.append(indicator.value().calculate(gdf))
 
     return results
 

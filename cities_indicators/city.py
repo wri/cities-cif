@@ -7,8 +7,6 @@ from shapely.geometry import box
 from functools import cached_property, lru_cache
 import requests
 
-from geocube.api.core import make_geocube
-
 
 # API_URI = "https://citiesapi-1-x4387694.deta.app/cities"
 API_URI = "http://44.201.179.158:8000/cities"
@@ -81,29 +79,7 @@ class City:
         aoi_geom = requests.get(f"{API_URI}/{self.id}/{self.aoi_boundary_level}/geojson").json()['city_geometry']
         return gpd.GeoDataFrame.from_features(aoi_geom).reset_index()
 
-    @cached_property
-    def bounds(self):
-        return self.aoi_boundaries.total_bounds
-
-    @cached_property
-    def bounding_box(self):
-        return box(*self.bounds)
-
     def get_geom(self, admin_level):
         unit_geom = requests.get(f"{API_URI}/{self.id}/{admin_level}/geojson").json()['city_geometry']
         unit_boundaries = gpd.GeoDataFrame.from_features(unit_geom).reset_index()
         return unit_boundaries
-
-    def to_raster(self, admin_level, snap_to):
-        """
-        Rasterize the admin boundaries to the specified resolution.
-        :param resolution: resolution in geographic coordinates of the output raster
-        :return:
-        """
-
-        return make_geocube(
-            vector_data=self.get_geom(admin_level),
-            measurements=["index"],
-            like=snap_to,
-            geom=self.bounding_box
-        ).index
