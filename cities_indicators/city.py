@@ -16,7 +16,14 @@ API_URI = "https://citiesapi-1-x4387694.deta.app/cities"
 @lru_cache(maxsize=1, typed=False)
 def get_cities():
     cities = requests.get(API_URI).json()["cities"]
-    cities = [City(*city["fields"].values()) for city in cities]
+    fields = [
+        "id", "units_boundary_level", "country_name", "aoi_boundary_level",
+        "aoi_boundary_file", "name", "project", "unit_boundary_file", "country_code_iso3"
+    ]
+    cities = [
+        City(*[city["fields"][field] for field in fields])
+        for city in cities
+    ]
     return cities
 
 
@@ -66,7 +73,7 @@ class City:
     def bounding_box(self):
         return box(*self.bounds)
 
-    def to_raster(self, resolution):
+    def to_raster(self, snap_to):
         """
         Rasterize the admin boundaries to the specified resolution.
         :param resolution: resolution in geographic coordinates of the output raster
@@ -74,8 +81,8 @@ class City:
         """
 
         return make_geocube(
-            vector_data=self.aoi_boundaries,
+            vector_data=self.unit_boundaries,
             measurements=["index"],
-            resolution=(-resolution, resolution),
+            like=snap_to,
             geom=self.bounding_box
         ).index
