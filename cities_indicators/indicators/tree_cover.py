@@ -8,7 +8,7 @@ class TreeCover:
 
     def calculate(self, gdf):
         tree_cover = TropicalTreeCover().read(gdf)
-        city_raster = to_raster(gdf, tree_cover)
+        city_raster = to_raster(gdf, snap_to=tree_cover)
 
         tree_cover_mean = \
             zonal_stats(zones=city_raster, values=tree_cover, stats_funcs=["mean"]).set_index("zone")

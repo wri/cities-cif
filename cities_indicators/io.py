@@ -15,6 +15,7 @@ from cities_indicators.city import City
 from geocube.api.core import make_geocube
 from geopandas import GeoDataFrame
 from shapely.geometry import box
+from rioxarray.merge import merge_arrays
 
 
 def read_vrt(gdf: GeoDataFrame, vrt_uri: str, snap_to=None, no_data=None):

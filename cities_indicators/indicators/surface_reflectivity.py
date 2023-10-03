@@ -16,7 +16,7 @@ class SurfaceReflectivity:
 
         low_albedo_in_built_up_land = albedo.where(albedo < self.LOW_ALBEDO_MAX).where(~np.isnan(built_up_land))
 
-        built_up_land_count = zonal_stats(zones=city_raster, values=built_up_land.where(~np.isnan(albedo)), stats_funcs=["count"]).set_index("zone")
+        built_up_land_count = zonal_stats(zones=city_raster, values=built_up_land, stats_funcs=["count"]).set_index("zone")
         low_albedo_in_built_up_land_count = zonal_stats(zones=city_raster, values=low_albedo_in_built_up_land, stats_funcs=["count"]).set_index("zone")
 
         low_albedo_in_built_up_land_percent = low_albedo_in_built_up_land_count / built_up_land_count
