@@ -552,7 +552,7 @@ class LandSurfaceTemperature:
         # Store LST mean geotiff
         file_name = _get_geo_name(gdf) + '-LST-mean'
         task = ee.batch.Export.image.toCloudStorage(**{
-            'image': LSTmean,
+            'image': LSTmean.round().toInt8(),
             'description': file_name,
             'scale': 30,
             'region': boundary_geo_ee.geometry(),
