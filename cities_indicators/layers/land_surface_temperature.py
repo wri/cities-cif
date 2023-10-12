@@ -16,18 +16,18 @@ class LandSurfaceTemperature:
 
     DATA_LAKE_PATH = "s3://cities-indicators/data/land-surface-temperature/test"
 
-    def read(self, city: City, snap_to=None):
+    def read(self, gdf, snap_to=None):
         # if data not in data lake for city, extract
-        uri = f"{self.DATA_LAKE_PATH}/{city.name}-LST.tif"
+        geo_name = _get_geo_name(gdf)
+        uri = f"{self.DATA_LAKE_PATH}/{geo_name}-LST-mean.tif"
 
         try:
-            return read_tiles(city, [uri], snap_to=snap_to)
+            return read_tiles(gdf, [uri], snap_to=snap_to)
         except rasterio.errors.RasterioIOError as e:
-            uri = self.extract_gee(city)
-            return read_tiles(city, [uri], snap_to=snap_to)
+            uri = self.extract_gee(gdf)
+            return read_tiles(gdf, [uri], snap_to=snap_to)
 
-
-    def extract_gee(self, city: City):
+    def extract_gee(self, gdf):
         #  METHODS TO CALCULATE MEAN LST MOSAIC FOR HOTTEST PERIOD USING LANDSAT
         ee.Authenticate()
         ee.Initialize()
@@ -45,6 +45,83 @@ class LandSurfaceTemperature:
             Google Earth Engine open-source code for Land Surface Temperature estimation from the Landsat series.
             'Remote Sensing, 12 (9), 1471; https://doi.org/10.3390/rs12091471
         """
+
+        # Variables for hottest day search ranges
+
+        start_date = '2013-03-18'  # start date of Landsat archive to include in hottest day search
+        end_date = '2022-09-17'  # end date of Landsat archive to include in hottest day search
+        start_dateYearStr = str(ee.Date(start_date).get('year').getInfo())
+        end_dateYearStr = str(ee.Date(end_date).get('year').getInfo())
+        window = 90  # number of days to include in LST mean mosaic
+
+        ##Add Land use land cover dataset
+        WC = ee.ImageCollection("ESA/WorldCover/v100")
+        WorldCover = WC.first();
+        builtup = WorldCover.eq(50)
+
+        ## define projection for use later
+        WCprojection = WC.first().projection();
+        esaScale = WorldCover.projection().nominalScale();
+
+        print('WorldCover projection:', WCprojection.getInfo());
+
+        # Map.addLayer(WorldCover, {'bands': "Map"}, "WorldCover 10m 2020 (ESA)",1);
+
+        # Map.add_legend(builtin_legend='ESA_WorldCover',position='bottomleft')
+
+        ## Add intra-urban land use dataset
+
+        ULU = ee.ImageCollection("projects/wri-datalab/urban_land_use/v1")
+
+        WRIulu = ULU.select('lulc').reduce(ee.Reducer.firstNonNull()).rename('lulc')
+        WRIulu = WRIulu.mask(WRIulu.mask().gt(0))
+        WRIroad = ULU.select('road_lulc').reduce(ee.Reducer.firstNonNull()).rename('lulc')
+        WRIuluwRoad = WRIulu.add(WRIroad).where(WRIroad.eq(1), 6).mask(WRIulu.mask().gt(0))
+
+        ULUmaskedESA = WRIuluwRoad.updateMask(WorldCover.eq(50))  # .Or(WorldCover.eq(60)))
+
+        ULUmaskedESA = ULUmaskedESA.reproject(
+            crs=WCprojection
+        )
+
+        CLASSES_7 = [
+            "open_space",
+            "nonresidential",
+            "atomistic",
+            "informal_subdivision",
+            "formal_subdivision",
+            "housing_project",
+            "road"]
+        COLORS_7 = [
+            '33A02C',
+            'E31A1C',
+            'FB9A99',
+            'FFFF99',
+            '1F78B4',
+            'A6CEE3',
+            '3f3f3f']
+        ULU7Params = {"bands": ['lulc'], 'min': 0, 'max': 6, "opacity": 1, "palette": COLORS_7}
+
+        # Map.addLayer(ULUmaskedESA,ULU7Params,"Urban Land Use 2020 (WRI) masked to WorldCover built",True)
+
+        #  METHODS TO CALCULATE MEAN LST MOSAIC FOR HOTTEST PERIOD USING LANDSAT
+
+        """"
+        Derived from
+        LSTfun = require('users/sofiaermida/landsat_smw_lst:modules/SMWalgorithm.js')
+        'Author': Sofia Ermida (sofia.ermida@ipma.pt; @ermida_sofia)
+
+        This code is free and open.
+        By using this code and any data derived with it,
+        you agree to cite the following reference
+        'in any publications derived from them':
+        Ermida, S.L., Soares, P., Mantas, V., Göttsche, F.-M., Trigo, I.F., 2020.
+            Google Earth Engine open-source code for Land Surface Temperature estimation from the Landsat series.
+            'Remote Sensing, 12 (9), 1471; https://doi.org/10.3390/rs12091471
+        """
+
+        # LandsatLST = require('users/emackres/DataPortal:/Landsat_LST.js')
+        # cloudmask = require('users/emackres/DataPortal:/cloudmask.js')
 
         COLLECTION = ee.Dictionary({
             'L4': {
@@ -71,7 +148,7 @@ class LandSurfaceTemperature:
                 'TIR': ['B10', 'B11'],
                 'VISW': ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7', 'QA_PIXEL']
             }
-        })
+        });
 
         def NDVIaddBand(landsat):
             def wrap(image):
@@ -102,6 +179,7 @@ class LandSurfaceTemperature:
             return wrap
 
         def NCEP_TPWaddBand(image):
+
             # first select the day of interest
             date = ee.Date(image.get('system:time_start'))
             year = ee.Number.parse(date.format('yyyy'))
@@ -263,6 +341,7 @@ class LandSurfaceTemperature:
             return ee.List(lookup.get('list'))
 
         def LSTaddBand(landsat):
+
             def wrap(image):
                 # coefficients for the Statistical Mono-Window Algorithm
                 coeff_SMW_L8 = ee.FeatureCollection([
@@ -322,6 +401,7 @@ class LandSurfaceTemperature:
             return image.updateMask(mask.Not())
 
         def LSTcollection(landsat, date_start, date_end, geometry, image_limit, use_ndvi):
+
             # load TOA Radiance/Reflectance
             collection_dict = ee.Dictionary(COLLECTION.get(landsat))
 
@@ -329,6 +409,7 @@ class LandSurfaceTemperature:
                 .filter(ee.Filter.date(date_start, date_end)) \
                 .filterBounds(geometry) \
                 .map(cloudmasktoa)
+            # .limit(image_limit,'CLOUD_COVER_LAND') \
 
             # load Surface Reflectance collection for NDVI
             landsatSR = ee.ImageCollection(collection_dict.get('SR')) \
@@ -361,11 +442,19 @@ class LandSurfaceTemperature:
             return landsatLST
 
         def HottestPeriod(FC, start_date, end_date):
-            window = 90
             FCcenter = FC.geometry().centroid(1)
             #  CALCULATE DATES OF HOTTEST PERIOD OF HIGH TEMPERATURES FOR EACH PIXEL
 
             # select dataset, filter by dates and visualize
+            # dataset = (ee.ImageCollection('NASA/NEX-GDDP')
+            #            .filter(ee.Filter.And(
+            #                ee.Filter.date(start_date, end_date),
+            #                ee.Filter.eq('scenario','rcp85'),
+            #                 ee.Filter.eq('model','BNU-ESM'),
+            #                ee.Filter.bounds(FC)
+            #            ))
+            #           )
+            # AirTemperature = dataset.select(['tasmax'])
             dataset = ee.ImageCollection("ECMWF/ERA5/DAILY")
             AirTemperature = (dataset
                               .filter(ee.Filter.And(
@@ -373,6 +462,14 @@ class LandSurfaceTemperature:
                 ee.Filter.bounds(FC)))
                               .select(['maximum_2m_air_temperature'], ['tasmax'])
                               )
+            AirTemperatureVis = {
+                'min': 240.0,
+                'max': 300.0,
+                'palette': ['blue', 'purple', 'cyan', 'green', 'yellow', 'red'],
+            }
+
+            # Map.addLayer(AirTemperature, AirTemperatureVis, 'Max Air Temperature')
+            # print(AirTemperature)
 
             # add date as a band to image collection
             def addDate(image):
@@ -381,16 +478,21 @@ class LandSurfaceTemperature:
                 return image.addBands(ee.Image(img_date).rename('date').toInt())
 
             withdates = AirTemperature.map(addDate)
+            # print(withdates)
 
             # create a composite with the hottest day value and dates for every location and add to map
             hottest = withdates.qualityMosaic('tasmax')
+            # print(hottest)
+            # Map.addLayer(hottest.select('tasmax'), AirTemperatureVis, 'Max temp',0)
 
             # reduce composite to get the hottest date for centroid of ROI
             resolution = dataset.first().projection().nominalScale()
             NEXtempMax = ee.Number(hottest.reduceRegion(ee.Reducer.firstNonNull(), FCcenter, resolution).get('date'))
+            # print(NEXtempMax.getInfo())
 
             # convert date number to date type
             date = ee.Date.parse('YYYYMMdd', str(NEXtempMax.getInfo()))
+            # print(date.getInfo())
 
             # calculate relative start and end dates
             startwindowadvance = ee.Number(window).multiply(-0.5).add(1)
@@ -401,7 +503,7 @@ class LandSurfaceTemperature:
             endwindowdate = date.advance(endwindowadvance, 'day').format('YYYY-MM-dd')
             return date, startwindowdate, endwindowdate
 
-        def LST(FC, hottestdate, start_date, end_date):
+        def LST(FC, hottestdate, start, end):
             # select parameters: date range, and landsat satellite
             landsat = 'L8'  # options: 'L4', 'L5', 'L7', 'L8'
             use_ndvi = False
@@ -413,57 +515,42 @@ class LandSurfaceTemperature:
             month_end = month  # month.add(1) # 12 # or month
 
             # get landsat collection with added variables: NDVI, FVC, TPW, EM, LST
+            # link to the code that computes the Landsat LST
+            # oeel = geemap.requireJS()
+            # Landsat_LST = geemap.requireJS('users/emackres/DataPortal:Landsat_LST.js')
+            # LandsatColl = Landsat_LST.collection(landsat, date_start, date_end, FC, image_limit, use_ndvi).filter(ee.Filter.calendarRange(month_start, month_end, 'month'))
             LandsatColl = LSTcollection(landsat, date_start, date_end, FC, image_limit, use_ndvi).filter(
                 ee.Filter.calendarRange(month_start, month_end, 'month'))
-
             LSTmean = LandsatColl.select('LST').reduce(ee.Reducer.mean()).subtract(273.15)
-
             return LSTmean
-
-        ##Add Land use land cover dataset
-        WC = ee.ImageCollection("ESA/WorldCover/v100")
-        WorldCover = WC.first()
-        builtup = WorldCover.eq(50)
-
-        ## define projection for use later
-        WCprojection = WC.first().projection()
-        esaScale = WorldCover.projection().nominalScale()
 
         def HighLST(FC, LSTmean):
             # define "high LST" threshold
             UrbanLSTmean = LSTmean.updateMask(builtup)
             UrbanAreaLSTReduction = UrbanLSTmean.reduceRegion(ee.Reducer.mean(), FC,
-                                                              100)  # default scale: 100 can increase if "User memory limit exceeded". # or ee.Reducer.percentile([50]) for median LST of region
+                                                              100)  # or ee.Reducer.percentile([50]) for median LST of region
             thesholdAdder = 3  # degrees C above UrbanAreaReduction value at which to set threshold
             TempThresValue = ee.Number(UrbanAreaLSTReduction.get('LST_mean')).multiply(100).round().divide(100).add(
                 thesholdAdder).getInfo()
-            LSTmeanThres = LSTmean.updateMask(LSTmean.gte(TempThresValue))  # .eq(1).toByte()
+            LSTmeanThres = LSTmean.updateMask(LSTmean.gte(TempThresValue))
             return LSTmeanThres
 
+            # obtain LST for location, time and threshold
 
-        # Variables for hottest day search ranges
-
-        start_date = '2013-03-18'  # start date of Landsat archive to include in hottest day search
-        end_date = '2022-09-17'  # end date of Landsat archive to include in hottest day search
-        start_dateYearStr = str(ee.Date(start_date).get('year').getInfo())
-        end_dateYearStr = str(ee.Date(end_date).get('year').getInfo())
-
-
-        boundary_geo = json.loads(city.aoi_boundaries.to_json())
+        boundary_geo = json.loads(gdf.to_json())
         boundary_geo_ee = geemap.geojson_to_ee(boundary_geo)
 
-        # obtain LST for location, time and threshold
-        hottestdate, start, end = HottestPeriod(boundary_geo_ee, start_date, end_date)
+        FC = boundary_geo_ee
+        hottestdate, start, end = HottestPeriod(FC, start_date, end_date)
+        LSTmean = LST(FC, hottestdate, start, end)
+        # LSTmeanScale = LSTmean.projection().nominalScale()
+        # LSTmeanThres = HighLST(FC,LSTmean)
 
-        # obtain LST mean
-        LSTmean = LST(boundary_geo_ee, hottestdate, start, end)
-
-        # obtain LSTmeanThres
-        LSTmeanThres = HighLST(boundary_geo_ee, LSTmean)
-        data = geemap.ee_to_numpy(LSTmeanThres, region=boundary_geo_ee)
+        byMonthShort = '-' + start_dateYearStr + 'to' + end_dateYearStr + 'meanofmonthwhottestday'
+        mosaicmethod = byMonthShort
 
         # Store LST mean geotiff
-        file_name = city.name + '-LST'
+        file_name = _get_geo_name(gdf) + '-LST-mean'
         task = ee.batch.Export.image.toCloudStorage(**{
             'image': LSTmean,
             'description': file_name,
@@ -490,33 +577,11 @@ class LandSurfaceTemperature:
                               f"data/land-surface-temperature/test/{file_name}.tif")
 
 
-        # Store LST thresh geotiff
-        file_name = city.name + '-LSTmeanThres'
-        task = ee.batch.Export.image.toCloudStorage(**{
-            'image': LSTmeanThres,
-            'description': file_name,
-            'scale': 30,
-            'region': boundary_geo_ee.geometry(),
-            'fileFormat': 'GeoTIFF',
-            'bucket': 'gee-exports',
-            'formatOptions': {'cloudOptimized': True}
-        })
-        task.start()
 
-        while task.active():
-            print('Polling for task (id: {}).'.format(task.id))
-            time.sleep(5)
-
-        storage_client = storage.Client(project="CitiesIndicators")
-
-        bucket = storage_client.bucket('gee-exports')
-        blob = bucket.blob(f"{file_name}.tif")
-        blob.download_to_filename(f"{file_name}.tif")
-
-        s3_client = boto3.client("s3")
-        s3_client.upload_file(f"{file_name}.tif", "cities-indicators",
-                              f"data/land-surface-temperature/test/{file_name}.tif")
-
-        return f"{file_name}.tif"
-
-
+def _get_geo_name(gdf: gpd.GeoDataFrame):
+    if "geo_parent_name" in gdf.columns:
+        geo_name = gdf["geo_parent_name"][0]
+        return geo_name
+    else:
+        loc_string = "__".join([str("{:.1f}".format(b)) for b in gdf.total_bounds]).replace(".", "_")
+        return loc_string
