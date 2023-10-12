@@ -21,7 +21,7 @@ def get_cities():
     ]
     cities = [
         City(*[city[field] for field in fields])
-        for city in cities
+        for city in cities if city
     ]
     return cities
 
@@ -31,6 +31,7 @@ def get_city(id):
     for city in cities:
         if city.id == id:
             return city
+
 
 def get_city_admin(id, admin_levels=None):
     cities = get_cities()
@@ -45,6 +46,7 @@ def get_city_admin(id, admin_levels=None):
                     if admin_level in city.admin_levels:
                         city_list.append([city, admin_level])
             return city_list
+
 
 class City:
     def __init__(
