@@ -1,8 +1,7 @@
 from pystac_client import Client
 from enum import Enum
 
-from cities_indicators.city import City
-from cities_indicators.io import read_tiles
+from cities_indicators.io import read_tiles, bounding_box
 
 
 class EsaWorldCoverClass(Enum):
@@ -24,12 +23,12 @@ class EsaWorldCover:
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
 
-    def get_tile_uris(self, city):
+    def get_tile_uris(self, gdf):
         catalog = Client.open(self.STAC_CATALOG_URI)
         search = catalog.search(
             max_items=20,
             collections=self.STAC_COLLECTION_ID,
-            intersects=city.bounding_box
+            intersects=bounding_box(gdf)
         )
 
         uris = [
@@ -39,8 +38,8 @@ class EsaWorldCover:
 
         return uris
 
-    def read(self, city: City, snap_to=None, land_cover_class: EsaWorldCoverClass=None):
-        data = read_tiles(city, self.get_tile_uris(city), snap_to)
+    def read(self, gdf, snap_to=None, land_cover_class: EsaWorldCoverClass=None):
+        data = read_tiles(gdf, self.get_tile_uris(gdf), snap_to)
         if land_cover_class:
             return data.where(data == land_cover_class.value)
 

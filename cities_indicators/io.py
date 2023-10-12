@@ -12,18 +12,22 @@ from datetime import datetime
 import pandas as pd
 
 from cities_indicators.city import City
+from geocube.api.core import make_geocube
+from geopandas import GeoDataFrame
+from shapely.geometry import box
+from rioxarray.merge import merge_arrays
 
 
-def read_vrt(city: City, vrt_uri: str, snap_to=None, no_data=None):
-    return read_tiles(city, [vrt_uri], snap_to, no_data)
+def read_vrt(gdf: GeoDataFrame, vrt_uri: str, snap_to=None, no_data=None):
+    return read_tiles(gdf, [vrt_uri], snap_to, no_data)
 
 
-def read_tiles(city: City, tile_uris: List[str], snap_to=None, no_data=None):
+def read_tiles(gdf: GeoDataFrame, tile_uris: List[str], snap_to=None, no_data=None):
     # read and clip to city extent
     windows = []
     for layer_uri in tile_uris:
         ds = rioxarray.open_rasterio(layer_uri)
-        window = ds.rio.clip_box(*city.bounds)
+        window = ds.rio.clip_box(*gdf.total_bounds)
         windows.append(window)
 
     if len(windows) > 1:
@@ -106,3 +110,21 @@ def export_results(results: List[gpd.GeoDataFrame], data_to_csv: bool, data_to_c
             # upload indicators to carto
             to_carto(result_long, "indicators", if_exists='append')
 
+
+def to_raster(gdf: GeoDataFrame, snap_to):
+    """
+    Rasterize the admin boundaries to the specified resolution.
+    :param resolution: resolution in geographic coordinates of the output raster
+    :return:
+    """
+
+    return make_geocube(
+        vector_data=gdf,
+        measurements=["index"],
+        like=snap_to,
+        geom=gdf.total_bounds
+    ).index
+
+
+def bounding_box(gdf):
+    return box(*gdf.total_bounds)
