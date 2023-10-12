@@ -30,6 +30,15 @@ def test_surface_reflectivity():
         assert pytest.approx(actual, abs=0.015) == baseline
 
 
+def test_high_lst():
+    jakarta = get_city_admin("IDN-Jakarta")[1:]
+    indicators = get_city_indicators(cities=jakarta, indicators=[Indicator.BUILT_LAND_WITH_HIGH_LST])[0]
+    baseline_indicators = get_baseline("HEA_2_percentBuiltupwHighLST-2013to2022meanofmonthwhottestday")
+
+    for actual, baseline in zip(indicators["HEA_2_percentBuiltupwHighLST-2013to2022meanofmonthwhottestday"], baseline_indicators["HEA_2_percentBuiltupwHighLST-2013to2022meanofmonthwhottestday"]):
+        assert pytest.approx(actual, abs=1) == baseline
+
+
 def test_tree_cover():
     jakarta = get_city_admin("IDN-Jakarta")[1:]
     indicators = get_city_indicators(cities=jakarta, indicators=[Indicator.TREE_COVER])[0]

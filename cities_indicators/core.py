@@ -8,6 +8,8 @@ from cities_indicators.indicators.built_land_without_tree_cover import BuiltLand
 from cities_indicators.indicators.surface_reflectivity import SurfaceReflectivity
 from cities_indicators.indicators.tree_cover import TreeCover
 from cities_indicators.indicators.tree_cover_gee import TreeCoverGEE
+from cities_indicators.indicators.built_land_with_high_lst import BuiltUpHighLandSurfaceTemperature
+from cities_indicators.indicators.built_land_with_high_lst_gee import BuiltUpHighLandSurfaceTemperatureGEE
 
 
 class Indicator(Enum):
@@ -15,6 +17,8 @@ class Indicator(Enum):
     SURFACE_REFLECTIVTY = SurfaceReflectivity
     TREE_COVER = TreeCover
     TREE_COVER_GEE = TreeCoverGEE
+    BUILT_LAND_WITH_HIGH_LST = BuiltUpHighLandSurfaceTemperature
+    BUILT_LAND_WITH_HIGH_LST_GEE = BuiltUpHighLandSurfaceTemperatureGEE
 
 
 def get_city_indicators(cities: List[tuple[City, str]], indicators: List[Indicator]):
