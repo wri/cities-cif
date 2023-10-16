@@ -21,6 +21,9 @@ class SurfaceReflectivity:
 
         low_albedo_in_built_up_land_percent = low_albedo_in_built_up_land_count / built_up_land_count
 
+        if "HEA_3_percentBuiltwLowAlbedo" in gdf.columns:
+            del gdf["HEA_3_percentBuiltwLowAlbedo"]
+
         return gdf.set_index("index").join(low_albedo_in_built_up_land_percent).rename(columns={
             "count": "HEA_3_percentBuiltwLowAlbedo"
         })

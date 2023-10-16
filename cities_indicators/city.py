@@ -83,7 +83,7 @@ class City:
         return gpd.GeoDataFrame.from_features(aoi_geom).reset_index()
 
     def get_geom(self, admin_level):
-        unit_geom = requests.get(f"{API_URI}/{self.id}/{admin_level}/geojson").json()['city_geometry']
+        unit_geom = requests.get(f"{API_URI}/{self.id}/{admin_level}/geojson").json()
         unit_boundaries = gpd.GeoDataFrame.from_features(unit_geom)
         unit_boundaries["index"] = unit_boundaries["geo_id"].apply(lambda x: int(x.split("_")[2]) - 1)
         unit_boundaries = unit_boundaries.sort_values(by="index")

@@ -34,6 +34,9 @@ class BuiltUpHighLandSurfaceTemperature:
 
         percent_high_lst_in_built_up_land = high_lst_built_up_land_count.fillna(0) / built_up_land_count
 
+        if "HEA_2_percentBuiltupwHighLST-2013to2022meanofmonthwhottestday" in gdf.columns:
+            del gdf["HEA_2_percentBuiltupwHighLST-2013to2022meanofmonthwhottestday"]
+
         return gdf.set_index("index").join(percent_high_lst_in_built_up_land).rename(
             columns={"count": "HEA_2_percentBuiltupwHighLST-2013to2022meanofmonthwhottestday"})
 

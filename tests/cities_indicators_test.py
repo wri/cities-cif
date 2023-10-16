@@ -6,7 +6,7 @@ import pytest
 
 
 def get_baseline(indicator_name):
-    df = pd.read_csv("tests/fixtures/jakarta_baseline.csv")
+    df = pd.read_csv("fixtures/jakarta_baseline.csv")
     return df[["geo_id", indicator_name]]
 
 

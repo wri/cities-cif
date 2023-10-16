@@ -15,4 +15,7 @@ class TreeCover:
         
         percent_tree_cover = tree_cover_mean * 0.01
 
+        if "LND_2_percentTreeCover" in gdf.columns:
+            del gdf["LND_2_percentTreeCover"]
+
         return gdf.set_index("index").join(percent_tree_cover).rename(columns={"mean": "LND_2_percentTreeCover"})

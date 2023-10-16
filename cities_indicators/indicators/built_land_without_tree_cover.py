@@ -20,5 +20,8 @@ class BuiltLandWithTreeCover:
 
         percent_tree_cover_in_built_up_land = 1 - (tree_cover_in_built_up_land_count / built_up_land_count)
 
+        if "HEA_4_percentBuiltupWithoutTreeCover" in gdf.columns:
+            del gdf["HEA_4_percentBuiltupWithoutTreeCover"]
+
         return gdf.set_index("index").join(percent_tree_cover_in_built_up_land).rename(columns={"count": "HEA_4_percentBuiltupWithoutTreeCover"})
 
