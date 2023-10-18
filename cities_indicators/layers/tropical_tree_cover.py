@@ -24,6 +24,6 @@ class TropicalTreeCover:
         data = read_tiles(gdf, final_extents.uri.to_list(), snap_to, no_data=self.NO_DATA_VALUE)
         return data
 
-    def read_from_gee(self, city: City):
-        data = read_gee(city, self.TML)
+    def read_from_gee(self, gdf: GeoDataFrame):
+        data = read_gee(gdf, self.TML)
         return data

@@ -47,13 +47,13 @@ def read_tiles(gdf: GeoDataFrame, tile_uris: List[str], snap_to=None, no_data=No
     return unaligned_data
 
 
-def read_gee(city: City, asset_id: str):
+def read_gee(gdf: GeoDataFrame, asset_id: str):
     # read imagecollection
     ImgColl = ee.ImageCollection(asset_id)
     # reduce image collection to image
     Img = ImgColl.reduce(ee.Reducer.mean()).rename('b1')
     # clip to city extent
-    data = Img.clip(ee.Geometry.BBox(*city.bounds))
+    data = Img.clip(ee.Geometry.BBox(*gdf.total_bounds))
     
     return data
 
@@ -128,3 +128,9 @@ def to_raster(gdf: GeoDataFrame, snap_to):
 
 def bounding_box(gdf):
     return box(*gdf.total_bounds)
+
+
+def read_carto_city(city_name: str):
+    set_default_credentials(username='wri-cities', api_key='default_public')
+    city_df = read_carto(f"SELECT * FROM smart_surfaces_urban_areas WHERE name10 = '{city_name}'")
+    return city_df

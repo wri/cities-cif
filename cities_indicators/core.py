@@ -1,7 +1,11 @@
 from typing import List
 from enum import Enum
+import pandas as pd
+import geopandas as gpd
 from geopandas import GeoDataFrame
+from google.oauth2 import service_account
 import ee
+import os
 
 from cities_indicators.city import City
 from cities_indicators.indicators.built_land_without_tree_cover import BuiltLandWithTreeCover
@@ -28,8 +32,11 @@ def get_city_indicators(cities: List[tuple[City, str]], indicators: List[Indicat
         for indicator in indicators:
             gdf = city.get_geom(admin_level)
             results.append(indicator.value().calculate(gdf))
+    
+    # Merge the list of GeoDataFrames into a single GeoDataFrame
+    merged_gdf = gpd.GeoDataFrame(pd.concat(results, ignore_index=True))
 
-    return results
+    return merged_gdf
 
 
 def get_indicators(gdf: GeoDataFrame, indicators: List[Indicator]):
@@ -38,11 +45,15 @@ def get_indicators(gdf: GeoDataFrame, indicators: List[Indicator]):
     for indicator in indicators:
         results.append(indicator.value().calculate(gdf))
 
-    return results
+    # Merge the list of GeoDataFrames into a single GeoDataFrame
+    merged_gdf = gpd.GeoDataFrame(pd.concat(results, ignore_index=True))
+
+    return merged_gdf
 
 
 def initialize_ee():
     _CREDENTIAL_FILE = 'gcsCIFcredential.json'
-    GEE_SERVICE_ACCOUNT = 'developers@citiesindicators.iam.gserviceaccount.com'
-    auth = ee.ServiceAccountCredentials(GEE_SERVICE_ACCOUNT, _CREDENTIAL_FILE)
+    credentials = service_account.Credentials.from_service_account_file(_CREDENTIAL_FILE)
+    # GEE_SERVICE_ACCOUNT = 'developers@citiesindicators.iam.gserviceaccount.com'
+    auth = ee.ServiceAccountCredentials(os.getenv('GEE_SERVICE_ACCOUNT'), os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
     ee.Initialize(auth)
