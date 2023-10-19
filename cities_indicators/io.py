@@ -47,15 +47,15 @@ def read_tiles(gdf: GeoDataFrame, tile_uris: List[str], snap_to=None, no_data=No
     return unaligned_data
 
 
-def read_gee(gdf: GeoDataFrame, asset_id: str):
-    # read imagecollection
-    ImgColl = ee.ImageCollection(asset_id)
-    # reduce image collection to image
-    Img = ImgColl.reduce(ee.Reducer.mean()).rename('b1')
-    # clip to city extent
-    data = Img.clip(ee.Geometry.BBox(*gdf.total_bounds))
+# def read_gee(gdf: GeoDataFrame, asset_id: str):
+#     # read imagecollection
+#     ImgColl = ee.ImageCollection(asset_id)
+#     # reduce image collection to image
+#     Img = ImgColl.reduce(ee.Reducer.mean()).rename('b1')
+#     # clip to city extent
+#     data = Img.clip(ee.Geometry.BBox(*gdf.total_bounds))
     
-    return data
+#     return data
 
 
 def export_results(results: List[gpd.GeoDataFrame], data_to_csv: bool, data_to_carto: bool):

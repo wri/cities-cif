@@ -1,11 +1,12 @@
 import rioxarray
 
 from cities_indicators.city import City
-from cities_indicators.io import read_tiles, read_gee
+from cities_indicators.io import read_tiles
 
 from geopandas import GeoDataFrame
 import geopandas as gpd
 from shapely.geometry import box
+import ee
 
 
 class LandCoverClass:
@@ -22,6 +23,11 @@ class LandCoverClass:
     #     data = read_tiles(gdf, final_extents.uri.to_list(), snap_to, no_data=self.NO_DATA_VALUE)
     #     return data
 
-    def read_from_gee(self, gdf: GeoDataFrame):
-        data = read_gee(gdf, self.LULC)
+    def read_gee(self, gdf: GeoDataFrame):
+        # read imagecollection
+        ImgColl = ee.ImageCollection(self.LULC)
+        # reduce image collection to image
+        Img = ImgColl.reduce(ee.Reducer.max()).rename('b1')
+        # clip to city extent
+        data = Img.clip(ee.Geometry.BBox(*gdf.total_bounds))
         return data

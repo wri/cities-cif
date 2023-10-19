@@ -3,6 +3,7 @@ from typing import List
 from cities_indicators.core import get_city_indicators, get_indicators, Indicator
 from cities_indicators.city import get_city_admin
 from cities_indicators.city import City
+from cities_indicators.io import read_carto_city
 
 import pandas as pd
 import pytest
@@ -62,6 +63,10 @@ def test_tree_cover():
 
     for actual, baseline in zip(indicators["LND_2_percentTreeCover"], baseline_indicators["LND_2_percentTreeCover"]):
         assert pytest.approx(actual, abs=0.01) == baseline   
+
+def test_non_tree_cover_by_land_use():
+    columbia = read_carto_city('Columbia_SC')
+    indicators = get_indicators(gdf=columbia, indicators=[Indicator.NON_TREE_COVER_BY_LAND_USE_GEE]).sort_values(by='geo_id', ascending=True)
 
 
 ACTUAL_ALBEDO_VALUES = [

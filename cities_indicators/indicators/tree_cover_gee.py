@@ -6,7 +6,7 @@ import geemap
 class TreeCoverGEE:
 
     def calculate(self, gdf):
-        tree_cover = TropicalTreeCover().read_from_gee(gdf)
+        tree_cover = TropicalTreeCover().read_gee(gdf)
         crs = tree_cover.projection().getInfo()['crs']
         gdf.crs = crs
         boundary_geo_ee = geemap.geopandas_to_ee(gdf)
