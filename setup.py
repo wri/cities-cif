@@ -16,6 +16,7 @@ setup(
         "google-cloud-storage",
         "odc-stac",
         "pystac-client",
-        "xarray-spatial"
+        "xarray-spatial",
+        "cartoframes"
     ],
 )
