@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from enum import Enum
 from geopandas import GeoDataFrame
 import ee
@@ -21,7 +21,7 @@ class Indicator(Enum):
     BUILT_LAND_WITH_HIGH_LST_GEE = BuiltUpHighLandSurfaceTemperatureGEE
 
 
-def get_city_indicators(cities: List[tuple[City, str]], indicators: List[Indicator]):
+def get_city_indicators(cities: List[Tuple[City, str]], indicators: List[Indicator]):
     results = []
 
     for city, admin_level in cities:
