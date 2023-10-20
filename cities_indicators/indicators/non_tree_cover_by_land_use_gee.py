@@ -13,7 +13,8 @@ class NonTreeCoverByLandUseGEE:
         boundary_geo_ee = geemap.geopandas_to_ee(gdf)
 
         results = []
-        LULC_category = {"GreenSpace":1,"BuildUp":2,"Barren":3, "PublicOpenSpace":10, "Roads":20, "Water":30, "LowSlopeRoof":41, "HighSlopeRoof":42, "Parking":50}
+        LULC_category = {"GreenSpace": 1, "BuildUp": 2, "Barren": 3, "PublicOpenSpace": 10,
+                         "Roads": 20, "Water": 30, "LowSlopeRoof": 41, "HighSlopeRoof": 42, "Parking": 50}
 
         for cat, idx in LULC_category.items():
             # Mask the land cover image by the current class
@@ -24,16 +25,17 @@ class NonTreeCoverByLandUseGEE:
 
             # Calculate mean non_tree_cover of the current class
             mean = non_tree_values_of_class.reduceRegion(
-                reducer = ee.Reducer.mean(),
-                geometry = boundary_geo_ee.geometry(),
-                scale = 30,  # adjust scale based on resolution
+                reducer=ee.Reducer.mean(),
+                geometry=boundary_geo_ee.geometry(),
+                scale=10,  # adjust scale based on resolution
                 maxPixels=1e13
-            ).get('b1').getInfo()
+            ).get('b1')
+            meanpct = ee.Algorithms.If(ee.Number(mean), ee.Number(mean).multiply(0.01), "NA").getInfo()
 
-            results.append((f"percentTreeCover{cat}", mean))
-        
+            results.append((f"percentTreeCover{cat}", meanpct))
+
         df = pd.DataFrame(results, columns=["Category", "MeanValue"])
         wide_df = df.set_index("Category").T
         wide_df.reset_index(drop=True, inplace=True)
 
-        return pd.concat([gdf,wide_df], axis=1)
+        return pd.concat([gdf, wide_df], axis=1)

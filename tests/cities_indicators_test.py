@@ -66,7 +66,7 @@ def test_tree_cover():
 
 def test_non_tree_cover_by_land_use():
     columbia = read_carto_city('Columbia_SC')
-    indicators = get_indicators(gdf=columbia, indicators=[Indicator.NON_TREE_COVER_BY_LAND_USE_GEE]).sort_values(by='geo_id', ascending=True)
+    indicators = get_indicators(gdf=columbia, indicators=[Indicator.NON_TREE_COVER_BY_LAND_USE_GEE])
 
 
 ACTUAL_ALBEDO_VALUES = [
