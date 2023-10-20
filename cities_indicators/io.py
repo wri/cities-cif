@@ -11,7 +11,7 @@ import os
 from datetime import datetime
 import pandas as pd
 
-from cities_indicators.city import City
+from .city import City
 from geocube.api.core import make_geocube
 from geopandas import GeoDataFrame
 from shapely.geometry import box

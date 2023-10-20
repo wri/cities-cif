@@ -1,6 +1,6 @@
-from cities_indicators.layers.esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from cities_indicators.layers.albedo import Albedo
-from cities_indicators.io import to_raster
+from ..layers.esa_world_cover import EsaWorldCover, EsaWorldCoverClass
+from ..layers.albedo import Albedo
+from ..io import to_raster
 
 from xrspatial import zonal_stats
 import numpy as np

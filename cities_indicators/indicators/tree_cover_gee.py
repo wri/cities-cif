@@ -1,4 +1,4 @@
-from cities_indicators.layers.tropical_tree_cover import TropicalTreeCover
+from ..layers.tropical_tree_cover import TropicalTreeCover
 import ee
 import geemap
 

@@ -3,13 +3,13 @@ from enum import Enum
 from geopandas import GeoDataFrame
 import ee
 
-from cities_indicators.city import City
-from cities_indicators.indicators.built_land_without_tree_cover import BuiltLandWithTreeCover
-from cities_indicators.indicators.surface_reflectivity import SurfaceReflectivity
-from cities_indicators.indicators.tree_cover import TreeCover
-from cities_indicators.indicators.tree_cover_gee import TreeCoverGEE
-from cities_indicators.indicators.built_land_with_high_lst import BuiltUpHighLandSurfaceTemperature
-from cities_indicators.indicators.built_land_with_high_lst_gee import BuiltUpHighLandSurfaceTemperatureGEE
+from .city import City
+from .indicators.built_land_without_tree_cover import BuiltLandWithTreeCover
+from .indicators.surface_reflectivity import SurfaceReflectivity
+from .indicators.tree_cover import TreeCover
+from .indicators.tree_cover_gee import TreeCoverGEE
+from .indicators.built_land_with_high_lst import BuiltUpHighLandSurfaceTemperature
+from .indicators.built_land_with_high_lst_gee import BuiltUpHighLandSurfaceTemperatureGEE
 
 
 class Indicator(Enum):

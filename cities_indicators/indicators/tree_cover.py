@@ -1,5 +1,5 @@
-from cities_indicators.layers.tropical_tree_cover import TropicalTreeCover
-from cities_indicators.io import to_raster
+from ..layers.tropical_tree_cover import TropicalTreeCover
+from ..io import to_raster
 
 from xrspatial import zonal_stats
 

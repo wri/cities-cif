@@ -1,7 +1,7 @@
 from pystac_client import Client
 from enum import Enum
 
-from cities_indicators.io import read_tiles, bounding_box
+from ..io import read_tiles, bounding_box
 
 
 class EsaWorldCoverClass(Enum):

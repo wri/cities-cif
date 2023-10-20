@@ -5,8 +5,8 @@ from rasterio.profiles import DefaultGTiffProfile
 from rasterio.transform import from_bounds
 from google.cloud import storage
 
-from cities_indicators.city import City
-from cities_indicators.io import read_vrt, read_tiles
+from ..city import City
+from ..io import read_vrt, read_tiles
 import ee
 import geemap
 import rasterio.errors

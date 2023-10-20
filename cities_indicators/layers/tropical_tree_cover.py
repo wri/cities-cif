@@ -1,7 +1,7 @@
 import rioxarray
 
-from cities_indicators.city import City
-from cities_indicators.io import read_tiles, read_gee
+from ..city import City
+from ..io import read_tiles, read_gee
 
 from geopandas import GeoDataFrame
 import geopandas as gpd
