@@ -15,7 +15,7 @@ from ..io import read_vrt, read_tiles
 
 class LandSurfaceTemperature:
 
-    DATA_LAKE_PATH = "s3://cities-indicators/data/land-surface-temperature/test"
+    DATA_LAKE_PATH = "gs://gee-exports"
 
     def read(self, gdf, snap_to=None):
         # if data not in data lake for city, extract
@@ -566,18 +566,6 @@ class LandSurfaceTemperature:
         while task.active():
             print('Polling for task (id: {}).'.format(task.id))
             time.sleep(5)
-
-        storage_client = storage.Client(project="CitiesIndicators")
-
-        bucket = storage_client.bucket('gee-exports')
-        blob = bucket.blob(f"{file_name}.tif")
-        blob.download_to_filename(f"{file_name}.tif")
-
-        s3_client = boto3.client("s3")
-        s3_client.upload_file(f"{file_name}.tif", "cities-indicators",
-                              f"data/land-surface-temperature/test/{file_name}.tif")
-
-
 
 def _get_geo_name(gdf: gpd.GeoDataFrame):
     if "geo_parent_name" in gdf.columns:

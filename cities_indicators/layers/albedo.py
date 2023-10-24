@@ -24,7 +24,7 @@ from distributed import Client
 
 
 class Albedo:
-    DATA_LAKE_PATH = "s3://cities-indicators/data/albedo/test"
+    DATA_LAKE_PATH = "gs://gee-exports"
 
     def read(self, gdf: gpd.GeoDataFrame, snap_to=None):
         # if data not in data lake for city, extract
@@ -141,7 +141,7 @@ class Albedo:
             'scale': 10,
             'region': boundary_geo_ee.geometry(),
             'fileFormat': 'GeoTIFF',
-            'bucket': 'cities-indicators',
+            'bucket': 'gee-exports',
             'formatOptions': {'cloudOptimized': True}
         })
         task.start()
@@ -149,15 +149,6 @@ class Albedo:
         while task.active():
             print('Polling for task (id: {}).'.format(task.id))
             time.sleep(5)
-
-        storage_client = storage.Client(project="Resource Watch")
-
-        bucket = storage_client.bucket('cities-indicators')
-        blob = bucket.blob(f"{file_name}.tif")
-        blob.download_to_filename(f"{file_name}.tif")
-
-        s3_client = boto3.client("s3")
-        s3_client.upload_file(f"{file_name}.tif", "cities-indicators", f"data/albedo/test/{file_name}.tif")
 
         return f"{file_name}.tif"
 
