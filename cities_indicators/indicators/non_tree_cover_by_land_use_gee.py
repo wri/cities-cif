@@ -1,5 +1,5 @@
-from cities_indicators.layers.non_tropical_tree_cover import NonTropicalTreeCover
-from cities_indicators.layers.land_cover_class import LandCoverClass
+from ..layers.non_tropical_tree_cover import NonTropicalTreeCover
+from ..layers.land_cover_class import LandCoverClass
 import ee
 import geemap
 import pandas as pd
