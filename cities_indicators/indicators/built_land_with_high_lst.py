@@ -1,6 +1,6 @@
-from cities_indicators.io import to_raster
-from cities_indicators.layers.esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from cities_indicators.layers.land_surface_temperature import LandSurfaceTemperature
+from ..io import to_raster
+from ..layers.esa_world_cover import EsaWorldCover, EsaWorldCoverClass
+from ..layers.land_surface_temperature import LandSurfaceTemperature
 
 import xarray as xr
 from xrspatial import zonal_stats

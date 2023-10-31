@@ -5,13 +5,13 @@ import numpy as np
 from pystac_client import Client
 import ee
 import geopandas as gpd
-from cartoframes.auth import set_default_credentials
-from cartoframes import read_carto, to_carto
+# from cartoframes.auth import set_default_credentials
+# from cartoframes import read_carto, to_carto
 import os
 from datetime import datetime
 import pandas as pd
 
-from cities_indicators.city import City
+from .city import City
 from geocube.api.core import make_geocube
 from geopandas import GeoDataFrame
 from shapely.geometry import box

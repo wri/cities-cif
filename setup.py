@@ -4,7 +4,7 @@ setup(
     name="cities-indicators",
     version="0.1",
     description="Module to calculate cities indicators",
-    packages=["cities_indicators"],
+    packages=["cities_indicators", "cities_indicators.indicators", "cities_indicators.layers"],
     author="Justin Terry",
     license="MIT",
     install_requires=[
@@ -16,6 +16,7 @@ setup(
         "google-cloud-storage",
         "odc-stac",
         "pystac-client",
-        "xarray-spatial"
+        "xarray-spatial",
+        "cartoframes"
     ],
 )

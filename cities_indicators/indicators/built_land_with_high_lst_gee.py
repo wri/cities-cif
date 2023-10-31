@@ -9,8 +9,7 @@ import geopandas as gpd
 import json
 import time
 import rasterio
-from cities_indicators.city import City
-from cities_indicators.io import read_vrt, read_tiles
+from ..city import City
 
 class BuiltUpHighLandSurfaceTemperatureGEE:
 
