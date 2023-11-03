@@ -132,7 +132,7 @@ def bounding_box(gdf):
 
 def initialize_ee():
     _CREDENTIAL_FILE = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
-    GEE_SERVICE_ACCOUNT = os.environ["GEE_SERVICE_ACCOUNT"]
+    GEE_SERVICE_ACCOUNT = os.environ["GOOGLE_APPLICATION_USER"]
     auth = ee.ServiceAccountCredentials(GEE_SERVICE_ACCOUNT, _CREDENTIAL_FILE)
     ee.Initialize(auth)
 

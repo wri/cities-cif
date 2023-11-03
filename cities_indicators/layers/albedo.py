@@ -1,3 +1,4 @@
+import os
 from time import sleep
 
 import boto3
@@ -24,7 +25,7 @@ from distributed import Client
 
 
 class Albedo:
-    DATA_LAKE_PATH = "gs://gee-exports/albedo"
+    DATA_LAKE_PATH = f"gs://{os.environ['GCS_BUCKET']}/albedo"
 
     def read(self, gdf: gpd.GeoDataFrame, snap_to=None):
         # if data not in data lake for city, extract
@@ -140,7 +141,7 @@ class Albedo:
             'scale': 10,
             'region': boundary_geo_ee.geometry(),
             'fileFormat': 'GeoTIFF',
-            'bucket': 'gee-exports',
+            'bucket': os.environ["GCS_BUCKET"],
             'formatOptions': {'cloudOptimized': True},
             'fileNamePrefix': 'albedo/' + file_name,
             'maxPixels': 1e13,

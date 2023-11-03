@@ -15,7 +15,7 @@ from ..io import read_vrt, read_tiles, initialize_ee, get_geo_name
 
 class LandSurfaceTemperature:
 
-    DATA_LAKE_PATH = "gs://gee-exports/land-surface-temperature"
+    DATA_LAKE_PATH = f"gs://{os.environ['GCS_BUCKET']}/land-surface-temperature"
 
     def read(self, gdf, snap_to=None):
         # if data not in data lake for city, extract
@@ -559,7 +559,7 @@ class LandSurfaceTemperature:
             'region': boundary_geo_ee.geometry(),
             'fileFormat': 'GeoTIFF',
             'fileNamePrefix': 'land-surface-temperature/' + file_name,
-            'bucket': 'gee-exports',
+            'bucket': os.environ["GCS_BUCKET"],
             'formatOptions': {'cloudOptimized': True},
             'maxPixels': 1e13,
         })
