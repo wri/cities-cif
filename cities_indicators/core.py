@@ -1,6 +1,7 @@
 from typing import List, Tuple
 from enum import Enum
 from geopandas import GeoDataFrame
+import os
 import ee
 
 from .city import City
@@ -35,14 +36,11 @@ def get_city_indicators(cities: List[Tuple[City, str]], indicators: List[Indicat
 def get_indicators(gdf: GeoDataFrame, indicators: List[Indicator]):
     results = []
 
+    # all analysis is done in WGS84
+    reprojected_gdf = gdf.to_crs("4326")
+
     for indicator in indicators:
-        results.append(indicator.value().calculate(gdf))
+        results.append(indicator.value().calculate(reprojected_gdf))
 
     return results
 
-
-def initialize_ee():
-    _CREDENTIAL_FILE = 'gcsCIFcredential.json'
-    GEE_SERVICE_ACCOUNT = 'developers@citiesindicators.iam.gserviceaccount.com'
-    auth = ee.ServiceAccountCredentials(GEE_SERVICE_ACCOUNT, _CREDENTIAL_FILE)
-    ee.Initialize(auth)
