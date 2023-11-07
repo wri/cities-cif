@@ -22,12 +22,15 @@ class LandSurfaceTemperature:
         geo_name = get_geo_name(gdf)
         uri = f"{self.DATA_LAKE_PATH}/{geo_name}-LST-mean.tif"
 
-        try:
-            data = read_tiles(gdf, [uri], snap_to=snap_to)
-            return data
-        except rasterio.errors.RasterioIOError as e:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(os.environ['GCS_BUCKET'])
+        blob = storage.Blob(bucket=bucket, name=f"land-surface-temperature/{geo_name}-LST-mean.tif")
+
+        if not blob.exists(storage_client):
             self.extract_gee(gdf)
-            return read_tiles(gdf, [uri], snap_to=snap_to)
+
+        albedo = read_tiles(gdf, [uri], snap_to)
+        return albedo
 
     def extract_gee(self, gdf):
         #  METHODS TO CALCULATE MEAN LST MOSAIC FOR HOTTEST PERIOD USING LANDSAT

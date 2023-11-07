@@ -37,7 +37,7 @@ def get_indicators(gdf: GeoDataFrame, indicators: List[Indicator]):
     results = []
 
     # all analysis is done in WGS84
-    reprojected_gdf = gdf.to_crs("4326")
+    reprojected_gdf = gdf.to_crs("4326").reset_index()
 
     for indicator in indicators:
         results.append(indicator.value().calculate(reprojected_gdf))

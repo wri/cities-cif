@@ -32,13 +32,15 @@ class Albedo:
         geo_name = get_geo_name(gdf)
         uri = f"{self.DATA_LAKE_PATH}/{geo_name}-S2-albedo.tif"
 
-        try:
-            albedo = read_tiles(gdf, [uri], snap_to)
-            return albedo
-        except rasterio.errors.RasterioIOError as e:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(os.environ['GCS_BUCKET'])
+        blob = storage.Blob(bucket=bucket, name=f"albedo/{geo_name}-S2-albedo.tif")
+
+        if not blob.exists(storage_client):
             self.extract_gee(gdf)
-            albedo = read_tiles(gdf, [uri], snap_to)
-            return albedo
+
+        albedo = read_tiles(gdf, [uri], snap_to)
+        return albedo
 
     def extract_gee(self, gdf: gpd.GeoDataFrame):
         initialize_ee()
@@ -148,8 +150,8 @@ class Albedo:
         })
         task.start()
 
+        print('Submitting jobs to GEE for analysis, this may take a moment...')
         while task.active():
-            print('Polling for task (id: {}).'.format(task.id))
             time.sleep(5)
 
         if task.status()["state"] == "COMPLETED":
