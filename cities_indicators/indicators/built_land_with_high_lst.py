@@ -2,7 +2,6 @@ from ..io import to_raster
 from ..layers.esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from ..layers.land_surface_temperature import LandSurfaceTemperature
 
-import xarray as xr
 from xrspatial import zonal_stats
 import numpy as np
 
