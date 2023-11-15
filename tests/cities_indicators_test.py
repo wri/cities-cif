@@ -26,8 +26,7 @@ def test_tree_cover_in_built_up_areas():
 
 
 def test_surface_reflectivity():
-    # create a remote Dask cluster with Coiled
-    jakarta = get_city_admin("ARG-Buenos_Aires")[1:]
+    jakarta = get_city_admin("IDN-Jakarta")[1:]
     indicators = get_city_indicators(cities=jakarta, indicators=[Indicator.SURFACE_REFLECTIVTY])[0]
 
     for actual, baseline in zip(indicators["HEA_3_percentBuiltwLowAlbedo"], ACTUAL_ALBEDO_VALUES):
