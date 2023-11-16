@@ -3,6 +3,8 @@ from distributed import Client
 
 from cities_indicators.core import get_city_indicators, get_indicators, Indicator
 from cities_indicators.city import get_city_admin, API_URI
+from cities_indicators.layers.esa_world_cover import EsaWorldCover, EsaWorldCoverClass
+from cities_indicators.layers.land_surface_temperature import LandSurfaceTemperature
 
 import pandas as pd
 import geopandas as gpd
@@ -58,6 +60,16 @@ def test_gdf():
 
     indicators = get_indicators(gdf, indicators=[Indicator.TREE_COVER, Indicator.SURFACE_REFLECTIVTY])
     assert len(indicators) == 2
+
+
+def test_lst():
+    url = f"{API_URI}/IDN-Jakarta/ADM4union/geojson"
+    gdf = gpd.read_file(url)
+
+    lst = LandSurfaceTemperature(bbox=gdf.total_bounds, start_date="2001-01-01", end_date="2023-01-01")
+    built_up = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
+    lst_by_admin_area = lst.filter(built_up).groupby(geometries=gdf).mean()
+    print(lst_by_admin_area)
 
 
 ACTUAL_ALBEDO_VALUES = [
@@ -584,5 +596,6 @@ ACTUAL_BUILT_TTC_VALUES = [0.7875765949777724,
                            0.8783586398994531,
                            0.8611382510991695,
                            0.9171776057895266,
-                           0.8290920042162325,
-                           0.8772047425531023]
+                           0.8290920042162325]
+
+                    
