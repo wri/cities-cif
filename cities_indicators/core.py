@@ -15,6 +15,7 @@ from .indicators.tree_cover_gee import TreeCoverGEE
 from .indicators.built_land_with_high_lst import BuiltUpHighLandSurfaceTemperature
 from .indicators.built_land_with_high_lst_gee import BuiltUpHighLandSurfaceTemperatureGEE
 from .indicators.non_tree_cover_by_land_use_gee import NonTreeCoverByLandUseGEE
+from .indicators.natural_areas import NaturalAreas
 
 
 class Indicator(Enum):
@@ -25,6 +26,7 @@ class Indicator(Enum):
     BUILT_LAND_WITH_HIGH_LST = BuiltUpHighLandSurfaceTemperature
     BUILT_LAND_WITH_HIGH_LST_GEE = BuiltUpHighLandSurfaceTemperatureGEE
     NON_TREE_COVER_BY_LAND_USE_GEE = NonTreeCoverByLandUseGEE
+    NATURAL_AREAS = NaturalAreas
 
 
 def get_city_indicators(cities: List[Tuple[City, str]], indicators: List[Indicator]):

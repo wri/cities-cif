@@ -64,6 +64,14 @@ def test_tree_cover():
     for actual, baseline in zip(indicators["LND_2_percentTreeCover"], baseline_indicators["LND_2_percentTreeCover"]):
         assert pytest.approx(actual, abs=0.01) == baseline   
 
+def test_natural_areas():
+    jakarta = get_city_admin("IDN-Jakarta")
+    indicators = get_city_indicators(cities=jakarta, indicators=[Indicator.NATURAL_AREAS]).sort_values(by='geo_id', ascending=True)
+    baseline_indicators = get_baseline_api(jakarta,"BIO_1_percentNaturalArea")
+
+    for actual, baseline in zip(indicators["BIO_1_percentNaturalArea"], baseline_indicators["BIO_1_percentNaturalArea"]):
+        assert pytest.approx(actual, abs=0.01) == baseline  
+
 def test_non_tree_cover_by_land_use():
     columbia = read_carto_city('Columbia_SC')
     indicators = get_indicators(gdf=columbia, indicators=[Indicator.NON_TREE_COVER_BY_LAND_USE_GEE])
