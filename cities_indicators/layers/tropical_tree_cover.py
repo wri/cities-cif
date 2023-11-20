@@ -33,9 +33,10 @@ class TropicalTreeCover(Layer):
             tiles.append(tile)
 
         data = xr.combine_by_coords(tiles).squeeze("band")
+        data = data.where(data != self.NO_DATA_VALUE)
 
-        if self.min_tree_cover:
-            data = data.where(data >= self.min_tree_cover)
+        if self.min_tree_cover is not None:
+            data = data.where(data > self.min_tree_cover)
 
         return data
 

@@ -42,17 +42,21 @@ class LayerGroupBy:
 
     def _zonal_stats(self, stats_func, column_name=None):
         bbox = self.groupby.total_bounds
-
         aggregate_data = self.aggregate.get_data(bbox)
-        mask_datum = [self._align(mask.get_data(bbox), aggregate_data) for mask in self.masks]
+        mask_datum = [mask.get_data(bbox) for mask in self.masks]
+
+        # align to highest resolution raster, which should be the largest raster
+        # since all are clipped to the extent
+        align_to = sorted(mask_datum + [aggregate_data], key=lambda data: data.size, reverse=True).pop()
+        aggregate_data = self._align(aggregate_data, align_to)
+        mask_datum = [self._align(data, align_to) for data in mask_datum]
 
         for mask in mask_datum:
             aggregate_data = aggregate_data.where(~np.isnan(mask))
 
-        zones = self._rasterize(self.groupby, aggregate_data)
+        zones = self._rasterize(self.groupby, align_to)
 
         stats = zonal_stats(zones=zones, values=aggregate_data, stats_funcs=[stats_func])
-        #joined = self.groupby.set_index("index").join(stats).rename({stats_func: column_name})
         return stats[stats_func]
 
     def _align(self, to_reproject, reprojecter):

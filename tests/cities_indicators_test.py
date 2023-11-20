@@ -20,7 +20,7 @@ def get_baseline(indicator_name):
 def test_tree_cover_in_built_up_areas():
     jakarta = get_city_admin("IDN-Jakarta")[1:]
     indicators = get_city_indicators(cities=jakarta, indicators=[Indicator.BUILT_LAND_WITH_TREE_COVER])[0]
-    baseline_indicators = get_baseline("HEA_4_percentBuiltupWithoutTreeCover")
+    #baseline_indicators = get_baseline("HEA_4_percentBuiltupWithoutTreeCover")
 
     for actual, baseline in zip(indicators["HEA_4_percentBuiltupWithoutTreeCover"],
                                 ACTUAL_BUILT_TTC_VALUES):
