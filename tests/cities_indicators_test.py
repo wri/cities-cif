@@ -72,10 +72,10 @@ def test_lst():
     built_up = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
     lst_by_admin_area = lst.mask(built_up).groupby(jakarta).mean()
 
-    ttc = TropicalTreeCover(min_cover=1)
-
-    built_up.count()
-    ttc.mask(built_up).groupby(jakarta).count()
+    # ttc = TropicalTreeCover(min_cover=1)
+    #
+    # built_up.count()
+    # ttc.mask(built_up).groupby(jakarta).count()
 
     print(lst_by_admin_area)
 

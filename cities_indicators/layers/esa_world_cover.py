@@ -1,8 +1,10 @@
 from pystac_client import Client
 from enum import Enum
 import odc.stac
+import rioxarray
+import xarray as xr
 
-from ..io import read_tiles, bounding_box
+from .layer import Layer
 
 
 class EsaWorldCoverClass(Enum):
@@ -19,29 +21,40 @@ class EsaWorldCoverClass(Enum):
     MOSS_AND_LICHEN = 100
 
 
-class EsaWorldCover:
+class EsaWorldCover(Layer):
     STAC_CATALOG_URI = "https://services.terrascope.be/stac/"
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
 
-    def __init__(self, bbox, land_cover_class=None):
+    def __init__(self, land_cover_class=None, **kwargs):
+        super().__init__(**kwargs)
+        self.land_cover_class = land_cover_class
+
+    def get_data(self, bbox):
         catalog = Client.open(self.STAC_CATALOG_URI)
         query = catalog.search(
             collections=self.STAC_COLLECTION_ID,
             bbox=bbox,
         )
 
-        self.data = odc.stac.load(
-            query.items(),
-            resolution=10,
-            crs=4326,
-            bbox=bbox,
-            chunks={'x': 1024, 'y': 1024, 'time': 1},
-            fail_on_error=False,
-        )
+        # read URIs directly to get native resolution
+        uris = [
+            item.assets[self.STAC_ASSET_ID].href
+            for item in query.items()
+        ]
 
-        if land_cover_class:
-            self.data = self.data.where(self.data == land_cover_class.value)
+        tiles = []
+        for layer_uri in uris:
+            ds = rioxarray.open_rasterio(layer_uri)
+            tile = ds.rio.clip_box(*bbox)
+            tiles.append(tile)
+
+        data = xr.combine_by_coords(tiles).squeeze("band")
+
+        if self.land_cover_class:
+            data = data.where(data == self.land_cover_class.value)
+
+        return data
 
 
 
