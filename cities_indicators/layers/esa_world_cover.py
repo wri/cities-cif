@@ -1,5 +1,6 @@
 from pystac_client import Client
 from enum import Enum
+import odc.stac
 
 from ..io import read_tiles, bounding_box
 
@@ -23,25 +24,27 @@ class EsaWorldCover:
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
 
-    def get_tile_uris(self, gdf):
+    def __init__(self, bbox, land_cover_class=None):
         catalog = Client.open(self.STAC_CATALOG_URI)
-        search = catalog.search(
-            max_items=20,
+        query = catalog.search(
             collections=self.STAC_COLLECTION_ID,
-            intersects=bounding_box(gdf)
+            bbox=bbox,
         )
 
-        uris = [
-            item.assets[self.STAC_ASSET_ID].href
-            for item in search.items()
-        ]
+        self.data = odc.stac.load(
+            query.items(),
+            resolution=10,
+            crs=4326,
+            bbox=bbox,
+            chunks={'x': 1024, 'y': 1024, 'time': 1},
+            fail_on_error=False,
+        )
 
-        return uris
-
-    def read(self, gdf, snap_to=None, land_cover_class: EsaWorldCoverClass=None):
-        data = read_tiles(gdf, self.get_tile_uris(gdf), snap_to)
         if land_cover_class:
-            return data.where(data == land_cover_class.value)
+            self.data = self.data.where(self.data == land_cover_class.value)
 
-        return data
+
+
+
+
 

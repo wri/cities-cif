@@ -1,43 +1,62 @@
+from abc import abstractmethod
+
 from geocube.api.core import make_geocube
 from xrspatial import zonal_stats
 
 
 class Layer:
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, masks=[], groupby=None):
+        self.masks = masks
+        self.groupby = groupby
 
-    def filter(self, filter_layer):
-        reprojected = filter_layer.data.rio.reproject_match(self.data).assign_coords({
-            "x": self.data.x,
-            "y": self.data.y,
-        })
+    @abstractmethod
+    def get_data(self):
+        ...
+
+    def mask(self, *layers):
+        return Layer(masks=self.masks + layers, groupby=self.groupby)
+
+    def groupby(self, groupby):
+        # asset geodatafraame
+        return Layer(masks=self.masks, groupby=groupby)
+
+    def mean(self, column_name=None):
+        return self._zonal_stats("mean")
+
+    def _zonal_stats(self, stats_func, column_name=None):
+        if self.groupby is None:
+            raise ValueError("Must specify a groupby parameter before running statistics function.")
+
+        bbox = self._get_bbox()  # get bbox
+        #grid_xarray = self._get_grid_xarray(bbox)
+
+        data = self.get_data()
+        mask_datum = [_snap(mask.get_data(), data) for mask in mask]
+        masked_data = reduce(data.where(mask_datum))
 
         data = self.data.where(reprojected)
-        return Layer(data)
+        zones = _rasterize(self.groupby)
 
-    def groupby(self, geometries):
-        return LayerGroupBy(geometries, self.data)
+        stats = zonal_stats(zones=zones, values=masked_data, stats_funcs=[stats_func])
+        return self.groupby.reset_index().join(stats).rename({"mean": column_name})
 
+    def _snap(self):
+        reprojected = to_reproject.data.rio.reproject_match(reprojecter).assign_coords({
+            "x": reprojecter.x,
+            "y": reprojecter.y,
+        })
 
-class LayerGroupBy:
-    def __init__(self, geometries, data, output_path=None):
-        self.geometries = geometries
-        self.data = data
-
+    def _rasterize(self, data):
         geoms_with_index = geometries.reset_index()
 
         self.zones = make_geocube(
             vector_data=geoms_with_index,
             measurements=["index"],
-            like=self.data,
+            like=data,
             geom=geoms_with_index.total_bounds
         ).index
 
-    def count(self):
-        return self._zonal_stats("count")
 
-    def mean(self):
-        return self._zonal_stats("mean")
 
-    def _zonal_stats(self, stats_func):
-        return zonal_stats(zones=self.zones, values=self.data, stats_funcs=[stats_func])
+
+

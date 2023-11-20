@@ -63,12 +63,20 @@ def test_gdf():
 
 
 def test_lst():
-    url = f"{API_URI}/IDN-Jakarta/ADM4union/geojson"
-    gdf = gpd.read_file(url)
+    url = f"{API_URI}/IDN-Jakarta/ADM4/geojson"
+    jakarta = gpd.read_file(url)
 
-    lst = LandSurfaceTemperature(bbox=gdf.total_bounds, start_date="2001-01-01", end_date="2023-01-01")
+    #lst = g.land_surface_temperature(start_date="2022-12-24", end_date="2023-01-01", output_path="")
+
+    lst = LandSurfaceTemperature(start_date="2022-12-24", end_date="2023-01-01")
     built_up = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
-    lst_by_admin_area = lst.filter(built_up).groupby(geometries=gdf).mean()
+    lst_by_admin_area = lst.mask(built_up).groupby(jakarta).mean()
+
+    ttc = TropicalTreeCover(min_cover=1)
+
+    built_up.count()
+    ttc.mask(built_up).groupby(jakarta).count()
+
     print(lst_by_admin_area)
 
 

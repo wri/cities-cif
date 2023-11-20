@@ -17,11 +17,12 @@ from ..io import read_vrt, read_tiles, initialize_ee, get_geo_name
 
 
 class LandSurfaceTemperature(Layer):
-    def __init__(self, bbox, start_date="2013-01-01", end_date="2023-01-01"):
+    def __init__(self, start_date="2013-01-01", end_date="2023-01-01"):
         self.bbox = bbox
         self.start_date = start_date
         self.end_date = end_date
 
+    def get_data(self, bbox):
         catalog = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")
         query = catalog.search(
             collections=["landsat-c2-l2"],
@@ -39,7 +40,7 @@ class LandSurfaceTemperature(Layer):
             fail_on_error=False,
         )
 
-        qa_lst = lc2.where((lc2.qa_pixel & 24) == 0).where(lc2.lwir11 != 0)
+        qa_lst = lc2.lwir11.where((lc2.qa_pixel & 24) == 0).where(lc2.lwir11 != 0)
         celsius_lst = (((qa_lst * 0.00341802) + 149) - 273.15)
         self.data = celsius_lst.mean(dim="time").compute()
 
