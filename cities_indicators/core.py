@@ -5,12 +5,12 @@ import os
 import ee
 
 from .city import City
-from .indicators.built_land_without_tree_cover import BuiltLandWithTreeCover
-from .indicators.surface_reflectivity import SurfaceReflectivity
-from .indicators.tree_cover import TreeCover
-from .indicators.tree_cover_gee import TreeCoverGEE
-from .indicators.built_land_with_high_lst import BuiltUpHighLandSurfaceTemperature
-from .indicators.built_land_with_high_lst_gee import BuiltUpHighLandSurfaceTemperatureGEE
+from .indicators_old.built_land_without_tree_cover import BuiltLandWithTreeCover
+from .indicators_old.surface_reflectivity import SurfaceReflectivity
+from .indicators_old.tree_cover import TreeCover
+from .indicators_old.tree_cover_gee import TreeCoverGEE
+from .indicators_old.built_land_with_high_lst import BuiltUpHighLandSurfaceTemperature
+from .indicators_old.built_land_with_high_lst_gee import BuiltUpHighLandSurfaceTemperatureGEE
 
 
 class Indicator(Enum):

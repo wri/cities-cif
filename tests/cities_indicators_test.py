@@ -5,6 +5,7 @@ from cities_indicators.core import get_city_indicators, get_indicators, Indicato
 from cities_indicators.city import get_city_admin, API_URI
 from cities_indicators.layers.esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from cities_indicators.layers.land_surface_temperature import LandSurfaceTemperature
+from cities_indicators.indicators import built_land_without_tree_cover
 
 import pandas as pd
 import geopandas as gpd
@@ -72,12 +73,17 @@ def test_lst():
     built_up = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
     lst_by_admin_area = lst.mask(built_up).groupby(jakarta).mean()
 
-    # ttc = TropicalTreeCover(min_cover=1)
-    #
-    # built_up.count()
-    # ttc.mask(built_up).groupby(jakarta).count()
-
     print(lst_by_admin_area)
+
+
+def test_ttc():
+    url = f"{API_URI}/IDN-Jakarta/ADM4/geojson"
+    jakarta = gpd.read_file(url)
+
+    indicator = built_land_without_tree_cover(jakarta)
+    print(indicator)
+
+
 
 
 ACTUAL_ALBEDO_VALUES = [

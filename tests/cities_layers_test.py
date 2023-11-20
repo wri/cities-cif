@@ -2,8 +2,8 @@
 from cities_indicators.city import SupportedCity, City
 from cities_indicators.layers.albedo_gee import AlbedoGEE
 from cities_indicators.layers.land_surface_temperature_gee import LandSurfaceTemperatureGEE
-from cities_indicators.indicators.built_land_with_high_lst import BuiltUpHighLandSurfaceTemperature
-from cities_indicators.indicators.built_land_with_high_lst_gee import BuiltUpHighLandSurfaceTemperatureGEE
+from cities_indicators.indicators_old.built_land_with_high_lst import BuiltUpHighLandSurfaceTemperature
+from cities_indicators.indicators_old.built_land_with_high_lst_gee import BuiltUpHighLandSurfaceTemperatureGEE
 # city
 geo_name = "IDN-Jakarta"
 admin_level= 4

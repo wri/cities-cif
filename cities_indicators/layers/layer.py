@@ -8,6 +8,9 @@ import numpy as np
 class Layer:
     def __init__(self, aggregate=None, masks=[]):
         self.aggregate = aggregate
+        if aggregate is None:
+            self.aggregate = self
+
         self.masks = masks
 
     @abstractmethod
@@ -34,6 +37,9 @@ class LayerGroupBy:
     def mean(self, column_name=None):
         return self._zonal_stats("mean", column_name)
 
+    def count(self, column_name=None):
+        return self._zonal_stats("count", column_name)
+
     def _zonal_stats(self, stats_func, column_name=None):
         bbox = self.groupby.total_bounds
 
@@ -46,8 +52,8 @@ class LayerGroupBy:
         zones = self._rasterize(self.groupby, aggregate_data)
 
         stats = zonal_stats(zones=zones, values=aggregate_data, stats_funcs=[stats_func])
-        joined = self.groupby.set_index("index").join(stats).rename({stats_func: column_name})
-        return joined
+        #joined = self.groupby.set_index("index").join(stats).rename({stats_func: column_name})
+        return stats[stats_func]
 
     def _align(self, to_reproject, reprojecter):
         return to_reproject.rio.reproject_match(reprojecter).assign_coords({

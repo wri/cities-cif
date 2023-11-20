@@ -64,8 +64,8 @@ def export_results(results: List[gpd.GeoDataFrame], data_to_csv: bool, data_to_c
     set_default_credentials(username="wri-cities",
                             base_url="https://wri-cities.carto.com/",
                             api_key=api_key)
-    # pull indicators table from Carto
-    indicators = read_carto('indicators')
+    # pull indicators_old table from Carto
+    indicators = read_carto('indicators_old')
     
     # loop through results tables in the list
     for result in results:
@@ -107,8 +107,8 @@ def export_results(results: List[gpd.GeoDataFrame], data_to_csv: bool, data_to_c
         
         # upload valid results to carto
         if data_to_carto==True:
-            # upload indicators to carto
-            to_carto(result_long, "indicators", if_exists='append')
+            # upload indicators_old to carto
+            to_carto(result_long, "indicators_old", if_exists='append')
 
 
 def to_raster(gdf: GeoDataFrame, snap_to):

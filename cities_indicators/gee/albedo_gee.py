@@ -202,4 +202,4 @@ def _write_to_s3(result, city: City):
         dst.write(result.data, 1)
 
     s3_client = boto3.client("s3")
-    s3_client.upload_file(file_name, "cities-indicators", f"data/albedo/test/{file_name}")
+    s3_client.upload_file(file_name, "cities-indicators_old", f"data/albedo/test/{file_name}")

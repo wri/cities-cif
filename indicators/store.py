@@ -27,9 +27,9 @@ def s3_upload_indicators_geo(indicator_geo, s3_bucket_name, public):
         geo_levels_aoi = geo_levels[0]
         indicator_geo_aoi = indicator_geo[indicator_geo.geo_level == geo_levels_aoi]
 
-        s3_file = 'data/indicators/indicators_geo/' + city + '-' + geo_levels_aoi + '.geojson'
+        s3_file = 'data/indicators_old/indicators_geo/' + city + '-' + geo_levels_aoi + '.geojson'
 
-        print("store AOI level indicators:")
+        print("store AOI level indicators_old:")
         print(s3_file)
 
         # upload geojson file
@@ -51,9 +51,9 @@ def s3_upload_indicators_geo(indicator_geo, s3_bucket_name, public):
         geo_levels_unit = geo_levels[1]
         indicator_geo_unit = indicator_geo[indicator_geo.geo_level == geo_levels_unit]
 
-        s3_file = 'data/indicators/indicators_geo/' + city + '-' + geo_levels_unit + '.geojson'
+        s3_file = 'data/indicators_old/indicators_geo/' + city + '-' + geo_levels_unit + '.geojson'
 
-        print("store Unit level indicators:")
+        print("store Unit level indicators_old:")
         print(s3_file)
 
         # upload geojson file

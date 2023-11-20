@@ -7,6 +7,7 @@ from rasterio.profiles import DefaultGTiffProfile
 from rasterio.transform import from_bounds
 from google.cloud import storage
 
+from .layer import Layer
 from ..city import City
 from ..io import read_tiles, get_geo_name
 import ee
@@ -19,14 +20,17 @@ from odc.stac import stac_load
 from distributed import Client
 
 
-class Albedo:
-    def read(self, gdf: gpd.GeoDataFrame, snap_to=None, start_date="2021-01-01", end_date="2022-01-01"):
-        return self.extract(gdf, start_date, end_date)
+class Albedo(Layer):
+    def __init__(self, land_cover_class=None, **kwargs):
+        super().__init__(**kwargs)
+        self.land_cover_class = land_cover_class
 
-    def extract(self, gdf, start_date, end_date):
+    def get_data(self, bbox):
         catalog = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")
         query = catalog.search(
-            collections=["sentinel-2-l2a"], datetime=[start_date, end_date], bbox=gdf.total_bounds
+            collections=["sentinel-2-l2a"],
+            datetime=[self.start_date, self,end_date],
+            bbox=bbox
         )
 
         cfg = {
@@ -47,7 +51,7 @@ class Albedo:
             bands=("R", "G", "B", "NIR", "SWIR1", "SWIR2", "SCL"),
             resolution=10,
             stac_cfg=cfg,
-            bbox=gdf.total_bounds,
+            bbox=bbox,
             chunks={'x': 1024 * 4, 'y': 1024 * 4, 'time': 1},
         )
 
@@ -81,4 +85,4 @@ def _write_to_s3(result, city: City):
         dst.write(result.data, 1)
 
     s3_client = boto3.client("s3")
-    s3_client.upload_file(file_name, "cities-indicators", f"data/albedo/test/{file_name}")
+    s3_client.upload_file(file_name, "cities-indicators_old", f"data/albedo/test/{file_name}")

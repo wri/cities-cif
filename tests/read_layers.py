@@ -2,7 +2,7 @@ from cityscale.layers import tree_mosaic_land
 from cityscale.layers import esa_world_cover
 from cityscale.layers import open_space
 
-service_account = 'cities-indicators@wri-gee.iam.gserviceaccount.com'
+service_account = 'cities-indicators_old@wri-gee.iam.gserviceaccount.com'
 credentials = ee.ServiceAccountCredentials(service_account, './keys/wri-gee-358d958ce7c6.json')
 
 ee.Initialize(credentials)
