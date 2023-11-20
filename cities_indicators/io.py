@@ -128,3 +128,19 @@ def to_raster(gdf: GeoDataFrame, snap_to):
 
 def bounding_box(gdf):
     return box(*gdf.total_bounds)
+
+
+def initialize_ee():
+    _CREDENTIAL_FILE = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+    GEE_SERVICE_ACCOUNT = os.environ["GOOGLE_APPLICATION_USER"]
+    auth = ee.ServiceAccountCredentials(GEE_SERVICE_ACCOUNT, _CREDENTIAL_FILE)
+    ee.Initialize(auth)
+
+
+def get_geo_name(gdf: gpd.GeoDataFrame):
+    if "geo_parent_name" in gdf.columns and "geo_level" in gdf.columns:
+        geo_name = gdf["geo_parent_name"][0] + "-" + gdf["geo_level"][0]
+        return geo_name
+    else:
+        loc_string = "__".join([str("{:.1f}".format(b)) for b in gdf.total_bounds]).replace(".", "_")
+        return loc_string

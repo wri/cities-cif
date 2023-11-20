@@ -1,7 +1,8 @@
 from cities_indicators.core import get_city_indicators, get_indicators, Indicator
-from cities_indicators.city import get_city_admin
+from cities_indicators.city import get_city_admin, API_URI
 
 import pandas as pd
+import geopandas as gpd
 import pytest
 
 
@@ -46,6 +47,15 @@ def test_tree_cover():
 
     for actual, baseline in zip(indicators["LND_2_percentTreeCover"], baseline_indicators["LND_2_percentTreeCover"]):
         assert pytest.approx(actual, abs=0.01) == baseline
+
+
+def test_gdf():
+    url = f"{API_URI}/IDN-Jakarta/ADM4union/geojson"
+    gdf = gpd.read_file(url)
+    gdf = gdf.to_crs("3857")[["id", "geometry"]]
+
+    indicators = get_indicators(gdf, indicators=[Indicator.TREE_COVER, Indicator.SURFACE_REFLECTIVTY])
+    assert len(indicators) == 2
 
 
 ACTUAL_ALBEDO_VALUES = [

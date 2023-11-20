@@ -10,29 +10,30 @@ import json
 import time
 import rasterio
 from ..city import City
-from ..io import read_vrt, read_tiles
+from ..io import read_vrt, read_tiles, initialize_ee, get_geo_name
 
 
 class LandSurfaceTemperature:
 
-    DATA_LAKE_PATH = "gs://gee-exports"
+    DATA_LAKE_PATH = f"gs://{os.environ['GCS_BUCKET']}/land-surface-temperature"
 
     def read(self, gdf, snap_to=None):
         # if data not in data lake for city, extract
-        geo_name = _get_geo_name(gdf)
+        geo_name = get_geo_name(gdf)
         uri = f"{self.DATA_LAKE_PATH}/{geo_name}-LST-mean.tif"
 
-        try:
-            return read_tiles(gdf, [uri], snap_to=snap_to)
-        except rasterio.errors.RasterioIOError as e:
-            uri = self.extract_gee(gdf)
-            return read_tiles(gdf, [uri], snap_to=snap_to)
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(os.environ['GCS_BUCKET'])
+        blob = storage.Blob(bucket=bucket, name=f"land-surface-temperature/{geo_name}-LST-mean.tif")
+
+        if not blob.exists(storage_client):
+            self.extract_gee(gdf)
+
+        albedo = read_tiles(gdf, [uri], snap_to)
+        return albedo
 
     def extract_gee(self, gdf):
         #  METHODS TO CALCULATE MEAN LST MOSAIC FOR HOTTEST PERIOD USING LANDSAT
-        ee.Authenticate()
-        ee.Initialize()
-
         """"
         Derived from
         LSTfun = require('users/sofiaermida/landsat_smw_lst:modules/SMWalgorithm.js')
@@ -46,6 +47,8 @@ class LandSurfaceTemperature:
             Google Earth Engine open-source code for Land Surface Temperature estimation from the Landsat series.
             'Remote Sensing, 12 (9), 1471; https://doi.org/10.3390/rs12091471
         """
+
+        initialize_ee()
 
         # Variables for hottest day search ranges
 
@@ -551,15 +554,17 @@ class LandSurfaceTemperature:
         mosaicmethod = byMonthShort
 
         # Store LST mean geotiff
-        file_name = _get_geo_name(gdf) + '-LST-mean'
+        file_name = get_geo_name(gdf) + '-LST-mean'
         task = ee.batch.Export.image.toCloudStorage(**{
             'image': LSTmean,
             'description': file_name,
             'scale': 30,
             'region': boundary_geo_ee.geometry(),
             'fileFormat': 'GeoTIFF',
-            'bucket': 'gee-exports',
-            'formatOptions': {'cloudOptimized': True}
+            'fileNamePrefix': 'land-surface-temperature/' + file_name,
+            'bucket': os.environ["GCS_BUCKET"],
+            'formatOptions': {'cloudOptimized': True},
+            'maxPixels': 1e13,
         })
         task.start()
 
@@ -567,10 +572,8 @@ class LandSurfaceTemperature:
             print('Polling for task (id: {}).'.format(task.id))
             time.sleep(5)
 
-def _get_geo_name(gdf: gpd.GeoDataFrame):
-    if "geo_parent_name" in gdf.columns:
-        geo_name = gdf["geo_parent_name"][0]
-        return geo_name
-    else:
-        loc_string = "__".join([str("{:.1f}".format(b)) for b in gdf.total_bounds]).replace(".", "_")
-        return loc_string
+        if task.status()["status"] == "COMPLETED":
+            return task.status()["output_url"]
+        else:
+            raise Exception(f"GEE task failed with status {task.status()['state']}, error message:\n{task.status()['error_message']}")
+
