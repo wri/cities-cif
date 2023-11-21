@@ -1,52 +1,21 @@
 from ..layers.non_tropical_tree_cover import NonTropicalTreeCover
 from ..layers.land_cover_class import LandCoverClass
+from ..io import split_into_grids
 import ee
 import geemap
 import pandas as pd
-import math
 
 
 class NonTreeCoverByLandUseGEE:
 
     def calculate(self, gdf):
-        # gdf=columbia
         non_tree_cover, non_tree_cover_scale = NonTropicalTreeCover().read_gee(gdf)
         land_cover_class = LandCoverClass().read_gee(gdf)
         boundary_geo_ee = geemap.geopandas_to_ee(gdf)
 
-        # non_tree_cover_scale = 1
-
         results = []
         LULC_category = {"GreenSpace": 1, "BuildUp": 2, "Barren": 3, "PublicOpenSpace": 10,
                          "Roads": 20, "Water": 30, "LowSlopeRoof": 41, "HighSlopeRoof": 42, "Parking": 50}
-
-        # Function to cut the region into grids
-        def split_into_grids(region, gridSize):
-            bounds = ee.Geometry(region).bounds()
-            coords = ee.List(bounds.coordinates().get(0))
-            ll = ee.List(coords.get(0))
-            ur = ee.List(coords.get(2))
-            xmin = ll.get(0)
-            xmax = ur.get(0)
-            ymin = ll.get(1)
-            ymax = ur.get(1)
-            xrange = ee.Number(xmax).subtract(xmin)
-            yrange = ee.Number(ymax).subtract(ymin)
-            xSteps = xrange.divide(gridSize).ceil()
-            ySteps = yrange.divide(gridSize).ceil()
-            xList = ee.List.sequence(0, xSteps, gridSize)
-            yList = ee.List.sequence(0, ySteps, gridSize)
-
-            def map_x(x):
-                def map_y(y):
-                    x1 = ee.Number(x).add(xmin)
-                    x2 = ee.Number(x).add(gridSize).add(xmin)
-                    y1 = ee.Number(y).add(ymin)
-                    y2 = ee.Number(y).add(gridSize).add(ymin)
-                    return ee.Geometry.Rectangle([x1, y1, x2, y2])
-                return yList.map(map_y)
-
-            return xList.map(map_x).flatten()
 
         # Function to split a list into batches
         def split_list(input_list, chunk_size):
@@ -55,7 +24,6 @@ class NonTreeCoverByLandUseGEE:
         
         # gridSize = maxPixels default[1e9]/(1 degree[100km]/spatial resolution[m])^2 keep one decimal point to ceil
         gridSize = ee.Number(1e9).divide(ee.Number(100000).divide(non_tree_cover_scale).pow(2)).multiply(10).floor().add(1).divide(10)
-        # gridSize = math.ceil(1e9/(100000/non_tree_cover_scale.getInfo())**2 * 10)/10
 
         # Modify gridSize based on desired grid size
         grids = split_into_grids(boundary_geo_ee.geometry(), gridSize)
@@ -142,37 +110,3 @@ class NonTreeCoverByLandUseGEE:
         wide_df.reset_index(drop=True, inplace=True)
 
         return pd.concat([gdf, wide_df], axis=1)
-
-
-    # def calculate(self, gdf):
-    #     non_tree_cover = NonTropicalTreeCover().read_gee(gdf)
-    #     land_cover_class = LandCoverClass().read_gee(gdf)
-    #     boundary_geo_ee = geemap.geopandas_to_ee(gdf)
-
-    #     results = []
-    #     LULC_category = {"GreenSpace": 1, "BuildUp": 2, "Barren": 3, "PublicOpenSpace": 10,
-    #                      "Roads": 20, "Water": 30, "LowSlopeRoof": 41, "HighSlopeRoof": 42, "Parking": 50}
-
-    #     for cat, idx in LULC_category.items():
-    #         # Mask the land cover image by the current class
-    #         current_class_mask = land_cover_class.eq(idx)
-
-    #         # Use the mask to extract the non_tree_cover values of the current class
-    #         non_tree_values_of_class = non_tree_cover.updateMask(current_class_mask)
-
-    #         # Calculate mean non_tree_cover of the current class
-    #         mean = non_tree_values_of_class.reduceRegion(
-    #             reducer=ee.Reducer.mean(),
-    #             geometry=boundary_geo_ee.geometry(),
-    #             scale=10,  # adjust scale based on resolution
-    #             maxPixels=1e13
-    #         ).get('b1')
-    #         meanpct = ee.Algorithms.If(ee.Number(mean), ee.Number(mean).multiply(0.01), "NA").getInfo()
-
-    #         results.append((f"percentTreeCover{cat}", meanpct))
-
-    #     df = pd.DataFrame(results, columns=["Category", "MeanValue"])
-    #     wide_df = df.set_index("Category").T
-    #     wide_df.reset_index(drop=True, inplace=True)
-
-    #     return pd.concat([gdf, wide_df], axis=1)

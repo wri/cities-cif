@@ -1,6 +1,3 @@
-import rioxarray
-
-from ..city import City
 from ..io import read_tiles
 
 from geopandas import GeoDataFrame

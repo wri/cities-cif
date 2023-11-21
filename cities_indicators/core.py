@@ -5,8 +5,6 @@ import geopandas as gpd
 from geopandas import GeoDataFrame
 from google.oauth2 import service_account
 import os
-import ee
-import os
 
 from .city import City
 from .indicators.built_land_without_tree_cover import BuiltLandWithTreeCover
@@ -55,10 +53,3 @@ def get_indicators(gdf: GeoDataFrame, indicators: List[Indicator]):
     merged_gdf = gpd.GeoDataFrame(pd.concat(results, ignore_index=True))
 
     return merged_gdf
-
-
-def initialize_ee():
-    _CREDENTIAL_FILE = 'gcsCIFcredential.json'
-    GEE_SERVICE_ACCOUNT = 'developers@citiesindicators.iam.gserviceaccount.com'
-    auth = ee.ServiceAccountCredentials(GEE_SERVICE_ACCOUNT, _CREDENTIAL_FILE)
-    ee.Initialize(auth)
