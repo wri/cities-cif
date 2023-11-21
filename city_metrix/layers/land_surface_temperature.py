@@ -1,6 +1,7 @@
 import odc.stac
 import pystac_client
 
+from .landsat_collection_2 import LandsatCollection2
 from .layer import Layer
 
 
@@ -11,25 +12,13 @@ class LandSurfaceTemperature(Layer):
         self.end_date = end_date
 
     def get_data(self, bbox):
-        catalog = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")
-        query = catalog.search(
-            collections=["landsat-c2-l2"],
-            datetime=[self.start_date, self.end_date],
-            bbox=bbox,
-        )
+        landsat = LandsatCollection2(
+            bands=["lwir11"],
+            start_date=self.start_date,
+            end_date=self.end_date
+        ).get_data(bbox)
 
-        lc2 = odc.stac.load(
-            query.items(),
-            bands=("lwir11", "qa_pixel"),
-            resolution=30,
-            bbox=bbox,
-            chunks={'x': 1024, 'y': 1024, 'time': 1},
-            groupby="solar_day",
-            fail_on_error=False,
-        )
-
-        qa_lst = lc2.lwir11.where((lc2.qa_pixel & 24) == 0).where(lc2.lwir11 != 0)
-        celsius_lst = (((qa_lst * 0.00341802) + 149) - 273.15)
+        celsius_lst = (((landsat.lwir11 * 0.00341802) + 149) - 273.15)
         data = celsius_lst.mean(dim="time").compute()
         return data
 

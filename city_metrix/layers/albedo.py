@@ -8,6 +8,8 @@ import rasterio.errors
 
 from odc.stac import stac_load
 
+from .sentinel_2_level_2 import Sentinel2Level2
+
 
 class Albedo(Layer):
     def __init__(self, start_date="2021-01-01", end_date="2022-01-01", threshold=None, **kwargs):
@@ -17,49 +19,15 @@ class Albedo(Layer):
         self.threshold = threshold
 
     def get_data(self, bbox):
-        catalog = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")
-        query = catalog.search(
-            collections=["sentinel-2-l2a"],
-            datetime=[self.start_date, self.end_date],
-            bbox=bbox
-        )
-
-        cfg = {
-            "sentinel-2-l2a": {
-                "assets": {
-                    "*": {"data_type": "uint16", "nodata": 0},
-                    "SCL": {"data_type": "uint8", "nodata": 0},
-                    "visual": {"data_type": "uint8", "nodata": 0},
-                },
-                "aliases": {"R": "red", "G": "green", "B": "blue", "NIR": "nir", "SWIR1": "swir16", "SWIR2": "swir22",
-                            "SCL": "scl"},
-            },
-            "*": {"warnings": "ignore"},
-        }
-
-        s2 = stac_load(
-            list(query.items()),
-            bands=("R", "G", "B", "NIR", "SWIR1", "SWIR2", "SCL"),
-            resolution=10,
-            stac_cfg=cfg,
-            bbox=bbox,
-            chunks={'x': 1024 * 4, 'y': 1024 * 4, 'time': 1},
-        )
-
-        # Scene Classfication Layer (SCL) categorizes pixels at a scene level
-        # 0 = no data
-        # 3 = cloud shadows
-        # 8 = medium probability of clouds
-        # 9 = high probability of clouds
-        # 10 = thin cirrus clouds
-
-        # mask out no data, clouds and cloud shadows
-        cloud_masked = s2.where(s2 != 0).where(s2["SCL"] != 3).where(s2["SCL"] != 8).where(s2["SCL"] != 9).where(
-            s2 != 10) / 10000
+        s2 = Sentinel2Level2(
+            bands=("R", "G", "B", "NIR", "SWIR1", "SWIR2"),
+            start_date=self.start_date,
+            end_date=self.end_date,
+        ).get_data(bbox) / 10000
 
         Bw, Gw, Rw, NIRw, SWIR1w, SWIR2w = 0.2266, 0.1236, 0.1573, 0.3417, 0.1170, 0.0338
-        albedo = ((cloud_masked.B * Bw) + (cloud_masked.G * Gw) + (cloud_masked.R * Rw) + (cloud_masked.NIR * NIRw) + (
-                    cloud_masked.SWIR1 * SWIR1w) + (cloud_masked.SWIR2 * SWIR2w))
+        albedo = (s2.B * Bw) + (s2.G * Gw) + (s2.R * Rw) + (s2.NIR * NIRw) + \
+                 (s2.SWIR1 * SWIR1w) + (s2.SWIR2 * SWIR2w)
         albedoMean = albedo.mean(dim="time")
         data = albedoMean.compute()
 
