@@ -4,6 +4,7 @@ import pandas as pd
 import geopandas as gpd
 from geopandas import GeoDataFrame
 from google.oauth2 import service_account
+import os
 import ee
 import os
 
@@ -44,8 +45,11 @@ def get_city_indicators(cities: List[Tuple[City, str]], indicators: List[Indicat
 def get_indicators(gdf: GeoDataFrame, indicators: List[Indicator]):
     results = []
 
+    # all analysis is done in WGS84
+    reprojected_gdf = gdf.to_crs("4326").reset_index()
+
     for indicator in indicators:
-        results.append(indicator.value().calculate(gdf))
+        results.append(indicator.value().calculate(reprojected_gdf))
 
     # Merge the list of GeoDataFrames into a single GeoDataFrame
     merged_gdf = gpd.GeoDataFrame(pd.concat(results, ignore_index=True))
@@ -55,7 +59,6 @@ def get_indicators(gdf: GeoDataFrame, indicators: List[Indicator]):
 
 def initialize_ee():
     _CREDENTIAL_FILE = 'gcsCIFcredential.json'
-    credentials = service_account.Credentials.from_service_account_file(_CREDENTIAL_FILE)
-    # GEE_SERVICE_ACCOUNT = 'developers@citiesindicators.iam.gserviceaccount.com'
-    auth = ee.ServiceAccountCredentials(os.getenv('GEE_SERVICE_ACCOUNT'), os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
+    GEE_SERVICE_ACCOUNT = 'developers@citiesindicators.iam.gserviceaccount.com'
+    auth = ee.ServiceAccountCredentials(GEE_SERVICE_ACCOUNT, _CREDENTIAL_FILE)
     ee.Initialize(auth)

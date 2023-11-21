@@ -134,3 +134,19 @@ def read_carto_city(city_name: str):
     set_default_credentials(username='wri-cities', api_key='default_public')
     city_df = read_carto(f"SELECT * FROM smart_surfaces_urban_areas WHERE name10 = '{city_name}'")
     return city_df
+
+
+def initialize_ee():
+    _CREDENTIAL_FILE = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+    GEE_SERVICE_ACCOUNT = os.environ["GOOGLE_APPLICATION_USER"]
+    auth = ee.ServiceAccountCredentials(GEE_SERVICE_ACCOUNT, _CREDENTIAL_FILE)
+    ee.Initialize(auth)
+
+
+def get_geo_name(gdf: gpd.GeoDataFrame):
+    if "geo_parent_name" in gdf.columns and "geo_level" in gdf.columns:
+        geo_name = gdf["geo_parent_name"][0] + "-" + gdf["geo_level"][0]
+        return geo_name
+    else:
+        loc_string = "__".join([str("{:.1f}".format(b)) for b in gdf.total_bounds]).replace(".", "_")
+        return loc_string

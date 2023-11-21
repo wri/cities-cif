@@ -1,3 +1,4 @@
+import os
 from time import sleep
 
 import boto3
@@ -6,7 +7,7 @@ from rasterio.transform import from_bounds
 from google.cloud import storage
 
 from ..city import City
-from ..io import read_vrt, read_tiles
+from ..io import read_vrt, read_tiles, initialize_ee, get_geo_name
 import ee
 import geemap
 import rasterio.errors
@@ -24,24 +25,25 @@ from distributed import Client
 
 
 class Albedo:
-    DATA_LAKE_PATH = "gs://gee-exports"
+    DATA_LAKE_PATH = f"gs://{os.environ['GCS_BUCKET']}/albedo"
 
     def read(self, gdf: gpd.GeoDataFrame, snap_to=None):
         # if data not in data lake for city, extract
-        geo_name = _get_geo_name(gdf)
+        geo_name = get_geo_name(gdf)
         uri = f"{self.DATA_LAKE_PATH}/{geo_name}-S2-albedo.tif"
 
-        try:
-            albedo = read_tiles(gdf, [uri], snap_to)
-            return albedo
-        except rasterio.errors.RasterioIOError as e:
-            uri = self.extract_gee(gdf)
-            albedo = read_tiles(gdf, [uri], snap_to)
-            return albedo
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(os.environ['GCS_BUCKET'])
+        blob = storage.Blob(bucket=bucket, name=f"albedo/{geo_name}-S2-albedo.tif")
+
+        if not blob.exists(storage_client):
+            self.extract_gee(gdf)
+
+        albedo = read_tiles(gdf, [uri], snap_to)
+        return albedo
 
     def extract_gee(self, gdf: gpd.GeoDataFrame):
-        ee.Authenticate()
-        ee.Initialize()
+        initialize_ee()
 
         date_start = '2021-01-01'
         date_end = '2022-01-01'
@@ -134,23 +136,28 @@ class Albedo:
         albedoMean = albedoMean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
 
         # TODO hits pixel limit easily, need to just export to GCS and copy to S3
-        file_name = _get_geo_name(gdf) + '-S2-albedo'
+        file_name = get_geo_name(gdf) + '-S2-albedo'
         task = ee.batch.Export.image.toCloudStorage(**{
             'image': albedoMean,
             'description': file_name,
             'scale': 10,
             'region': boundary_geo_ee.geometry(),
             'fileFormat': 'GeoTIFF',
-            'bucket': 'gee-exports',
-            'formatOptions': {'cloudOptimized': True}
+            'bucket': os.environ["GCS_BUCKET"],
+            'formatOptions': {'cloudOptimized': True},
+            'fileNamePrefix': 'albedo/' + file_name,
+            'maxPixels': 1e13,
         })
         task.start()
 
+        print('Submitting jobs to GEE for analysis, this may take a moment...')
         while task.active():
-            print('Polling for task (id: {}).'.format(task.id))
             time.sleep(5)
 
-        return f"{file_name}.tif"
+        if task.status()["state"] == "COMPLETED":
+            return f"{self.DATA_LAKE_PATH}/{file_name}"
+        else:
+            raise Exception(f"GEE task failed with status {task.status()['state']}, error message:\n{task.status()['error_message']}")
 
     def extract_dask(self, city: City):
         # TODO doesn't seem to be an easy way to access S2 cloud masks outside of GEE
@@ -196,12 +203,3 @@ def _write_to_s3(result, city: City):
 
     s3_client = boto3.client("s3")
     s3_client.upload_file(file_name, "cities-indicators", f"data/albedo/test/{file_name}")
-
-
-def _get_geo_name(gdf: gpd.GeoDataFrame):
-    if "geo_parent_name" in gdf.columns:
-        geo_name = gdf["geo_parent_name"][0]
-        return geo_name
-    else:
-        loc_string = "__".join([str("{:.1f}".format(b)) for b in gdf.total_bounds]).replace(".", "_")
-        return loc_string
