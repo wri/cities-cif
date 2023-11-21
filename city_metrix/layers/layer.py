@@ -30,13 +30,13 @@ class LayerGroupBy:
         self.masks = masks
         self.groupby = groupby.reset_index()
 
-    def mean(self, column_name=None):
-        return self._zonal_stats("mean", column_name)
+    def mean(self):
+        return self._zonal_stats("mean")
 
-    def count(self, column_name=None):
-        return self._zonal_stats("count", column_name)
+    def count(self):
+        return self._zonal_stats("count")
 
-    def _zonal_stats(self, stats_func, column_name=None):
+    def _zonal_stats(self, stats_func):
         bbox = self.groupby.total_bounds
         aggregate_data = self.aggregate.get_data(bbox)
         mask_datum = [mask.get_data(bbox) for mask in self.masks]

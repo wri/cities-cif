@@ -2,6 +2,7 @@ from city_metrix.layers import Layer
 
 import shapely.geometry as geometry
 import geopandas as gpd
+import numpy as np
 from geocube.api.core import make_geocube
 
 
@@ -29,6 +30,7 @@ def create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size):
     fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs("EPSG:4326")
     return fishnet
 
+
 # Test zones of a regular 0.01x0.01 grid over a 0.1x0.1 extent
 ZONES = create_fishnet_grid(106.7, -6.3, 106.8, -6.2, 0.01).reset_index()
 
@@ -47,6 +49,24 @@ class MockLayer(Layer):
         return arr
 
 
+class MockMaskLayer(Layer):
+    """
+    Simple layer where even indices are masked
+    """
+    def get_data(self, bbox):
+        mask_gdf = create_fishnet_grid(*bbox, 0.01).reset_index()
+        mask_gdf['index'] = mask_gdf['index'] % 2
+        mask = make_geocube(
+            vector_data=mask_gdf,
+            measurements=['index'],
+            resolution=(0.001, 0.001),
+            output_crs=4326,
+        ).index
+
+        mask = mask.where(mask != 0)
+        return mask
+
+
 def test_count():
     counts = MockLayer().groupby(ZONES).count()
     assert counts.size == 100
@@ -59,3 +79,11 @@ def test_mean():
     assert all([mean == i for i, mean in enumerate(means)])
 
 
+def test_masks():
+    counts = MockLayer().mask(MockMaskLayer()).groupby(ZONES).count()
+    assert counts.size == 100
+    for i, count in enumerate(counts):
+        if i % 2 == 0:
+            assert np.isnan(count)
+        else:
+            assert count == 100
