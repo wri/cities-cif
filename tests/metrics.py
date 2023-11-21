@@ -1,7 +1,7 @@
 import coiled
 from distributed import Client
 
-from city_metrix import built_land_without_tree_cover
+#from city_metrix import built_land_without_tree_cover
 from city_metrix.city import API_URI
 from city_metrix.layers import Albedo
 

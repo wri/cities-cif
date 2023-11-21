@@ -68,17 +68,3 @@ class Albedo(Layer):
 
         return data
 
-
-def _write_to_s3(result, city: City):
-    file_name = f"{city.id}-S2-albedo.tif"
-    width, height = result.data.shape[1], result.data.shape[0]
-    transform = from_bounds(*city.bounds, width, height)
-    profile = DefaultGTiffProfile(transform=transform, width=width, height=height, crs=4326, blockxsize=400,
-                                  blockysize=400, count=1, dtype=result.dtype)
-
-    # write tile to file
-    with rasterio.open(file_name, "w", **profile) as dst:
-        dst.write(result.data, 1)
-
-    s3_client = boto3.client("s3")
-    s3_client.upload_file(file_name, "cities-indicators_old", f"data/albedo/test/{file_name}")

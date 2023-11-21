@@ -1,36 +1,61 @@
-#from city_metrix.core import get_indicators, Indicator
-from city_metrix.city import SupportedCity, City
-from city_metrix.layers.albedo_gee import AlbedoGEE
-from city_metrix.layers.land_surface_temperature_gee import LandSurfaceTemperatureGEE
-from city_metrix.indicators_old.built_land_with_high_lst import BuiltUpHighLandSurfaceTemperature
-from city_metrix.indicators_old.built_land_with_high_lst_gee import BuiltUpHighLandSurfaceTemperatureGEE
-# city
-geo_name = "IDN-Jakarta"
-admin_level= 4
-city = SupportedCity(geo_name)
+from city_metrix.layers import Layer
 
-# Read Albedo
-# albedo = Albedo().read(city=City(SupportedCity.IDN_Jakarta, admin_level=4), resolution=0.001)
-# print(albedo)
-
-# Extract albedo
-# albedo = Albedo().extract_gee(city = City(SupportedCity.IDN_Jakarta, admin_level = 4))
-# print(albedo)
-
-# Extract LST
-# lst = LandSurfaceTemperature().extract_gee(city = City(SupportedCity.IDN_Jakarta, admin_level = 4))
-# print(lst)
+import shapely.geometry as geometry
+import geopandas as gpd
+from geocube.api.core import make_geocube
 
 
-# Read LST
-# lst = LandSurfaceTemperature().read(city=City(SupportedCity.IDN_Jakarta, admin_level=4), resolution=0.001)
-# print(lst)
+def create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size):
+    x, y = (min_x, min_y)
+    geom_array = []
 
-# Read LST
-# lst = BuiltUpHighLandSurfaceTemperature().calculate(city=City(SupportedCity.IDN_Jakarta, admin_level=4))
-# print(lst.describe())
+    # Polygon Size
+    while y < (max_y - 0.000001):
+        while x < (max_x - 0.000001):
+            geom = geometry.Polygon(
+                [
+                    (x, y),
+                    (x, y + cell_size),
+                    (x + cell_size, y + cell_size),
+                    (x + cell_size, y),
+                    (x, y),
+                ]
+            )
+            geom_array.append(geom)
+            x += cell_size
+        x = min_x
+        y += cell_size
 
-# Read LST GEE
-# lst = BuiltUpHighLandSurfaceTemperatureGEE().calculate(city=City(SupportedCity.IDN_Jakarta, admin_level=4))
-# print(lst.describe())
+    fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs("EPSG:4326")
+    return fishnet
+
+# Test zones of a regular 0.01x0.01 grid over a 0.1x0.1 extent
+ZONES = create_fishnet_grid(106.7, -6.3, 106.8, -6.2, 0.01).reset_index()
+
+
+class MockLayer(Layer):
+    """
+    Simple mock layer that just rasterizes the zones
+    """
+    def get_data(self, bbox):
+        arr = make_geocube(
+            vector_data=ZONES,
+            measurements=['index'],
+            resolution=(0.001, 0.001),
+            output_crs=4326,
+        ).index
+        return arr
+
+
+def test_count():
+    counts = MockLayer().groupby(ZONES).count()
+    assert counts.size == 100
+    assert all([count == 100 for count in counts])
+
+
+def test_mean():
+    means = MockLayer().groupby(ZONES).mean()
+    assert means.size == 100
+    assert all([mean == i for i, mean in enumerate(means)])
+
 
