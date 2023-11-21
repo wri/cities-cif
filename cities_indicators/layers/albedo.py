@@ -5,31 +5,25 @@ import boto3
 import pystac_client
 from rasterio.profiles import DefaultGTiffProfile
 from rasterio.transform import from_bounds
-from google.cloud import storage
 
 from .layer import Layer
-from ..city import City
-from ..io import read_tiles, get_geo_name
-import ee
-import geemap
 import rasterio.errors
-import geopandas as gpd
-from pystac_client import Client
 
 from odc.stac import stac_load
-from distributed import Client
 
 
 class Albedo(Layer):
-    def __init__(self, land_cover_class=None, **kwargs):
+    def __init__(self, start_date="2021-01-01", end_date="2022-01-01", threshold=None, **kwargs):
         super().__init__(**kwargs)
-        self.land_cover_class = land_cover_class
+        self.start_date = start_date
+        self.end_date = end_date
+        self.threshold = threshold
 
     def get_data(self, bbox):
         catalog = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")
         query = catalog.search(
             collections=["sentinel-2-l2a"],
-            datetime=[self.start_date, self,end_date],
+            datetime=[self.start_date, self.end_date],
             bbox=bbox
         )
 
@@ -70,7 +64,12 @@ class Albedo(Layer):
         albedo = ((cloud_masked.B * Bw) + (cloud_masked.G * Gw) + (cloud_masked.R * Rw) + (cloud_masked.NIR * NIRw) + (
                     cloud_masked.SWIR1 * SWIR1w) + (cloud_masked.SWIR2 * SWIR2w))
         albedoMean = albedo.mean(dim="time")
-        return albedoMean.compute()
+        data = albedoMean.compute()
+
+        if self.threshold is not None:
+            data = data.where(data > self.threshold)
+
+        return data
 
 
 def _write_to_s3(result, city: City):

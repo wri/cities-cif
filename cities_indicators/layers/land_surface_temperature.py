@@ -1,19 +1,7 @@
-import boto3
-import ee
-from google.cloud import storage
-import pandas as pd
-import geemap
-import requests
-import os
-import geopandas as gpd
-import json
-import time
 import odc.stac
 import pystac_client
 
 from .layer import Layer
-from ..city import City
-from ..io import read_vrt, read_tiles, initialize_ee, get_geo_name
 
 
 class LandSurfaceTemperature(Layer):

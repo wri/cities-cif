@@ -1,11 +1,9 @@
 import coiled
 from distributed import Client
 
-from cities_indicators.core import get_city_indicators, get_indicators, Indicator
-from cities_indicators.city import get_city_admin, API_URI
-from cities_indicators.layers.esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from cities_indicators.layers.land_surface_temperature import LandSurfaceTemperature
-from cities_indicators.indicators import built_land_without_tree_cover
+from cities_indicators import built_land_without_tree_cover
+from cities_indicators.city import API_URI
+from cities_indicators.layers import Albedo
 
 import pandas as pd
 import geopandas as gpd

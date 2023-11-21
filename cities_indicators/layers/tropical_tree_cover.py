@@ -1,8 +1,6 @@
 import rioxarray
 
 from .layer import Layer
-from ..city import City
-from ..io import read_tiles, read_gee
 
 import xarray as xr
 import geopandas as gpd
