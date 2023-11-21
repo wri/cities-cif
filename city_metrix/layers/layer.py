@@ -17,10 +17,6 @@ class Layer:
     def get_data(self):
         ...
 
-    # @abstractmethod
-    # def get_nominal_resolution(self):
-    #     ...
-
     def mask(self, *layers):
         return Layer(aggregate=self, masks=self.masks + list(layers))
 

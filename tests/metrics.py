@@ -1,9 +1,9 @@
 import coiled
 from distributed import Client
 
-from cities_indicators import built_land_without_tree_cover
-from cities_indicators.city import API_URI
-from cities_indicators.layers import Albedo
+from city_metrix import built_land_without_tree_cover
+from city_metrix.city import API_URI
+from city_metrix.layers import Albedo
 
 import pandas as pd
 import geopandas as gpd

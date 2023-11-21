@@ -1,6 +1,4 @@
-from cities_indicators.layers.albedo import Albedo
-from cities_indicators.layers.esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from cities_indicators.layers.tropical_tree_cover import TropicalTreeCover
+from city_metrix.layers import Albedo, EsaWorldCoverClass, EsaWorldCover, LandSurfaceTemperature, TropicalTreeCover
 
 
 def built_land_without_tree_cover(zones):

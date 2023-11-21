@@ -1,6 +1,3 @@
-import os
-from time import sleep
-
 import boto3
 import pystac_client
 from rasterio.profiles import DefaultGTiffProfile

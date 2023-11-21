@@ -1,6 +1,5 @@
 from pystac_client import Client
 from enum import Enum
-import odc.stac
 import rioxarray
 import xarray as xr
 
