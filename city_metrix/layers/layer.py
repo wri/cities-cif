@@ -1,8 +1,10 @@
 from abc import abstractmethod
 
 from geocube.api.core import make_geocube
+from shapely.geometry import box
 from xrspatial import zonal_stats
 import numpy as np
+import utm
 
 
 class Layer:
@@ -72,6 +74,19 @@ class LayerGroupBy:
         return zones_raster
 
 
+def get_utm_zone_epsg(bbox) -> str:
+    """
+    Get the UTM zone projection for given a bounding box.
 
+    :param bbox: tuple of (min x, min y, max x, max y)
+    :return: the EPSG code for the UTM zone of the centroid of the bbox
+    """
+    centroid = box(*bbox).centroid
+    utm_x, utm_y, band, zone = utm.from_latlon(centroid.y, centroid.x)
 
+    if centroid.y > 0:  # Northern zone
+        epsg = 32600 + band
+    else:
+        epsg = 32700 + band
 
+    return f"EPSG:{epsg}"

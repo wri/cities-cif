@@ -26,8 +26,6 @@ def surface_reflectivity(zones, start_time, end_time, albedo_threshold):
     return built_albedo / built_land
 
 
-def high_land_surface_temperature(start_date, end_date):
-    # get highest temperaure
-    # get lst around highest temperature
-    # get average lst in that period
-    pass
+def high_land_surface_temperature(zones):
+    indicator = LandSurfaceTemperature(hottest_90_days=True).groupby(zones).mean()
+    return indicator
