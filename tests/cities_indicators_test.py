@@ -1,11 +1,12 @@
 from typing import List
 
 from cities_indicators.core import get_city_indicators, get_indicators, Indicator
-from cities_indicators.city import get_city_admin
+from cities_indicators.city import get_city_admin, API_URI
 from cities_indicators.city import City
 from cities_indicators.io import read_carto_city
 
 import pandas as pd
+import geopandas as gpd
 import pytest
 import requests
 import pandas as pd
@@ -75,6 +76,15 @@ def test_natural_areas():
 def test_non_tree_cover_by_land_use():
     columbia = read_carto_city('Columbia_SC')
     indicators = get_indicators(gdf=columbia, indicators=[Indicator.NON_TREE_COVER_BY_LAND_USE_GEE])
+
+
+def test_gdf():
+    url = f"{API_URI}/IDN-Jakarta/ADM4union/geojson"
+    gdf = gpd.read_file(url)
+    gdf = gdf.to_crs("3857")[["id", "geometry"]]
+
+    indicators = get_indicators(gdf, indicators=[Indicator.TREE_COVER, Indicator.SURFACE_REFLECTIVTY])
+    assert len(indicators) == 2
 
 
 ACTUAL_ALBEDO_VALUES = [

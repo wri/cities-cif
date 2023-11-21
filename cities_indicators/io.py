@@ -47,17 +47,6 @@ def read_tiles(gdf: GeoDataFrame, tile_uris: List[str], snap_to=None, no_data=No
     return unaligned_data
 
 
-# def read_gee(gdf: GeoDataFrame, asset_id: str):
-#     # read imagecollection
-#     ImgColl = ee.ImageCollection(asset_id)
-#     # reduce image collection to image
-#     Img = ImgColl.reduce(ee.Reducer.mean()).rename('b1')
-#     # clip to city extent
-#     data = Img.clip(ee.Geometry.BBox(*gdf.total_bounds))
-    
-#     return data
-
-
 def export_results(results: List[gpd.GeoDataFrame], data_to_csv: bool, data_to_carto: bool):
     # set carto credentials
     api_key= os.environ["CARTO_API_KEY"]
@@ -128,6 +117,51 @@ def to_raster(gdf: GeoDataFrame, snap_to):
 
 def bounding_box(gdf):
     return box(*gdf.total_bounds)
+
+
+def initialize_ee():
+    _CREDENTIAL_FILE = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+    GEE_SERVICE_ACCOUNT = os.environ["GOOGLE_APPLICATION_USER"]
+    auth = ee.ServiceAccountCredentials(GEE_SERVICE_ACCOUNT, _CREDENTIAL_FILE)
+    ee.Initialize(auth)
+
+
+def get_geo_name(gdf: gpd.GeoDataFrame):
+    if "geo_parent_name" in gdf.columns and "geo_level" in gdf.columns:
+        geo_name = gdf["geo_parent_name"][0] + "-" + gdf["geo_level"][0]
+        return geo_name
+    else:
+        loc_string = "__".join([str("{:.1f}".format(b)) for b in gdf.total_bounds]).replace(".", "_")
+        return loc_string
+
+
+def split_into_grids(region, gridSize):
+    # Function to cut the region into grids when handling large GEE dataset
+    bounds = ee.Geometry(region).bounds()
+    coords = ee.List(bounds.coordinates().get(0))
+    ll = ee.List(coords.get(0))
+    ur = ee.List(coords.get(2))
+    xmin = ll.get(0)
+    xmax = ur.get(0)
+    ymin = ll.get(1)
+    ymax = ur.get(1)
+    xrange = ee.Number(xmax).subtract(xmin)
+    yrange = ee.Number(ymax).subtract(ymin)
+    xSteps = xrange.divide(gridSize).ceil()
+    ySteps = yrange.divide(gridSize).ceil()
+    xList = ee.List.sequence(0, xSteps, gridSize)
+    yList = ee.List.sequence(0, ySteps, gridSize)
+
+    def map_x(x):
+        def map_y(y):
+            x1 = ee.Number(x).add(xmin)
+            x2 = ee.Number(x).add(gridSize).add(xmin)
+            y1 = ee.Number(y).add(ymin)
+            y2 = ee.Number(y).add(gridSize).add(ymin)
+            return ee.Geometry.Rectangle([x1, y1, x2, y2])
+        return yList.map(map_y)
+
+    return xList.map(map_x).flatten()
 
 
 def read_carto_city(city_name: str):
