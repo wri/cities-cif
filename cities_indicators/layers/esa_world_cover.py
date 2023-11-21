@@ -1,5 +1,7 @@
 from pystac_client import Client
 from enum import Enum
+import xarray as xr
+import numpy as np
 
 from ..io import read_tiles, bounding_box
 
@@ -45,3 +47,46 @@ class EsaWorldCover:
 
         return data
 
+
+class EsaWorldCoverNaturalArea:
+    STAC_CATALOG_URI = "https://services.terrascope.be/stac/"
+    STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
+    STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
+
+    def get_tile_uris(self, gdf):
+        catalog = Client.open(self.STAC_CATALOG_URI)
+        search = catalog.search(
+            max_items=20,
+            collections=self.STAC_COLLECTION_ID,
+            intersects=bounding_box(gdf)
+        )
+
+        uris = [
+            item.assets[self.STAC_ASSET_ID].href
+            for item in search.items()
+        ]
+
+        return uris
+
+    @staticmethod
+    def classify_naturalarea(element):
+        if element == 0:
+            # NO DATA
+            return 0
+        elif element <= 30:
+            # TREE_COVER, SHRUBLAND, GRASSLAND
+            return 1
+        elif element <= 80:
+            # CROPLAND, BUILT_UP, BARE_OR_SPARSE_VEGETATION, SNOW_AND_ICE, PERMANENT_WATER_BODIES
+            return 0
+        else:
+            # HERBACEOUS_WET_LAND, MANGROVES, MOSS_AND_LICHEN
+            return 1
+
+    def read(self, gdf, snap_to=None):
+        data = read_tiles(gdf, self.get_tile_uris(gdf), snap_to)
+        
+        vfunc = np.vectorize(self.classify_naturalarea)
+        reclassified_data = xr.apply_ufunc(vfunc, data)
+
+        return reclassified_data
