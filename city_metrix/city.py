@@ -10,7 +10,7 @@ import re
 
 
 # API_URI = "https://citiesapi-1-x4387694.deta.app/cities"
-API_URI = "http://44.201.179.158:8000/cities"
+API_URI = "http://3.225.116.209:8000/cities"
 
 
 @lru_cache(maxsize=1, typed=False)
