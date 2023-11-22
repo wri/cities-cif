@@ -162,9 +162,3 @@ def split_into_grids(region, gridSize):
         return yList.map(map_y)
 
     return xList.map(map_x).flatten()
-
-
-def read_carto_city(city_name: str):
-    set_default_credentials(username='wri-cities', api_key='default_public')
-    city_df = read_carto(f"SELECT * FROM smart_surfaces_urban_areas WHERE name10 = '{city_name}'")
-    return city_df
