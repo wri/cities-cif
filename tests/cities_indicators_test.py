@@ -67,12 +67,13 @@ def test_tree_cover():
         assert pytest.approx(actual, abs=0.01) == baseline   
 
 def test_natural_areas():
-    jakarta = get_city_admin("IDN-Jakarta")
-    indicators = get_city_indicators(cities=jakarta, indicators=[Indicator.NATURAL_AREAS]).sort_values(by='geo_id', ascending=True)
-    baseline_indicators = get_baseline_api(jakarta,"BIO_1_percentNaturalArea")
+    jakarta = get_city_admin("IDN-Jakarta")[1:]
+    indicators = get_city_indicators(cities=jakarta, indicators=[Indicator.NATURAL_AREAS])
+    baseline_indicators = get_baseline("BIO_1_percentNaturalArea")
 
     for actual, baseline in zip(indicators["BIO_1_percentNaturalArea"], baseline_indicators["BIO_1_percentNaturalArea"]):
         assert pytest.approx(actual, abs=0.01) == baseline  
+
 
 # Smart Surfaces Coalition work for Elizabeth
 def test_non_tree_cover_by_land_use():

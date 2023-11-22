@@ -1,4 +1,4 @@
-from ..layers.esa_world_cover import EsaWorldCoverNaturalArea
+from ..layers.esa_world_cover import EsaWorldCover
 from ..io import to_raster
 
 from xrspatial import zonal_stats
@@ -7,7 +7,7 @@ from xrspatial import zonal_stats
 class NaturalAreas:
 
     def calculate(self, gdf):
-        esa_land_natural_area = EsaWorldCoverNaturalArea().read(gdf)
+        esa_land_natural_area = EsaWorldCover().read_natural_area(gdf)
         city_raster = to_raster(gdf, snap_to=esa_land_natural_area)
 
         natural_area = zonal_stats(zones=city_raster, values=esa_land_natural_area, stats_funcs=["mean"]).set_index("zone")
