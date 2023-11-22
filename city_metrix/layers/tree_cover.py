@@ -5,16 +5,23 @@ import xarray as xr
 import xee
 import ee
 
-class TropicalTreeCover(Layer):
+
+class TreeCover(Layer):
+    """
+    Merged tropical and nontropical tree cover from WRI
+    """
+    
     NO_DATA_VALUE = 255
-    ASSET_ID = "projects/wri-datalab/TropicalTreeCover"
 
     def __init__(self, min_tree_cover=None, **kwargs):
         super().__init__(**kwargs)
         self.min_tree_cover = min_tree_cover
 
     def get_data(self, bbox):
-        ttc_image = ee.ImageCollection(self.ASSET_ID).reduce(ee.Reducer.mean()).rename('ttc')
+        tropics = ee.ImageCollection('projects/wri-datalab/TropicalTreeCover')
+        nontropics = ee.ImageCollection('projects/wri-datalab/TTC-nontropics')
+        merged_ttc = tropics.merge(nontropics)
+        ttc_image = merged_ttc.reduce(ee.Reducer.mean()).rename('ttc')
         crs = get_utm_zone_epsg(bbox)
 
         ds = xr.open_dataset(

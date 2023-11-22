@@ -79,7 +79,7 @@ def test_mean():
 
 
 def test_masks():
-    counts = MockLayer().mask(MockMaskLayer()).groupby(ZONES).count()
+    counts = MockLayer().mask(MockMaskLayer()).zones(ZONES).count()
     assert counts.size == 100
     for i, count in enumerate(counts):
         if i % 2 == 0:

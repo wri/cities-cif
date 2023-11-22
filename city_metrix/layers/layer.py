@@ -22,15 +22,16 @@ class Layer:
     def mask(self, *layers):
         return Layer(aggregate=self, masks=self.masks + list(layers))
 
-    def groupby(self, zones):
-        return LayerGroupBy(self.aggregate, zones, self.masks)
+    def groupby(self, zones, layer=None):
+        return LayerGroupBy(self.aggregate, zones, layer, self.masks)
 
 
 class LayerGroupBy:
-    def __init__(self, aggregate, groupby, masks=[]):
+    def __init__(self, aggregate, zones, layer=None, masks=[]):
         self.aggregate = aggregate
         self.masks = masks
-        self.groupby = groupby.reset_index()
+        self.zones = zones.reset_index()
+        self.layer = layer
 
     def mean(self):
         return self._zonal_stats("mean")
@@ -39,7 +40,7 @@ class LayerGroupBy:
         return self._zonal_stats("count")
 
     def _zonal_stats(self, stats_func):
-        bbox = self.groupby.total_bounds
+        bbox = self.zones.total_bounds
         aggregate_data = self.aggregate.get_data(bbox)
         mask_datum = [mask.get_data(bbox) for mask in self.masks]
 
@@ -52,9 +53,20 @@ class LayerGroupBy:
         for mask in mask_datum:
             aggregate_data = aggregate_data.where(~np.isnan(mask))
 
-        zones = self._rasterize(self.groupby, align_to)
+        if self.layer is not None:
+            layer_data = self.layer.get_data(bbox)
+            aggregate_data = self._align(aggregate_data, layer_data)
+            zones = self._rasterize(self.zones, layer_data)
+            zones = zones + (layer_data >> 16)
 
-        stats = zonal_stats(zones=zones, values=aggregate_data, stats_funcs=[stats_func])
+            stats = zonal_stats(zones=zones, values=aggregate_data, stats_funcs=[stats_func])
+            stats['layer'] = stats['zone'] << 16
+            stats['zone'] = (stats['zones'] >> 16) << 16
+            stats = stats.set_index('layer')
+        else:
+            zones = self._rasterize(self.zones, align_to)
+            stats = zonal_stats(zones=zones, values=aggregate_data, stats_funcs=[stats_func])
+
         return stats[stats_func]
 
     def _align(self, to_reproject, reprojecter):
