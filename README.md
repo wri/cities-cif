@@ -12,6 +12,14 @@ Set the following environment variables:
 - GOOGLE_APPLICATION_USER: The email for your GCP user.
 - GCS_BUCKET: The GCS bucket to read and write data from. 
 
+For example, you could set the following in your `~/.zshrc` file:
+
+```
+export GCS_BUCKET=gee-exports
+export GOOGLE_APPLICATION_USER=developers@citiesindicators.iam.gserviceaccount.com
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/file
+```
+
 ## How to contribute
 The code has the following structure:
 
@@ -23,3 +31,11 @@ The code has the following structure:
 - Pre-canned "indicator" analyses are defined as functions in `metrics.py`
     - Indicator analyses should use calculate using layer classes and `Layer` zonal stats API
 - To utilize dask for bigger jobs, dask cluster must be initialized outside this library
+
+You can run the tests by setting the credentials above and running the following:
+
+```
+cd ./tests
+pytest layers.py
+```
+
