@@ -3,13 +3,14 @@ from typing import List
 from cities_indicators.core import get_city_indicators, get_indicators, Indicator
 from cities_indicators.city import get_city_admin, API_URI
 from cities_indicators.city import City
-from cities_indicators.io import read_carto_city
 
 import pandas as pd
 import geopandas as gpd
 import pytest
 import requests
 import pandas as pd
+from cartoframes.auth import set_default_credentials
+from cartoframes import read_carto
 
 
 def get_baseline(indicator_name):
@@ -17,7 +18,6 @@ def get_baseline(indicator_name):
     return df[["geo_id", indicator_name]]
 
 def get_baseline_api(cities: List[tuple[City, str]], indicator_name: str):
-    API_URI = "http://44.201.179.158:8000/cities"
     dfs = []
     for city, admin_level in cities:
         city_indicator = requests.get(f"{API_URI}/{city.id}/{admin_level}").json()['city_indicators']
@@ -27,6 +27,7 @@ def get_baseline_api(cities: List[tuple[City, str]], indicator_name: str):
     df = df[df['indicator_version'] == 0].reset_index().sort_values(by='geo_id', ascending=True)
 
     return df[["geo_id", indicator_name]]
+
 
 def test_tree_cover_in_built_up_areas():
     jakarta = get_city_admin("IDN-Jakarta")[1:]
@@ -58,9 +59,9 @@ def test_high_lst():
 
 
 def test_tree_cover():
-    jakarta = get_city_admin("IDN-Jakarta")
-    indicators = get_city_indicators(cities=jakarta, indicators=[Indicator.TREE_COVER]).sort_values(by='geo_id', ascending=True)
-    baseline_indicators = get_baseline_api(jakarta,"LND_2_percentTreeCover")
+    jakarta = get_city_admin("IDN-Jakarta")[1:]
+    indicators = get_city_indicators(cities=jakarta, indicators=[Indicator.TREE_COVER])
+    baseline_indicators = get_baseline("LND_2_percentTreeCover")
 
     for actual, baseline in zip(indicators["LND_2_percentTreeCover"], baseline_indicators["LND_2_percentTreeCover"]):
         assert pytest.approx(actual, abs=0.01) == baseline   
@@ -73,7 +74,13 @@ def test_natural_areas():
     for actual, baseline in zip(indicators["BIO_1_percentNaturalArea"], baseline_indicators["BIO_1_percentNaturalArea"]):
         assert pytest.approx(actual, abs=0.01) == baseline  
 
+# Smart Surfaces Coalition work for Elizabeth
 def test_non_tree_cover_by_land_use():
+    def read_carto_city(city_name: str):
+        set_default_credentials(username='wri-cities', api_key='default_public')
+        city_df = read_carto(f"SELECT * FROM smart_surfaces_urban_areas WHERE name10 = '{city_name}'")
+        return city_df
+
     columbia = read_carto_city('Columbia_SC')
     indicators = get_indicators(gdf=columbia, indicators=[Indicator.NON_TREE_COVER_BY_LAND_USE_GEE])
 

@@ -572,8 +572,9 @@ class LandSurfaceTemperature:
             print('Polling for task (id: {}).'.format(task.id))
             time.sleep(5)
 
-        if task.status()["status"] == "COMPLETED":
-            return task.status()["output_url"]
+        if task.status()["state"] == "COMPLETED":
+            return f"{self.DATA_LAKE_PATH}/{file_name}"
         else:
-            raise Exception(f"GEE task failed with status {task.status()['state']}, error message:\n{task.status()['error_message']}")
+            raise Exception(
+                f"GEE task failed with status {task.status()['state']}, error message:\n{task.status()['error_message']}")
 
