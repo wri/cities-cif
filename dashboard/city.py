@@ -17,7 +17,7 @@ API_URI = "http://3.225.116.209:8000/cities"
 def get_cities():
     cities = requests.get(API_URI).json()["cities"]
     fields = [
-        "id", "name", "country_name", "country_code_iso3", "admin_levels", "aoi_boundary_level", "project" 
+        "id", "name", "country_name", "country_code_iso3", "admin_levels", "aoi_boundary_level", "project"
     ]
     cities = [
         City(*[city[field] for field in fields])
@@ -60,7 +60,7 @@ class City:
             aoi_boundary_level: str,
             project: List[str],
             # aoi_boundary_file: str,
-            # unit_boundary_file: str,           
+            # unit_boundary_file: str,
     ):
         self.id = id
         self.name = name
@@ -84,7 +84,7 @@ class City:
 
     def get_geom(self, admin_level):
         unit_geom = requests.get(f"{API_URI}/{self.id}/{admin_level}/geojson").json()
-        unit_boundaries = gpd.GeoDataFrame.from_features(unit_geom).reset_index()
-        # unit_boundaries["index"] = unit_boundaries["geo_id"].apply(lambda x: int(x.split("_")[2]) - 1)
-        # unit_boundaries = unit_boundaries.sort_values(by="index")
+        unit_boundaries = gpd.GeoDataFrame.from_features(unit_geom)
+        unit_boundaries["index"] = unit_boundaries["geo_id"].apply(lambda x: int(x.split("_")[2]) - 1)
+        unit_boundaries = unit_boundaries.sort_values(by="index")
         return unit_boundaries
