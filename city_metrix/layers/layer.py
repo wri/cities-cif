@@ -1,8 +1,11 @@
 from abc import abstractmethod
+from typing import Union
 
 from geocube.api.core import make_geocube
 from shapely.geometry import box
 from xrspatial import zonal_stats
+import geopandas as gpd
+import xarray as xr
 import numpy as np
 import utm
 
@@ -16,7 +19,7 @@ class Layer:
         self.masks = masks
 
     @abstractmethod
-    def get_data(self):
+    def get_data(self, bbox) -> Union[xr.DataArray, gpd.GeoDataFrame]:
         ...
 
     def mask(self, *layers):
@@ -41,6 +44,7 @@ class LayerGroupBy:
 
     def _zonal_stats(self, stats_func):
         bbox = self.zones.total_bounds
+
         aggregate_data = self.aggregate.get_data(bbox)
         mask_datum = [mask.get_data(bbox) for mask in self.masks]
 
@@ -53,37 +57,32 @@ class LayerGroupBy:
         for mask in mask_datum:
             aggregate_data = aggregate_data.where(~np.isnan(mask))
 
-        if self.layer is not None:
-            layer_data = self.layer.get_data(bbox)
-            aggregate_data = self._align(aggregate_data, layer_data)
-            zones = self._rasterize(self.zones, layer_data)
-            zones = zones + (layer_data >> 16)
-
-            stats = zonal_stats(zones=zones, values=aggregate_data, stats_funcs=[stats_func])
-            stats['layer'] = stats['zone'] << 16
-            stats['zone'] = (stats['zones'] >> 16) << 16
-            stats = stats.set_index('layer')
-        else:
-            zones = self._rasterize(self.zones, align_to)
-            stats = zonal_stats(zones=zones, values=aggregate_data, stats_funcs=[stats_func])
+        zones = self._rasterize(self.zones, align_to)
+        stats = zonal_stats(zones=zones, values=aggregate_data, stats_funcs=[stats_func])
 
         return stats[stats_func]
 
-    def _align(self, to_reproject, reprojecter):
-        return to_reproject.rio.reproject_match(reprojecter).assign_coords({
-            "x": reprojecter.x,
-            "y": reprojecter.y,
-        })
+    def _align(self, layer, align_to):
+        if isinstance(layer, xr.DataArray):
+            return layer.rio.reproject_match(align_to).assign_coords({
+                "x": align_to.x,
+                "y": align_to.y,
+            })
+        elif isinstance(layer, gpd.GeoDataFrame):
+            gdf = layer.to_crs(align_to.rio.crs).reset_index()
+            return self._rasterize(gdf, align_to)
+        else:
+            raise NotImplementedError("Can only align DataArray or GeoDataFrame")
 
-    def _rasterize(self, zones, snap_to):
-        zones_raster = make_geocube(
-            vector_data=zones,
+    def _rasterize(self, gdf, snap_to):
+        raster = make_geocube(
+            vector_data=gdf,
             measurements=["index"],
             like=snap_to,
-            geom=zones.total_bounds
+            geom=gdf.total_bounds
         ).index
 
-        return zones_raster
+        return raster
 
 
 def get_utm_zone_epsg(bbox) -> str:
