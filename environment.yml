@@ -13,3 +13,9 @@ dependencies:
   - pytest
   - python=3.10
   - xarray-spatial
+  - xee
+  - utm
+  - pytest
+  - osmnx
+  - dask[complete]
+  - cartoframes
