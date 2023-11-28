@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Union
+from typing import Union, Tuple, List
 
 from geocube.api.core import make_geocube
 from shapely.geometry import box
@@ -19,13 +19,29 @@ class Layer:
         self.masks = masks
 
     @abstractmethod
-    def get_data(self, bbox) -> Union[xr.DataArray, gpd.GeoDataFrame]:
+    def get_data(self, bbox: Tuple[float]) -> Union[xr.DataArray, gpd.GeoDataFrame]:
+        """
+        Extract the data from the source and return it in a way we can compare to other layers.
+        :param bbox: a tuple of floats representing the bounding box, (min x, min y, max x, max y)
+        :return: A rioxarray-format DataArray or a GeoPandas DataFrame
+        """
         ...
 
     def mask(self, *layers):
+        """
+        Apply layers as masks
+        :param layers: lis
+        :return:
+        """
         return Layer(aggregate=self, masks=self.masks + list(layers))
 
     def groupby(self, zones, layer=None):
+        """
+        Group layers by zones.
+        :param zones: GeoDataFrame containing geometries to group by.
+        :param layer: Additional categorical layer to group by
+        :return: LayerGroupBy object that can be aggregated.
+        """
         return LayerGroupBy(self.aggregate, zones, layer, self.masks)
 
 
@@ -50,7 +66,8 @@ class LayerGroupBy:
 
         # align to highest resolution raster, which should be the largest raster
         # since all are clipped to the extent
-        align_to = sorted(mask_datum + [aggregate_data], key=lambda data: data.size, reverse=True).pop()
+        raster_data = [data for data in mask_datum + [aggregate_data] if isinstance(data, xr.DataArray)]
+        align_to = sorted(raster_data, key=lambda data: data.size, reverse=True).pop()
         aggregate_data = self._align(aggregate_data, align_to)
         mask_datum = [self._align(data, align_to) for data in mask_datum]
 
@@ -79,10 +96,9 @@ class LayerGroupBy:
             vector_data=gdf,
             measurements=["index"],
             like=snap_to,
-            geom=gdf.total_bounds
         ).index
 
-        return raster
+        return raster.rio.reproject_match(snap_to)
 
 
 def get_utm_zone_epsg(bbox) -> str:

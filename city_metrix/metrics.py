@@ -1,4 +1,5 @@
-from city_metrix.layers import Albedo, EsaWorldCoverClass, EsaWorldCover, HighLandSurfaceTemperature, TreeCover
+from city_metrix.layers import Albedo, EsaWorldCoverClass, EsaWorldCover, HighLandSurfaceTemperature, TreeCover, \
+    OSMOpenSpace
 from city_metrix.layers.smart_cities_lulc import SmartCitiesLULC
 
 
@@ -37,6 +38,11 @@ def high_land_surface_temperature(zones):
     return built_high_lst_counts.fillna(0) / built_land_counts
 
 
-def tree_cover_by_lulc(zones):
-    lulc = SmartCitiesLULC()
-    return TreeCover().groupby(zones, layer=SmartCitiesLULC).mean()
+def urban_open_space(zones):
+    built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
+    open_space = OSMOpenSpace()
+
+    open_space_in_built_land = open_space.mask(built_up_land).groupby(zones).count()
+    built_land_counts = built_up_land.groupby(zones).count()
+
+    return open_space_in_built_land.fillna(0) / built_land_counts
