@@ -32,7 +32,7 @@ class Sentinel2Level2(Layer):
 
         s2 = odc.stac.load(
             list(query.items()),
-            bands=(self.bands, "SCL"),
+            bands=(*self.bands, "scl"),
             resolution=10,
             stac_cfg=cfg,
             bbox=bbox,
@@ -47,7 +47,7 @@ class Sentinel2Level2(Layer):
         # 10 = thin cirrus clouds
 
         # mask out no data, clouds and cloud shadows
-        cloud_masked = s2.where(s2 != 0).where(s2["SCL"] != 3).where(s2["SCL"] != 8).where(s2["SCL"] != 9).where(
-            s2 != 10)
+        cloud_masked = s2.where(s2 != 0).where(s2.scl != 3).where(s2.scl != 8).where(s2.scl != 9).where(
+            s2.scl != 10)
 
-        return cloud_masked.drop_vars("SCL")
+        return cloud_masked.drop_vars("scl")

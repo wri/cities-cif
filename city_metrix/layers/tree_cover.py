@@ -39,7 +39,7 @@ class TreeCover(Layer):
         data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
 
         if self.min_tree_cover is not None:
-            data = data.where(data > self.min_tree_cover)
+            data = data.where(data >= self.min_tree_cover)
 
         return data
 

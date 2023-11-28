@@ -20,14 +20,14 @@ class Albedo(Layer):
 
     def get_data(self, bbox):
         s2 = Sentinel2Level2(
-            bands=("R", "G", "B", "NIR", "SWIR1", "SWIR2"),
+            bands=("red", "green", "blue", "nir", "swir16", "swir22"),
             start_date=self.start_date,
             end_date=self.end_date,
         ).get_data(bbox) / 10000
 
         Bw, Gw, Rw, NIRw, SWIR1w, SWIR2w = 0.2266, 0.1236, 0.1573, 0.3417, 0.1170, 0.0338
-        albedo = (s2.B * Bw) + (s2.G * Gw) + (s2.R * Rw) + (s2.NIR * NIRw) + \
-                 (s2.SWIR1 * SWIR1w) + (s2.SWIR2 * SWIR2w)
+        albedo = (s2.blue * Bw) + (s2.green * Gw) + (s2.red * Rw) + (s2.nir * NIRw) + \
+                 (s2.swir16 * SWIR1w) + (s2.swir22 * SWIR2w)
         albedoMean = albedo.mean(dim="time")
         data = albedoMean.compute()
 

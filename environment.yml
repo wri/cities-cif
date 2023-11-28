@@ -7,6 +7,8 @@ dependencies:
   - earthengine-api
   - geemap
   - geocube
+  - geopandas
+  - rioxarray
   - google-cloud-storage
   - odc-stac
   - pystac-client
@@ -19,3 +21,4 @@ dependencies:
   - osmnx
   - dask[complete]
   - cartoframes
+  - matplotlib

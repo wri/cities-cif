@@ -12,7 +12,7 @@ def built_land_without_tree_cover(zones: GeoDataFrame):
     :return: Pandas Series of percentages
     """
     built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
-    tree_cover = TreeCover(min_tree_cover=0)
+    tree_cover = TreeCover(min_tree_cover=1)
 
     built_land = built_up_land.groupby(zones).count()
     tree_cover_in_built_land = tree_cover.mask(built_up_land).groupby(zones).count()
@@ -21,7 +21,7 @@ def built_land_without_tree_cover(zones: GeoDataFrame):
     return percent_tree_cover_in_built_up_land
 
 
-def tree_cover(zones: GeoDataFrame):
+def mean_tree_cover(zones: GeoDataFrame):
     """
     Get mean tree cover (WRI tropical tree cover).
     :param zones: GeoDataFrame with geometries to collect zonal stats on
@@ -30,22 +30,22 @@ def tree_cover(zones: GeoDataFrame):
     return TreeCover().groupby(zones).mean()
 
 
-def surface_reflectivity(
+def built_land_with_low_surface_reflectivity(
         zones: GeoDataFrame,
-        start_time="2022-01-01",
-        end_time="2023-01-01",
+        start_date="2022-01-01",
+        end_date="2023-01-01",
         albedo_threshold=0.2
 ):
     """
     Get percentage of built up land with low albedo based on Sentinel 2 imagery.
     :param zones: GeoDataFrame with geometries to collect zonal stats over
-    :param start_time: start time for collecting albedo values.
-    :param end_time: end time for collecting albedo values.
+    :param start_date: start time for collecting albedo values.
+    :param end_date: end time for collecting albedo values.
     :param albedo_threshold: threshold for "low" albedo.
     :return: Pandas Series of percentages
     """
     built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
-    albedo = Albedo(start_time=start_time, end_time=end_time, threshold=albedo_threshold)
+    albedo = Albedo(start_date=start_date, end_date=end_date, threshold=albedo_threshold)
 
     built_land_counts = built_up_land.groupby(zones).count()
     built_albedo_counts = albedo.mask(built_up_land).groupby(zones).count()
@@ -53,7 +53,7 @@ def surface_reflectivity(
     return built_albedo_counts / built_land_counts
 
 
-def high_land_surface_temperature(zones):
+def built_land_with_high_land_surface_temperature(zones):
     """
     Get percentage of built up land with low albedo based on Sentinel 2 imagery.
     :param zones: 
