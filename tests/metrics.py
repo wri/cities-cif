@@ -1,11 +1,7 @@
 from city_metrix import *
+from .conftest import ZONES
 
-import geopandas as gpd
 
-
-def test_ttc():
-    url = f"/Users/jt/Downloads/boundary-IDN-Jakarta-ADM4.geojson"
-    jakarta = gpd.read_file(url)
-
-    indicator = urban_open_space(jakarta)
-    print(indicator)
+def test_urban_open_space():
+    indicator = urban_open_space(ZONES)
+    assert indicator.size == 100
