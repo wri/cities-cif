@@ -11,7 +11,23 @@ class SmartCitiesLULC(Layer):
         self.land_cover_class = land_cover_class
 
     def get_data(self, bbox):
-       raise NotImplementedError("Need to implement once layers in GCS")
+       esa1m = EsaWorldCover.get_data(bbox).rio.reproject(grid=())
+       osm_gdf = OSMOpenSpace().get_data(bbox)
+
+       make_geocube(
+           vector_data=osm_gdf,
+           measurements=["index"],
+           like=esa1m,
+       )
+
+       ulu = xr.open_dataset(
+           ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1"),
+           engine='ee',
+           scale=5,
+           crs=crs,
+           geometry=ee.Geometry.Rectangle(*bbox)
+       )
+
 
 
 

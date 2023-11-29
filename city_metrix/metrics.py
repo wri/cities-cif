@@ -3,6 +3,8 @@ from city_metrix.layers import Albedo, EsaWorldCoverClass, EsaWorldCover, HighLa
 
 from geopandas import GeoDataFrame
 
+from city_metrix.layers.natural_areas import NaturalAreas
+
 
 def built_land_without_tree_cover(zones: GeoDataFrame):
     """
@@ -32,8 +34,8 @@ def mean_tree_cover(zones: GeoDataFrame):
 
 def built_land_with_low_surface_reflectivity(
         zones: GeoDataFrame,
-        start_date="2022-01-01",
-        end_date="2023-01-01",
+        start_date="2021-01-01",
+        end_date="2022-01-01",
         albedo_threshold=0.2
 ):
     """
@@ -76,3 +78,10 @@ def urban_open_space(zones):
     built_land_counts = built_up_land.groupby(zones).count()
 
     return open_space_in_built_land.fillna(0) / built_land_counts
+
+
+def natural_areas(zones):
+    natural_areas = NaturalAreas()
+    natural_area_counts = natural_areas.mask(...).groupby(zones).count()
+
+

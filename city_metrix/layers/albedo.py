@@ -1,13 +1,4 @@
-import boto3
-import pystac_client
-from rasterio.profiles import DefaultGTiffProfile
-from rasterio.transform import from_bounds
-
 from .layer import Layer
-import rasterio.errors
-
-from odc.stac import stac_load
-
 from .sentinel_2_level_2 import Sentinel2Level2
 
 

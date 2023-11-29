@@ -33,6 +33,7 @@ class TreeCover(Layer):
         )
 
         data = ds.ttc.compute()
+
         data = data.where(data != self.NO_DATA_VALUE)
 
         # get in rioxarray format

@@ -18,6 +18,8 @@ setup(
         "xarray-spatial",
         "xee",
         "rioxarray",
-        "cartoframes"
+        "cartoframes",
+        "utm",
+        "osmnx",
     ],
 )
