@@ -1,5 +1,5 @@
 from city_metrix.layers import Albedo, EsaWorldCoverClass, EsaWorldCover, HighLandSurfaceTemperature, TreeCover, \
-    OSMOpenSpace
+    OSMClass, OpenStreetMap
 
 from geopandas import GeoDataFrame
 
@@ -72,7 +72,7 @@ def built_land_with_high_land_surface_temperature(zones):
 
 def urban_open_space(zones):
     built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
-    open_space = OSMOpenSpace()
+    open_space = OpenStreetMap(osm_class=OSMClass.OPEN_SPACE)
 
     open_space_in_built_land = open_space.mask(built_up_land).groupby(zones).count()
     built_land_counts = built_up_land.groupby(zones).count()
@@ -81,7 +81,6 @@ def urban_open_space(zones):
 
 
 def natural_areas(zones):
-    natural_areas = NaturalAreas()
-    natural_area_counts = natural_areas.mask(...).groupby(zones).count()
+    return NaturalAreas().groupby(zones).mean()
 
 
