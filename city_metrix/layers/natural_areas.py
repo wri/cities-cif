@@ -10,7 +10,7 @@ class NaturalAreas(Layer):
         super().__init__(**kwargs)
 
     def get_data(self, bbox):
-        esa_world_cover = EsaWorldCover.get_data(bbox)
+        esa_world_cover = EsaWorldCover().get_data(bbox)
         reclass_map = {
             EsaWorldCoverClass.TREE_COVER.value: 1,
             EsaWorldCoverClass.SHRUBLAND.value: 1,
@@ -33,9 +33,3 @@ class NaturalAreas(Layer):
         )
 
         return reclassified_data
-
-
-
-
-
-

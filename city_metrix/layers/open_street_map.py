@@ -19,9 +19,12 @@ class OpenStreetMap(Layer):
         if 'highway' not in self.osm_tag:
             # Drop lines
             osm_feature = osm_feature[osm_feature.geom_type != 'LineString']
+            # keep only columns desired to reduce file size 
+            osm_feature = osm_feature.reset_index().loc[:, ['osmid','geometry']]
 
-        # keep only columns desired to reduce file size 
-        osm_feature = osm_feature.reset_index().loc[:, ['osmid','geometry']]
+        else:
+            # keep only columns desired to reduce file size 
+            osm_feature = osm_feature.reset_index().loc[:, ['osmid','geometry', 'highway', 'lanes']]
 
         return osm_feature
     

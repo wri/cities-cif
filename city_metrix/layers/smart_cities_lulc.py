@@ -2,6 +2,11 @@ from pystac_client import Client
 import rioxarray
 import xarray as xr
 import ee
+import numpy as np
+from rasterio.enums import Resampling
+from geocube.api.core import make_geocube
+import pandas as pd
+from shapely.geometry import CAP_STYLE, JOIN_STYLE
 
 from .layer import Layer, get_utm_zone_epsg
 from .. import EsaWorldCover, EsaWorldCoverClass
@@ -13,9 +18,44 @@ class SmartCitiesLULC(Layer):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
 
-    def get_data(self, bbox):
-        esa1m = EsaWorldCover.get_data(bbox).rio.reproject(grid=())
+    bbox = ZONES.total_bounds
 
+    def get_data(self, bbox):
+        crs = get_utm_zone_epsg(bbox)
+
+        # ESA reclass and upsample
+        esa_world_cover = EsaWorldCover().get_data(bbox)
+
+        reclass_map = {
+            EsaWorldCoverClass.TREE_COVER.value: 1,
+            EsaWorldCoverClass.SHRUBLAND.value: 1,
+            EsaWorldCoverClass.GRASSLAND.value: 1,
+            EsaWorldCoverClass.CROPLAND.value: 1,
+            EsaWorldCoverClass.BUILT_UP.value: 2,
+            EsaWorldCoverClass.BARE_OR_SPARSE_VEGETATION.value: 3,
+            EsaWorldCoverClass.SNOW_AND_ICE.value: 4,
+            EsaWorldCoverClass.PERMANENT_WATER_BODIES.value: 4,
+            EsaWorldCoverClass.HERBACEOUS_WET_LAND.value: 4,
+            EsaWorldCoverClass.MANGROVES.value: 4,
+            EsaWorldCoverClass.MOSS_AND_LICHEN.value: 3
+            # Add other mappings as needed
+        }
+        reclassified_esa = xr.apply_ufunc(
+            np.vectorize(lambda x: reclass_map.get(x, x)),
+            esa_world_cover,
+            vectorize=True
+        )
+
+        reclassified_esa = reclassified_esa.rio.reproject(crs)
+
+        esa_1m = reclassified_esa.rio.reproject(
+            reclassified_esa.rio.crs,
+            shape=(int(reclassified_esa.rio.height * reclassified_esa.rio.resolution()[0]),
+                   int(reclassified_esa.rio.width * (-reclassified_esa.rio.resolution()[1]))),
+            resampling=Resampling.nearest
+        )
+
+        # OSM tags
         open_space_tag = {'leisure': ['park', 'nature_reserve', 'common', 'playground', 'pitch', 'track', 'garden', 'golf_course', 'dog_park', 'recreation_ground', 'disc_golf_course'],
                           'boundary': ['protected_area', 'national_park', 'forest_compartment', 'forest']}
         water_tag = {'water': True,
@@ -23,17 +63,79 @@ class SmartCitiesLULC(Layer):
                      'waterway': True}
         roads_tag = {'highway': ["residential", "service", "unclassified", "tertiary", "secondary", "primary", "turning_circle", "living_street", "trunk", "motorway", "motorway_link", "trunk_link",
                                  "primary_link", "secondary_link", "tertiary_link", "motorway_junction", "turning_loop", "road", "mini_roundabout", "passing_place", "busway"]}
-        building = {'building': True}
-        parking = {'amenity': ['parking'],
-                   'parking': True}
+        building_tag = {'building': True}
+        parking_tag = {'amenity': ['parking'],
+                       'parking': True}
 
-        osm_gdf = OpenStreetMap().get_data(bbox)
-        crs = get_utm_zone_epsg(bbox)
+        def rasterize_osm(gdf, snap_to):
+            raster = make_geocube(
+                vector_data=gdf,
+                measurements=["Value"],
+                like=esa_1m,
+                fill=0
+            ).Value
 
-        make_geocube(
-            vector_data=osm_gdf,
-            measurements=["index"],
-            like=esa1m,
+            return raster.rio.reproject_match(snap_to)
+
+        # Open space
+        open_space_osm = OpenStreetMap(osm_tag=open_space_tag).get_data(bbox).to_crs(crs).reset_index()
+        open_space_osm['Value'] = 10
+        open_space_1m = rasterize_osm(open_space_osm, esa_1m)
+
+        # Water
+        water_osm = OpenStreetMap(osm_tag=water_tag).get_data(bbox).to_crs(crs).reset_index()
+        water_osm['Value'] = 20
+        water_1m = rasterize_osm(water_osm, esa_1m)
+
+        # Roads
+        roads_osm = OpenStreetMap(osm_tag=roads_tag).get_data(bbox).to_crs(crs).reset_index()
+        roads_osm['lanes'] = pd.to_numeric(roads_osm['lanes'], errors='coerce')
+        # Get the average number of lanes per highway class
+        lanes = (roads_osm.drop(columns='geometry')
+                 .groupby('highway')
+                 # Calculate average and round up
+                 .agg(avg_lanes=('lanes', lambda x: np.ceil(np.nanmean(x))))
+                 )
+        # Handle NaN values in avg_lanes
+        lanes['avg_lanes'] = lanes['avg_lanes'].fillna(2)
+
+        # Fill lanes with avg lane value when missing
+        roads_osm = roads_osm.merge(lanes, on='highway', how='left')
+        roads_osm['lanes'] = roads_osm['lanes'].fillna(roads_osm['avg_lanes'])
+
+        # Add value field (30)
+        roads_osm['Value'] = 30
+
+        # Buffer roads by lanes * 10 ft (3.048 m)
+        # https://nacto.org/publication/urban-street-design-guide/street-design-elements/lane-width/#:~:text=wider%20lane%20widths.-,Lane%20widths%20of%2010%20feet%20are%20appropriate%20in%20urban%20areas,be%20used%20in%20each%20direction
+        # cap is flat to the terminus of the road
+        # join style is mitred so intersections are squared
+        roads_osm['geometry'] = roads_osm.apply(lambda row: row['geometry'].buffer(
+            row['lanes'] * 3.048,
+            cap_style=CAP_STYLE.flat,
+            join_style=JOIN_STYLE.mitre),
+            axis=1
         )
 
-       
+        roads_1m = rasterize_osm(roads_osm, esa_1m)
+
+        # TODO Building
+        building_osm = OpenStreetMap(osm_tag=building_tag).get_data(bbox).to_crs(crs).reset_index()
+        building_osm['Value'] = 41  # 41 42
+        building_1m = rasterize_osm(building_osm, esa_1m)
+
+        # Parking
+        parking_osm = OpenStreetMap(osm_tag=parking_tag).get_data(bbox).to_crs(crs).reset_index()
+        parking_osm['Value'] = 50
+        parking_1m = rasterize_osm(parking_osm, esa_1m)
+
+        # Combine rasters
+        LULC = xr.concat([esa_1m, open_space_1m, roads_1m, water_1m, building_1m, parking_1m], dim='Value').max(dim='Value')
+        # Reclass ESA water (4) to 20
+        reclass_from = [1, 2, 3, 4, 10, 20, 30, 41, 42, 50]
+        reclass_to = [1, 2, 3, 20, 10, 20, 30, 41, 42, 50]
+        reclass_dict = dict(zip(reclass_from, reclass_to))
+        LULC = LULC.copy(data=np.vectorize(reclass_dict.get)
+                         (LULC.values, LULC.values))
+
+        # TODO write tif
