@@ -5,7 +5,7 @@ import ee
 
 from .layer import Layer, get_utm_zone_epsg
 from .. import EsaWorldCover, EsaWorldCoverClass
-from .. import OSMClass,OpenStreetMap
+from .. import OpenStreetMap
 
 
 class SmartCitiesLULC(Layer):
@@ -15,31 +15,25 @@ class SmartCitiesLULC(Layer):
 
     def get_data(self, bbox):
         esa1m = EsaWorldCover.get_data(bbox).rio.reproject(grid=())
+
+        open_space_tag = {'leisure': ['park', 'nature_reserve', 'common', 'playground', 'pitch', 'track', 'garden', 'golf_course', 'dog_park', 'recreation_ground', 'disc_golf_course'],
+                          'boundary': ['protected_area', 'national_park', 'forest_compartment', 'forest']}
+        water_tag = {'water': True,
+                     'natural': ['water'],
+                     'waterway': True}
+        roads_tag = {'highway': ["residential", "service", "unclassified", "tertiary", "secondary", "primary", "turning_circle", "living_street", "trunk", "motorway", "motorway_link", "trunk_link",
+                                 "primary_link", "secondary_link", "tertiary_link", "motorway_junction", "turning_loop", "road", "mini_roundabout", "passing_place", "busway"]}
+        building = {'building': True}
+        parking = {'amenity': ['parking'],
+                   'parking': True}
+
         osm_gdf = OpenStreetMap().get_data(bbox)
         crs = get_utm_zone_epsg(bbox)
 
         make_geocube(
-           vector_data=osm_gdf,
-           measurements=["index"],
-           like=esa1m,
+            vector_data=osm_gdf,
+            measurements=["index"],
+            like=esa1m,
         )
 
-        ulu = xr.open_dataset(
-            ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1"),
-            engine='ee',
-            scale=5,
-            crs=crs,
-            geometry=ee.Geometry.Rectangle(*bbox)
-        )
        
-        ulu_data = ulu.ulu.compute()
-
-        # ulu_data = ulu_data.where(ulu_data != self.NO_DATA_VALUE)
-
-        # get in rioxarray format
-        ulu_data = ulu_data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
-
-
-
-
-
