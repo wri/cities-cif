@@ -11,14 +11,13 @@ from shapely.geometry import CAP_STYLE, JOIN_STYLE
 from .layer import Layer, get_utm_zone_epsg
 from .. import EsaWorldCover, EsaWorldCoverClass
 from .. import OpenStreetMap
+from .. import UrbanLandUse
 
 
 class SmartCitiesLULC(Layer):
     def __init__(self, land_cover_class=None, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
-
-    bbox = ZONES.total_bounds
 
     def get_data(self, bbox):
         crs = get_utm_zone_epsg(bbox)
@@ -55,6 +54,7 @@ class SmartCitiesLULC(Layer):
             resampling=Resampling.nearest
         )
 
+
         # OSM tags
         open_space_tag = {'leisure': ['park', 'nature_reserve', 'common', 'playground', 'pitch', 'track', 'garden', 'golf_course', 'dog_park', 'recreation_ground', 'disc_golf_course'],
                           'boundary': ['protected_area', 'national_park', 'forest_compartment', 'forest']}
@@ -77,15 +77,18 @@ class SmartCitiesLULC(Layer):
 
             return raster.rio.reproject_match(snap_to)
 
+
         # Open space
         open_space_osm = OpenStreetMap(osm_tag=open_space_tag).get_data(bbox).to_crs(crs).reset_index()
         open_space_osm['Value'] = 10
         open_space_1m = rasterize_osm(open_space_osm, esa_1m)
 
+
         # Water
         water_osm = OpenStreetMap(osm_tag=water_tag).get_data(bbox).to_crs(crs).reset_index()
         water_osm['Value'] = 20
         water_1m = rasterize_osm(water_osm, esa_1m)
+
 
         # Roads
         roads_osm = OpenStreetMap(osm_tag=roads_tag).get_data(bbox).to_crs(crs).reset_index()
@@ -119,15 +122,52 @@ class SmartCitiesLULC(Layer):
 
         roads_1m = rasterize_osm(roads_osm, esa_1m)
 
+
         # TODO Building
+        # Read ULU land cover, filter to city, select lulc band
+        ulu_lulc = UrbanLandUse(band='lulc').get_data(bbox)
+        ulu_roads = UrbanLandUse(band='road').get_data(bbox)
+        # Create road mask of 50
+        # Typical threshold for creating road mask 
+        road_mask = ulu_roads >= 50
+        ulu_lulc = ulu_lulc.where(~road_mask, 6)
+        # 1-Non-residential: 0 (open space), 1 (non-res)
+        # 2-Residential: 2 (Atomistic), 3 (Informal), 4 (Formal), 5 (Housing project)
+        # 3-Roads: 6 (Roads)
+        mapping = {0: 1, 1: 1, 2: 2, 3: 2, 4: 2, 5: 2, 6: 3}
+        for from_val, to_val in mapping.items():
+            ulu_lulc = ulu_lulc.where(ulu_lulc != from_val, to_val)
+        
+        # ANBH is the average height of the built surfaces, USE THIS
+        # AGBH is the amount of built cubic meters per surface unit in the cell
+        # https://ghsl.jrc.ec.europa.eu/ghs_buH2023.php
+        # TODO
+        # anbh = (ee.ImageCollection("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_R2023A")
+        #         .filterBounds(ee.Geometry.BBox(*bbox))
+        #         .select('b1')
+        #         .mosaic()
+        #         )
+        # ds = xr.open_dataset(
+        #     ee.ImageCollection(anbh),
+        #     engine='ee',
+        #     scale=100,
+        #     crs=crs,
+        #     geometry=ee.Geometry.Rectangle(*bbox)
+        # )
+        # data = ds.b1.compute()
+        # # get in rioxarray format
+        # data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
+
         building_osm = OpenStreetMap(osm_tag=building_tag).get_data(bbox).to_crs(crs).reset_index()
         building_osm['Value'] = 41  # 41 42
         building_1m = rasterize_osm(building_osm, esa_1m)
+
 
         # Parking
         parking_osm = OpenStreetMap(osm_tag=parking_tag).get_data(bbox).to_crs(crs).reset_index()
         parking_osm['Value'] = 50
         parking_1m = rasterize_osm(parking_osm, esa_1m)
+
 
         # Combine rasters
         LULC = xr.concat([esa_1m, open_space_1m, roads_1m, water_1m, building_1m, parking_1m], dim='Value').max(dim='Value')
