@@ -21,11 +21,23 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/file
 ```
 
 ## How to contribute
-Create a Pull request
+The code has the following structure:
+
+- The `layers` subpackage contains all data raster or vector data used for metrics inhering from the base `Layer` class
+    - All layers must implement a `get_data` function that accept a bbox and returns either:
+        - A rioxarray-format xarray with the data in the bbox for raster data
+        - A GeoPandas DataFrame for vector data
+    - rioxarray format means only `x` and `y` dimensions, in that order
+    - New layers based off existing layers should re-use that layer's data
+    - The Layer subclass will handle actually running zonal statistics
+- Pre-canned "indicator" analyses are defined as functions in `metrics.py`
+    - Indicator analyses should use calculate using layer classes and `Layer` zonal stats API
+- To utilize dask for bigger jobs, dask cluster must be initialized outside this library
 
 You can run the tests by setting the credentials above and running the following:
 
 ```
 cd ./tests
-pytest cities_indicators_test.py
+pytest layers.py
 ```
+
