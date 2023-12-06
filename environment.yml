@@ -2,6 +2,7 @@ name: cities-cif
 channels:
   - conda-forge
 dependencies:
+  - python=3.10
   - boto3
   - coiled
   - earthengine-api
@@ -13,12 +14,13 @@ dependencies:
   - odc-stac
   - pystac-client
   - pytest
-  - python=3.10
   - xarray-spatial
   - xee
   - utm
   - pytest
   - osmnx
   - dask[complete]
-  - cartoframes
   - matplotlib
+  - pip
+  - pip:
+    - cartoframes
