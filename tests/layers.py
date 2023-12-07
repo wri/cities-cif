@@ -3,7 +3,7 @@ from city_metrix import (
 
 )
 
-from city_metrix.layers import LandsatCollection2
+from city_metrix.layers import LandsatCollection2, Albedo
 from .conftest import MockLayer, MockMaskLayer, ZONES
 
 import pytest
@@ -39,5 +39,5 @@ def test_tree_cover():
     assert pytest.approx(53.84184165912419, rel=0.001) == TreeCover().get_data(SAMPLE_BBOX).mean()
 
 
-def test_test_landsat():
-    assert pytest.approx(53.84184165912419, rel=0.001) == LandsatCollection2(bands=["red"], start_date="2022-10-01", end_date="2023-11-01").get_data(SAMPLE_BBOX).mean()
+def test_albedo():
+    assert Albedo().get_data(SAMPLE_BBOX).mean()
