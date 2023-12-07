@@ -1,6 +1,5 @@
 from .layer import Layer, get_utm_zone_epsg
 
-from rioxarray.raster_array import RasterArray
 import xarray as xr
 import xee
 import ee

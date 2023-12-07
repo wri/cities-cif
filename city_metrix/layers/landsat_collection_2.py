@@ -29,7 +29,7 @@ class LandsatCollection2(Layer):
             fail_on_error=False,
         )
 
-        qa_lst = lc2.where((lc2.qa_pixel & 24) == 0).where(lc2 != 0)
+        qa_lst = lc2.where((lc2.qa_pixel & 24) == 0)
         return qa_lst.drop_vars("qa_pixel")
 
 
