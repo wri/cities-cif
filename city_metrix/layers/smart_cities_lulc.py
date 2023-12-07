@@ -9,9 +9,9 @@ import pandas as pd
 from shapely.geometry import CAP_STYLE, JOIN_STYLE
 
 from .layer import Layer, get_utm_zone_epsg
-from .. import EsaWorldCover, EsaWorldCoverClass
-from .. import OpenStreetMap
-from .. import UrbanLandUse
+from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
+from .open_street_map import OpenStreetMap
+from .urban_land_use import UrbanLandUse
 
 
 class SmartCitiesLULC(Layer):
