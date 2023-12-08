@@ -45,12 +45,11 @@ class SmartCitiesLULC(Layer):
             vectorize=True
         )
 
-        reclassified_esa = reclassified_esa.rio.reproject(crs)
+        reclassified_esa = reclassified_esa.rio.write_crs(esa_world_cover.rio.crs, inplace=True)
 
         esa_1m = reclassified_esa.rio.reproject(
-            reclassified_esa.rio.crs,
-            shape=(int(reclassified_esa.rio.height * reclassified_esa.rio.resolution()[0]),
-                   int(reclassified_esa.rio.width * (-reclassified_esa.rio.resolution()[1]))),
+            dst_crs=crs,
+            resolution=1,
             resampling=Resampling.nearest
         )
 
@@ -138,37 +137,92 @@ class SmartCitiesLULC(Layer):
         for from_val, to_val in mapping.items():
             ulu_lulc = ulu_lulc.where(ulu_lulc != from_val, to_val)
         
+        # 1-Non-residential as default
+        ulu_lulc_1m = ulu_lulc.rio.reproject(
+            dst_crs=crs,
+            shape=esa_1m.shape,
+            resampling=Resampling.nearest,
+            nodata=1
+        )
+
+        # np.unique(ulu_lulc_1m.values)
+
         # ANBH is the average height of the built surfaces, USE THIS
         # AGBH is the amount of built cubic meters per surface unit in the cell
         # https://ghsl.jrc.ec.europa.eu/ghs_buH2023.php
-        # TODO
-        # anbh = (ee.ImageCollection("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_R2023A")
-        #         .filterBounds(ee.Geometry.BBox(*bbox))
-        #         .select('b1')
-        #         .mosaic()
-        #         )
-        # ds = xr.open_dataset(
-        #     ee.ImageCollection(anbh),
-        #     engine='ee',
-        #     scale=100,
-        #     crs=crs,
-        #     geometry=ee.Geometry.Rectangle(*bbox)
-        # )
-        # data = ds.b1.compute()
+        anbh = (ee.ImageCollection("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_R2023A")
+                .filterBounds(ee.Geometry.BBox(*bbox))
+                .select('b1')
+                .mosaic()
+                )
+        ds = xr.open_dataset(
+            ee.ImageCollection(anbh),
+            engine='ee',
+            scale=100,
+            crs=crs,
+            geometry=ee.Geometry.Rectangle(*bbox)
+        )
+        anbh_data = ds.b1.compute()
         # # get in rioxarray format
-        # data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
+        anbh_data = anbh_data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
+        
+        anbh_1m = anbh_data.rio.reproject(
+            dst_crs=crs,
+            shape=esa_1m.shape,
+            resampling=Resampling.nearest,
+            nodata=0
+        )
 
         building_osm = OpenStreetMap(osm_tag=building_tag).get_data(bbox).to_crs(crs).reset_index()
-        building_osm['Value'] = 41  # 41 42
-        building_1m = rasterize_osm(building_osm, esa_1m)
+        building_osm['Value'] = building_osm['osmid']  # 41 42
+        building_osm_1m = rasterize_osm(building_osm, esa_1m)
 
+        # Extract values to buildings as coverage fractions
+        # Extract average of pixel values to buildings
+        # Reproject to local state plane and calculate area
+        def calc_majority_ULU_mean_ANBH_area(row):
+            mask = building_osm_1m == row['osmid']
+            masked_ulu = ulu_lulc_1m.values[mask]
+            
+            # Extract values to buildings as coverage fractions
+            # when there is no majority class, use 1-Non-residential as default
+            if masked_ulu.size == 0:
+                majority_ULU = 1
+            else:
+                unique, counts = np.unique(masked_ulu, return_counts=True)
+                sorted_indices = np.argsort(-counts)  # Sort by descending order
+                
+                # Apply your specific logic
+                if unique[sorted_indices[0]] != 3:
+                    majority_ULU = unique[sorted_indices[0]]
+                elif len(sorted_indices) > 1:
+                    majority_ULU = unique[sorted_indices[1]]
+                else:
+                    majority_ULU = 1  # Default to 1 non-residential
+
+            # Extract average of pixel values to buildings
+            masked_anbh = anbh_1m.values[mask]
+            if masked_anbh.size == 0:
+                mean_ANBH = 0
+            else:
+                mean_ANBH = np.mean(masked_anbh)
+            
+            # Reproject to local state plane and calculate area
+            Area_m = row.geometry.area
+
+            return pd.Series([majority_ULU, mean_ANBH, Area_m])
+        
+        building_osm[['ULU', 'ANBH', 'Area_m']] = building_osm.apply(calc_majority_ULU_mean_ANBH_area, axis=1)
+
+        # TODO
+        # roof slope model
 
         # Parking
         parking_osm = OpenStreetMap(osm_tag=parking_tag).get_data(bbox).to_crs(crs).reset_index()
         parking_osm['Value'] = 50
         parking_1m = rasterize_osm(parking_osm, esa_1m)
 
-
+        # TODO
         # Combine rasters
         LULC = xr.concat([esa_1m, open_space_1m, roads_1m, water_1m, building_1m, parking_1m], dim='Value').max(dim='Value')
         # Reclass ESA water (4) to 20

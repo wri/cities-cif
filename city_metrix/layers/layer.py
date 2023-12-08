@@ -75,7 +75,7 @@ class LayerGroupBy:
             aggregate_data = aggregate_data.where(~np.isnan(mask))
 
         zones = self._rasterize(self.zones, align_to)
-        stats = zonal_stats(zones=zones, values=aggregate_data, stats_funcs=[stats_func])
+        stats = zonal_stats(zones, aggregate_data, stats_funcs=[stats_func])
 
         return stats[stats_func]
 

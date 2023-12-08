@@ -32,4 +32,6 @@ class NaturalAreas(Layer):
             vectorize=True
         )
 
+        reclassified_data = reclassified_data.rio.write_crs(esa_world_cover.rio.crs, inplace=True)
+
         return reclassified_data

@@ -49,9 +49,3 @@ class EsaWorldCover(Layer):
             data = data.where(data == self.land_cover_class.value)
 
         return data
-
-
-
-
-
-
