@@ -8,3 +8,5 @@ from .open_street_map import OpenStreetMap
 from .urban_land_use import UrbanLandUse
 from .natural_areas import NaturalAreas
 from .layer import Layer, LayerGroupBy
+from .landsat_collection_2 import LandsatCollection2
+from .sentinel_2_level_2 import Sentinel2Level2

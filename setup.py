@@ -14,6 +14,7 @@ setup(
         "geocube",
         "google-cloud-storage",
         "odc-stac",
+        "geemap",
         "pystac-client",
         "xarray-spatial",
         "xee",
@@ -21,5 +22,6 @@ setup(
         "cartoframes",
         "utm",
         "osmnx",
+        "geopandas",
     ],
 )
