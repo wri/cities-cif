@@ -3,7 +3,7 @@ from city_metrix import (
 
 )
 
-from city_metrix.layers import LandsatCollection2, Albedo
+from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass
 from .conftest import MockLayer, MockMaskLayer, ZONES
 
 import pytest
@@ -41,3 +41,13 @@ def test_tree_cover():
 
 def test_albedo():
     assert Albedo().get_data(SAMPLE_BBOX).mean()
+
+
+def test_lst():
+    mean = LandSurfaceTemperature().get_data(SAMPLE_BBOX).mean()
+    assert mean
+
+
+def test_esa():
+    count = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP).get_data(SAMPLE_BBOX).count()
+    assert count

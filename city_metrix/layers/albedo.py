@@ -99,6 +99,10 @@ class Albedo(Layer):
         ds = ds.compute()
 
         data = ds.albedo_mean.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
+
+        if self.threshold is not None:
+            return data.where(data < self.threshold)
+
         return data
 
 
