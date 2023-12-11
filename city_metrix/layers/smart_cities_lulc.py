@@ -7,6 +7,10 @@ from rasterio.enums import Resampling
 from geocube.api.core import make_geocube
 import pandas as pd
 from shapely.geometry import CAP_STYLE, JOIN_STYLE
+import geopandas as gpd
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import LabelEncoder
 
 from .layer import Layer, get_utm_zone_epsg
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
@@ -20,6 +24,11 @@ class SmartCitiesLULC(Layer):
         self.land_cover_class = land_cover_class
 
     def get_data(self, bbox):
+        # buildings sample classed LA for testing
+        buildings_sample = gpd.read_file('buildings-sample-classed_LA.geojson')
+        buildings_sample.to_crs(epsg=4326,inplace=True)
+        bbox = buildings_sample.reset_index().total_bounds
+
         crs = get_utm_zone_epsg(bbox)
 
         # ESA reclass and upsample
@@ -145,8 +154,6 @@ class SmartCitiesLULC(Layer):
             nodata=1
         )
 
-        # np.unique(ulu_lulc_1m.values)
-
         # ANBH is the average height of the built surfaces, USE THIS
         # AGBH is the amount of built cubic meters per surface unit in the cell
         # https://ghsl.jrc.ec.europa.eu/ghs_buH2023.php
@@ -163,7 +170,7 @@ class SmartCitiesLULC(Layer):
             geometry=ee.Geometry.Rectangle(*bbox)
         )
         anbh_data = ds.b1.compute()
-        # # get in rioxarray format
+        # get in rioxarray format
         anbh_data = anbh_data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
         
         anbh_1m = anbh_data.rio.reproject(
@@ -180,8 +187,9 @@ class SmartCitiesLULC(Layer):
         # Extract values to buildings as coverage fractions
         # Extract average of pixel values to buildings
         # Reproject to local state plane and calculate area
-        def calc_majority_ULU_mean_ANBH_area(row):
-            mask = building_osm_1m == row['osmid']
+        def calc_majority_ULU_mean_ANBH_area(row, building_raster, id_col):
+            # mask = building_osm_1m == row['osmid']
+            mask = building_raster == row[id_col]
             masked_ulu = ulu_lulc_1m.values[mask]
             
             # Extract values to buildings as coverage fractions
@@ -212,10 +220,25 @@ class SmartCitiesLULC(Layer):
 
             return pd.Series([majority_ULU, mean_ANBH, Area_m])
         
-        building_osm[['ULU', 'ANBH', 'Area_m']] = building_osm.apply(calc_majority_ULU_mean_ANBH_area, axis=1)
+        # building_osm[['ULU', 'ANBH', 'Area_m']] = building_osm.apply(lambda row:calc_majority_ULU_mean_ANBH_area(row, building_osm_1m, 'osmid'), axis=1)
 
         # TODO
         # roof slope model
+        buildings_sample['Value'] = buildings_sample['ID']
+        buildings_sample_1m = rasterize_osm(buildings_sample, esa_1m)
+        buildings_sample[['ULU', 'ANBH', 'Area_m']] = buildings_sample.to_crs(crs).apply(lambda row:calc_majority_ULU_mean_ANBH_area(row, buildings_sample_1m, 'ID'), axis=1)
+        clf = DecisionTreeClassifier()
+        # encode labels
+        label_encoder = LabelEncoder()
+        buildings_sample['Slope_encoded'] = label_encoder.fit_transform(buildings_sample['Slope'])
+
+        clf.fit(buildings_sample[['ULU', 'ANBH', 'Area_m']], buildings_sample['Slope_encoded'])
+
+        # Predict and evaluate
+        y_pred = clf.predict(buildings_sample[['ULU', 'ANBH', 'Area_m']])
+        accuracy = accuracy_score(buildings_sample['Slope_encoded'], y_pred)
+        print(f"Accuracy: {accuracy}")
+
 
         # Parking
         parking_osm = OpenStreetMap(osm_tag=parking_tag).get_data(bbox).to_crs(crs).reset_index()
