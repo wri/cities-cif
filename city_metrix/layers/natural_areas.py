@@ -1,7 +1,7 @@
 import xarray as xr
 
 from .layer import Layer
-from .. import EsaWorldCover, EsaWorldCoverClass
+from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 import numpy as np
 
 

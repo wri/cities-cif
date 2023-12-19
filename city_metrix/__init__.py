@@ -1,6 +1,7 @@
 from .metrics import *
 import os
 import ee
+import warnings
 
 # initialize ee
 if "GOOGLE_APPLICATION_CREDENTIALS" in os.environ and "GOOGLE_APPLICATION_USER" in os.environ:
@@ -17,3 +18,4 @@ else:
 
 # set for AWS requests
 os.environ["AWS_REQUEST_PAYER"] = "requester"
+warnings.filterwarnings('ignore', module='xee')

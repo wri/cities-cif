@@ -2,8 +2,9 @@ from pystac_client import Client
 from enum import Enum
 import rioxarray
 import xarray as xr
+import ee
 
-from .layer import Layer
+from .layer import Layer, get_utm_zone_epsg
 
 
 class EsaWorldCoverClass(Enum):
@@ -30,25 +31,19 @@ class EsaWorldCover(Layer):
         self.land_cover_class = land_cover_class
 
     def get_data(self, bbox):
-        catalog = Client.open(self.STAC_CATALOG_URI)
-        query = catalog.search(
-            collections=self.STAC_COLLECTION_ID,
-            bbox=bbox,
+        esa = ee.ImageCollection("ESA/WorldCover/v100")
+        crs = get_utm_zone_epsg(bbox)
+
+        ds = xr.open_dataset(
+            esa,
+            engine='ee',
+            scale=10,
+            crs=crs,
+            geometry=ee.Geometry.Rectangle(*bbox)
         )
 
-        # read URIs directly to get native resolution
-        uris = [
-            item.assets[self.STAC_ASSET_ID].href
-            for item in query.items()
-        ]
-
-        tiles = []
-        for layer_uri in uris:
-            ds = rioxarray.open_rasterio(layer_uri)
-            tile = ds.rio.clip_box(*bbox)
-            tiles.append(tile)
-
-        data = xr.combine_by_coords(tiles).squeeze("band")
+        data = ds.Map.compute()
+        data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
 
         if self.land_cover_class:
             data = data.where(data == self.land_cover_class.value)
