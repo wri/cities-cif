@@ -95,8 +95,12 @@ class Albedo(Layer):
             scale=10,
             crs=crs,
             geometry=ee.Geometry.BBox(*bbox),
+            chunks={'X': 512, 'Y': 512},
         )
-        ds = ds.compute()
+
+        with ProgressBar():
+            print("Calculating albedo layer:")
+            ds = ds.compute()
 
         data = ds.albedo_mean.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
 

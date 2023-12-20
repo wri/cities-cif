@@ -1,8 +1,9 @@
+import functools
+
 from .landsat_collection_2 import LandsatCollection2
 from .layer import Layer, get_utm_zone_epsg
 
-from shapely.geometry import box
-import datetime
+from dask.diagnostics import ProgressBar
 import ee
 import xarray
 
@@ -13,6 +14,7 @@ class LandSurfaceTemperature(Layer):
         self.start_date = start_date
         self.end_date = end_date
 
+    @functools.lru_cache(maxsize=10)
     def get_data(self, bbox):
         def cloud_mask(image):
             qa = image.select('QA_PIXEL')
@@ -40,8 +42,12 @@ class LandSurfaceTemperature(Layer):
             scale=30,
             crs=crs,
             geometry=ee.Geometry.BBox(*bbox),
+            chunks={'X': 512, 'Y': 512},
         )
-        ds = ds.compute()
+
+        with ProgressBar():
+            print("Calculating land surface temperature layer:")
+            ds = ds.compute()
 
         data = ds.ST_B10_mean.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
         return data

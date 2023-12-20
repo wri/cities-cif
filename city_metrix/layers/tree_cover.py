@@ -1,5 +1,6 @@
 from .layer import Layer, get_utm_zone_epsg
 
+from dask.diagnostics import ProgressBar
 import xarray as xr
 import xee
 import ee
@@ -28,10 +29,13 @@ class TreeCover(Layer):
             engine='ee',
             scale=10,
             crs=crs,
-            geometry=ee.Geometry.Rectangle(*bbox)
+            geometry=ee.Geometry.Rectangle(*bbox),
+            chunks={'X': 512, 'Y': 512},
         )
 
-        data = ds.ttc.compute()
+        with ProgressBar():
+            print("Extracting tree cover layer:")
+            data = ds.ttc.compute()
 
         data = data.where(data != self.NO_DATA_VALUE)
 

@@ -1,6 +1,5 @@
-from pystac_client import Client
+from dask.diagnostics import ProgressBar
 from enum import Enum
-import rioxarray
 import xarray as xr
 import ee
 
@@ -39,10 +38,14 @@ class EsaWorldCover(Layer):
             engine='ee',
             scale=10,
             crs=crs,
-            geometry=ee.Geometry.Rectangle(*bbox)
+            geometry=ee.Geometry.Rectangle(*bbox),
+            chunks={'X': 512, 'Y': 512},
         )
 
-        data = ds.Map.compute()
+        with ProgressBar():
+            print("Extracting ESA world cover layer:")
+            data = ds.Map.compute()
+
         data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
 
         if self.land_cover_class:
