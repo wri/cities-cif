@@ -73,7 +73,7 @@ class SmartCitiesLULC(Layer):
             raster = make_geocube(
                 vector_data=gdf,
                 measurements=["Value"],
-                like=esa_1m,
+                like=snap_to,
                 fill=0
             ).Value
 
