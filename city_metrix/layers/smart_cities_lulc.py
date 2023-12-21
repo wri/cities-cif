@@ -14,7 +14,7 @@ from .layer import Layer, get_utm_zone_epsg
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .open_street_map import OpenStreetMap
 from .urban_land_use import UrbanLandUse
-from .building_classification import BuildingClassification
+from .building_classifier import BuildingClassifier
 
 
 class SmartCitiesLULC(Layer):
@@ -183,7 +183,7 @@ class SmartCitiesLULC(Layer):
         # TODO
         # roof slope model
         # buildings sample classed LA for testing
-        build_class = BuildingClassification(geo_file = 'buildings-sample-classed_LA.geojson')
+        build_class = BuildingClassifier(geo_file = 'buildings-sample-classed_LA.geojson')
         clf = build_class.building_class_tree()
 
         plt.figure(figsize=(20, 10))

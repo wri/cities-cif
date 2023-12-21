@@ -14,7 +14,7 @@ from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .urban_land_use import UrbanLandUse
 
 
-class BuildingClassification(Layer):
+class BuildingClassifier(Layer):
     def __init__(self, geo_file=None, **kwargs):
         super().__init__(**kwargs)
         self.geo_file = geo_file
