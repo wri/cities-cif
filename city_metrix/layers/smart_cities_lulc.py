@@ -178,7 +178,7 @@ class SmartCitiesLULC(Layer):
         building_osm['Value'] = building_osm['osmid']
         building_osm_1m = rasterize_osm(building_osm, esa_1m)
         
-        building_osm[['ULU', 'ANBH', 'Area_m']] = building_osm.apply(lambda row: BuildingClassification().calc_majority_ULU_mean_ANBH_area(row, building_osm_1m, 'osmid', ulu_lulc_1m, anbh_1m), axis=1)
+        building_osm[['ULU', 'ANBH', 'Area_m']] = building_osm.apply(lambda row: BuildingClassifier().calc_majority_ULU_mean_ANBH_area(row, building_osm_1m, 'osmid', ulu_lulc_1m, anbh_1m), axis=1)
 
         # TODO
         # roof slope model
