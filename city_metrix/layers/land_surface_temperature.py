@@ -1,5 +1,3 @@
-import functools
-
 from .landsat_collection_2 import LandsatCollection2
 from .layer import Layer, get_utm_zone_epsg
 
@@ -14,7 +12,6 @@ class LandSurfaceTemperature(Layer):
         self.start_date = start_date
         self.end_date = end_date
 
-    @functools.lru_cache(maxsize=10)
     def get_data(self, bbox):
         def cloud_mask(image):
             qa = image.select('QA_PIXEL')

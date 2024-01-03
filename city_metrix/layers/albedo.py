@@ -1,5 +1,6 @@
 import ee
 import xarray
+from dask.diagnostics import ProgressBar
 
 from .layer import Layer, get_utm_zone_epsg
 
