@@ -51,4 +51,22 @@ This document serves as a guide for cities-cif developers to add new indicators 
     Define a function for new indicator with input of the calculation zones as `GeoDataFrame` and output of the calculated indicators as `Pandas Series`.
 
 
+# Package structure
+
+The `City_metrix` library allows users of geospatial data to collect and apply zonal statistics on Global Geospatial Datasets for measuring sustainability indicators in urban areas.
+It provides two main functionalities:
+- Extracting geospatial `layers` based on specific areas of interests (defined as geodataframe)' These data layers are collected from any cloud source (Google Earth Engine, AWS S3 public buckets, Public APIs). Two formats of data layers are handled in `city_metrix`: Rasters and vectors. Rasters data are collected and transformed into _arrays_ using `xarray` (GEE images collections are converted also into `arrays` using `xee`) and vectors adata are stored as `geopandadataframe`.  
+- Measuring `indicators` using the extracted `layers` by implementing zonal statistics operations 
+
+The main package source code is located in `city_metrix` directory.
+
+## Layers
+The `layers` sub-directory contains the different scripts used to extract layers from various data sources. Every `layer` is defined in a separate `python` script (with the name of script referencing the name of the layer). 
+
+Every layer is defined as a python `class`, which contains all instructions to calculate and extract the data from the global data sources. Every `layer class` should include at least a `get_data` function that will be used in the `indicators` script to collect the data based on a region of interest.
+
+## Indicators
+
+The indicators methods are defined in `metrics.py` file. Every indicator is implemented as separate function that uses the `layers` extraction defined in the `layers` sub-module.
+The indicators function take as input a `geodataframe` (defined by `zones`) and returns the indicator values.
 
