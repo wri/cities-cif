@@ -1,8 +1,7 @@
 from .landsat_collection_2 import LandsatCollection2
 from .layer import Layer, get_utm_zone_epsg
 
-from shapely.geometry import box
-import datetime
+from dask.diagnostics import ProgressBar
 import ee
 import xarray
 
@@ -40,8 +39,12 @@ class LandSurfaceTemperature(Layer):
             scale=30,
             crs=crs,
             geometry=ee.Geometry.BBox(*bbox),
+            chunks={'X': 512, 'Y': 512},
         )
-        ds = ds.compute()
+
+        with ProgressBar():
+            print("Calculating land surface temperature layer:")
+            ds = ds.compute()
 
         data = ds.ST_B10_mean.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
         return data
