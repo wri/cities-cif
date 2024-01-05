@@ -12,9 +12,10 @@ import matplotlib.pyplot as plt
 
 from .layer import Layer, get_utm_zone_epsg
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from .open_street_map import OpenStreetMap
+from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .urban_land_use import UrbanLandUse
 from .building_classifier import BuildingClassifier
+from .average_net_building_height import AverageNetBuildingHeight
 
 
 class SmartCitiesLULC(Layer):
@@ -56,19 +57,6 @@ class SmartCitiesLULC(Layer):
             resampling=Resampling.nearest
         )
 
-
-        # OSM tags
-        open_space_tag = {'leisure': ['park', 'nature_reserve', 'common', 'playground', 'pitch', 'track', 'garden', 'golf_course', 'dog_park', 'recreation_ground', 'disc_golf_course'],
-                          'boundary': ['protected_area', 'national_park', 'forest_compartment', 'forest']}
-        water_tag = {'water': True,
-                     'natural': ['water'],
-                     'waterway': True}
-        roads_tag = {'highway': ["residential", "service", "unclassified", "tertiary", "secondary", "primary", "turning_circle", "living_street", "trunk", "motorway", "motorway_link", "trunk_link",
-                                 "primary_link", "secondary_link", "tertiary_link", "motorway_junction", "turning_loop", "road", "mini_roundabout", "passing_place", "busway"]}
-        building_tag = {'building': True}
-        parking_tag = {'amenity': ['parking'],
-                       'parking': True}
-
         def rasterize_osm(gdf, snap_to):
             raster = make_geocube(
                 vector_data=gdf,
@@ -81,19 +69,19 @@ class SmartCitiesLULC(Layer):
 
 
         # Open space
-        open_space_osm = OpenStreetMap(osm_tag=open_space_tag).get_data(bbox).to_crs(crs).reset_index()
+        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).to_crs(crs).reset_index()
         open_space_osm['Value'] = 10
         open_space_1m = rasterize_osm(open_space_osm, esa_1m)
 
 
         # Water
-        water_osm = OpenStreetMap(osm_tag=water_tag).get_data(bbox).to_crs(crs).reset_index()
+        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox).to_crs(crs).reset_index()
         water_osm['Value'] = 20
         water_1m = rasterize_osm(water_osm, esa_1m)
 
 
         # Roads
-        roads_osm = OpenStreetMap(osm_tag=roads_tag).get_data(bbox).to_crs(crs).reset_index()
+        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox).to_crs(crs).reset_index()
         roads_osm['lanes'] = pd.to_numeric(roads_osm['lanes'], errors='coerce')
         # Get the average number of lanes per highway class
         lanes = (roads_osm.drop(columns='geometry')
@@ -147,26 +135,10 @@ class SmartCitiesLULC(Layer):
             resampling=Resampling.nearest,
             nodata=1
         )
-
-        # ANBH is the average height of the built surfaces, USE THIS
-        # AGBH is the amount of built cubic meters per surface unit in the cell
-        # https://ghsl.jrc.ec.europa.eu/ghs_buH2023.php
-        anbh = (ee.ImageCollection("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_R2023A")
-                .filterBounds(ee.Geometry.BBox(*bbox))
-                .select('b1')
-                .mosaic()
-                )
-        ds = xr.open_dataset(
-            ee.ImageCollection(anbh),
-            engine='ee',
-            scale=100,
-            crs=crs,
-            geometry=ee.Geometry.Rectangle(*bbox)
-        )
-        anbh_data = ds.b1.compute()
-        # get in rioxarray format
-        anbh_data = anbh_data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
         
+        # Load ANBH layer
+        anbh_data = AverageNetBuildingHeight().get_data(bbox)
+
         anbh_1m = anbh_data.rio.reproject(
             dst_crs=crs,
             shape=esa_1m.shape,
@@ -174,7 +146,7 @@ class SmartCitiesLULC(Layer):
             nodata=0
         )
 
-        building_osm = OpenStreetMap(osm_tag=building_tag).get_data(bbox).to_crs(crs).reset_index()
+        building_osm = OpenStreetMap(osm_class=OpenStreetMapClass.BUILDING).get_data(bbox).to_crs(crs).reset_index()
         building_osm['Value'] = building_osm['osmid']
         building_osm_1m = rasterize_osm(building_osm, esa_1m)
         
@@ -199,7 +171,7 @@ class SmartCitiesLULC(Layer):
 
 
         # Parking
-        parking_osm = OpenStreetMap(osm_tag=parking_tag).get_data(bbox).to_crs(crs).reset_index()
+        parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(bbox).to_crs(crs).reset_index()
         parking_osm['Value'] = 50
         parking_1m = rasterize_osm(parking_osm, esa_1m)
 

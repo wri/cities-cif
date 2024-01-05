@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from .layer import Layer, get_utm_zone_epsg
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .urban_land_use import UrbanLandUse
+from .average_net_building_height import AverageNetBuildingHeight
 
 
 class BuildingClassifier(Layer):
@@ -79,24 +80,8 @@ class BuildingClassifier(Layer):
             nodata=1
         )
 
-        # ANBH is the average height of the built surfaces, USE THIS
-        # AGBH is the amount of built cubic meters per surface unit in the cell
-        # https://ghsl.jrc.ec.europa.eu/ghs_buH2023.php
-        anbh = (ee.ImageCollection("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_R2023A")
-                .filterBounds(ee.Geometry.BBox(*bbox))
-                .select('b1')
-                .mosaic()
-                )
-        ds = xr.open_dataset(
-            ee.ImageCollection(anbh),
-            engine='ee',
-            scale=100,
-            crs=crs,
-            geometry=ee.Geometry.Rectangle(*bbox)
-        )
-        anbh_data = ds.b1.compute()
-        # get in rioxarray format
-        anbh_data = anbh_data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
+        # Load ANBH layer
+        anbh_data = AverageNetBuildingHeight().get_data(bbox)
         
         anbh_1m = anbh_data.rio.reproject(
             dst_crs=crs,
