@@ -15,8 +15,8 @@ class OpenStreetMapClass(Enum):
     ROAD = {'highway': ["residential", "service", "unclassified", "tertiary", "secondary", "primary", "turning_circle", "living_street", "trunk", "motorway", "motorway_link", "trunk_link",
                          "primary_link", "secondary_link", "tertiary_link", "motorway_junction", "turning_loop", "road", "mini_roundabout", "passing_place", "busway"]}
     BUILDING = {'building': True}
-    PARK = {'amenity': ['parking'],
-            'parking': True}
+    PARKING = {'amenity': ['parking'],
+               'parking': True}
 
 
 class OpenStreetMap(Layer):
@@ -50,7 +50,7 @@ class OpenStreetMap(Layer):
 
     def write(self, output_path):
         self.data['bbox'] = str(self.data.total_bounds)
-        self.data['osm_class'] = str(self.osm_class)
+        self.data['osm_class'] = str(self.osm_class.value)
 
         # Write to a GeoJSON file
         self.data.to_file(output_path, driver='GeoJSON')
