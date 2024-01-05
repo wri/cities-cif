@@ -1,11 +1,19 @@
-# cities-cif
+# Cities Indicator Framework
+
+The Cities Indicator Framework (CIF) is a set of Python tools to make it easier to calculate zonal statistics for cities by providing a standardized set of data layers for inputs and a common framework for using those layers to calculate indicators.
 
 ## Dependencies
 ### Conda
 `conda env create -f environment.yml`
 
 ## Credentials
-To run the module, you need to a GEE-enabled GCP service account to read and write data.
+To run the module, you need access to Google Earth Engine.
+
+### Interactive development
+For most people working in a notebook or IDE the script should walk you thourgh an interactive authentication process. You will just need to be logged in to your Google account that has access to GEE in your browser.
+
+### Programatic access
+If you have issues with this or need to run the script as part of an automated workflow we have a GEE-enabled GCP service account that can be used. Get in touch with Saif or Chris to ask about getting the credetials.
 
 Set the following environment variables:
 - GOOGLE_APPLICATION_CREDENTIALS: The path of GCP credentials JSON file containing your private key.
@@ -21,23 +29,8 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/file
 ```
 
 ## How to contribute
-The code has the following structure:
 
-- The `layers` subpackage contains all data raster or vector data used for metrics inhering from the base `Layer` class
-    - All layers must implement a `get_data` function that accept a bbox and returns either:
-        - A rioxarray-format xarray with the data in the bbox for raster data
-        - A GeoPandas DataFrame for vector data
-    - rioxarray format means only `x` and `y` dimensions, in that order
-    - New layers based off existing layers should re-use that layer's data
-    - The Layer subclass will handle actually running zonal statistics
-- Pre-canned "indicator" analyses are defined as functions in `metrics.py`
-    - Indicator analyses should use calculate using layer classes and `Layer` zonal stats API
-- To utilize dask for bigger jobs, dask cluster must be initialized outside this library
+All are welcome to contribute by creating a [Pull Request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests). We try to follow the [Github Flow](https://docs.github.com/en/get-started/quickstart/github-flow) workflow.
 
-You can run the tests by setting the credentials above and running the following:
-
-```
-cd ./tests
-pytest layers.py
-```
+See the [developer docs](docs/developer.md) to learn more about how to add data layers and indicators.
 
