@@ -1,9 +1,9 @@
-from .layer import Layer, get_utm_zone_epsg
-
-from rioxarray.raster_array import RasterArray
+from dask.diagnostics import ProgressBar
 import xarray as xr
 import xee
 import ee
+
+from .layer import Layer, get_utm_zone_epsg
 
 
 class UrbanLandUse(Layer):
@@ -26,10 +26,13 @@ class UrbanLandUse(Layer):
             engine='ee',
             scale=5,
             crs=crs,
-            geometry=ee.Geometry.Rectangle(*bbox)
+            geometry=ee.Geometry.Rectangle(*bbox),
+            chunks={'X': 512, 'Y': 512}
         )
 
-        data = ds.lulc.compute()
+        with ProgressBar():
+            print("Extracting ULU layer:")
+            data = ds.lulc.compute()
 
         # get in rioxarray format
         data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
