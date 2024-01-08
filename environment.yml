@@ -3,24 +3,20 @@ channels:
   - conda-forge
 dependencies:
   - python=3.10
-  - boto3
-  - coiled
-  - earthengine-api
-  - geemap
-  - geocube
-  - geopandas
-  - rioxarray
-  - google-cloud-storage
-  - odc-stac
-  - pystac-client
-  - pytest
-  - xarray-spatial
-  - xee
-  - utm
-  - pytest
-  - osmnx
-  - dask[complete]
-  - matplotlib
-  - pip
+  - earthengine-api=0.1.379
+  - geocube=0.4.2
+  - geopandas=0.14.1
+  - rioxarray=0.15.0
+  - odc-stac=0.3.8
+  - pystac-client=0.7.5
+  - pytest=7.4.3
+  - xarray-spatial=0.3.7
+  - xee=0.0.3
+  - utm=0.7.0
+  - osmnx=1.8.1
+  - dask[complete]=2023.11.0
+  - matplotlib=3.8.2
+  - jupyter=1.0.0
+  - pip=23.3.1
   - pip:
-    - cartoframes
+    - cartoframes=1.2.5
