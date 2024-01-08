@@ -23,13 +23,13 @@ Every layer is defined as a python `class`, which contains all instructions to c
 
 ### Indicators
 
-The indicators methods are defined in the `metrics.py` file. Every indicator is implemented as a separate function that uses the `layers` extraction defined in the `layers` sub-module.
+The indicators methods are defined in the `metrics` folder. Every indicator is implemented as a separate function in a separate file that uses the `layers` extraction defined in the `layers` sub-module.
 The indicators function takes as input a `geodataframe` (defined by `zones`) and returns the indicator values.
 
 ### Cities
 By default we assume you will provide the city boundary files you want to run calculations on. 
 
-We also have and API for storing city polygons and caclulated metrics in a standardized way for projects that want a system to keep track of their inputs and outputs. If you want to use that, get in touch with Saif, Tori, or Chris.
+We also have and API for storing city polygons and calculated metrics in a standardized way for projects that want a system to keep track of their inputs and outputs. If you want to use that, get in touch with Saif, Tori, or Chris.
 
 ## Setup
 
@@ -67,7 +67,7 @@ Once you have all the data layers you need as inputs, here is the process to cre
 
     You should add a record to the Airtable table for the new indicator. There should be a unique **indicator_label** of the indicator with the associated metadata, including **theme**, **indicator_legend**, **code**, **indicator_definition**, etc. You should also link the record to the **Layers** and **data_sources_link** that are used to calculate this indicator.
 
-2. Define the indicator calculation function in [city_metrix/metrics.py](../city_metrix/metrics.py)
+2. Define the indicator calculation function in a new file [city_metrix/metrics](../city_metrix/metrics)
 
     Define a function for new indicator with the input of the calculation zones as a `GeoDataFrame` and output of the calculated indicators as a `Pandas Series`.
 
