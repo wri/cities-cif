@@ -19,4 +19,4 @@ dependencies:
   - jupyter=1.0.0
   - pip=23.3.1
   - pip:
-    - cartoframes=1.2.5
+    - cartoframes==1.2.5
