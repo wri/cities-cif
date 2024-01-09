@@ -7,7 +7,7 @@ from .layer import Layer, get_utm_zone_epsg
 
 
 class UrbanLandUse(Layer):
-    def __init__(self, band=None, **kwargs):
+    def __init__(self, band='lulc', **kwargs):
         super().__init__(**kwargs)
         self.band = band
 
