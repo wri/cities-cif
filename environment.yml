@@ -16,7 +16,7 @@ dependencies:
   - osmnx=1.8.1
   - dask[complete]=2023.11.0
   - matplotlib=3.8.2
-  - jupyter=1.0.0
+  - jupyterlab=4.0.10
   - pip=23.3.1
   - pip:
     - cartoframes==1.2.5
