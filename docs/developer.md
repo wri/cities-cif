@@ -6,25 +6,45 @@ This document serves as a guide for cities-cif developers who would like to cont
 
 ## Package structure
 
-The `City_metrix` library allows users of geospatial data to collect and apply zonal statistics on Global Geospatial Datasets for measuring sustainability indicators in urban areas.
+The `city_metrix` library allows users of geospatial data to collect and apply zonal statistics on Global Geospatial Datasets for measuring sustainability indicators in urban areas.
 
 It provides two main functionalities:
 1. Extracting geospatial `layers` based on specific areas of interests (defined as geodataframe)' These data layers are collected from any cloud source (Google Earth Engine, AWS S3 public buckets, Public APIs). Two formats of data layers are handled in `city_metrix`: Rasters and vectors. 
     - Rasters data are collected and transformed into _arrays_ using `xarray` (GEE images collections are converted also into `arrays` using `xee`).
-    - Vectors adata are stored as `geopandadataframe`.  
+    - Vectors adata are stored as `GeoDataFrame`.  
 2. Measuring `indicators` using the extracted `layers` by implementing zonal statistics operations 
 
 The main package source code is located in the `city_metrix` directory.
 
 ### Layers
-The `layers` sub-directory contains the different scripts used to extract layers from various data sources. Every `layer` is defined in a separate `python` script (with the name of script referencing the name of the layer). 
+The `layers` sub-directory contains the different scripts used to extract layers from various data sources. Every `layer` is defined in a separate `python` file (with the name of script referencing the name of the layer). 
 
-Every layer is defined as a python `class`, which contains all instructions to calculate and extract the data from the global data sources. Every `layer class` should include at least a `get_data` function that will be used in the `indicators` script to collect the data based on a region of interest.
+Every layer is defined as a python `class`, which contains all instructions to calculate and extract the data from the global data sources. 
+
+Every `layer class` should implement at least a `get_data` function that either returns an `xarray` with the raster data or a `GeoDataFrame` with the vector data. `layer` classes can also define parameters in their `__init__` function the effect how the data is extracted (e.g. a date range, land cover class, etc.)
+
+This will be used in the `indicators` script to collect the data based on a region of interest.
 
 ### Indicators
 
-The indicators methods are defined in the `metrics` folder. Every indicator is implemented as a separate function in a separate file that uses the `layers` extraction defined in the `layers` sub-module.
-The indicators function takes as input a `geodataframe` (defined by `zones`) and returns the indicator values.
+The indicators methods are defined in the `metrics` folder. 
+
+Every indicator is implemented as a separate function in a separate file that uses the `layers` extraction defined in the `layers` sub-module.
+
+The `layer` objects can be chained together similar to `pandas` DataFrames to perform zonal statistics. Generally, you'll need three things
+
+- The `layer` you want to collect any statistics over (e.g. count, mean)
+- Any `layers` you want to apply as a mask (e.g. built-up land)
+- A `GeoDataFrame` representing one city (and possibly many subdistricts) you wants to use as zones
+
+For example, you can get the tree cover count in built up land over Jakarta with the following code:
+
+`TreeCover(min_tree_cover=10).mask(EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)).groupby(jakarta_gdf).count()`
+
+
+``
+
+The indicators function takes as input a `GeoDataFrame` (defined by `zones`) and returns the indicator values.
 
 ### Cities
 By default we assume you will provide the city boundary files you want to run calculations on. 
@@ -69,7 +89,7 @@ Once you have all the data layers you need as inputs, here is the process to cre
 
 2. Define the indicator calculation function in a new file in [city_metrix/metrics](../city_metrix/metrics)
 
-    Define a function for new indicator with the input of the calculation zones as a `GeoDataFrame` and output of the calculated indicators as a `Pandas Series`.
+    Define a function for new indicator with the input of the calculation zones as a `GeoDataFrame` and output of the calculated indicators as a `GeoSeries`.
 
 
 ## Adding Cities
