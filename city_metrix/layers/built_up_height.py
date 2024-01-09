@@ -6,23 +6,22 @@ import ee
 from .layer import Layer, get_utm_zone_epsg
 
 
-class AverageNetBuildingHeight(Layer):
+class BuiltUpHeight(Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def get_data(self, bbox):
         crs = get_utm_zone_epsg(bbox)
+        # Notes for Heat project:
+        # https://ghsl.jrc.ec.europa.eu/ghs_buH2023.php
         # ANBH is the average height of the built surfaces, USE THIS
         # AGBH is the amount of built cubic meters per surface unit in the cell
-        # https://ghsl.jrc.ec.europa.eu/ghs_buH2023.php
-        anbh = (ee.ImageCollection("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_R2023A")
-                .filterBounds(ee.Geometry.BBox(*bbox))
-                .select('b1')
-                .mosaic()
-                )
+        # ee.ImageCollection("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_R2023A")
+        
+        built_height = ee.Image("JRC/GHSL/P2023A/GHS_BUILT_H/2018")
         
         ds = xr.open_dataset(
-            ee.ImageCollection(anbh),
+            ee.ImageCollection(built_height),
             engine='ee',
             scale=100,
             crs=crs,
@@ -31,8 +30,8 @@ class AverageNetBuildingHeight(Layer):
         )
 
         with ProgressBar():
-            print("Extracting ANBH layer:")
-            data = ds.b1.compute()
+            print("Extracting built up height layer:")
+            data = ds.built_height.compute()
         
         # get in rioxarray format
         data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
