@@ -67,7 +67,7 @@ Once you have all the data layers you need as inputs, here is the process to cre
 
     You should add a record to the Airtable table for the new indicator. There should be a unique **indicator_label** of the indicator with the associated metadata, including **theme**, **indicator_legend**, **code**, **indicator_definition**, etc. You should also link the record to the **Layers** and **data_sources_link** that are used to calculate this indicator.
 
-2. Define the indicator calculation function in a new file [city_metrix/metrics](../city_metrix/metrics)
+2. Define the indicator calculation function in a new file in [city_metrix/metrics](../city_metrix/metrics)
 
     Define a function for new indicator with the input of the calculation zones as a `GeoDataFrame` and output of the calculated indicators as a `Pandas Series`.
 
