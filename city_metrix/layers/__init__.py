@@ -4,7 +4,11 @@ from .land_surface_temperature import LandSurfaceTemperature
 from .tree_cover import TreeCover
 from .high_land_surface_temperature import HighLandSurfaceTemperature
 from .smart_cities_lulc import SmartCitiesLULC
-from .osm_open_space import OpenSpaceClass, OSMOpenSpace
+from .open_street_map import OpenStreetMap, OpenStreetMapClass
+from .urban_land_use import UrbanLandUse
+from .natural_areas import NaturalAreas
 from .layer import Layer, LayerGroupBy
 from .landsat_collection_2 import LandsatCollection2
 from .sentinel_2_level_2 import Sentinel2Level2
+from .world_pop import WorldPop
+from .built_up_height import BuiltUpHeight
