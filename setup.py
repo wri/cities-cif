@@ -8,11 +8,8 @@ setup(
     author="Justin Terry",
     license="MIT",
     install_requires=[
-        "boto3",
-        "coiled",
         "earthengine-api",
         "geocube",
-        "google-cloud-storage",
         "odc-stac",
         "geemap",
         "pystac-client",
