@@ -26,11 +26,13 @@ class NaturalAreas(Layer):
             # Add other mappings as needed
         }
 
-        reclassified_data = xr.apply_ufunc(
-            np.vectorize(lambda x: reclass_map.get(x, x)),
-            esa_world_cover,
-            vectorize=True
-        )
+        # Create an array of the same shape as esa_world_cover filled with default values
+        reclassified_data = np.full(esa_world_cover.shape, -1, dtype=np.int8)
+        # Apply the mapping using advanced indexing
+        for key, value in reclass_map.items():
+            reclassified_data[esa_world_cover == key] = value
+        # Convert the NumPy array back to xarray.DataArray
+        reclassified_data = xr.DataArray(reclassified_data, dims=esa_world_cover.dims, coords=esa_world_cover.coords)
 
         reclassified_data = reclassified_data.rio.write_crs(esa_world_cover.rio.crs, inplace=True)
 
