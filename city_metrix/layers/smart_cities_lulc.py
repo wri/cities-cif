@@ -15,7 +15,7 @@ from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .urban_land_use import UrbanLandUse
 from .building_classifier import BuildingClassifier
-from .average_net_building_height import AverageNetBuildingHeight
+from .built_up_height import BuiltUpHeight
 
 
 class SmartCitiesLULC(Layer):
@@ -43,11 +43,14 @@ class SmartCitiesLULC(Layer):
             EsaWorldCoverClass.MOSS_AND_LICHEN.value: 3
             # Add other mappings as needed
         }
-        reclassified_esa = xr.apply_ufunc(
-            np.vectorize(lambda x: reclass_map.get(x, x)),
-            esa_world_cover,
-            vectorize=True
-        )
+
+        # Create an array of the same shape as esa_world_cover filled with default values
+        reclassified_esa = np.full(esa_world_cover.shape, -1, dtype=np.int8)
+        # Apply the mapping using advanced indexing
+        for key, value in reclass_map.items():
+            reclassified_esa[esa_world_cover == key] = value
+        # Convert the NumPy array back to xarray.DataArray
+        reclassified_esa = xr.DataArray(reclassified_esa, dims=esa_world_cover.dims, coords=esa_world_cover.coords)
 
         reclassified_esa = reclassified_esa.rio.write_crs(esa_world_cover.rio.crs, inplace=True)
 
@@ -70,7 +73,7 @@ class SmartCitiesLULC(Layer):
 
         # Open space
         open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).to_crs(crs).reset_index()
-        open_space_osm['Value'] = 10
+        open_space_osm['Value'] = np.int8(10)
         open_space_1m = rasterize_osm(open_space_osm, esa_1m)
 
 
@@ -137,7 +140,7 @@ class SmartCitiesLULC(Layer):
         )
         
         # Load ANBH layer
-        anbh_data = AverageNetBuildingHeight().get_data(bbox)
+        anbh_data = BuiltUpHeight().get_data(bbox)
 
         anbh_1m = anbh_data.rio.reproject(
             dst_crs=crs,
