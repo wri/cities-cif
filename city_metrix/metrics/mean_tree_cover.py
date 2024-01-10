@@ -9,4 +9,4 @@ def mean_tree_cover(zones: GeoDataFrame) -> GeoSeries:
     :param zones: GeoDataFrame with geometries to collect zonal stats on
     :return: Pandas Series of percentages
     """
-    return TreeCover().groupby(zones).mean()
+    return TreeCover().groupby(zones).mean().divide(100)
