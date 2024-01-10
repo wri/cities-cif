@@ -1,9 +1,4 @@
-from city_metrix import (
-    TreeCover,
-
-)
-
-from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass
+from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover
 from .conftest import MockLayer, MockMaskLayer, ZONES
 
 import pytest

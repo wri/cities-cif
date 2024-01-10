@@ -10,4 +10,5 @@ from .natural_areas import NaturalAreas
 from .layer import Layer, LayerGroupBy
 from .landsat_collection_2 import LandsatCollection2
 from .sentinel_2_level_2 import Sentinel2Level2
-from .average_net_building_height import AverageNetBuildingHeight
+from .world_pop import WorldPop
+from .built_up_height import BuiltUpHeight
