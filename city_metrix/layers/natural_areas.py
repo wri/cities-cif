@@ -1,8 +1,8 @@
 import xarray as xr
+from xrspatial.classify import reclassify
 
 from .layer import Layer
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-import numpy as np
 
 
 class NaturalAreas(Layer):
@@ -26,14 +26,10 @@ class NaturalAreas(Layer):
             # Add other mappings as needed
         }
 
-        # Create an array of the same shape as esa_world_cover filled with default values
-        reclassified_data = np.full(esa_world_cover.shape, -1, dtype=np.int8)
-        # Apply the mapping using advanced indexing
-        for key, value in reclass_map.items():
-            reclassified_data[esa_world_cover == key] = value
-        # Convert the NumPy array back to xarray.DataArray
-        reclassified_data = xr.DataArray(reclassified_data, dims=esa_world_cover.dims, coords=esa_world_cover.coords)
+        # Perform the reclassification
+        reclassified_data = reclassify(esa_world_cover, bins=list(reclass_map.keys()), new_values=list(reclass_map.values()))
 
+        # Apply the original CRS (Coordinate Reference System)
         reclassified_data = reclassified_data.rio.write_crs(esa_world_cover.rio.crs, inplace=True)
 
         return reclassified_data
