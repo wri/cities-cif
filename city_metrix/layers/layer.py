@@ -63,11 +63,11 @@ class LayerGroupBy:
     def _zonal_stats(self, stats_func):
         bbox = self.zones.total_bounds
 
-        if box(*bbox).area <= 0.25:  #0.0025:
+        if box(*bbox).area <= 0.0025:
             return self._zonal_stats_tile(self.zones, stats_func)[stats_func]
         else:
             # fishnet GeoDataFrame into smaller tiles
-            fishnet = create_fishnet_grid(*bbox, 0.5)
+            fishnet = create_fishnet_grid(*bbox, 0.005)
 
             # spatial join with fishnet grid and then intersect geometries with fishnet tiles
             joined = self.zones.sjoin(fishnet)
@@ -79,16 +79,25 @@ class LayerGroupBy:
                 for _, tile in gdf.groupby("index_right")
             ]
 
+            if stats_func == "mean":
+                tile_funcs = ["count", "mean"]
+            else:
+                tile_funcs = [stats_func]
+
             tile_stats = pd.concat([
-                self._zonal_stats_tile(tile_gdf, stats_func)
+                self._zonal_stats_tile(tile_gdf, tile_funcs)
                 for tile_gdf in tile_gdfs
             ])
 
-            aggregated = tile_stats.groupby("zone").agg({
-                stats_func: "sum"
-            })
+            def aggregate_stats(df):
+                if stats_func == "count":
+                    return df["count"].sum()
+                elif stats_func == "mean":
+                    return (df["mean"] * df["count"]).sum() / df["count"].sum()
 
-            return aggregated
+        aggregated = tile_stats.groupby("zone").apply(aggregate_stats)
+
+        return aggregated
 
     def _zonal_stats_tile(self, tile_gdf, stats_func):
         bbox = tile_gdf.total_bounds
@@ -106,7 +115,7 @@ class LayerGroupBy:
             aggregate_data = aggregate_data.where(~np.isnan(mask))
 
         zones = self._rasterize(tile_gdf, align_to)
-        stats = zonal_stats(zones, aggregate_data, stats_funcs=[stats_func])
+        stats = zonal_stats(zones, aggregate_data, stats_funcs=stats_func)
 
         return stats
 
