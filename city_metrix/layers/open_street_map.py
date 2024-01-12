@@ -1,5 +1,7 @@
 from enum import Enum
 import osmnx as ox
+import geopandas as gpd
+import pandas as pd
 
 from .layer import Layer
 
@@ -28,7 +30,12 @@ class OpenStreetMap(Layer):
         north, south, east, west = bbox[3],  bbox[1], bbox[0], bbox[2]
         # Set the OSMnx configuration to disable caching
         ox.settings.use_cache = False
-        osm_feature = ox.features_from_bbox(north, south, east, west, self.osm_class.value)
+        try:
+            osm_feature = ox.features_from_bbox(north, south, east, west, self.osm_class.value)
+        # When no feature in bbox, return an empty gdf
+        except ox._errors.InsufficientResponseError as e:
+            osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['osmid', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
+            osm_feature.crs = "EPSG:4326"
 
         # Filter out Point and LineString (if the feature is not ROAD)
         if self.osm_class != OpenStreetMapClass.ROAD:
