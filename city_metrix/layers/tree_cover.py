@@ -34,7 +34,7 @@ class TreeCover(Layer):
         )
 
         with ProgressBar():
-            print("Extracting tree cover layer:")
+            print(f"Extracting tree cover layer in bbox {bbox}:")
             data = ds.ttc.compute()
 
         data = data.where(data != self.NO_DATA_VALUE)

@@ -43,7 +43,7 @@ class EsaWorldCover(Layer):
         )
 
         with ProgressBar():
-            print("Extracting ESA world cover layer:")
+            print(f"Extracting ESA world cover layer in bbox {bbox}:")
             data = ds.Map.compute()
 
         data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})

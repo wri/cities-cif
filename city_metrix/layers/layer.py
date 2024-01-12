@@ -12,6 +12,9 @@ import shapely.geometry as geometry
 import pandas as pd
 
 
+MAX_TILE_SIZE = 0.5
+
+
 class Layer:
     def __init__(self, aggregate=None, masks=[]):
         self.aggregate = aggregate
@@ -61,41 +64,36 @@ class LayerGroupBy:
         return self._zonal_stats("count")
 
     def _zonal_stats(self, stats_func):
-        bbox = self.zones.total_bounds
-
-        if box(*bbox).area <= 0.0025:
+        if box(*self.zones.total_bounds).area <= MAX_TILE_SIZE**2:
             return self._zonal_stats_tile(self.zones, stats_func)[stats_func]
         else:
-            # fishnet GeoDataFrame into smaller tiles
-            fishnet = create_fishnet_grid(*bbox, 0.005)
+            return self._zonal_stats_fishnet(stats_func)
 
-            # spatial join with fishnet grid and then intersect geometries with fishnet tiles
-            joined = self.zones.sjoin(fishnet)
-            joined["geometry"] = joined.intersection(joined["fishnet_geometry"])
-            gdf = joined[joined.geometry.type == 'Polygon']
+    def _zonal_stats_fishnet(self, stats_func):
+        # fishnet GeoDataFrame into smaller tiles
+        fishnet = create_fishnet_grid(*self.zones.total_bounds, MAX_TILE_SIZE)
 
-            tile_gdfs = [
-                tile[["index", "geometry"]]
-                for _, tile in gdf.groupby("index_right")
-            ]
+        # spatial join with fishnet grid and then intersect geometries with fishnet tiles
+        joined = self.zones.sjoin(fishnet)
+        joined["geometry"] = joined.intersection(joined["fishnet_geometry"])
 
-            if stats_func == "mean":
-                tile_funcs = ["count", "mean"]
-            else:
-                tile_funcs = [stats_func]
+        # remove linestring artifacts due to float precision
+        gdf = joined[joined.geometry.type.isin(['Polygon', 'MultiPolygon'])]
 
-            tile_stats = pd.concat([
-                self._zonal_stats_tile(tile_gdf, tile_funcs)
-                for tile_gdf in tile_gdfs
-            ])
+        # separate out zones intersecting to tiles in their own data frames
+        tile_gdfs = [
+            tile[["index", "geometry"]]
+            for _, tile in gdf.groupby("index_right")
+        ]
+        tile_funcs = get_stats_funcs(stats_func)
 
-            def aggregate_stats(df):
-                if stats_func == "count":
-                    return df["count"].sum()
-                elif stats_func == "mean":
-                    return (df["mean"] * df["count"]).sum() / df["count"].sum()
+        # run zonal stats per data frame
+        tile_stats = pd.concat([
+            self._zonal_stats_tile(tile_gdf, tile_funcs)
+            for tile_gdf in tile_gdfs
+        ])
 
-        aggregated = tile_stats.groupby("zone").apply(aggregate_stats)
+        aggregated = tile_stats.groupby("zone").apply(_aggregate_stats, stats_func)
 
         return aggregated
 
@@ -183,3 +181,19 @@ def create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size):
     fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs("EPSG:4326")
     fishnet["fishnet_geometry"] = fishnet["geometry"]
     return fishnet
+
+
+def _aggregate_stats(df, stats_func):
+    if stats_func == "count":
+        return df["count"].sum()
+    elif stats_func == "mean":
+        # mean must weight by number of pixels used for each tile
+        return (df["mean"] * df["count"]).sum() / df["count"].sum()
+
+
+def get_stats_funcs(stats_func):
+    if stats_func == "mean":
+        # mean requires both count and mean to get weighted mean across tiles
+        return ["count", "mean"]
+    else:
+        return [stats_func]

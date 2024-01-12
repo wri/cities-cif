@@ -32,7 +32,7 @@ def create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size):
 
 # Test zones of a regular 0.01x0.01 grid over a 0.1x0.1 extent
 ZONES = create_fishnet_grid(106.7, -6.3, 106.8, -6.2, 0.01).reset_index()
-
+LARGE_ZONES = create_fishnet_grid(106, -7, 107, -6, 0.1).reset_index()
 
 class MockLayer(Layer):
     """
@@ -64,3 +64,17 @@ class MockMaskLayer(Layer):
 
         mask = mask.where(mask != 0)
         return mask
+
+
+class MockLargeLayer(Layer):
+    """
+    Simple mock layer that just rasterizes the zones
+    """
+    def get_data(self, bbox):
+        arr = make_geocube(
+            vector_data=LARGE_ZONES,
+            measurements=['index'],
+            resolution=(0.01, 0.01),
+            output_crs=4326,
+        ).index
+        return arr
