@@ -8,6 +8,7 @@ import geopandas as gpd
 from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
+from xrspatial.classify import reclassify
 
 from .layer import Layer, get_utm_zone_epsg
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
@@ -20,13 +21,14 @@ class BuildingClassifier(Layer):
         super().__init__(**kwargs)
         self.geo_file = geo_file
 
-    def get_data(self):
+    def get_data_geo(self):
+        geo_file = '/home/weiqi_tori/GitHub/wri/cities-cif/buildings-sample-classed_LA.geojson'
         buildings_sample = gpd.read_file(self.geo_file)
-        buildings_sample.to_crs(epsg=4326,inplace=True)
-        bbox = buildings_sample.reset_index().total_bounds
+        buildings_sample.to_crs(epsg=4326, inplace=True)
 
-        crs = get_utm_zone_epsg(bbox)
+        return buildings_sample
 
+    def get_data_esa_reclass(self, bbox, crs):
         # ESA reclass and upsample
         esa_world_cover = EsaWorldCover().get_data(bbox)
 
@@ -44,11 +46,9 @@ class BuildingClassifier(Layer):
             EsaWorldCoverClass.MOSS_AND_LICHEN.value: 3
             # Add other mappings as needed
         }
-        reclassified_esa = xr.apply_ufunc(
-            np.vectorize(lambda x: reclass_map.get(x, x)),
-            esa_world_cover,
-            vectorize=True
-        )
+
+        # Perform the reclassification
+        reclassified_esa = reclassify(esa_world_cover, bins=list(reclass_map.keys()), new_values=list(reclass_map.values()))
 
         reclassified_esa = reclassified_esa.rio.write_crs(esa_world_cover.rio.crs, inplace=True)
 
@@ -58,11 +58,14 @@ class BuildingClassifier(Layer):
             resampling=Resampling.nearest
         )
 
+        return esa_1m
+
+    def get_data_ulu(self, bbox, crs, snap_to):
         # Read ULU land cover, filter to city, select lulc band
         ulu_lulc = UrbanLandUse(band='lulc').get_data(bbox)
         ulu_roads = UrbanLandUse(band='road').get_data(bbox)
         # Create road mask of 50
-        # Typical threshold for creating road mask 
+        # Typical threshold for creating road mask
         road_mask = ulu_roads >= 50
         ulu_lulc = ulu_lulc.where(~road_mask, 6)
         # 1-Non-residential: 0 (open space), 1 (non-res)
@@ -71,66 +74,37 @@ class BuildingClassifier(Layer):
         mapping = {0: 1, 1: 1, 2: 2, 3: 2, 4: 2, 5: 2, 6: 3}
         for from_val, to_val in mapping.items():
             ulu_lulc = ulu_lulc.where(ulu_lulc != from_val, to_val)
-        
+
         # 1-Non-residential as default
         ulu_lulc_1m = ulu_lulc.rio.reproject(
             dst_crs=crs,
-            shape=esa_1m.shape,
+            shape=snap_to.shape,
             resampling=Resampling.nearest,
             nodata=1
         )
 
+        return ulu_lulc_1m
+
+    def get_data_anbh(self, bbox, crs, snap_to):
         # Load ANBH layer
         anbh_data = AverageNetBuildingHeight().get_data(bbox)
-        
+
         anbh_1m = anbh_data.rio.reproject(
             dst_crs=crs,
-            shape=esa_1m.shape,
+            shape=snap_to.shape,
             resampling=Resampling.nearest,
             nodata=0
         )
 
-        return buildings_sample, esa_1m, ulu_lulc_1m, anbh_1m, crs
-    
+        return anbh_1m
 
-    # Extract values to buildings as coverage fractions
-    # Extract average of pixel values to buildings
-    # Reproject to local state plane and calculate area
-    def calc_majority_ULU_mean_ANBH_area(self, row, building_sample_1m, id_col, ulu_lulc_1m, anbh_1m):
-        mask = building_sample_1m == row[id_col]
-        masked_ulu = ulu_lulc_1m.values[mask]
-        
-        # Extract values to buildings as coverage fractions
-        # when there is no majority class, use 1-Non-residential as default
-        if masked_ulu.size == 0:
-            majority_ULU = 1
-        else:
-            unique, counts = np.unique(masked_ulu, return_counts=True)
-            sorted_indices = np.argsort(-counts)  # Sort by descending order
-            
-            # Apply your specific logic
-            if unique[sorted_indices[0]] != 3:
-                majority_ULU = unique[sorted_indices[0]]
-            elif len(sorted_indices) > 1:
-                majority_ULU = unique[sorted_indices[1]]
-            else:
-                majority_ULU = 1  # Default to 1 non-residential
+    def rasterize_polygon(self, gdf, snap_to):
+        if gdf.empty:
+            raster = np.full(snap_to.shape, 0, dtype=np.int8)
+            raster = xr.DataArray(raster, dims=snap_to.dims, coords=snap_to.coords)
 
-        # Extract average of pixel values to buildings
-        masked_anbh = anbh_1m.values[mask]
-        if masked_anbh.size == 0:
-            mean_ANBH = 0
-        else:
-            mean_ANBH = np.mean(masked_anbh)
-        
-        # Reproject to local state plane and calculate area
-        Area_m = row.geometry.area
+            return raster.rio.write_crs(snap_to.rio.crs, inplace=True)
 
-        return pd.Series([majority_ULU, mean_ANBH, Area_m])
-        
-        # TODO
-        # roof slope model
-    def rasterize_building(self, gdf, snap_to):
         raster = make_geocube(
             vector_data=gdf,
             measurements=["Value"],
@@ -140,12 +114,61 @@ class BuildingClassifier(Layer):
 
         return raster.rio.reproject_match(snap_to)
     
+
+    # Extract values to buildings as coverage fractions
+    # Extract average of pixel values to buildings
+    # Reproject to local state plane and calculate area
+
+    def extract_features(self, row, buildings_sample_1m, id_col, ulu_lulc_1m, anbh_1m):
+        # 3 features:
+        # majority of Urban Land Use(ULU) class
+        # mean Average Net Building Height(ANBH)
+        # area of the building
+        mask = buildings_sample_1m == row[id_col]
+        masked_ulu = ulu_lulc_1m.values[mask]
+
+        # Extract values to buildings as coverage fractions
+        # when there is no majority class, use 1-Non-residential as default
+        if masked_ulu.size == 0:
+            majority_ulu = 1
+        else:
+            unique, counts = np.unique(masked_ulu, return_counts=True)
+            sorted_indices = np.argsort(-counts)  # Sort by descending order
+
+            # Apply your specific logic
+            if unique[sorted_indices[0]] != 3:
+                majority_ulu = unique[sorted_indices[0]]
+            elif len(sorted_indices) > 1:
+                majority_ulu = unique[sorted_indices[1]]
+            else:
+                majority_ulu = 1  # Default to 1 non-residential
+
+        # Extract average of pixel values to buildings
+        masked_anbh = anbh_1m.values[mask]
+        if masked_anbh.size == 0:
+            mean_anbh = 0
+        else:
+            mean_anbh = np.mean(masked_anbh)
+
+        # Reproject to local state plane and calculate area
+        area_m = row.geometry.area
+
+        return pd.Series([majority_ulu, mean_anbh, area_m])
+
     def building_class_tree(self):
-        buildings_sample, esa_1m, ulu_lulc_1m, anbh_1m, crs = self.get_data()
+        buildings_sample = self.get_data_geo()
+        bbox = buildings_sample.reset_index().total_bounds
+        crs = get_utm_zone_epsg(bbox)
+
+        esa_1m = self.get_data_esa_reclass(bbox, crs)
         buildings_sample['Value'] = buildings_sample['ID']
-        buildings_sample_1m = self.rasterize_building(buildings_sample, esa_1m)
-        buildings_sample[['ULU', 'ANBH', 'Area_m']] = buildings_sample.to_crs(crs).apply(lambda row:self.calc_majority_ULU_mean_ANBH_area(row, buildings_sample_1m, 'ID', ulu_lulc_1m, anbh_1m), axis=1)
+        buildings_sample_1m = self.rasterize_polygon(buildings_sample, esa_1m)
+        ulu_lulc_1m = self.get_data_ulu(bbox, crs, esa_1m)
+        anbh_1m = self.get_data_anbh(bbox, crs, esa_1m)
         
+        buildings_sample[['ULU', 'ANBH', 'Area_m']] = buildings_sample.to_crs(crs).apply(
+            lambda row: self.extract_features(row, buildings_sample_1m, 'ID', ulu_lulc_1m, anbh_1m), axis=1)
+
         clf = DecisionTreeClassifier(max_depth=4)
         # encode labels
         buildings_sample['Slope_encoded'] = buildings_sample['Slope'].map({'low': 41, 'high': 42})
