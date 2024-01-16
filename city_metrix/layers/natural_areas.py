@@ -1,8 +1,8 @@
 import xarray as xr
+from xrspatial.classify import reclassify
 
 from .layer import Layer
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-import numpy as np
 
 
 class NaturalAreas(Layer):
@@ -26,12 +26,10 @@ class NaturalAreas(Layer):
             # Add other mappings as needed
         }
 
-        reclassified_data = xr.apply_ufunc(
-            np.vectorize(lambda x: reclass_map.get(x, x)),
-            esa_world_cover,
-            vectorize=True
-        )
+        # Perform the reclassification
+        reclassified_data = reclassify(esa_world_cover, bins=list(reclass_map.keys()), new_values=list(reclass_map.values()))
 
+        # Apply the original CRS (Coordinate Reference System)
         reclassified_data = reclassified_data.rio.write_crs(esa_world_cover.rio.crs, inplace=True)
 
         return reclassified_data
