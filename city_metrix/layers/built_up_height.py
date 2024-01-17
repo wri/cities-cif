@@ -24,7 +24,7 @@ class BuiltUpHeight(Layer):
         )
 
         with ProgressBar():
-            print("Extracting built up height layer:")
+            print(f"Extracting built up height layer in bbox {bbox}:")
             data = ds.built_height.compute()
         
         # get in rioxarray format

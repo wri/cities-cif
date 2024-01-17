@@ -15,3 +15,4 @@ def test_built_land_with_low_surface_reflectivity():
 def test_high_lst():
     indicator = built_land_with_high_land_surface_temperature(ZONES)
     assert indicator.size == 100
+
