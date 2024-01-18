@@ -19,7 +19,12 @@ class OpenStreetMapClass(Enum):
     BUILDING = {'building': True}
     PARKING = {'amenity': ['parking'],
                'parking': True}
-
+    TRANSIT_STOP = {'amenity':['ferry_terminal'],
+                    'railway':['stop', 'platform', 'halt', 'tram_stop'],
+                    'highway':['bus_stop', 'platform'],
+                    'public_transport': ['platform', 'stop_position'],
+                    'station':['subway'],
+                    'aerialway':['station']}
 
 class OpenStreetMap(Layer):
     def __init__(self, osm_class=None, **kwargs):
@@ -37,11 +42,16 @@ class OpenStreetMap(Layer):
             osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['osmid', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
             osm_feature.crs = "EPSG:4326"
 
-        # Filter out Point and LineString (if the feature is not ROAD)
-        if self.osm_class != OpenStreetMapClass.ROAD:
-            osm_feature = osm_feature[osm_feature.geom_type.isin(['Polygon', 'MultiPolygon'])]
-        else:
+        # Filter by geo_type
+        if self.osm_class == OpenStreetMapClass.ROAD:
+            # Filter out Point
             osm_feature = osm_feature[osm_feature.geom_type != 'Point']
+        elif self.osm_class == OpenStreetMapClass.TRANSIT_STOP:
+            # Keep Point
+            osm_feature = osm_feature[osm_feature.geom_type == 'Point']
+        else:
+            # Filter out Point and LineString
+            osm_feature = osm_feature[osm_feature.geom_type.isin(['Polygon', 'MultiPolygon'])]
 
         # keep only columns desired to reduce file size
         keep_col = ['osmid', 'geometry']
