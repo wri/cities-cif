@@ -223,12 +223,11 @@ def get_image_collection(
         engine='ee',
         scale=scale,
         crs=crs,
-        geometry=ee.Geometry.Rectangle(*bbox),
-        chunks={'X': 512, 'Y': 512}
+        geometry=ee.Geometry.Rectangle(*bbox)
     )
 
     with ProgressBar():
-        print("Extracting layer {name} from Google Earth Engine:")
+        print(f"Extracting layer {name} from Google Earth Engine:")
         data = ds.compute()
 
     # get in rioxarray format
