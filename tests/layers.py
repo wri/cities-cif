@@ -1,4 +1,7 @@
+import ee
+
 from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover
+from city_metrix.layers.layer import get_image_collection
 from .conftest import MockLayer, MockMaskLayer, ZONES
 
 import pytest
@@ -28,6 +31,20 @@ def test_masks():
 
 
 SAMPLE_BBOX = (-38.35530428121955, -12.821710300686393, -38.33813814352424, -12.80363249765361)
+
+
+def test_read_image_collection():
+    ic = ee.ImageCollection("ESA/WorldCover/v100")
+    data = get_image_collection(ic, SAMPLE_BBOX, 10, "test")
+
+    assert data.rio.crs == 32724
+    assert data.dims == {'x': 187, 'y': 200}
+
+
+def test_read_image_collection_scale():
+    ic = ee.ImageCollection("ESA/WorldCover/v100")
+    data = get_image_collection(ic, SAMPLE_BBOX, 100, "test")
+    assert data.dims == {'x': 19, 'y': 20}
 
 
 def test_tree_cover():

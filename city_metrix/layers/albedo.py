@@ -87,9 +87,8 @@ class Albedo(Layer):
         dataset = get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
         albedo_mean = s2_albedo.reduce(ee.Reducer.mean())
-        albedo_mean = albedo_mean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
 
-        data = get_image_collection(albedo_mean, bbox, "albedo").albedo_mean
+        data = get_image_collection(ee.ImageCollection(albedo_mean), bbox, 10, "albedo").albedo_mean
 
         if self.threshold is not None:
             return data.where(data < self.threshold)
