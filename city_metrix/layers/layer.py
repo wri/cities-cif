@@ -1,9 +1,6 @@
 from abc import abstractmethod
 from typing import Union, Tuple, List
 
-import ee
-from dask.diagnostics import ProgressBar
-from ee import ImageCollection
 from geocube.api.core import make_geocube
 from shapely.geometry import box
 from xrspatial import zonal_stats
@@ -120,37 +117,3 @@ def get_utm_zone_epsg(bbox) -> str:
         epsg = 32700 + band
 
     return f"EPSG:{epsg}"
-
-
-def get_image_collection(
-        image_collection: ImageCollection,
-        bbox: Tuple[float],
-        scale: int,
-        name: str=None
-) -> xr.DataArray:
-    """
-    Read an ImageCollection from Google Earth Engine into an xarray DataArray
-    :param image_collection: the ee.ImageCollection to read
-    :param bbox: the bounding box (min x, min y, max x, max y) to read the data from
-    :param name: optional name to print while reporting progress
-    :return:
-    """
-
-    crs = get_utm_zone_epsg(bbox)
-
-    ds = xr.open_dataset(
-        image_collection,
-        engine='ee',
-        scale=scale,
-        crs=crs,
-        geometry=ee.Geometry.Rectangle(*bbox),
-        chunks={'X': 512, 'Y': 512}
-    )
-
-    with ProgressBar():
-        print("Extracting layer {name} from Google Earth Engine:")
-        data = ds.compute()
-
-    # get in rioxarray format
-    data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
-    return data

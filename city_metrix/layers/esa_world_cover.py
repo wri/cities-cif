@@ -3,7 +3,7 @@ from enum import Enum
 import xarray as xr
 import ee
 
-from .layer import Layer, get_utm_zone_epsg, get_image_collection
+from .layer import Layer, get_utm_zone_epsg
 
 
 class EsaWorldCoverClass(Enum):
@@ -30,12 +30,23 @@ class EsaWorldCover(Layer):
         self.land_cover_class = land_cover_class
 
     def get_data(self, bbox):
-        data = get_image_collection(
-                ee.ImageCollection("ESA/WorldCover/v100"),
-                bbox,
-                10,
-                "ESA world cover"
-            ).Map
+        esa = ee.ImageCollection("ESA/WorldCover/v100")
+        crs = get_utm_zone_epsg(bbox)
+
+        ds = xr.open_dataset(
+            esa,
+            engine='ee',
+            scale=10,
+            crs=crs,
+            geometry=ee.Geometry.Rectangle(*bbox),
+            chunks={'X': 512, 'Y': 512},
+        )
+
+        with ProgressBar():
+            print("Extracting ESA world cover layer:")
+            data = ds.Map.compute()
+
+        data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
 
         if self.land_cover_class:
             data = data.where(data == self.land_cover_class.value)

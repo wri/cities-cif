@@ -2,7 +2,7 @@ import ee
 import xarray
 from dask.diagnostics import ProgressBar
 
-from .layer import Layer, get_utm_zone_epsg, get_image_collection
+from .layer import Layer, get_utm_zone_epsg
 
 
 class Albedo(Layer):
@@ -86,10 +86,24 @@ class Albedo(Layer):
         ## S2 MOSAIC AND ALBEDO
         dataset = get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
-        albedo_mean = s2_albedo.reduce(ee.Reducer.mean())
-        albedo_mean = albedo_mean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
+        albedoMean = s2_albedo.reduce(ee.Reducer.mean())
+        albedoMean = albedoMean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
+        crs = get_utm_zone_epsg(bbox)
 
-        data = get_image_collection(albedo_mean, bbox, "albedo").albedo_mean
+        ds = xarray.open_dataset(
+            ee.ImageCollection(albedoMean),
+            engine='ee',
+            scale=10,
+            crs=crs,
+            geometry=ee.Geometry.BBox(*bbox),
+            chunks={'X': 512, 'Y': 512},
+        )
+
+        with ProgressBar():
+            print("Calculating albedo layer:")
+            ds = ds.compute()
+
+        data = ds.albedo_mean.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
 
         if self.threshold is not None:
             return data.where(data < self.threshold)
