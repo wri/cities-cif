@@ -3,7 +3,7 @@ import xarray as xr
 import xee
 import ee
 
-from .layer import Layer, get_utm_zone_epsg
+from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
 
 class WorldPop(Layer):
@@ -11,30 +11,14 @@ class WorldPop(Layer):
         super().__init__(**kwargs)
 
     def get_data(self, bbox):
-        crs = get_utm_zone_epsg(bbox)
         # load population
         dataset = ee.ImageCollection('WorldPop/GP/100m/pop')
-        world_pop = (dataset
+        world_pop = ee.ImageCollection(dataset
                      .filterBounds(ee.Geometry.BBox(*bbox))
                      .filter(ee.Filter.inList('year', [2020]))
                      .select('population')
                      .mean()
                      )
 
-        ds = xr.open_dataset(
-            ee.ImageCollection(world_pop),
-            engine='ee',
-            scale=100,
-            crs=crs,
-            geometry=ee.Geometry.Rectangle(*bbox),
-            chunks={'X': 512, 'Y': 512}
-        )
-
-        with ProgressBar():
-            print("Extracting World Pop layer:")
-            data = ds.population.compute()
-
-        # get in rioxarray format
-        data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
-
-        return data
+        data = get_image_collection(world_pop, bbox, 100, "world pop")
+        return data.population

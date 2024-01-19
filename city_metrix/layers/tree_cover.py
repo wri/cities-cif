@@ -1,4 +1,4 @@
-from .layer import Layer, get_utm_zone_epsg
+from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
 from dask.diagnostics import ProgressBar
 import xarray as xr
@@ -22,25 +22,8 @@ class TreeCover(Layer):
         nontropics = ee.ImageCollection('projects/wri-datalab/TTC-nontropics')
         merged_ttc = tropics.merge(nontropics)
         ttc_image = merged_ttc.reduce(ee.Reducer.mean()).rename('ttc')
-        crs = get_utm_zone_epsg(bbox)
 
-        ds = xr.open_dataset(
-            ee.ImageCollection(ttc_image),
-            engine='ee',
-            scale=10,
-            crs=crs,
-            geometry=ee.Geometry.Rectangle(*bbox),
-            chunks={'X': 512, 'Y': 512},
-        )
-
-        with ProgressBar():
-            print("Extracting tree cover layer:")
-            data = ds.ttc.compute()
-
-        data = data.where(data != self.NO_DATA_VALUE)
-
-        # get in rioxarray format
-        data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
+        data = get_image_collection(ee.ImageCollection(ttc_image), bbox, 10, "tree cover").ttc
 
         if self.min_tree_cover is not None:
             data = data.where(data >= self.min_tree_cover)

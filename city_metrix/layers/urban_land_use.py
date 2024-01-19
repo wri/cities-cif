@@ -3,7 +3,7 @@ import xarray as xr
 import xee
 import ee
 
-from .layer import Layer, get_utm_zone_epsg
+from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
 
 class UrbanLandUse(Layer):
@@ -12,29 +12,13 @@ class UrbanLandUse(Layer):
         self.band = band
 
     def get_data(self, bbox):
-        crs = get_utm_zone_epsg(bbox)
         dataset = ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1")
-        ulu = (dataset
+        ulu = ee.ImageCollection(dataset
                .filterBounds(ee.Geometry.BBox(*bbox))
                .select(self.band)
                .reduce(ee.Reducer.firstNonNull())
                .rename('lulc')
                )
-        
-        ds = xr.open_dataset(
-            ee.ImageCollection(ulu),
-            engine='ee',
-            scale=5,
-            crs=crs,
-            geometry=ee.Geometry.Rectangle(*bbox),
-            chunks={'X': 512, 'Y': 512}
-        )
 
-        with ProgressBar():
-            print("Extracting ULU layer:")
-            data = ds.lulc.compute()
-
-        # get in rioxarray format
-        data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
-
+        data = get_image_collection(ulu, bbox, 5, "urban land use").lulc
         return data
