@@ -43,7 +43,7 @@ class LandSurfaceTemperature(Layer):
         )
 
         with ProgressBar():
-            print("Calculating land surface temperature layer:")
+            print(f"Calculating land surface temperature layer in bbox {bbox}:")
             ds = ds.compute()
 
         data = ds.ST_B10_mean.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
