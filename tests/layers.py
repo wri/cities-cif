@@ -1,5 +1,5 @@
 from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover
-from .conftest import MockLayer, MockMaskLayer, ZONES
+from .conftest import MockLayer, MockMaskLayer, MockLargeLayer, ZONES, LARGE_ZONES
 
 import pytest
 import numpy as np
@@ -13,6 +13,18 @@ def test_count():
 
 def test_mean():
     means = MockLayer().groupby(ZONES).mean()
+    assert means.size == 100
+    assert all([mean == i for i, mean in enumerate(means)])
+
+
+def test_fishnetted_count():
+    counts = MockLargeLayer().groupby(LARGE_ZONES).count()
+    assert counts.size == 100
+    assert all([count == 100 for count in counts])
+
+
+def test_fishnetted_mean():
+    means = MockLargeLayer().groupby(LARGE_ZONES).mean()
     assert means.size == 100
     assert all([mean == i for i, mean in enumerate(means)])
 

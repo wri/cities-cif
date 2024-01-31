@@ -100,7 +100,7 @@ class Albedo(Layer):
         )
 
         with ProgressBar():
-            print("Calculating albedo layer:")
+            print(f"Calculating albedo layer in bbox {bbox}:")
             ds = ds.compute()
 
         data = ds.albedo_mean.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
