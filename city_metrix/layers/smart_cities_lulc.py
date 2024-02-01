@@ -7,6 +7,7 @@ from sklearn.tree import plot_tree
 import matplotlib.pyplot as plt
 from xrspatial.classify import reclassify
 import rioxarray
+import psutil
 
 from .layer import Layer, get_utm_zone_epsg, create_fishnet_grid
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
@@ -27,9 +28,9 @@ class SmartCitiesLULC(Layer):
         buildings_sample = BuildingClassifier(geo_file = 'buildings-sample-classed_LA.geojson')
         clf = buildings_sample.building_class_tree()
 
-        plt.figure(figsize=(20, 10))
-        plot_tree(clf, feature_names=['ULU', 'ANBH', 'Area_m'], class_names=['low','high'], filled=True)
-        plt.show()
+        # plt.figure(figsize=(20, 10))
+        # plot_tree(clf, feature_names=['ULU', 'ANBH', 'Area_m'], class_names=['low','high'], filled=True)
+        # plt.show()
 
         # Predict and evaluate
         # y_pred = clf.predict(buildings_sample[['ULU', 'ANBH', 'Area_m']])
@@ -40,7 +41,9 @@ class SmartCitiesLULC(Layer):
         lulc_tiles = []
 
         for i in range(len(ZONES)):
-            print(i)
+            process = psutil.Process()
+            print(f'tile: {i}, memory: {process.memory_info().rss/10 ** 9} GB')
+
             bbox = ZONES.iloc[[i]].total_bounds
 
             esa_1m = BuildingClassifier().get_data_esa_reclass(bbox, crs)
@@ -97,7 +100,6 @@ class SmartCitiesLULC(Layer):
             building_osm = OpenStreetMap(osm_class=OpenStreetMapClass.BUILDING).get_data(bbox).to_crs(crs).reset_index()
             building_osm['Value'] = building_osm['osmid']
             building_osm_1m = BuildingClassifier().rasterize_polygon(building_osm, esa_1m)
-            
             building_osm[['ULU', 'ANBH', 'Area_m']] = building_osm.apply(lambda row: BuildingClassifier().extract_features(row, building_osm_1m, 'osmid', ulu_lulc_1m, anbh_1m), axis=1)
 
             building_osm['Value'] = clf.predict(building_osm[['ULU', 'ANBH', 'Area_m']])
@@ -109,9 +111,12 @@ class SmartCitiesLULC(Layer):
             parking_osm['Value'] = np.int8(50)
             parking_1m = BuildingClassifier().rasterize_polygon(parking_osm, esa_1m)
 
-            # TODO
+            # osm_df = pd.concat([open_space_osm[['geometry','Value']], water_osm[['geometry','Value']], roads_osm[['geometry','Value']], building_osm[['geometry','Value']], parking_osm[['geometry','Value']]], axis=0)
+            # osm_1m = BuildingClassifier().rasterize_polygon(osm_df, esa_1m)
+
             # Combine rasters
             datasets = [esa_1m, open_space_1m, roads_1m, water_1m, building_1m, parking_1m]
+            # datasets = [esa_1m, osm_1m]
             # not all raster has 'time', concatenate without 'time' dimension
             aligned_datasets = [ds.drop_vars('time', errors='ignore') for ds in datasets]
             # use chunk 512x512
@@ -124,9 +129,9 @@ class SmartCitiesLULC(Layer):
             lulc = reclassify(lulc, bins=reclass_from, new_values=reclass_to).astype(np.int8)
 
             lulc_tiles.append(lulc)
+            # lulc_tiles.append(f'tile_{i}.tif')
+            # lulc.rio.to_raster(f'tile_{i}.tif')
         
         lulc_mosaiced = rioxarray.merge(lulc_tiles)
 
         return lulc_mosaiced
-
-        # TODO write tif

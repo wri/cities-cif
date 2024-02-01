@@ -14,13 +14,17 @@ class UrbanLandUse(Layer):
     def get_data(self, bbox):
         crs = get_utm_zone_epsg(bbox)
         dataset = ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1")
-        ulu = (dataset
-               .filterBounds(ee.Geometry.BBox(*bbox))
-               .select(self.band)
-               .reduce(ee.Reducer.firstNonNull())
-               .rename('lulc')
-               )
         
+        if dataset.filterBounds(ee.Geometry.BBox(*bbox)).size().getInfo() == 0:
+            ulu = ee.Image.constant(1).clip(ee.Geometry.BBox(*bbox)).rename('lulc')
+        else:
+            ulu = (dataset
+                .filterBounds(ee.Geometry.BBox(*bbox))
+                .select(self.band)
+                .reduce(ee.Reducer.firstNonNull())
+                .rename('lulc')
+                )
+
         ds = xr.open_dataset(
             ee.ImageCollection(ulu),
             engine='ee',
