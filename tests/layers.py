@@ -4,6 +4,7 @@ from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperatur
 from city_metrix.layers.layer import get_image_collection
 from .conftest import MockLayer, MockMaskLayer, ZONES, LARGE_ZONES, MockLargeLayer
 
+
 import pytest
 import numpy as np
 

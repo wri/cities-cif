@@ -86,7 +86,6 @@ class Albedo(Layer):
         ## S2 MOSAIC AND ALBEDO
         dataset = get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
-
         albedo_mean = s2_albedo.reduce(ee.Reducer.mean())
 
         data = get_image_collection(ee.ImageCollection(albedo_mean), bbox, 10, "albedo").albedo_mean
