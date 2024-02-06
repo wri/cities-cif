@@ -223,7 +223,8 @@ def get_image_collection(
         engine='ee',
         scale=scale,
         crs=crs,
-        geometry=ee.Geometry.Rectangle(*bbox)
+        geometry=ee.Geometry.Rectangle(*bbox),
+        chunks={'X': 512, 'Y': 512},
     )
 
     with ProgressBar():
