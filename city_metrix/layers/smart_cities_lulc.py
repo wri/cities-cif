@@ -8,11 +8,23 @@ import matplotlib.pyplot as plt
 from xrspatial.classify import reclassify
 import rioxarray
 import psutil
+import warnings
+warnings.filterwarnings('ignore',category=UserWarning)
 
 from .layer import Layer, get_utm_zone_epsg, create_fishnet_grid
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .building_classifier import BuildingClassifier
 
+
+from cartoframes.auth import set_default_credentials
+from cartoframes import read_carto
+def read_carto_city(city_name: str):
+    set_default_credentials(username='wri-cities', api_key='default_public')
+    city_df = read_carto(f"SELECT * FROM smart_surfaces_urban_areas WHERE name10 = '{city_name}'")
+    return city_df
+
+columbia = read_carto_city('Columbia_SC')
+bbox = columbia.reset_index().total_bounds
 
 class SmartCitiesLULC(Layer):
     def __init__(self, land_cover_class=None, **kwargs):
@@ -22,23 +34,15 @@ class SmartCitiesLULC(Layer):
     def get_data(self, bbox):
         crs = get_utm_zone_epsg(bbox)
 
-        # TODO
-        # roof slope model
+        # TODO: roof slope model
         # buildings sample classed LA for testing
         buildings_sample = BuildingClassifier(geo_file = 'buildings-sample-classed_LA.geojson')
         clf = buildings_sample.building_class_tree()
 
-        # plt.figure(figsize=(20, 10))
-        # plot_tree(clf, feature_names=['ULU', 'ANBH', 'Area_m'], class_names=['low','high'], filled=True)
-        # plt.show()
-
-        # Predict and evaluate
-        # y_pred = clf.predict(buildings_sample[['ULU', 'ANBH', 'Area_m']])
-        # accuracy = accuracy_score(buildings_sample['Slope_encoded'], y_pred)
-        # print(f"Accuracy: {accuracy}")
-
         ZONES = create_fishnet_grid(*bbox, 0.1).reset_index()
-        lulc_tiles = []
+        # Initialize a dictionary to hold counts of unique lulc types
+        unique_lulc_counts = {}
+        total_count = 0
 
         for i in range(len(ZONES)):
             process = psutil.Process()
@@ -128,10 +132,19 @@ class SmartCitiesLULC(Layer):
             reclass_to = [1, 2, 3, 20, 10, 20, 30, 41, 42, 50]
             lulc = reclassify(lulc, bins=reclass_from, new_values=reclass_to).astype(np.int8)
 
-            lulc_tiles.append(lulc)
-            # lulc_tiles.append(f'tile_{i}.tif')
-            # lulc.rio.to_raster(f'tile_{i}.tif')
-        
-        lulc_mosaiced = rioxarray.merge(lulc_tiles)
+            # Flatten the array as a 1D array
+            flattened_array = lulc.values.flatten()
+            # Count occurrences of each unique value
+            values, counts = np.unique(flattened_array, return_counts=True)
+            # Update the dictionary with counts, summing counts for existing keys (unique lulc)
+            for value, count in zip(values, counts):
+                if value in unique_lulc_counts:
+                    unique_lulc_counts[value] += count
+                else:
+                    unique_lulc_counts[value] = count
+            # Update total pixel count
+            total_count += flattened_array.size
+    
+        lulc_area_pct = {key: value/total_count for key, value in unique_lulc_counts.items()}
 
-        return lulc_mosaiced
+        return lulc_area_pct

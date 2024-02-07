@@ -177,19 +177,29 @@ class BuildingClassifier(Layer):
         buildings_sample[['ULU', 'ANBH', 'Area_m']] = buildings_sample.to_crs(crs).apply(
             lambda row: self.extract_features(row, buildings_sample_1m, 'ID', ulu_lulc_1m, anbh_1m), axis=1)
 
-        clf = DecisionTreeClassifier(max_depth=4)
+        # TODO: classifier parameters
+        clf = DecisionTreeClassifier()
         # encode labels
         buildings_sample['Slope_encoded'] = buildings_sample['Slope'].map({'low': np.int8(41), 'high': np.int8(42)})
         # drop records with NA in Slope
-        buildings_sample = buildings_sample.dropna(subset=['Slope'])
+        buildings_sample = buildings_sample.dropna(subset=['Slope']).query('Area_m < 40000').reset_index()
 
-        clf.fit(buildings_sample[['ULU', 'ANBH', 'Area_m']], buildings_sample['Slope_encoded'])
+        # Set the random seed for reproducibility
+        np.random.seed(5511)
+        # 70% samples for training
+        num_train = int(0.7 * len(buildings_sample))
+        train_indices = np.random.choice(len(buildings_sample), size=num_train, replace=False)
+        # Select these rows for the training set
+        train_buildings_sample = buildings_sample.iloc[train_indices]
+        # Select the remaining rows for the testing set
+        test_buildings_sample = buildings_sample.drop(train_indices)
+
+        clf.fit(train_buildings_sample[['ULU', 'ANBH', 'Area_m']], train_buildings_sample['Slope_encoded'])
 
         # plt.figure(figsize=(20, 10))
         # plot_tree(clf, feature_names=['ULU', 'ANBH', 'Area_m'], class_names=['low','high'], filled=True)
         # plt.show()
-
-        # Predict and evaluate
+        # # Predict and evaluate
         # y_pred = clf.predict(buildings_sample[['ULU', 'ANBH', 'Area_m']])
         # accuracy = accuracy_score(buildings_sample['Slope_encoded'], y_pred)
         # print(f"Accuracy: {accuracy}")

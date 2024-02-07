@@ -13,15 +13,20 @@ class UrbanLandUse(Layer):
 
     def get_data(self, bbox):
         dataset = ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1")
+        # ImageCollection didn't cover the globe
         if dataset.filterBounds(ee.Geometry.BBox(*bbox)).size().getInfo() == 0:
-            ulu = ee.Image.constant(1).clip(ee.Geometry.BBox(*bbox)).rename('lulc')
+            ulu = ee.ImageCollection(ee.Image.constant(1)
+                                     .clip(ee.Geometry.BBox(*bbox))
+                                     .rename('lulc')
+                                     )
         else:
             ulu = ee.ImageCollection(dataset
-                .filterBounds(ee.Geometry.BBox(*bbox))
-                .select(self.band)
-                .reduce(ee.Reducer.firstNonNull())
-                .rename('lulc')
-                )
+                                     .filterBounds(ee.Geometry.BBox(*bbox))
+                                     .select(self.band)
+                                     .reduce(ee.Reducer.firstNonNull())
+                                     .rename('lulc')
+                                     )
 
         data = get_image_collection(ulu, bbox, 5, "urban land use").lulc
+
         return data
