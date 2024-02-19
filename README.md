@@ -2,6 +2,9 @@
 
 The Cities Indicator Framework (CIF) is a set of Python tools to make it easier to calculate zonal statistics for cities by providing a standardized set of data layers for inputs and a common framework for using those layers to calculate indicators.
 
+## Quick start
+If all you want to do is use the CIF, the quickest way to get started is to use our [WRI Cities Indicator Framework Colab Notebook](https://colab.research.google.com/drive/1PV1H-godxJ6h42p74Ij9sdFh3T0RN-7j#scrollTo=eM14UgpmpZL-)
+
 ## Dependencies
 ### Conda
 `conda env create -f environment.yml`
