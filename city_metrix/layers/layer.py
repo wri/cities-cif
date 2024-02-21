@@ -73,12 +73,17 @@ class LayerGroupBy:
             stats = self._zonal_stats_fishnet(stats_func)
 
         if self.layer is not None:
+            # decode zone and layer value using bit operations
             stats["layer"] = stats["zone"].astype("uint32").values >> 16
             stats["zone"] = stats["zone"].astype("uint32").values & 65535
 
-            stats = stats.groupby("zone").apply(
-                lambda df: df.drop(columns="zone").groupby("layer").sum().to_dict()[stats_func]
-            )
+            # group layer values together into a dictionary per zone
+            def group_layer_values(df):
+               layer_values = df.drop(columns="zone").groupby("layer").sum()
+               layer_dicts = layer_values.to_dict()
+               return layer_dicts[stats_func]
+
+            stats = stats.groupby("zone").apply(group_layer_values)
 
             return stats
 
@@ -136,6 +141,7 @@ class LayerGroupBy:
         zones = self._rasterize(tile_gdf, align_to)
 
         if self.layer is not None:
+            # encode layer into zones by bitshifting
             zones = zones + (layer_data.astype("uint32") << 16)
 
         stats = zonal_stats(zones, aggregate_data, stats_funcs=stats_func)
