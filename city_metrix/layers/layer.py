@@ -68,12 +68,21 @@ class LayerGroupBy:
 
     def _zonal_stats(self, stats_func):
         if box(*self.zones.total_bounds).area <= MAX_TILE_SIZE**2:
-            stats = self._zonal_stats_tile(self.zones, [stats_func])[stats_func]
+            stats = self._zonal_stats_tile(self.zones, [stats_func])
         else:
             stats = self._zonal_stats_fishnet(stats_func)
 
         if self.layer is not None:
-            pass
+            stats["layer"] = stats["zone"].astype("uint32").values >> 16
+            stats["zone"] = stats["zone"].astype("uint32").values & 65535
+
+            stats = stats.groupby("zone").apply(
+                lambda df: df.drop(columns="zone").groupby("layer").sum().to_dict()[stats_func]
+            )
+
+            return stats
+
+        return stats[stats_func]
 
     def _zonal_stats_fishnet(self, stats_func):
         # fishnet GeoDataFrame into smaller tiles
@@ -101,8 +110,9 @@ class LayerGroupBy:
         ])
 
         aggregated = tile_stats.groupby("zone").apply(_aggregate_stats, stats_func)
+        aggregated.name = stats_func
 
-        return aggregated
+        return aggregated.reset_index()
 
     def _zonal_stats_tile(self, tile_gdf, stats_func):
         bbox = tile_gdf.total_bounds
@@ -112,18 +122,20 @@ class LayerGroupBy:
 
         # align to highest resolution raster, which should be the largest raster
         # since all are clipped to the extent
-        raster_data = [data for data in mask_datum + [aggregate_data] + layer_data if isinstance(data, xr.DataArray)]
+        raster_data = [data for data in mask_datum + [aggregate_data] + [layer_data] if isinstance(data, xr.DataArray)]
         align_to = sorted(raster_data, key=lambda data: data.size, reverse=True).pop()
         aggregate_data = self._align(aggregate_data, align_to)
         mask_datum = [self._align(data, align_to) for data in mask_datum]
-        layer_data = self._align(layer_data, align_to) if layer_data is not None else None
+
+        if self.layer is not None:
+            layer_data = self._align(layer_data, align_to)
 
         for mask in mask_datum:
             aggregate_data = aggregate_data.where(~np.isnan(mask))
 
         zones = self._rasterize(tile_gdf, align_to)
 
-        if layer_data is not None:
+        if self.layer is not None:
             zones = zones + (layer_data.astype("uint32") << 16)
 
         stats = zonal_stats(zones, aggregate_data, stats_funcs=stats_func)
