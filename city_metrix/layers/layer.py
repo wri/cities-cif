@@ -233,5 +233,10 @@ def get_image_collection(
 
     # get in rioxarray format
     data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
+
+    # remove scale_factor used for NetCDF, this confuses rioxarray GeoTiffs
+    for data_var in list(data.data_vars.values()):
+        del data_var.encoding["scale_factor"]
+
     return data
 
