@@ -2,8 +2,8 @@ import ee
 
 from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover
 from city_metrix.layers.layer import get_image_collection
-from .conftest import MockLayer, MockMaskLayer, ZONES, LARGE_ZONES, MockLargeLayer
-
+from .conftest import MockLayer, MockMaskLayer, ZONES, LARGE_ZONES, MockLargeLayer, MockGroupByLayer, \
+    MockLargeGroupByLayer
 
 import pytest
 import numpy as np
@@ -41,6 +41,16 @@ def test_masks():
             assert np.isnan(count)
         else:
             assert count == 100
+
+
+def test_group_by_layer():
+    counts = MockLayer().groupby(ZONES, layer=MockGroupByLayer()).count()
+    assert all([count == {1: 50.0, 2: 50.0} for count in counts])
+
+
+def test_group_by_large_layer():
+    counts = MockLargeLayer().groupby(LARGE_ZONES, layer=MockLargeGroupByLayer()).count()
+    assert all([count == {1: 50.0, 2: 50.0} for count in counts])
 
 
 SAMPLE_BBOX = (-38.35530428121955, -12.821710300686393, -38.33813814352424, -12.80363249765361)
