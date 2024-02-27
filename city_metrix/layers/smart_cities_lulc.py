@@ -1,13 +1,13 @@
 import xarray as xr
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 from shapely.geometry import CAP_STYLE, JOIN_STYLE
 from sklearn.metrics import accuracy_score
 from sklearn.tree import plot_tree
 import matplotlib.pyplot as plt
-from xrspatial.classify import reclassify
-import rioxarray
 import psutil
+from exactextract import exact_extract
 import warnings
 warnings.filterwarnings('ignore',category=UserWarning)
 
@@ -15,16 +15,9 @@ from .layer import Layer, get_utm_zone_epsg, create_fishnet_grid
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .building_classifier import BuildingClassifier
 
-
-from cartoframes.auth import set_default_credentials
-from cartoframes import read_carto
-def read_carto_city(city_name: str):
-    set_default_credentials(username='wri-cities', api_key='default_public')
-    city_df = read_carto(f"SELECT * FROM smart_surfaces_urban_areas WHERE name10 = '{city_name}'")
-    return city_df
-
-columbia = read_carto_city('Columbia_SC')
-bbox = columbia.reset_index().total_bounds
+ssc = gpd.read_file('SSC_CensusUrbanAreas2020.shp')
+san_antonio = ssc[ssc['NAME20'] == 'San Antonio, TX']
+bbox = san_antonio.reset_index().total_bounds
 
 class SmartCitiesLULC(Layer):
     def __init__(self, land_cover_class=None, **kwargs):
@@ -36,7 +29,7 @@ class SmartCitiesLULC(Layer):
 
         # TODO: roof slope model
         # buildings sample classed LA for testing
-        buildings_sample = BuildingClassifier(geo_file = 'buildings-sample-classed_LA.geojson')
+        buildings_sample = BuildingClassifier(geo_file = 'V2-building-class-data.geojson')
         clf = buildings_sample.building_class_tree()
 
         ZONES = create_fishnet_grid(*bbox, 0.1).reset_index()
@@ -55,13 +48,11 @@ class SmartCitiesLULC(Layer):
             # Open space
             open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).to_crs(crs).reset_index()
             open_space_osm['Value'] = np.int8(10)
-            open_space_1m = BuildingClassifier().rasterize_polygon(open_space_osm, esa_1m)
 
 
             # Water
             water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox).to_crs(crs).reset_index()
             water_osm['Value'] = np.int8(20)
-            water_1m = BuildingClassifier().rasterize_polygon(water_osm, esa_1m)
 
 
             # Roads
@@ -94,43 +85,59 @@ class SmartCitiesLULC(Layer):
                 axis=1
             )
 
-            roads_1m = BuildingClassifier().rasterize_polygon(roads_osm, esa_1m)
-
 
             # Building
             ulu_lulc_1m = BuildingClassifier().get_data_ulu(bbox, crs, esa_1m)
             anbh_1m = BuildingClassifier().get_data_anbh(bbox, crs, esa_1m)
+            # get building features
+            buildings = BuildingClassifier().get_data_buildings(bbox, crs)
+            # extract ULU, ANBH, and Area_m
+            buildings['ULU'] = exact_extract(ulu_lulc_1m, buildings, ["majority"], output='pandas')['majority']
+            buildings['ANBH'] = exact_extract(anbh_1m, buildings, ["mean"], output='pandas')['mean']
+            buildings['Area_m'] = buildings.geometry.area
+            # classify buildings
+            unclassed_buildings = buildings[buildings['ULU'] == 0]
+            classed_buildings = buildings[buildings['ULU'] != 0]
             
-            building_osm = OpenStreetMap(osm_class=OpenStreetMapClass.BUILDING).get_data(bbox).to_crs(crs).reset_index()
-            building_osm['Value'] = building_osm['osmid']
-            building_osm_1m = BuildingClassifier().rasterize_polygon(building_osm, esa_1m)
-            building_osm[['ULU', 'ANBH', 'Area_m']] = building_osm.apply(lambda row: BuildingClassifier().extract_features(row, building_osm_1m, 'osmid', ulu_lulc_1m, anbh_1m), axis=1)
-
-            building_osm['Value'] = clf.predict(building_osm[['ULU', 'ANBH', 'Area_m']])
-            building_1m = BuildingClassifier().rasterize_polygon(building_osm, esa_1m)
+            if len(classed_buildings) > 0:
+                classed_buildings['Value'] = clf.predict(classed_buildings[['ULU', 'ANBH', 'Area_m']])
+                # Define conditions and choices
+                case_when_class = [
+                    # "residential" & "high"
+                    (classed_buildings['Value'] == 40) & (classed_buildings['ULU'] == 2),
+                    # "non-residential" & "high"
+                    (classed_buildings['Value'] == 40) & (classed_buildings['ULU'] == 1),
+                    # "residential" & "low"
+                    (classed_buildings['Value'] == 42) & (classed_buildings['ULU'] == 2),
+                    # "non-residential" & "low"
+                    (classed_buildings['Value'] == 42) & (classed_buildings['ULU'] == 1)
+                ]
+                case_when_value = [40, 41, 42, 43]
+                classed_buildings['Value'] = np.select(case_when_class, case_when_value, default=44)
+                unclassed_buildings['Value'] = 44
+                buildings = pd.concat([classed_buildings, unclassed_buildings])
+            else:
+                buildings['Value'] = 44
 
 
             # Parking
             parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(bbox).to_crs(crs).reset_index()
             parking_osm['Value'] = np.int8(50)
-            parking_1m = BuildingClassifier().rasterize_polygon(parking_osm, esa_1m)
 
-            # osm_df = pd.concat([open_space_osm[['geometry','Value']], water_osm[['geometry','Value']], roads_osm[['geometry','Value']], building_osm[['geometry','Value']], parking_osm[['geometry','Value']]], axis=0)
-            # osm_1m = BuildingClassifier().rasterize_polygon(osm_df, esa_1m)
+
+            # combine features: open space, water, road, building, parking
+            feature_df = pd.concat([open_space_osm[['geometry','Value']], water_osm[['geometry','Value']], roads_osm[['geometry','Value']], buildings[['geometry','Value']], parking_osm[['geometry','Value']]], axis=0)
+            feature_1m = BuildingClassifier().rasterize_polygon(feature_df, esa_1m)
 
             # Combine rasters
-            datasets = [esa_1m, open_space_1m, roads_1m, water_1m, building_1m, parking_1m]
-            # datasets = [esa_1m, osm_1m]
+            datasets = [esa_1m, feature_1m]
             # not all raster has 'time', concatenate without 'time' dimension
             aligned_datasets = [ds.drop_vars('time', errors='ignore') for ds in datasets]
             # use chunk 512x512
             aligned_datasets = [ds.chunk({'x': 512, 'y': 512}) for ds in aligned_datasets]
             lulc = xr.concat(aligned_datasets, dim='Value').max(dim='Value')
 
-            # Reclass ESA water (4) to 20
-            reclass_from = [1, 2, 3, 4, 10, 20, 30, 41, 42, 50]
-            reclass_to = [1, 2, 3, 20, 10, 20, 30, 41, 42, 50]
-            lulc = reclassify(lulc, bins=reclass_from, new_values=reclass_to).astype(np.int8)
+            lulc.rio.to_raster(f'tile_{i}.tif')
 
             # Flatten the array as a 1D array
             flattened_array = lulc.values.flatten()

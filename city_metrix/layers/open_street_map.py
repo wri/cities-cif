@@ -9,7 +9,7 @@ from .layer import Layer
 class OpenStreetMapClass(Enum):
     OPEN_SPACE = {'leisure': ['park', 'nature_reserve', 'common', 'playground', 'pitch', 'track'],
                   'boundary': ['protected_area', 'national_park']}
-    OPEN_SPACE_HEAT = {'leisure': ['park', 'nature_reserve', 'common', 'playground', 'pitch', 'track', 'garden', 'golf_course', 'dog_park', 'recreation_ground', 'disc_golf_course'],
+    OPEN_SPACE_HEAT = {'leisure': ['park', 'nature_reserve', 'common', 'playground', 'pitch', 'garden', 'golf_course', 'dog_park', 'recreation_ground', 'disc_golf_course'],
                        'boundary': ['protected_area', 'national_park', 'forest_compartment', 'forest']}
     WATER = {'water': True,
              'natural': ['water'],

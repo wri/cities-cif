@@ -15,7 +15,7 @@ class UrbanLandUse(Layer):
         dataset = ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1")
         # ImageCollection didn't cover the globe
         if dataset.filterBounds(ee.Geometry.BBox(*bbox)).size().getInfo() == 0:
-            ulu = ee.ImageCollection(ee.Image.constant(1)
+            ulu = ee.ImageCollection(ee.Image.constant(0)
                                      .clip(ee.Geometry.BBox(*bbox))
                                      .rename('lulc')
                                      )
