@@ -1,8 +1,8 @@
 from setuptools import setup
 
 setup(
-    name="cities-indicators_old",
-    version="0.2",
+    name="city_metrix",
+    version="0.1.0",
     description="Module to calculate various metrics on cities.",
     packages=["city_metrix", "city_metrix.layers"],
     author="Justin Terry",
