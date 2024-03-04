@@ -32,7 +32,7 @@ class BuildingClassifier(Layer):
 
     def get_data_esa_reclass(self, bbox, crs):
         # ESA reclass and upsample
-        esa_world_cover = EsaWorldCover().get_data(bbox)
+        esa_world_cover = EsaWorldCover(year=2021).get_data(bbox)
 
         reclass_map = {
             EsaWorldCoverClass.TREE_COVER.value: 1,
@@ -95,16 +95,16 @@ class BuildingClassifier(Layer):
 
         return ulu_lulc_1m
 
-    def get_data_anbh(self, bbox, crs, snap_to):
+    def get_data_anbh(self, bbox, snap_to):
         # Load ANBH layer
         anbh_data = AverageNetBuildingHeight().get_data(bbox)
 
         # Chunk the data for Dask processing
         anbh_data = anbh_data.chunk({'x': 512, 'y': 512})
 
-        anbh_1m = anbh_data.rio.reproject(
-            dst_crs=crs,
-            shape=snap_to.shape,
+        # Use reproject_match, because reproject would raise OneDimensionalRaster with shape (1,1)
+        anbh_1m = anbh_data.rio.reproject_match(
+            match_data_array=snap_to,
             resampling=Resampling.nearest,
             nodata=0
         )
@@ -155,7 +155,7 @@ class BuildingClassifier(Layer):
         # building_sample has extracted data and saved in geojson
         # esa_1m = BuildingClassifier().get_data_esa_reclass(bbox, crs)
         # ulu_lulc_1m = self.get_data_ulu(bbox, crs, esa_1m)
-        # anbh_1m = self.get_data_anbh(bbox, crs, esa_1m)
+        # anbh_1m = self.get_data_anbh(bbox, esa_1m)
 
         # # Extract 3 features for buildings:
         # # majority of Urban Land Use(ULU) class

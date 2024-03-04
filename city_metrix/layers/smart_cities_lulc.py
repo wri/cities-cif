@@ -3,21 +3,16 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import CAP_STYLE, JOIN_STYLE
-from sklearn.metrics import accuracy_score
-from sklearn.tree import plot_tree
-import matplotlib.pyplot as plt
+from shapely.geometry import box
 import psutil
 from exactextract import exact_extract
 import warnings
 warnings.filterwarnings('ignore',category=UserWarning)
 
-from .layer import Layer, get_utm_zone_epsg, create_fishnet_grid
+from .layer import Layer, get_utm_zone_epsg, create_fishnet_grid, MAX_TILE_SIZE
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .building_classifier import BuildingClassifier
 
-ssc = gpd.read_file('SSC_CensusUrbanAreas2020.shp')
-san_antonio = ssc[ssc['NAME20'] == 'San Antonio, TX']
-bbox = san_antonio.reset_index().total_bounds
 
 class SmartCitiesLULC(Layer):
     def __init__(self, land_cover_class=None, **kwargs):
@@ -27,36 +22,27 @@ class SmartCitiesLULC(Layer):
     def get_data(self, bbox):
         crs = get_utm_zone_epsg(bbox)
 
-        # TODO: roof slope model
-        # buildings sample classed LA for testing
+        # Roof slope model
+        # buildings sample from US
         buildings_sample = BuildingClassifier(geo_file = 'V2-building-class-data.geojson')
         clf = buildings_sample.building_class_tree()
 
-        ZONES = create_fishnet_grid(*bbox, 0.1).reset_index()
-        # Initialize a dictionary to hold counts of unique lulc types
-        unique_lulc_counts = {}
-        total_count = 0
+        # ESA world cover
+        esa_1m = BuildingClassifier().get_data_esa_reclass(bbox, crs)
 
-        for i in range(len(ZONES)):
-            process = psutil.Process()
-            print(f'tile: {i}, memory: {process.memory_info().rss/10 ** 9} GB')
-
-            bbox = ZONES.iloc[[i]].total_bounds
-
-            esa_1m = BuildingClassifier().get_data_esa_reclass(bbox, crs)
-
-            # Open space
-            open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).to_crs(crs).reset_index()
-            open_space_osm['Value'] = np.int8(10)
+        # Open space
+        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).to_crs(crs).reset_index()
+        open_space_osm['Value'] = np.int8(10)
 
 
-            # Water
-            water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox).to_crs(crs).reset_index()
-            water_osm['Value'] = np.int8(20)
+        # Water
+        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox).to_crs(crs).reset_index()
+        water_osm['Value'] = np.int8(20)
 
 
-            # Roads
-            roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox).to_crs(crs).reset_index()
+        # Roads
+        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox).to_crs(crs).reset_index()
+        if len(roads_osm) > 0:
             roads_osm['lanes'] = pd.to_numeric(roads_osm['lanes'], errors='coerce')
             # Get the average number of lanes per highway class
             lanes = (roads_osm.drop(columns='geometry')
@@ -84,74 +70,86 @@ class SmartCitiesLULC(Layer):
                 join_style=JOIN_STYLE.mitre),
                 axis=1
             )
+        else:
+            # Add value field (30)
+            roads_osm['Value'] = np.int8(30)
 
 
-            # Building
-            ulu_lulc_1m = BuildingClassifier().get_data_ulu(bbox, crs, esa_1m)
-            anbh_1m = BuildingClassifier().get_data_anbh(bbox, crs, esa_1m)
-            # get building features
-            buildings = BuildingClassifier().get_data_buildings(bbox, crs)
-            # extract ULU, ANBH, and Area_m
-            buildings['ULU'] = exact_extract(ulu_lulc_1m, buildings, ["majority"], output='pandas')['majority']
-            buildings['ANBH'] = exact_extract(anbh_1m, buildings, ["mean"], output='pandas')['mean']
-            buildings['Area_m'] = buildings.geometry.area
-            # classify buildings
-            unclassed_buildings = buildings[buildings['ULU'] == 0]
-            classed_buildings = buildings[buildings['ULU'] != 0]
+        # Building
+        ulu_lulc_1m = BuildingClassifier().get_data_ulu(bbox, crs, esa_1m)
+        anbh_1m = BuildingClassifier().get_data_anbh(bbox, esa_1m)
+        # get building features
+        buildings = BuildingClassifier().get_data_buildings(bbox, crs)
+        # extract ULU, ANBH, and Area_m
+        buildings['ULU'] = exact_extract(ulu_lulc_1m, buildings, ["majority"], output='pandas')['majority']
+        buildings['ANBH'] = exact_extract(anbh_1m, buildings, ["mean"], output='pandas')['mean']
+        buildings['Area_m'] = buildings.geometry.area
+        # classify buildings
+        unclassed_buildings = buildings[buildings['ULU'] == 0]
+        classed_buildings = buildings[buildings['ULU'] != 0]
+        
+        if len(classed_buildings) > 0:
+            classed_buildings['Value'] = clf.predict(classed_buildings[['ULU', 'ANBH', 'Area_m']])
+            # Define conditions and choices
+            case_when_class = [
+                # "residential" & "high"
+                (classed_buildings['Value'] == 40) & (classed_buildings['ULU'] == 2),
+                # "non-residential" & "high"
+                (classed_buildings['Value'] == 40) & (classed_buildings['ULU'] == 1),
+                # "residential" & "low"
+                (classed_buildings['Value'] == 42) & (classed_buildings['ULU'] == 2),
+                # "non-residential" & "low"
+                (classed_buildings['Value'] == 42) & (classed_buildings['ULU'] == 1)
+            ]
+            case_when_value = [40, 41, 42, 43]
+            classed_buildings['Value'] = np.select(case_when_class, case_when_value, default=44)
+            unclassed_buildings['Value'] = 44
+            buildings = pd.concat([classed_buildings, unclassed_buildings])
+        else:
+            buildings['Value'] = 44
+
+
+        # Parking
+        parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(bbox).to_crs(crs).reset_index()
+        parking_osm['Value'] = np.int8(50)
+
+
+        # combine features: open space, water, road, building, parking
+        feature_df = pd.concat([open_space_osm[['geometry','Value']], water_osm[['geometry','Value']], roads_osm[['geometry','Value']], buildings[['geometry','Value']], parking_osm[['geometry','Value']]], axis=0)
+        feature_1m = BuildingClassifier().rasterize_polygon(feature_df, esa_1m)
+
+        # Combine rasters
+        datasets = [esa_1m, feature_1m]
+        # not all raster has 'time', concatenate without 'time' dimension
+        aligned_datasets = [ds.drop_vars('time', errors='ignore') for ds in datasets]
+        # use chunk 512x512
+        aligned_datasets = [ds.chunk({'x': 512, 'y': 512}) for ds in aligned_datasets]
+        lulc = xr.concat(aligned_datasets, dim='Value').max(dim='Value')
+
+        return lulc
+
+
+    def write(self, zones, output_path):
+        bbox = zones.total_bounds
+        if box(*bbox).area <= MAX_TILE_SIZE**2:
+            self.get_data(bbox).rio.to_raster(output_path)
+        else:
+            ZONES = create_fishnet_grid(*bbox, MAX_TILE_SIZE).reset_index()
+            # spatial join with fishnet grid and then intersect geometries with fishnet tiles
+            joined = zones.sjoin(ZONES)
+            joined["geometry"] = joined.intersection(joined["fishnet_geometry"])
+            # remove linestring artifacts due to float precision
+            gdf = joined[joined.geometry.type.isin(['Polygon', 'MultiPolygon'])]
             
-            if len(classed_buildings) > 0:
-                classed_buildings['Value'] = clf.predict(classed_buildings[['ULU', 'ANBH', 'Area_m']])
-                # Define conditions and choices
-                case_when_class = [
-                    # "residential" & "high"
-                    (classed_buildings['Value'] == 40) & (classed_buildings['ULU'] == 2),
-                    # "non-residential" & "high"
-                    (classed_buildings['Value'] == 40) & (classed_buildings['ULU'] == 1),
-                    # "residential" & "low"
-                    (classed_buildings['Value'] == 42) & (classed_buildings['ULU'] == 2),
-                    # "non-residential" & "low"
-                    (classed_buildings['Value'] == 42) & (classed_buildings['ULU'] == 1)
-                ]
-                case_when_value = [40, 41, 42, 43]
-                classed_buildings['Value'] = np.select(case_when_class, case_when_value, default=44)
-                unclassed_buildings['Value'] = 44
-                buildings = pd.concat([classed_buildings, unclassed_buildings])
-            else:
-                buildings['Value'] = 44
+            print(f"Input covers too much area, splitting into {len(gdf)} tiles")
+            for i in range(len(gdf)):
+                process = psutil.Process()
+                print(f'tile: {i}, memory: {process.memory_info().rss/10 ** 9} GB')
 
-
-            # Parking
-            parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(bbox).to_crs(crs).reset_index()
-            parking_osm['Value'] = np.int8(50)
-
-
-            # combine features: open space, water, road, building, parking
-            feature_df = pd.concat([open_space_osm[['geometry','Value']], water_osm[['geometry','Value']], roads_osm[['geometry','Value']], buildings[['geometry','Value']], parking_osm[['geometry','Value']]], axis=0)
-            feature_1m = BuildingClassifier().rasterize_polygon(feature_df, esa_1m)
-
-            # Combine rasters
-            datasets = [esa_1m, feature_1m]
-            # not all raster has 'time', concatenate without 'time' dimension
-            aligned_datasets = [ds.drop_vars('time', errors='ignore') for ds in datasets]
-            # use chunk 512x512
-            aligned_datasets = [ds.chunk({'x': 512, 'y': 512}) for ds in aligned_datasets]
-            lulc = xr.concat(aligned_datasets, dim='Value').max(dim='Value')
-
-            lulc.rio.to_raster(f'tile_{i}.tif')
-
-            # Flatten the array as a 1D array
-            flattened_array = lulc.values.flatten()
-            # Count occurrences of each unique value
-            values, counts = np.unique(flattened_array, return_counts=True)
-            # Update the dictionary with counts, summing counts for existing keys (unique lulc)
-            for value, count in zip(values, counts):
-                if value in unique_lulc_counts:
-                    unique_lulc_counts[value] += count
-                else:
-                    unique_lulc_counts[value] = count
-            # Update total pixel count
-            total_count += flattened_array.size
+                bbox = gdf.iloc[[i]].total_bounds
+                # Split the original path into name and extension
+                base_name, extension = output_path.rsplit('.', 1)
+                # Create a new path with '_i' appended before the extension
+                new_output_path = f"{base_name}_{i}.{extension}"
     
-        lulc_area_pct = {key: value/total_count for key, value in unique_lulc_counts.items()}
-
-        return lulc_area_pct
+                self.get_data(bbox).rio.to_raster(new_output_path)
