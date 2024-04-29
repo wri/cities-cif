@@ -1,6 +1,6 @@
 import ee
 
-from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover
+from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover, OpenBuildings
 from city_metrix.layers.layer import get_image_collection
 from .conftest import MockLayer, MockMaskLayer, ZONES, LARGE_ZONES, MockLargeLayer
 
@@ -75,4 +75,8 @@ def test_lst():
 
 def test_esa():
     count = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP).get_data(SAMPLE_BBOX).count()
+    assert count
+
+def test_openbuildings():
+    count = OpenBuildings().get_data(SAMPLE_BBOX).count()
     assert count
