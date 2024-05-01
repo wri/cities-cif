@@ -25,6 +25,8 @@ class EsaWorldCover(Layer):
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
 
+    name = "esa_world_cover_2020"
+
     def __init__(self, land_cover_class=None, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class

@@ -13,13 +13,17 @@ import numpy as np
 import utm
 import shapely.geometry as geometry
 import pandas as pd
+from uuid import uuid4
+import os
+import boto3
 
 
 MAX_TILE_SIZE = 0.5
 
 
 class Layer:
-    def __init__(self, aggregate=None, masks=[]):
+    def __init__(self, path=None, aggregate=None, masks=[]):
+        self.path = path
         self.aggregate = aggregate
         if aggregate is None:
             self.aggregate = self
@@ -41,7 +45,7 @@ class Layer:
         :param layers: lis
         :return:
         """
-        return Layer(aggregate=self, masks=self.masks + list(layers))
+        return Layer(path=self.path, aggregate=self, masks=self.masks + list(layers))
 
     def groupby(self, zones, layer=None):
         """
@@ -102,8 +106,17 @@ class LayerGroupBy:
 
     def _zonal_stats_tile(self, tile_gdf, stats_func):
         bbox = tile_gdf.total_bounds
+
         aggregate_data = self.aggregate.get_data(bbox)
-        mask_datum = [mask.get_data(bbox) for mask in self.masks]
+        if self.aggregate.path is not None:
+            write_layer(self.aggregate.path, aggregate_data)
+
+        mask_datum = []
+        for mask in self.masks:
+            mask_data = mask.get_data(bbox)
+
+            if mask.path is not None:
+                write_layer(self.mask.path, mask_data)
 
         # align to highest resolution raster, which should be the largest raster
         # since all are clipped to the extent
@@ -240,3 +253,21 @@ def get_image_collection(
 
     return data
 
+
+def write_layer(path, data):
+    if isinstance(data, xr.DataArray):
+        # for rasters, need to write to locally first then copy to cloud storage
+        if path.startswith("s3://"):
+            tmp_path = f"{uuid4()}.tif"
+            data.rio.to_raster(raster_path=tmp_path, driver="COG")
+
+            s3 = boto3.client('s3')
+            s3.upload_file(tmp_path, path.split('/')[2], '/'.join(path.split('/')[3:]))
+
+            os.remove(tmp_path)
+        else:
+            data.rio.to_raster(raster_path=path, driver="COG")
+    elif isinstance(data, gpd.GeoDataFrame):
+        data.to_file(path, driver="GeoJSON")
+    else:
+        raise NotImplementedError("Can only write DataArray or GeoDataFrame")

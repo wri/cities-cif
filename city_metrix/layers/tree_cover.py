@@ -13,6 +13,8 @@ class TreeCover(Layer):
     
     NO_DATA_VALUE = 255
 
+    name = "tropical_tree_cover"
+
     def __init__(self, min_tree_cover=None, **kwargs):
         super().__init__(**kwargs)
         self.min_tree_cover = min_tree_cover
