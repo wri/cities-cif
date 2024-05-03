@@ -8,9 +8,10 @@ If all you want to do is use the CIF, the quickest way to get started is to use 
 ## PR Review
 0. Prerequisites
   1. Git
-    * On Windows I recommend WSL https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-git 
+    * On Windows I recommend WSL https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-git
   3. https://cli.github.com/
     * On MacOS I recommend the Homebrew option
+    * If you don't have an ssh key, it will install one for you
   4. Conda (or Mamba) to install dependencies
     * If you have Homebrew `brew install --cask miniconda`
 
