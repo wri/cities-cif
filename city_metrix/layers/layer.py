@@ -5,7 +5,7 @@ from uuid import uuid4
 from osgeo import gdal
 
 import ee
-from dask.bytes.tests.test_s3 import boto3
+import boto3
 from dask.diagnostics import ProgressBar
 from ee import ImageCollection
 from geocube.api.core import make_geocube
@@ -63,22 +63,26 @@ class Layer:
         :param bbox: (min x, min y, max x, max y)
         :param output_path: local or s3 path to output to
         :param tile_degrees: optional param to tile the results into multiple files with a VRT.
-            Degrees to tile by. `output_path` must be a valid folder if provided.
+            Degrees to tile by. `output_path` should be a folder path to store the tiles.
         :return:
         """
 
         if tile_degrees is not None:
             tiles = create_fishnet_grid(*bbox, tile_degrees)
 
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
+
             file_names = []
             for tile in tiles["geometry"]:
-                data = self.aggregate.get_data(*tile.bounds)
+                data = self.aggregate.get_data(tile.bounds)
+
                 file_name = f"{output_path}/{uuid4()}.tif"
                 file_names.append(file_name)
 
                 write_layer(file_name, data)
 
-            gdal.BuildVRT(output_path, file_names)
+            gdal.BuildVRT(f"{output_path}.vrt", file_names)
         else:
             data = self.aggregate.get_data(bbox)
             write_layer(output_path, data)
