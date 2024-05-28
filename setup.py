@@ -20,5 +20,6 @@ setup(
         "utm",
         "osmnx",
         "geopandas",
+        "s3fs",
     ],
 )
