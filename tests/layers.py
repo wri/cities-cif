@@ -88,5 +88,5 @@ def test_urban_land_use():
     assert UrbanLandUse().get_data(SAMPLE_BBOX).count()
 
 def test_openbuildings():
-    count = OpenBuildings().get_data(SAMPLE_BBOX).count()
+    count = OpenBuildings().get_data(SAMPLE_BBOX).count().sum()
     assert count
