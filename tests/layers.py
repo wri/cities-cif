@@ -1,6 +1,6 @@
 import ee
 
-from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover, AverageNetBuildingHeight, OpenStreetMap, OpenStreetMapClass, UrbanLandUse
+from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover, AverageNetBuildingHeight, OpenStreetMap, OpenStreetMapClass, UrbanLandUse, OpenBuildings
 from city_metrix.layers.layer import get_image_collection
 from .conftest import MockLayer, MockMaskLayer, ZONES, LARGE_ZONES, MockLargeLayer
 
@@ -87,3 +87,6 @@ def test_open_street_map():
 def test_urban_land_use():
     assert UrbanLandUse().get_data(SAMPLE_BBOX).count()
 
+def test_openbuildings():
+    count = OpenBuildings().get_data(SAMPLE_BBOX).count().sum()
+    assert count

@@ -79,6 +79,16 @@ Hopefully we already have the layers you need in `city_metrix/layers/` and you c
 
 4. Import the new layer class to [city_metrix/layers/\_\_init\_\_.py](../city_metrix/layers/__init__.py)
 
+5. Add a test to [tests/layers.py](../tests/layers.py) to ensure the new layer is working as expected.
+
+6. Add a section to the get layers.ipynb notebook to demonstrate how to use the new layer.
+
+7. Create a PR to merge the new layer into the main branch with these in the PR description:
+    - Link to Jira ticket (if any)
+    - A brief description of the new layer
+    - A link to the Airtable record for the new layer
+    - Explain how to test the new layer
+
 
 ## Adding an Indicator
 Once you have all the data layers you need as inputs, here is the process to create an indicator using them.
