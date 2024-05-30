@@ -6,13 +6,15 @@
 	"image": "mcr.microsoft.com/devcontainers/python:0-3.11",
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
+	"features": {
+		"ghcr.io/dhoeric/features/google-cloud-cli:1": {}
+	}
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip3 install --user -r requirements.txt",
+	"postCreateCommand": ".devcontainer/setup.sh",
 
 	// Configure tool-specific properties.
 	"customizations": {
