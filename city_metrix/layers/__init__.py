@@ -14,4 +14,4 @@ from .world_pop import WorldPop
 from .built_up_height import BuiltUpHeight
 from .average_net_building_height import AverageNetBuildingHeight
 from .open_buildings import OpenBuildings
-from .tree_canopy_hight import TreeCanopyHeight
+from .tree_canopy_height import TreeCanopyHeight

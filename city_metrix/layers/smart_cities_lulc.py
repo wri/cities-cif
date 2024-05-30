@@ -6,12 +6,13 @@ from shapely.geometry import CAP_STYLE, JOIN_STYLE
 from shapely.geometry import box
 import psutil
 from exactextract import exact_extract
+import pickle
 import warnings
 warnings.filterwarnings('ignore',category=UserWarning)
 
 from .layer import Layer, get_utm_zone_epsg, create_fishnet_grid, MAX_TILE_SIZE
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
-from .building_classifier import BuildingClassifier
+from .building_classifier.building_classifier import BuildingClassifier
 
 
 class SmartCitiesLULC(Layer):
@@ -22,10 +23,9 @@ class SmartCitiesLULC(Layer):
     def get_data(self, bbox):
         crs = get_utm_zone_epsg(bbox)
 
-        # Roof slope model
-        # buildings sample from US
-        buildings_sample = BuildingClassifier(geo_file = 'V2-building-class-data.geojson')
-        clf = buildings_sample.building_class_tree()
+        # load building roof slope classifier
+        with open('city_metrix/layers/building_classifier/building_classifier.pkl', 'rb') as f:
+            clf = pickle.load(f)
 
         # ESA world cover
         esa_1m = BuildingClassifier().get_data_esa_reclass(bbox, crs)

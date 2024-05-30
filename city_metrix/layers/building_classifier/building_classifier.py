@@ -10,17 +10,18 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 from xrspatial.classify import reclassify
 from exactextract import exact_extract
+import pickle
 
-from .layer import Layer, get_utm_zone_epsg
-from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from .urban_land_use import UrbanLandUse
-from .average_net_building_height import AverageNetBuildingHeight
-from .open_street_map import OpenStreetMap, OpenStreetMapClass
-from .open_buildings import OpenBuildings
+from ..layer import Layer, get_utm_zone_epsg
+from ..esa_world_cover import EsaWorldCover, EsaWorldCoverClass
+from ..urban_land_use import UrbanLandUse
+from ..average_net_building_height import AverageNetBuildingHeight
+from ..open_street_map import OpenStreetMap, OpenStreetMapClass
+from ..open_buildings import OpenBuildings
 
 
 class BuildingClassifier(Layer):
-    def __init__(self, geo_file=None, **kwargs):
+    def __init__(self, geo_file='V2-building-class-data.geojson', **kwargs):
         super().__init__(**kwargs)
         self.geo_file = geo_file
 
@@ -46,7 +47,6 @@ class BuildingClassifier(Layer):
             EsaWorldCoverClass.HERBACEOUS_WET_LAND.value: 20,
             EsaWorldCoverClass.MANGROVES.value: 20,
             EsaWorldCoverClass.MOSS_AND_LICHEN.value: 3
-            # Add other mappings as needed
         }
 
         # Perform the reclassification
@@ -147,20 +147,21 @@ class BuildingClassifier(Layer):
         return raster.rio.reproject_match(snap_to)
     
 
-    def building_class_tree(self):
+    def building_classifier_tree(self):
         buildings_sample = self.get_data_geo()
-        bbox = buildings_sample.reset_index().total_bounds
-        crs = get_utm_zone_epsg(bbox)
-
-        # building_sample has extracted data and saved in geojson
+        
+        # # Building sample 'V2-building-class-data.geojson' has extracted data and saved in geojson,
+        # # so no need for steps below
+        # # Step 1: Get raster data
+        # bbox = buildings_sample.reset_index().total_bounds
+        # crs = get_utm_zone_epsg(bbox)
         # esa_1m = BuildingClassifier().get_data_esa_reclass(bbox, crs)
         # ulu_lulc_1m = self.get_data_ulu(bbox, crs, esa_1m)
         # anbh_1m = self.get_data_anbh(bbox, esa_1m)
-
-        # # Extract 3 features for buildings:
-        # # majority of Urban Land Use(ULU) class
-        # # mean Average Net Building Height(ANBH)
-        # # area of the building
+        # # Step 2: Extract 3 features for buildings:
+        # # 2.1 majority of Urban Land Use(ULU) class
+        # # 2.2 mean Average Net Building Height(ANBH)
+        # # 2.3 area of the building
         # buildings_sample['ULU'] = exact_extract(ulu_lulc_1m, buildings_sample, ["majority"], output='pandas')['majority']
         # buildings_sample['ANBH'] = exact_extract(anbh_1m, buildings_sample, ["mean"], output='pandas')['mean']
         # buildings_sample['Area_m'] = buildings_sample.geometry.area
@@ -172,23 +173,25 @@ class BuildingClassifier(Layer):
 
         # Select these rows for the training set
         build_train = buildings_sample[buildings_sample['Model']=='training']
-        # Select the remaining rows for the testing set
-        build_test = buildings_sample[buildings_sample['Model']=='testing']
 
         clf.fit(build_train[['ULU', 'ANBH', 'Area_m']], build_train['Slope_encoded'])
 
+        # save decision tree classifier
+        with open('building_classifier.pkl','wb') as f:
+            pickle.dump(clf, f)
+
+        # # Check decision tree and accuracy
+        # # Select the remaining rows for the testing set
+        # build_test = buildings_sample[buildings_sample['Model']=='testing']
         # plt.figure(figsize=(20, 10))
         # plot_tree(clf, feature_names=['ULU', 'ANBH', 'Area_m'], class_names=['low','high'], filled=True)
         # plt.show()
         # # Predict and evaluate
         # y_pred = clf.predict(build_train[['ULU', 'ANBH', 'Area_m']])
         # accuracy = accuracy_score(build_train['Slope_encoded'], y_pred)
-        # print(f"Accuracy: {accuracy}")
+        # print(f"Training Accuracy: {accuracy}")
         # len(build_train[build_train['Slope']==build_train['pred']])/len(build_train)
-
         # y_pred = clf.predict(build_test[['ULU', 'ANBH', 'Area_m']])
         # accuracy = accuracy_score(build_test['Slope_encoded'], y_pred)
-        # print(f"Accuracy: {accuracy}")
+        # print(f"Test Accuracy: {accuracy}")
         # len(build_test[build_test['Slope']==build_test['pred']])/len(build_test)
-
-        return clf
