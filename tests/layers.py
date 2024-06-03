@@ -1,6 +1,6 @@
 import ee
 
-from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover, AverageNetBuildingHeight, OpenStreetMap, OpenStreetMapClass, UrbanLandUse, OpenBuildings, TreeCanopyHeight
+from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover, AverageNetBuildingHeight, OpenStreetMap, OpenStreetMapClass, UrbanLandUse, OpenBuildings, TreeCanopyHeight, SmartSurfaceLULC
 from city_metrix.layers.layer import get_image_collection
 from .conftest import MockLayer, MockMaskLayer, ZONES, LARGE_ZONES, MockLargeLayer, MockGroupByLayer, \
     MockLargeGroupByLayer
@@ -103,4 +103,8 @@ def test_openbuildings():
 
 def test_tree_canopy_hight():
     count = TreeCanopyHeight().get_data(SAMPLE_BBOX).count()
+    assert count
+
+def test_smart_surface_lulc():
+    count = SmartSurfaceLULC().get_data(SAMPLE_BBOX).count()
     assert count

@@ -15,7 +15,7 @@ from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .building_classifier.building_classifier import BuildingClassifier
 
 
-class SmartCitiesLULC(Layer):
+class SmartSurfaceLULC(Layer):
     def __init__(self, land_cover_class=None, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
@@ -125,6 +125,7 @@ class SmartCitiesLULC(Layer):
         # use chunk 512x512
         aligned_datasets = [ds.chunk({'x': 512, 'y': 512}) for ds in aligned_datasets]
         lulc = xr.concat(aligned_datasets, dim='Value').max(dim='Value')
+        lulc = lulc.compute()
 
         return lulc
 
