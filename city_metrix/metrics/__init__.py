@@ -4,3 +4,4 @@ from .built_land_with_high_land_surface_temperature import built_land_with_high_
 from .mean_tree_cover import mean_tree_cover
 from .urban_open_space import urban_open_space
 from .natural_areas import natural_areas
+from .max_dsm import max_dsm

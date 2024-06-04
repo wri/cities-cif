@@ -21,3 +21,4 @@ dependencies:
   - pip=23.3.1
   - pip:
     - cartoframes==1.2.5
+    - git+https://github.com/isciences/exactextract

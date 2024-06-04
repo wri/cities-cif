@@ -65,6 +65,9 @@ class LayerGroupBy:
 
     def count(self):
         return self._zonal_stats("count")
+    
+    def max(self):
+        return self._zonal_stats("max")
 
     def _zonal_stats(self, stats_func):
         if box(*self.zones.total_bounds).area <= MAX_TILE_SIZE**2:
