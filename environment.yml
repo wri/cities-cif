@@ -20,5 +20,6 @@ dependencies:
   - geemap=0.32.0
   - s3fs=2024.5.0
   - pip=23.3.1
+  - pickleshare=0.7.5
   - pip:
     - cartoframes==1.2.5
