@@ -7,7 +7,7 @@ import ee
 
 
 class TreeCanopyHeight(Layer):
-    name = "tree_canopy_hight"
+    name = "tree_canopy_height"
     NO_DATA_VALUE = 0
 
     def __init__(self, **kwargs):
@@ -18,6 +18,6 @@ class TreeCanopyHeight(Layer):
         # aggregate time series into a single image
         canopy_ht = canopy_ht.reduce(ee.Reducer.mean()).rename("cover_code")
 
-        data = get_image_collection(ee.ImageCollection(canopy_ht), bbox, 1, "tree canopy hight")
+        data = get_image_collection(ee.ImageCollection(canopy_ht), bbox, 1, "tree canopy height")
 
         return data.cover_code

@@ -20,6 +20,7 @@ dependencies:
   - geemap=0.32.0
   - s3fs=2024.5.0
   - pip=23.3.1
-  - pickleshare=0.7.5
+  - scikit-learn=1.5.0
   - pip:
     - cartoframes==1.2.5
+    - git+https://github.com/isciences/exactextract

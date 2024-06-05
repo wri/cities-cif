@@ -105,7 +105,7 @@ def test_tree_canopy_hight():
     count = TreeCanopyHeight().get_data(SAMPLE_BBOX).count()
     assert count
     
-def test_AlosDSM():
+def test_alos_dsm():
     mean = AlosDSM().get_data(SAMPLE_BBOX).mean()
     assert mean
 
