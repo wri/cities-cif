@@ -25,17 +25,26 @@ class EsaWorldCover(Layer):
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
 
-    def __init__(self, land_cover_class=None, **kwargs):
+    def __init__(self, land_cover_class=None, year=2020, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
+        self.year = year
 
     def get_data(self, bbox):
-        data = get_image_collection(
-                ee.ImageCollection("ESA/WorldCover/v100"),
-                bbox,
-                10,
-                "ESA world cover"
-            ).Map
+        if self.year == 2020:
+            data = get_image_collection(
+                    ee.ImageCollection("ESA/WorldCover/v100"),
+                    bbox,
+                    10,
+                    "ESA world cover"
+                ).Map
+        elif self.year == 2021:
+            data = get_image_collection(
+                    ee.ImageCollection("ESA/WorldCover/v200"),
+                    bbox,
+                    10,
+                    "ESA world cover"
+                ).Map
 
         if self.land_cover_class:
             data = data.where(data == self.land_cover_class.value)

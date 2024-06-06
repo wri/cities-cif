@@ -18,6 +18,7 @@ dependencies:
   - matplotlib=3.8.2
   - jupyterlab=4.0.10
   - s3fs=2024.5.0
+  - geemap=0.32.0
   - pip=23.3.1
   - pip:
     - cartoframes==1.2.5
