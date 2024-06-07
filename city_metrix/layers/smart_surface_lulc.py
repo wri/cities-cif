@@ -128,29 +128,3 @@ class SmartSurfaceLULC(Layer):
         lulc = lulc.compute()
 
         return lulc
-
-    ## TODO: Remove this write() function after feature/write_layers been merged
-    # def write(self, zones, output_path):
-    #     bbox = zones.total_bounds
-    #     if box(*bbox).area <= MAX_TILE_SIZE**2:
-    #         self.get_data(bbox).rio.to_raster(output_path)
-    #     else:
-    #         ZONES = create_fishnet_grid(*bbox, MAX_TILE_SIZE).reset_index()
-    #         # spatial join with fishnet grid and then intersect geometries with fishnet tiles
-    #         joined = zones.sjoin(ZONES)
-    #         joined["geometry"] = joined.intersection(joined["fishnet_geometry"])
-    #         # remove linestring artifacts due to float precision
-    #         gdf = joined[joined.geometry.type.isin(['Polygon', 'MultiPolygon'])]
-            
-    #         print(f"Input covers too much area, splitting into {len(gdf)} tiles")
-    #         for i in range(len(gdf)):
-    #             process = psutil.Process()
-    #             print(f'tile: {i}, memory: {process.memory_info().rss/10 ** 9} GB')
-
-    #             bbox = gdf.iloc[[i]].total_bounds
-    #             # Split the original path into name and extension
-    #             base_name, extension = output_path.rsplit('.', 1)
-    #             # Create a new path with '_i' appended before the extension
-    #             new_output_path = f"{base_name}_{i}.{extension}"
-    
-    #             self.get_data(bbox).rio.to_raster(new_output_path)
