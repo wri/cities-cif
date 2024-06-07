@@ -81,8 +81,6 @@ class Layer:
                 file_names.append(file_name)
 
                 write_layer(file_name, data)
-
-            gdal.BuildVRT(f"{output_path}.vrt", file_names)
         else:
             data = self.aggregate.get_data(bbox)
             write_layer(output_path, data)
