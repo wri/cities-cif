@@ -16,7 +16,7 @@ class TreeCover(Layer):
     def __init__(self, min_tree_cover=None, max_tree_cover=None, **kwargs):
         super().__init__(**kwargs)
         self.min_tree_cover = min_tree_cover
-		self.max_tree_cover = max_tree_cover
+        self.max_tree_cover = max_tree_cover
 
     def get_data(self, bbox):
         tropics = ee.ImageCollection('projects/wri-datalab/TropicalTreeCover')
