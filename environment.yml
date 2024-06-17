@@ -22,3 +22,4 @@ dependencies:
   - pip=23.3.1
   - pip:
     - cartoframes==1.2.5
+    - overturemaps==0.6.0
