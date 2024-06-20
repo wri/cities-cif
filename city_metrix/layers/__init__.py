@@ -16,3 +16,4 @@ from .average_net_building_height import AverageNetBuildingHeight
 from .open_buildings import OpenBuildings
 from .tree_canopy_hight import TreeCanopyHeight
 from .alos_dsm import AlosDSM
+from .era_5_high_temperature import Era5HighTemperature
