@@ -110,5 +110,5 @@ def test_AlosDSM():
     assert mean
 
 def test_era_5_high_temperature():
-    mean = Era5HighTemperature().get_data(SAMPLE_BBOX).mean()
+    mean = Era5HighTemperature().get_data(SAMPLE_BBOX).count().sum()
     assert mean
