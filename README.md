@@ -15,8 +15,8 @@ The Cities Indicator Framework (CIF) is a set of Python tools to make it easier 
 
 0. Prerequisites
 1. Git
-   * On Windows I recommend WSL <https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-git>
-2. <https://cli.github.com/>
+   * On Windows I recommend WSL [https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-git](https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-git)
+2. [https://cli.github.com/](https://cli.github.com/)
    * On MacOS I recommend the Homebrew option
    * If you don't have an ssh key, it will install one for you
 3. Conda (or Mamba) to install dependencies
@@ -44,7 +44,6 @@ Set the following environment variables:
 
 * GOOGLE_APPLICATION_CREDENTIALS: The path of GCP credentials JSON file containing your private key.
 * GOOGLE_APPLICATION_USER: The email for your GCP user.
-* GCS_BUCKET: The GCS bucket to read and write data from.
 
 For example, you could set the following in your `~/.zshrc` file:
 
