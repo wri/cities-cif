@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build1:
 
     runs-on: ubuntu-latest
 
@@ -23,6 +23,10 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.10"
+    - name: Set GOOGLE_APPLICATION_USER env
+      run: echo "GOOGLE_APPLICATION_USER=$(echo $GOOGLE_APPLICATION_USER | cut -c 1-6)" >> $GITHUB_ENV
+    - name: Set GOOGLE_APPLICATION_CREDENTIALS env
+      run: echo "GOOGLE_APPLICATION_CREDENTIALS=$(echo $GOOGLE_APPLICATION_CREDENTIALS | cut -c 1-6)" >> $GITHUB_ENV
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
