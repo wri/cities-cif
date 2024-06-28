@@ -21,6 +21,10 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Set GOOGLE_APPLICATION_USER env
+      run: echo "GOOGLE_APPLICATION_USER=$(echo $GOOGLE_APPLICATION_USER | cut -c 1-6)" >> $GITHUB_ENV
+    - name: Set GOOGLE_APPLICATION_CREDENTIALS env
+      run: echo "GOOGLE_APPLICATION_CREDENTIALS=$(echo $GOOGLE_APPLICATION_CREDENTIALS | cut -c 1-6)" >> $GITHUB_ENV
     - name: Install Linux dependencies
       run: |
         sudo apt update
