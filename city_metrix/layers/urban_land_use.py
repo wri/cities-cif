@@ -7,12 +7,12 @@ from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
 
 class UrbanLandUse(Layer):
-    def __init__(self, band='lulc', **kwargs):
+    def __init__(self, band='b1', **kwargs):
         super().__init__(**kwargs)
         self.band = band
 
     def get_data(self, bbox):
-        dataset = ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1")
+        dataset = ee.ImageCollection("projects/wri-datalab/cities/SSC/LULC_V2")
         # ImageCollection didn't cover the globe
         if dataset.filterBounds(ee.Geometry.BBox(*bbox)).size().getInfo() == 0:
             ulu = ee.ImageCollection(ee.Image.constant(0)
@@ -27,6 +27,6 @@ class UrbanLandUse(Layer):
                                      .rename('lulc')
                                      )
 
-        data = get_image_collection(ulu, bbox, 5, "urban land use").lulc
+        data = get_image_collection(ulu, bbox, 1, "urban land use v2").lulc
 
         return data
