@@ -25,3 +25,4 @@ dependencies:
   - pip:
     - cartoframes==1.2.5
     - git+https://github.com/isciences/exactextract
+    - overturemaps==0.6.0
