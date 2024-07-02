@@ -21,6 +21,8 @@ dependencies:
   - geemap=0.32.0
   - pip=23.3.1
   - boto3=1.34.124
+  - scikit-learn=1.5.0
   - pip:
     - cartoframes==1.2.5
+    - git+https://github.com/isciences/exactextract
     - overturemaps==0.6.0
