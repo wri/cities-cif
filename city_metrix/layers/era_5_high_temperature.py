@@ -45,6 +45,7 @@ class Era5HighTemperature(Layer):
         highest_temperature_day = era5_hourly_mean.sort('hourly_mean_temperature', False).first()
         highest_temperature_day = highest_temperature_day.get('system:index').getInfo()
 
+        # system:index in format 20230101T00
         year = highest_temperature_day[0:4]
         month = highest_temperature_day[4:6]
         day = highest_temperature_day[6:8]
@@ -149,7 +150,6 @@ class Era5HighTemperature(Layer):
             df = df.round(2)
 
             df_list.append(df)
-
             os.remove(f'download_{i}.nc')
 
         data = pd.concat(df_list, ignore_index=True)
