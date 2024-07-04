@@ -1,6 +1,6 @@
 import ee
 
-from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover, AverageNetBuildingHeight, OpenStreetMap, OpenStreetMapClass, UrbanLandUse, OpenBuildings, TreeCanopyHeight, AlosDSM, SmartSurfaceLULC, OvertureBuildings, Era5HighTemperature
+from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover, AverageNetBuildingHeight, OpenStreetMap, OpenStreetMapClass, UrbanLandUse, OpenBuildings, TreeCanopyHeight, AlosDSM, SmartSurfaceLULC, OvertureBuildings, NasaDEM, Era5HighTemperature
 from city_metrix.layers.layer import get_image_collection
 from .conftest import MockLayer, MockMaskLayer, ZONES, LARGE_ZONES, MockLargeLayer, MockGroupByLayer, \
     MockLargeGroupByLayer
@@ -107,4 +107,16 @@ def test_tree_canopy_hight():
     
 def test_alos_dsm():
     mean = AlosDSM().get_data(SAMPLE_BBOX).mean()
+    assert mean
+
+def test_smart_surface_lulc():
+    count = SmartSurfaceLULC().get_data(SAMPLE_BBOX).count()
+    assert count
+  
+def test_overture_buildings():
+    count = OvertureBuildings().get_data(SAMPLE_BBOX).count().sum()
+    assert count
+
+def test_nasa_dem():
+    mean = NasaDEM().get_data(SAMPLE_BBOX).mean()
     assert mean

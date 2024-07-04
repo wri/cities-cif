@@ -17,4 +17,5 @@ from .open_buildings import OpenBuildings
 from .tree_canopy_height import TreeCanopyHeight
 from .alos_dsm import AlosDSM
 from .overture_buildings import OvertureBuildings
+from .nasa_dem import NasaDEM
 from .era_5_high_temperature import Era5HighTemperature
