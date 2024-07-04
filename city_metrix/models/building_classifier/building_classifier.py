@@ -12,12 +12,12 @@ from xrspatial.classify import reclassify
 from exactextract import exact_extract
 import pickle
 
-from ..layer import Layer, get_utm_zone_epsg
-from ..esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from ..urban_land_use import UrbanLandUse
-from ..average_net_building_height import AverageNetBuildingHeight
-from ..open_street_map import OpenStreetMap, OpenStreetMapClass
-from ..open_buildings import OpenBuildings
+from ...layers.layer import Layer, get_utm_zone_epsg
+from ...layers.esa_world_cover import EsaWorldCover, EsaWorldCoverClass
+from ...layers.urban_land_use import UrbanLandUse
+from ...layers.average_net_building_height import AverageNetBuildingHeight
+from ...layers.open_street_map import OpenStreetMap, OpenStreetMapClass
+from ...layers.open_buildings import OpenBuildings
 
 
 class BuildingClassifier(Layer):
@@ -166,7 +166,7 @@ class BuildingClassifier(Layer):
         # buildings_sample['ANBH'] = exact_extract(anbh_1m, buildings_sample, ["mean"], output='pandas')['mean']
         # buildings_sample['Area_m'] = buildings_sample.geometry.area
 
-        # TODO: classifier parameters
+        # set classifier parameters
         clf = DecisionTreeClassifier(max_depth=5)
         # encode labels
         buildings_sample['Slope_encoded'] = buildings_sample['Slope'].map({'low': np.int8(42), 'high': np.int8(40)})
