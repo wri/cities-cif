@@ -120,3 +120,7 @@ def test_overture_buildings():
 def test_nasa_dem():
     mean = NasaDEM().get_data(SAMPLE_BBOX).mean()
     assert mean
+
+def test_era_5_high_temperature():
+    count = Era5HighTemperature().get_data(SAMPLE_BBOX).count().sum()
+    assert count

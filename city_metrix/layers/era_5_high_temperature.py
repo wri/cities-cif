@@ -74,9 +74,11 @@ class Era5HighTemperature(Layer):
             utc_time_hourly = local_time_hourly.astimezone(pytz.utc)
             utc_times.append(utc_time_hourly)
 
+        utc_dates = list(set([dt.date() for dt in utc_times]))
+
         df_list = []
         c = cdsapi.Client()
-        for i in range(0, 24):
+        for i in range(len(utc_dates)):
             c.retrieve(
                 'reanalysis-era5-single-levels',
                 {
@@ -86,15 +88,17 @@ class Era5HighTemperature(Layer):
                         '2m_temperature', 'clear_sky_direct_solar_radiation_at_surface', 'mean_surface_direct_short_wave_radiation_flux_clear_sky',
                         'mean_surface_downward_long_wave_radiation_flux_clear_sky', 'sea_surface_temperature', 'total_precipitation',
                     ],
-                    'year': utc_times[i].year,
-                    'month': utc_times[i].month,
-                    'day': utc_times[i].day,
-                    'time': utc_times[i].strftime("%H:00"),
+                    'year': utc_dates[i].year,
+                    'month': utc_dates[i].month,
+                    'day': utc_dates[i].day,
+                    'time': ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00',
+                             '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00',
+                             '20:00', '21:00', '22:00', '23:00'],
                     'area': [max_lat, min_lon, min_lat, max_lon],
                     'format': 'netcdf',
                 },
                 f'download_{i}.nc')
-
+            
             dataset = netCDF4.Dataset(f'download_{i}.nc')
 
             t2m_var = dataset.variables['t2m']
@@ -109,17 +113,21 @@ class Era5HighTemperature(Layer):
             lat_var = dataset.variables['latitude']
             lon_var = dataset.variables['longitude']
 
+            # Subset times for the day
+            times = num2date(time_var[:], units=time_var.units)
+            indices = [i for i, value in enumerate(times) if value in utc_times]
+
             # temps go from K to C; global rad (cdir) goes from /hour to /second; wind speed from vectors (pythagorean)
             # rh calculated from temp and dew point; vpd calculated from tepm and rh
-            times = num2date(time_var[:], units=time_var.units)
-            t2m_vals = (t2m_var[:]-273.15)
-            d2m_vals = (d2m_var[:]-273.15)
+            times = num2date(time_var[indices], units=time_var.units)
+            t2m_vals = (t2m_var[indices]-273.15)
+            d2m_vals = (d2m_var[indices]-273.15)
             rh_vals = (100*(np.exp((17.625*d2m_vals)/(243.04+d2m_vals))/np.exp((17.625*t2m_vals)/(243.04+t2m_vals))))
-            grad_vals = (cdir_var[:]/3600)
-            dir_vals = (sw_var[:])
-            dif_vals = (lw_var[:])
-            wtemp_vals = (sst_var[:]-273.15)
-            wind_vals = (np.sqrt(((np.square(u10_var[:]))+(np.square(v10_var[:])))))
+            grad_vals = (cdir_var[indices]/3600)
+            dir_vals = (sw_var[indices])
+            dif_vals = (lw_var[indices])
+            wtemp_vals = (sst_var[indices]-273.15)
+            wind_vals = (np.sqrt(((np.square(u10_var[indices]))+(np.square(v10_var[indices])))))
             # calc vapor pressure deficit in hPa for future utci conversion. first, get svp in pascals and then get vpd
             svp_vals = (0.61078*np.exp(t2m_vals/(t2m_vals+237.3)*17.2694))
             vpd_vals = ((svp_vals*(1-(rh_vals/100))))*10
@@ -127,8 +135,7 @@ class Era5HighTemperature(Layer):
             # make lat/lon grid
             latitudes = lat_var[:]
             longitudes = lon_var[:]
-            latitudes_2d, longitudes_2d = np.meshgrid(
-                latitudes, longitudes, indexing='ij')
+            latitudes_2d, longitudes_2d = np.meshgrid(latitudes, longitudes, indexing='ij')
             latitudes_flat = latitudes_2d.flatten()
             longitudes_flat = longitudes_2d.flatten()
 
