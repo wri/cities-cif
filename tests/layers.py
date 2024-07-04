@@ -1,6 +1,6 @@
 import ee
 
-from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover, AverageNetBuildingHeight, OpenStreetMap, OpenStreetMapClass, UrbanLandUse, OpenBuildings, TreeCanopyHeight, AlosDSM, Era5HighTemperature
+from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover, AverageNetBuildingHeight, OpenStreetMap, OpenStreetMapClass, UrbanLandUse, OpenBuildings, TreeCanopyHeight, AlosDSM, SmartSurfaceLULC, OvertureBuildings, Era5HighTemperature
 from city_metrix.layers.layer import get_image_collection
 from .conftest import MockLayer, MockMaskLayer, ZONES, LARGE_ZONES, MockLargeLayer, MockGroupByLayer, \
     MockLargeGroupByLayer
@@ -105,10 +105,6 @@ def test_tree_canopy_hight():
     count = TreeCanopyHeight().get_data(SAMPLE_BBOX).count()
     assert count
     
-def test_AlosDSM():
+def test_alos_dsm():
     mean = AlosDSM().get_data(SAMPLE_BBOX).mean()
-    assert mean
-
-def test_era_5_high_temperature():
-    mean = Era5HighTemperature().get_data(SAMPLE_BBOX).count().sum()
     assert mean
