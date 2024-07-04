@@ -1,7 +1,9 @@
 import ee
 import xee
 import xarray as xr
-from city_metrix.layers.layer import Layer, get_image_collection
+
+from .layer import Layer, get_image_collection
+
 
 class NasaDEM(Layer):
     def __init__(self, **kwargs):
