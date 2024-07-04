@@ -117,6 +117,6 @@ def test_overture_buildings():
     count = OvertureBuildings().get_data(SAMPLE_BBOX).count().sum()
     assert count
 
-def test_masa_dem():
+def test_nasa_dem():
     mean = NasaDEM().get_data(SAMPLE_BBOX).mean()
     assert mean
