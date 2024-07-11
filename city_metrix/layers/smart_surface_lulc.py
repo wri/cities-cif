@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore',category=UserWarning)
 
 from .layer import Layer, get_utm_zone_epsg, create_fishnet_grid, MAX_TILE_SIZE
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
-from .building_classifier.building_classifier import BuildingClassifier
+from ..models.building_classifier.building_classifier import BuildingClassifier
 
 
 class SmartSurfaceLULC(Layer):
@@ -24,7 +24,7 @@ class SmartSurfaceLULC(Layer):
         crs = get_utm_zone_epsg(bbox)
 
         # load building roof slope classifier
-        with open('city_metrix/layers/building_classifier/building_classifier.pkl', 'rb') as f:
+        with open('city_metrix/models/building_classifier/building_classifier.pkl', 'rb') as f:
             clf = pickle.load(f)
 
         # ESA world cover
