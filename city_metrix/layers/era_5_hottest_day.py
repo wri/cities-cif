@@ -4,16 +4,12 @@ from pytz import timezone
 from datetime import datetime
 import pytz
 import cdsapi
-import pandas as pd
 import os
-from netCDF4 import num2date
-import numpy as np
-import netCDF4
+import xarray as xr
 
 from .layer import Layer
 
-
-class Era5HighTemperature(Layer):
+class Era5HottestDay(Layer):
     def __init__(self, start_date="2023-01-01", end_date="2024-01-01", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
@@ -76,7 +72,7 @@ class Era5HighTemperature(Layer):
 
         utc_dates = list(set([dt.date() for dt in utc_times]))
 
-        df_list = []
+        dataarray_list = []
         c = cdsapi.Client()
         for i in range(len(utc_dates)):
             c.retrieve(
@@ -99,66 +95,18 @@ class Era5HighTemperature(Layer):
                 },
                 f'download_{i}.nc')
             
-            dataset = netCDF4.Dataset(f'download_{i}.nc')
-
-            t2m_var = dataset.variables['t2m']
-            u10_var = dataset.variables['u10']
-            v10_var = dataset.variables['v10']
-            sst_var = dataset.variables['sst']
-            cdir_var = dataset.variables['cdir']
-            sw_var = dataset.variables['msdrswrfcs']
-            lw_var = dataset.variables['msdwlwrfcs']
-            d2m_var = dataset.variables['d2m']
-            time_var = dataset.variables['time']
-            lat_var = dataset.variables['latitude']
-            lon_var = dataset.variables['longitude']
+            dataarray = xr.open_dataset(f'download_{i}.nc')
 
             # Subset times for the day
-            times = num2date(time_var[:], units=time_var.units)
+            times = [time.astype('datetime64[s]').astype(datetime).replace(tzinfo=pytz.UTC) for time in dataarray['time'].values]
             indices = [i for i, value in enumerate(times) if value in utc_times]
+            subset_dataarray = dataarray.isel(time=indices)
 
-            # temps go from K to C; global rad (cdir) goes from /hour to /second; wind speed from vectors (pythagorean)
-            # rh calculated from temp and dew point; vpd calculated from tepm and rh
-            times = num2date(time_var[indices], units=time_var.units)
-            t2m_vals = (t2m_var[indices]-273.15)
-            d2m_vals = (d2m_var[indices]-273.15)
-            rh_vals = (100*(np.exp((17.625*d2m_vals)/(243.04+d2m_vals))/np.exp((17.625*t2m_vals)/(243.04+t2m_vals))))
-            grad_vals = (cdir_var[indices]/3600)
-            dir_vals = (sw_var[indices])
-            dif_vals = (lw_var[indices])
-            wtemp_vals = (sst_var[indices]-273.15)
-            wind_vals = (np.sqrt(((np.square(u10_var[indices]))+(np.square(v10_var[indices])))))
-            # calc vapor pressure deficit in hPa for future utci conversion. first, get svp in pascals and then get vpd
-            svp_vals = (0.61078*np.exp(t2m_vals/(t2m_vals+237.3)*17.2694))
-            vpd_vals = ((svp_vals*(1-(rh_vals/100))))*10
+            dataarray_list.append(subset_dataarray)
 
-            # make lat/lon grid
-            latitudes = lat_var[:]
-            longitudes = lon_var[:]
-            latitudes_2d, longitudes_2d = np.meshgrid(latitudes, longitudes, indexing='ij')
-            latitudes_flat = latitudes_2d.flatten()
-            longitudes_flat = longitudes_2d.flatten()
-
-            # create pandas dataframe
-            df = pd.DataFrame({
-                'time': np.repeat(times, len(latitudes_flat)),
-                'lat': np.tile(latitudes_flat, len(times)),
-                'lon': np.tile(longitudes_flat, len(times)),
-                'temp': t2m_vals.flatten(),
-                'rh': rh_vals.flatten(),
-                'global_rad': grad_vals.flatten(),
-                'direct_rad': dir_vals.flatten(),
-                'diffuse_rad': dif_vals.flatten(),
-                'water_temp': wtemp_vals.flatten(),
-                'wind': wind_vals.flatten(),
-                'vpd': vpd_vals.flatten()
-            })
-            # round all numbers to two decimal places, which is the precision needed by the model
-            df = df.round(2)
-
-            df_list.append(df)
+            # Remove local file
             os.remove(f'download_{i}.nc')
 
-        data = pd.concat(df_list, ignore_index=True)
+        data = xr.concat(dataarray_list, dim='time')
 
         return data
