@@ -21,8 +21,15 @@ The Cities Indicator Framework (CIF) is a set of Python tools to make it easier 
 
 
 ## Dependencies
+There are 2 ways to install dependencies. Choose one...
+
 ### Conda
 `conda env create -f environment.yml`
+
+### Setuptools
+`python setup.py`
+NOTE: If you are using this method you may want to use something like pyenv to manage Python environments
+
 
 ## Credentials
 To run the module, 
