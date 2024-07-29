@@ -25,7 +25,9 @@ The Cities Indicator Framework (CIF) is a set of Python tools to make it easier 
 `conda env create -f environment.yml`
 
 ## Credentials
-To run the module, you need access to Google Earth Engine.
+To run the module, 
+  1. You need access to Google Earth Engine
+  2. Install https://cloud.google.com/sdk/docs/install
 
 ### Interactive development
 For most people working in a notebook or IDE the script should walk you thourgh an interactive authentication process. You will just need to be logged in to your Google account that has access to GEE in your browser.
