@@ -1,10 +1,10 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="city_metrix",
     version="0.1.1",
     description="Module to calculate various metrics on cities.",
-    packages=["city_metrix", "city_metrix.layers", "city_metrix.metrics", "city_metrix.models", "city_metrix.models.building_classifier"],
+    packages=find_packages(),
     include_package_data=True,
     package_data={
         'city_metrix.models.building_classifier': [
@@ -22,7 +22,6 @@ setup(
         "xarray-spatial",
         "xee",
         "rioxarray",
-        "cartoframes",
         "utm",
         "osmnx",
         "geopandas",
@@ -31,6 +30,6 @@ setup(
         "boto3",
         "exactextract",
         "overturemaps",
-        "scikit-learn==1.5.0",
+        "scikit-learn>=1.5.0",
     ],
 )
