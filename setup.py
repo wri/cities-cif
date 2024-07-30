@@ -16,6 +16,7 @@ setup(
     install_requires=[
         "earthengine-api",
         "geocube",
+        "odc-stac",
         "geemap",
         "pystac-client",
         "xarray-spatial",
@@ -26,7 +27,7 @@ setup(
         "osmnx",
         "geopandas",
         "s3fs",
-        "dask",
+        "dask>=2023.11.0",
         "boto3",
         "exactextract",
         "overturemaps",
