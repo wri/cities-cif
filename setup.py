@@ -9,7 +9,6 @@ setup(
     package_data={
         'city_metrix.models.building_classifier': [
             'building_classifier.pkl',
-            'V2-building-class-data.geojson',
         ],
     },
     author="Justin Terry",
@@ -17,7 +16,6 @@ setup(
     install_requires=[
         "earthengine-api",
         "geocube",
-        "odc-stac",
         "geemap",
         "pystac-client",
         "xarray-spatial",
@@ -28,7 +26,7 @@ setup(
         "osmnx",
         "geopandas",
         "s3fs",
-        "dask==2023.11.0",
+        "dask",
         "boto3",
         "exactextract",
         "overturemaps",
