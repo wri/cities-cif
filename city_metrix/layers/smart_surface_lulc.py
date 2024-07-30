@@ -7,6 +7,7 @@ from shapely.geometry import box
 import psutil
 from exactextract import exact_extract
 import pickle
+import importlib.resources as pkg_resources
 import warnings
 warnings.filterwarnings('ignore',category=UserWarning)
 
@@ -24,7 +25,7 @@ class SmartSurfaceLULC(Layer):
         crs = get_utm_zone_epsg(bbox)
 
         # load building roof slope classifier
-        with open('city_metrix/models/building_classifier/building_classifier.pkl', 'rb') as f:
+        with pkg_resources.files('city_metrix.models.building_classifier').joinpath('building_classifier.pkl').open('rb') as f:
             clf = pickle.load(f)
 
         # ESA world cover
