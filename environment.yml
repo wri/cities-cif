@@ -23,5 +23,5 @@ dependencies:
   - boto3=1.34.124
   - scikit-learn=1.5.0
   - pip:
-    - git+https://github.com/isciences/exactextract
-    - overturemaps==0.6.0
+      - git+https://github.com/isciences/exactextract
+      - overturemaps==0.6.0
