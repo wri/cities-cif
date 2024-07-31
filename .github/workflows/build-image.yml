@@ -31,7 +31,7 @@ jobs:
         image: wri-cities-cif-environment
         tags: latest ${{ env.VERSION }} ${{ github.sha }}
         containerfiles: |
-          ./Containerfile
+          ./container/Containerfile
     - name: Push image to container registry
       id: push-image-to-registry
       uses: redhat-actions/push-to-registry@v2
