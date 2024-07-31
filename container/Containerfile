@@ -1,0 +1,8 @@
+FROM condaforge/miniforge3:latest
+LABEL maintainer="Chris Rowe"
+WORKDIR /src/
+COPY environment.yml .
+RUN true && \
+  mamba env create -f environment.yml && \
+  echo "source activate cities-cif" > "$HOME/.bashrc"
+ENV PATH "/src:/opt/conda/envs/cities-cif/bin:$PATH"

@@ -9,9 +9,12 @@ from city_metrix.layers import (
     EsaWorldCover,
     EsaWorldCoverClass,
     LandSurfaceTemperature,
+    NasaDEM,
     OpenBuildings,
     OpenStreetMap,
     OpenStreetMapClass,
+    OvertureBuildings,
+    SmartSurfaceLULC,
     TreeCanopyHeight,
     TreeCover,
     UrbanLandUse,
@@ -150,6 +153,21 @@ def test_tree_canopy_hight():
     assert count
 
 
-def test_AlosDSM():
+def test_alos_dsm():
     mean = AlosDSM().get_data(SAMPLE_BBOX).mean()
+    assert mean
+
+
+def test_smart_surface_lulc():
+    count = SmartSurfaceLULC().get_data(SAMPLE_BBOX).count()
+    assert count
+
+
+def test_overture_buildings():
+    count = OvertureBuildings().get_data(SAMPLE_BBOX).count().sum()
+    assert count
+
+
+def test_nasa_dem():
+    mean = NasaDEM().get_data(SAMPLE_BBOX).mean()
     assert mean
