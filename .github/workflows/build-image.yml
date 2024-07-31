@@ -7,6 +7,7 @@ on:
       - container/Containerfile
       - container/VERSION
       - environment.yml
+  workflow_dispatch:
 jobs:
   build-image:
     name: build-image
