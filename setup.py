@@ -31,5 +31,7 @@ setup(
         "exactextract",
         "overturemaps",
         "scikit-learn>=1.5.0",
+        "cdsapi",
+        "timezonefinder"
     ],
 )
