@@ -26,5 +26,5 @@ dependencies:
   - pytz=2024.1
   - timezonefinder=6.5.2
   - pip:
-    - git+https://github.com/isciences/exactextract
-    - overturemaps==0.6.0
+      - git+https://github.com/isciences/exactextract
+      - overturemaps==0.6.0
