@@ -30,6 +30,7 @@ from .conftest import (
     MockLayer,
     MockMaskLayer,
 )
+from .fixtures.bbox_constants import *
 
 
 def test_count():
@@ -78,61 +79,59 @@ def test_group_by_large_layer():
     assert all([count == {1: 50.0, 2: 50.0} for count in counts])
 
 
-SAMPLE_BBOX = (
-    -38.35530428121955,
-    -12.821710300686393,
-    -38.33813814352424,
-    -12.80363249765361,
-)
-
-
 def test_read_image_collection():
     ic = ee.ImageCollection("ESA/WorldCover/v100")
-    data = get_image_collection(ic, SAMPLE_BBOX, 10, "test")
+    data = get_image_collection(ic, BBOX_BRAZIL_LAURO_DE_FREITAS_1, 10, "test")
 
-    assert data.rio.crs == 32724
-    assert data.dims == {"x": 187, "y": 200}
+    expected_crs =  32724
+    expected_x_dimension = 187
+    expected_y_dimension = 199
+
+    assert data.rio.crs == expected_crs
+    assert data.dims == {"x": expected_x_dimension, "y": expected_y_dimension}
 
 
 def test_read_image_collection_scale():
     ic = ee.ImageCollection("ESA/WorldCover/v100")
-    data = get_image_collection(ic, SAMPLE_BBOX, 100, "test")
+    data = get_image_collection(ic, BBOX_BRAZIL_LAURO_DE_FREITAS_1, 100, "test")
     assert data.dims == {"x": 19, "y": 20}
 
 
 def test_tree_cover():
+    actual = TreeCover().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).mean()
+    expected = 54.0
+    tolerance = 0.1
     assert (
-        pytest.approx(53.84184165912419, rel=0.001)
-        == TreeCover().get_data(SAMPLE_BBOX).mean()
+        pytest.approx(expected, rel=tolerance) == actual
     )
 
 
 def test_albedo():
-    assert Albedo().get_data(SAMPLE_BBOX).mean()
+    assert Albedo().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).mean()
 
 
 def test_lst():
-    mean = LandSurfaceTemperature().get_data(SAMPLE_BBOX).mean()
+    mean = LandSurfaceTemperature().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).mean()
     assert mean
 
 
 def test_esa():
     count = (
         EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
-        .get_data(SAMPLE_BBOX)
+        .get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1)
         .count()
     )
     assert count
 
 
 def test_average_net_building_height():
-    assert AverageNetBuildingHeight().get_data(SAMPLE_BBOX).mean()
+    assert AverageNetBuildingHeight().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).mean()
 
 
 def test_open_street_map():
     count = (
         OpenStreetMap(osm_class=OpenStreetMapClass.ROAD)
-        .get_data(SAMPLE_BBOX)
+        .get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1)
         .count()
         .sum()
     )
@@ -140,34 +139,34 @@ def test_open_street_map():
 
 
 def test_urban_land_use():
-    assert UrbanLandUse().get_data(SAMPLE_BBOX).count()
+    assert UrbanLandUse().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).count()
 
 
 def test_openbuildings():
-    count = OpenBuildings().get_data(SAMPLE_BBOX).count().sum()
+    count = OpenBuildings().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).count().sum()
     assert count
 
 
 def test_tree_canopy_hight():
-    count = TreeCanopyHeight().get_data(SAMPLE_BBOX).count()
+    count = TreeCanopyHeight().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).count()
     assert count
 
 
 def test_alos_dsm():
-    mean = AlosDSM().get_data(SAMPLE_BBOX).mean()
+    mean = AlosDSM().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).mean()
     assert mean
 
 
 def test_smart_surface_lulc():
-    count = SmartSurfaceLULC().get_data(SAMPLE_BBOX).count()
+    count = SmartSurfaceLULC().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).count()
     assert count
 
 
 def test_overture_buildings():
-    count = OvertureBuildings().get_data(SAMPLE_BBOX).count().sum()
+    count = OvertureBuildings().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).count().sum()
     assert count
 
 
 def test_nasa_dem():
-    mean = NasaDEM().get_data(SAMPLE_BBOX).mean()
+    mean = NasaDEM().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).mean()
     assert mean
