@@ -66,4 +66,6 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/file
 
 All are welcome to contribute by creating a [Pull Request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests). We try to follow the [Github Flow](https://docs.github.com/en/get-started/quickstart/github-flow) workflow.
 
+See [PR Review](docs/pr_review.md) for more details and options on how to review a PR.
+
 See the [developer docs](docs/developer.md) to learn more about how to add data layers and indicators.
