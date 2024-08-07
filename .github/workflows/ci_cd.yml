@@ -2,6 +2,11 @@ name: Dev CIF API CI/CD
 
 on:
   pull_request:
+    branches:
+      - '**'
+  push:
+    branches:
+      - '**'
 
 permissions:
   contents: read
