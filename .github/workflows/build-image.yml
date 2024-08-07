@@ -1,12 +1,5 @@
 name: build-image
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - container/Containerfile
-      - container/VERSION
-      - environment.yml
   workflow_dispatch:
 jobs:
   build-image:
