@@ -81,7 +81,7 @@ class SmartSurfaceLULC(Layer):
         ulu_lulc_1m = BuildingClassifier().get_data_ulu(bbox, crs, esa_1m)
         anbh_1m = BuildingClassifier().get_data_anbh(bbox, esa_1m)
         # get building features
-        buildings = OvertureBuildings().get_data(bbox)
+        buildings = OvertureBuildings().get_data(bbox).to_crs(crs)
         # extract ULU, ANBH, and Area_m
         buildings['ULU'] = exact_extract(ulu_lulc_1m, buildings, ["majority"], output='pandas')['majority']
         buildings['ANBH'] = exact_extract(anbh_1m, buildings, ["mean"], output='pandas')['mean']
