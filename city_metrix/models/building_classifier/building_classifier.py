@@ -16,8 +16,6 @@ from ...layers.layer import Layer, get_utm_zone_epsg
 from ...layers.esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from ...layers.urban_land_use import UrbanLandUse
 from ...layers.average_net_building_height import AverageNetBuildingHeight
-from ...layers.open_street_map import OpenStreetMap, OpenStreetMapClass
-from ...layers.open_buildings import OpenBuildings
 
 
 class BuildingClassifier(Layer):
@@ -111,24 +109,6 @@ class BuildingClassifier(Layer):
 
         return anbh_1m
 
-    def get_data_buildings(self, bbox, crs):
-        # OSM buildings
-        building_osm = OpenStreetMap(osm_class=OpenStreetMapClass.BUILDING).get_data(bbox).to_crs(crs).reset_index(drop=True)
-        # Google-Microsoft Open Buildings Dataset buildings
-        openbuilds = OpenBuildings(country='USA').get_data(bbox).to_crs(crs).reset_index(drop=True)
-        
-        # Intersect buildings and keep the open buildings that don't intersect OSM buildings
-        intersect_buildings = gpd.sjoin(building_osm, openbuilds, how='inner', predicate='intersects')
-        openbuilds_non_intersect = openbuilds.loc[~openbuilds.index.isin(intersect_buildings.index)]
-        
-        buildings = pd.concat([building_osm['geometry'], openbuilds_non_intersect['geometry']], ignore_index=True).reset_index()
-        # Get rid of any 3d geometries that cause a problem
-        buildings = buildings[~buildings['geometry'].apply(lambda geom: 'Z' in geom.geom_type)]
-
-        # Value not start with 0
-        buildings['Value'] = buildings['index'] + 1
-
-        return buildings
     
     def rasterize_polygon(self, gdf, snap_to):
         if gdf.empty:
