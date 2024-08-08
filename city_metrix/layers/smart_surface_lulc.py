@@ -13,6 +13,7 @@ warnings.filterwarnings('ignore',category=UserWarning)
 
 from .layer import Layer, get_utm_zone_epsg, create_fishnet_grid, MAX_TILE_SIZE
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
+from .overture_buildings import OvertureBuildings
 from ..models.building_classifier.building_classifier import BuildingClassifier
 
 
@@ -80,7 +81,7 @@ class SmartSurfaceLULC(Layer):
         ulu_lulc_1m = BuildingClassifier().get_data_ulu(bbox, crs, esa_1m)
         anbh_1m = BuildingClassifier().get_data_anbh(bbox, esa_1m)
         # get building features
-        buildings = BuildingClassifier().get_data_buildings(bbox, crs)
+        buildings = OvertureBuildings().get_data(bbox)
         # extract ULU, ANBH, and Area_m
         buildings['ULU'] = exact_extract(ulu_lulc_1m, buildings, ["majority"], output='pandas')['majority']
         buildings['ANBH'] = exact_extract(anbh_1m, buildings, ["mean"], output='pandas')['mean']
