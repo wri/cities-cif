@@ -1,9 +1,7 @@
 import ee
 import numpy as np
-import pytest
 
 from city_metrix.layers.layer import get_image_collection
-
 from .conftest import (
     LARGE_ZONES,
     ZONES,
