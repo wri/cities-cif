@@ -1,8 +1,7 @@
 name: Dev CIF API CI/CD
 
 on:
-  push:
-    branches: [ "bugfix/pytest" ]
+  pull_request:
 
 permissions:
   contents: read
