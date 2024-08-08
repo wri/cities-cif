@@ -16,3 +16,6 @@ def test_high_lst():
     indicator = built_land_with_high_land_surface_temperature(ZONES)
     assert indicator.size == 100
 
+def test_era_5_met_preprocess():
+    indicator = era_5_met_preprocessing(ZONES)
+    assert len(indicator) == 24

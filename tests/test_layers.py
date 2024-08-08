@@ -18,6 +18,7 @@ from city_metrix.layers import (
     TreeCanopyHeight,
     TreeCover,
     UrbanLandUse,
+    Era5HottestDay,
 )
 from city_metrix.layers.layer import get_image_collection
 
@@ -169,4 +170,8 @@ def test_overture_buildings():
 
 def test_nasa_dem():
     mean = NasaDEM().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).mean()
+    assert mean
+
+def test_era_5_hottest_day():
+    mean = Era5HottestDay().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).mean()
     assert mean
