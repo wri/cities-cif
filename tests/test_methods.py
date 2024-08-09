@@ -1,7 +1,5 @@
-import ee
 import numpy as np
 
-from city_metrix.layers.layer import get_image_collection
 from .conftest import (
     LARGE_ZONES,
     ZONES,
@@ -58,21 +56,3 @@ def test_group_by_large_layer():
         MockLargeLayer().groupby(LARGE_ZONES, layer=MockLargeGroupByLayer()).count()
     )
     assert all([count == {1: 50.0, 2: 50.0} for count in counts])
-
-
-def test_read_image_collection():
-    ic = ee.ImageCollection("ESA/WorldCover/v100")
-    data = get_image_collection(ic, BBOX_BRAZIL_LAURO_DE_FREITAS_1, 10, "test")
-
-    expected_crs =  32724
-    expected_x_dimension = 187
-    expected_y_dimension = 199
-
-    assert data.rio.crs == expected_crs
-    assert data.dims == {"x": expected_x_dimension, "y": expected_y_dimension}
-
-
-def test_read_image_collection_scale():
-    ic = ee.ImageCollection("ESA/WorldCover/v100")
-    data = get_image_collection(ic, BBOX_BRAZIL_LAURO_DE_FREITAS_1, 100, "test")
-    assert data.dims == {"x": 19, "y": 20}

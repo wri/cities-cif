@@ -1,3 +1,4 @@
+import ee
 import pytest
 
 from city_metrix.layers import (
@@ -22,6 +23,7 @@ from city_metrix.layers import (
     UrbanLandUse,
     WorldPop
 )
+from city_metrix.layers.layer import get_image_collection
 from tests.fixtures.bbox_constants import BBOX_BRAZIL_LAURO_DE_FREITAS_1
 
 
@@ -45,6 +47,24 @@ def test_esa_world_cover():
         .count()
     )
     assert count
+
+
+def test_read_image_collection():
+    ic = ee.ImageCollection("ESA/WorldCover/v100")
+    data = get_image_collection(ic, BBOX_BRAZIL_LAURO_DE_FREITAS_1, 10, "test")
+
+    expected_crs = 32724
+    expected_x_dimension = 187
+    expected_y_dimension = 199
+
+    assert data.rio.crs == expected_crs
+    assert data.dims == {"x": expected_x_dimension, "y": expected_y_dimension}
+
+
+def test_read_image_collection_scale():
+    ic = ee.ImageCollection("ESA/WorldCover/v100")
+    data = get_image_collection(ic, BBOX_BRAZIL_LAURO_DE_FREITAS_1, 100, "test")
+    assert data.dims == {"x": 19, "y": 20}
 
 
 def test_high_land_surface_temperature():
