@@ -54,10 +54,3 @@ class OpenStreetMap(Layer):
         osm_feature = osm_feature.reset_index()[keep_col]
 
         return osm_feature
-
-    def write(self, output_path):
-        self.data['bbox'] = str(self.data.total_bounds)
-        self.data['osm_class'] = str(self.osm_class.value)
-
-        # Write to a GeoJSON file
-        self.data.to_file(output_path, driver='GeoJSON')
