@@ -51,7 +51,7 @@ class BuildingClassifier(Layer):
         reclassified_esa = reclassify(esa_world_cover, bins=list(reclass_map.keys()), new_values=list(reclass_map.values()))
 
         # Convert to int8 and chunk the data for Dask processing
-        reclassified_esa = reclassified_esa.astype(np.int8).chunk({'x': 512, 'y': 512})
+        reclassified_esa = reclassified_esa.astype(np.uint16).chunk({'x': 512, 'y': 512})
 
         reclassified_esa = reclassified_esa.rio.write_crs(esa_world_cover.rio.crs, inplace=True)
 
@@ -80,7 +80,7 @@ class BuildingClassifier(Layer):
             ulu_lulc = ulu_lulc.where(ulu_lulc != from_val, to_val)
 
         # Convert to int8 and chunk the data for Dask processing
-        ulu_lulc = ulu_lulc.astype(np.int8).chunk({'x': 512, 'y': 512})
+        ulu_lulc = ulu_lulc.astype(np.uint16).chunk({'x': 512, 'y': 512})
 
         ####### 1-Non-residential as default
         # 0-Unclassified as nodata 
@@ -112,7 +112,7 @@ class BuildingClassifier(Layer):
     
     def rasterize_polygon(self, gdf, snap_to):
         if gdf.empty:
-            raster = np.full(snap_to.shape, 0, dtype=np.int8)
+            raster = np.full(snap_to.shape, 0, dtype=np.uint16)
             raster = xr.DataArray(raster, dims=snap_to.dims, coords=snap_to.coords)
 
             return raster.rio.write_crs(snap_to.rio.crs, inplace=True)
@@ -121,7 +121,7 @@ class BuildingClassifier(Layer):
             vector_data=gdf,
             measurements=["Value"],
             like=snap_to,
-            fill=np.int8(0)
+            fill=np.uint16(0)
         ).Value
 
         return raster.rio.reproject_match(snap_to)
@@ -149,7 +149,7 @@ class BuildingClassifier(Layer):
         # set classifier parameters
         clf = DecisionTreeClassifier(max_depth=5)
         # encode labels
-        buildings_sample['Slope_encoded'] = buildings_sample['Slope'].map({'low': np.int8(42), 'high': np.int8(40)})
+        buildings_sample['Slope_encoded'] = buildings_sample['Slope'].map({'low': np.uint16(42), 'high': np.uint16(40)})
 
         # Select these rows for the training set
         build_train = buildings_sample[buildings_sample['Model']=='training']
