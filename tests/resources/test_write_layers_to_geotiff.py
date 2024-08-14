@@ -22,17 +22,17 @@ from city_metrix.layers import (
     UrbanLandUse,
     WorldPop
 )
-from tests.fixtures.bbox_constants import *
-from tools.general_tools import create_temp_folder, verify_file_is_populated
+from tests.resources.bbox_constants import BBOX_BR_LAURO_DE_FREITAS_1
+from tools.general_tools import create_temp_folder
 
-RUN_DUMPS = False
+RUN_DUMPS = True
 BBOX = BBOX_BR_LAURO_DE_FREITAS_1
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
-def test_prepare_target():
+def test_geotiff_writing():
     qgis_project_file = 'layers_for_br_lauro_de_freitas.qgs'
 
-    source_folder = os.path.join(os.path.dirname(__file__), 'resources')
+    source_folder = os.path.dirname(__file__)
     output_temp_folder = create_temp_folder('test_result_tif_files')
     source_qgis_file = os.path.join(source_folder, qgis_project_file)
     target_qgis_file = os.path.join(output_temp_folder, qgis_project_file)
@@ -163,3 +163,7 @@ def prep_output_path(output_temp_folder, file_name):
     if os.path.isfile(file_path):
         os.remove(file_path)
     return file_path
+
+def verify_file_is_populated(file_path):
+    is_populated = True if os.path.getsize(file_path) > 0 else False
+    return is_populated

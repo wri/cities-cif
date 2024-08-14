@@ -24,7 +24,7 @@ from city_metrix.layers import (
     WorldPop
 )
 from city_metrix.layers.layer import get_image_collection
-from tests.fixtures.bbox_constants import BBOX_BR_LAURO_DE_FREITAS_1
+from tests.resources.bbox_constants import BBOX_BR_LAURO_DE_FREITAS_1
 
 EE_IMAGE_DIMENSION_TOLERANCE = 1  # Tolerance compensates for variable results from GEE service
 

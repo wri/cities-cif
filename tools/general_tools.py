@@ -15,6 +15,3 @@ def create_temp_folder(sub_directory):
 
     return path
 
-def verify_file_is_populated(file_path):
-    is_populated = True if os.path.getsize(file_path) > 0 else False
-    return is_populated
