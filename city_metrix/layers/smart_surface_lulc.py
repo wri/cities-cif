@@ -34,12 +34,12 @@ class SmartSurfaceLULC(Layer):
 
         # Open space
         open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).to_crs(crs).reset_index()
-        open_space_osm['Value'] = np.int8(10)
+        open_space_osm['Value'] = np.uint16(10)
 
 
         # Water
         water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox).to_crs(crs).reset_index()
-        water_osm['Value'] = np.int8(20)
+        water_osm['Value'] = np.uint16(20)
 
 
         # Roads
@@ -60,7 +60,7 @@ class SmartSurfaceLULC(Layer):
             roads_osm['lanes'] = roads_osm['lanes'].fillna(roads_osm['avg_lanes'])
 
             # Add value field (30)
-            roads_osm['Value'] = np.int8(30)
+            roads_osm['Value'] = np.uint16(30)
 
             # Buffer roads by lanes * 10 ft (3.048 m)
             # https://nacto.org/publication/urban-street-design-guide/street-design-elements/lane-width/#:~:text=wider%20lane%20widths.-,Lane%20widths%20of%2010%20feet%20are%20appropriate%20in%20urban%20areas,be%20used%20in%20each%20direction
@@ -74,7 +74,7 @@ class SmartSurfaceLULC(Layer):
             )
         else:
             # Add value field (30)
-            roads_osm['Value'] = np.int8(30)
+            roads_osm['Value'] = np.uint16(30)
 
 
         # Building
@@ -113,7 +113,7 @@ class SmartSurfaceLULC(Layer):
 
         # Parking
         parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(bbox).to_crs(crs).reset_index()
-        parking_osm['Value'] = np.int8(50)
+        parking_osm['Value'] = np.uint16(50)
 
 
         # combine features: open space, water, road, building, parking
