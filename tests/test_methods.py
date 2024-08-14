@@ -9,7 +9,6 @@ from .conftest import (
     MockLayer,
     MockMaskLayer,
 )
-from .fixtures.bbox_constants import *
 
 
 def test_count():

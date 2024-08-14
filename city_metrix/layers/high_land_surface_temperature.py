@@ -55,7 +55,8 @@ class HighLandSurfaceTemperature(Layer):
         # convert to date object
         return datetime.datetime.strptime(hottest_date, "%Y%m%d").date()
 
-    def write(self, output_path):
-        self.data.rio.to_raster(output_path)
+    # TODO: Is this inherited class function needed?
+    # def write(self, output_path):
+    #     self.data.rio.to_raster(output_path)
 
 
