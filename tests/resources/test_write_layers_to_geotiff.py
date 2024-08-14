@@ -25,7 +25,7 @@ from city_metrix.layers import (
 from tests.resources.bbox_constants import BBOX_BR_LAURO_DE_FREITAS_1
 from tools.general_tools import create_temp_folder
 
-RUN_DUMPS = True
+RUN_DUMPS = False
 BBOX = BBOX_BR_LAURO_DE_FREITAS_1
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
