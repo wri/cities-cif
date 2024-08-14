@@ -1,3 +1,5 @@
+# This code is mostly intended for manual execution
+
 import pytest
 import os
 import shutil
@@ -25,7 +27,11 @@ from city_metrix.layers import (
 from tests.resources.bbox_constants import BBOX_BR_LAURO_DE_FREITAS_1
 from tools.general_tools import create_temp_folder
 
+# RUN_DUMPS is the master control for whether the writes and tests are executed
+# Setting RUN_DUMPS to True turns on code execution.
+# Values should normally be set to False to avoid unnecessary execution.
 RUN_DUMPS = False
+# Both the tests and QGIS file are implemented for the same bounding box in Brazil.
 BBOX = BBOX_BR_LAURO_DE_FREITAS_1
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
