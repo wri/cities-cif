@@ -54,13 +54,14 @@ def process_layers(output_temp_folder):
     write_esa_world_cover(output_temp_folder)
     write_high_land_surface_temperature(output_temp_folder)
     write_land_surface_temperature(output_temp_folder)
-    # write_landsat_collection_2(output_temp_folder)
+    # write_landsat_collection_2(output_temp_folder)  # TODO no longer used, but may be useful
     write_nasa_dem(output_temp_folder)
     write_natural_areas(output_temp_folder)
     write_openbuildings(output_temp_folder)
-    # write_open_street_map(output_temp_folder)
+    # TODO Talk to Saif
+    # write_open_street_map(output_temp_folder) # TODO still needed or have we switched to overture
     write_overture_buildings(output_temp_folder)
-    # write_sentinel_2_level2(output_temp_folder)
+    # write_sentinel_2_level2(output_temp_folder)  # TODO no longer used, but may be useful
     write_smart_surface_lulc(output_temp_folder)
     write_tree_canopy_height(output_temp_folder)
     write_tree_cover(output_temp_folder)
