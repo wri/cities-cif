@@ -30,6 +30,6 @@ setup(
         "boto3",
         "exactextract",
         "overturemaps",
-        "scikit-learn>=1.5.0",
+        "scikit-learn>=1.5.1",
     ],
 )
