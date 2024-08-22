@@ -7,7 +7,7 @@ The Cities Indicator Framework (CIF) is a set of Python tools to make it easier 
 * If all you want to do is use the CIF, the quickest way to get started is to use our [WRI Cities Indicator Framework Colab Notebook](https://colab.research.google.com/drive/1PV1H-godxJ6h42p74Ij9sdFh3T0RN-7j#scrollTo=eM14UgpmpZL-)
 
 ## Installation
-
+* `pip install git+https://github.com/wri/cities-cif@v0.1.2` to install a specific version.
 * `pip install git+https://github.com/wri/cities-cif/releases/latest` gives you the latest stable release.
 * `pip install git+https://github.com/wri/cities-cif` gives you the main branch with is not stable.
 
