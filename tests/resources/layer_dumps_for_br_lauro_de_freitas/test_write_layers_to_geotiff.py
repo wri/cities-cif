@@ -29,9 +29,10 @@ from tools.general_tools import create_temp_folder
 
 # RUN_DUMPS is the master control for whether the writes and tests are executed
 # Setting RUN_DUMPS to True turns on code execution.
-# Values should normally be set to False to avoid unnecessary execution.
-RUN_DUMPS = False
+# Values should normally be set to False in order to avoid unnecessary execution.
+RUN_DUMPS = True
 # Both the tests and QGIS file are implemented for the same bounding box in Brazil.
+COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BR_LAURO_DE_FREITAS_1
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
@@ -119,7 +120,7 @@ def write_natural_areas(output_temp_folder):
 
 def write_openbuildings(output_temp_folder):
     file_path = prep_output_path(output_temp_folder, 'open_buildings.tif')
-    OpenBuildings().write(BBOX, file_path, tile_degrees=None)
+    OpenBuildings(COUNTRY_CODE_FOR_BBOX).write(BBOX, file_path, tile_degrees=None)
     assert verify_file_is_populated(file_path)
 
 # TODO: class function "write" does not properly handle call

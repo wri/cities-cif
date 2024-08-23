@@ -33,9 +33,3 @@ class LandSurfaceTemperature(Layer):
 
         data = get_image_collection(ee.ImageCollection(l8_st), bbox, 30, "LST").ST_B10_mean
         return data
-
-    # TODO: Is this inherited class function needed?
-    # def write(self, output_path):
-    #     self.data.rio.to_raster(output_path)
-
-
