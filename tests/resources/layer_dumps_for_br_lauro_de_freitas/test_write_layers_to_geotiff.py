@@ -30,7 +30,7 @@ from tools.general_tools import create_temp_folder
 # RUN_DUMPS is the master control for whether the writes and tests are executed
 # Setting RUN_DUMPS to True turns on code execution.
 # Values should normally be set to False in order to avoid unnecessary execution.
-RUN_DUMPS = True
+RUN_DUMPS = False
 # Both the tests and QGIS file are implemented for the same bounding box in Brazil.
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BR_LAURO_DE_FREITAS_1
