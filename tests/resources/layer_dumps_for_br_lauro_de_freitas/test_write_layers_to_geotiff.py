@@ -39,7 +39,8 @@ def test_geotiff_writing():
     qgis_project_file = 'layers_for_br_lauro_de_freitas.qgs'
 
     source_folder = os.path.dirname(__file__)
-    output_temp_folder = create_temp_folder('test_result_tif_files')
+    output_temp_folder = create_temp_folder('test_result_tif_files', True)
+
     source_qgis_file = os.path.join(source_folder, qgis_project_file)
     target_qgis_file = os.path.join(output_temp_folder, qgis_project_file)
     shutil.copyfile(source_qgis_file, target_qgis_file)
