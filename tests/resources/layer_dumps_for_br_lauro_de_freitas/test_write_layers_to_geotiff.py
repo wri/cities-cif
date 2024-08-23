@@ -25,7 +25,7 @@ from city_metrix.layers import (
     WorldPop
 )
 from tests.resources.bbox_constants import BBOX_BR_LAURO_DE_FREITAS_1
-from tools.general_tools import create_temp_folder
+from tools.general_tools import create_temp_folder, create_folder
 
 # RUN_DUMPS is the master control for whether the writes and tests are executed
 # Setting RUN_DUMPS to True turns on code execution.
@@ -34,19 +34,27 @@ RUN_DUMPS = False
 # Both the tests and QGIS file are implemented for the same bounding box in Brazil.
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BR_LAURO_DE_FREITAS_1
+# Specify None to write to a temporary default folder otherwise specify a valid custom target path.
+CUSTOM_DUMP_DIRECTORY = None
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
 def test_geotiff_writing():
     qgis_project_file = 'layers_for_br_lauro_de_freitas.qgs'
 
     source_folder = os.path.dirname(__file__)
-    output_temp_folder = create_temp_folder('test_result_tif_files', True)
+
+    if CUSTOM_DUMP_DIRECTORY is None:
+        output_temp_folder = create_temp_folder('test_result_tif_files', True)
+    else:
+        output_temp_folder = create_folder(CUSTOM_DUMP_DIRECTORY, True)
 
     source_qgis_file = os.path.join(source_folder, qgis_project_file)
     target_qgis_file = os.path.join(output_temp_folder, qgis_project_file)
     shutil.copyfile(source_qgis_file, target_qgis_file)
 
     process_layers(output_temp_folder)
+
+    print("\n\033[93mQGIS project file and layer files were written to the %s folder.\033[0m" % output_temp_folder)
 
 
 def process_layers(output_temp_folder):
