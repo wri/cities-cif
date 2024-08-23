@@ -19,6 +19,9 @@ class OpenStreetMapClass(Enum):
     BUILDING = {'building': True}
     PARKING = {'amenity': ['parking'],
                'parking': True}
+	ECONOMIC_OPPORTUNITY = {'landuse': ['commercial', 'industrial', 'retail', 'institutional', 'education'],
+							'building': ['office', 'commercial', 'industrial', 'retail', 'supermarket'],
+							'shop': True}
 
 
 class OpenStreetMap(Layer):
