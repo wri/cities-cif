@@ -1,10 +1,9 @@
 import odc.stac
 import pystac_client
-from jupyterlab.utils import deprecated
 
 from .layer import Layer
 
-@deprecated
+
 class Sentinel2Level2(Layer):
     def __init__(self, bands, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
         super().__init__(**kwargs)
