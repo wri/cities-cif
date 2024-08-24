@@ -1,9 +1,10 @@
 import odc.stac
 import pystac_client
+from jupyterlab.utils import deprecated
 
 from .layer import Layer
 
-
+@deprecated
 class Sentinel2Level2(Layer):
     def __init__(self, bands, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
         super().__init__(**kwargs)
@@ -49,5 +50,7 @@ class Sentinel2Level2(Layer):
         # mask out no data, clouds and cloud shadows
         cloud_masked = s2.where(s2 != 0).where(s2.scl != 3).where(s2.scl != 8).where(s2.scl != 9).where(
             s2.scl != 10)
+
+        # TODO: Determine how to output as an xarray
 
         return cloud_masked.drop_vars("scl")

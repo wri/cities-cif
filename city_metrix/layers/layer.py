@@ -18,9 +18,7 @@ import utm
 import shapely.geometry as geometry
 import pandas as pd
 
-
 MAX_TILE_SIZE = 0.5
-
 
 class Layer:
     def __init__(self, aggregate=None, masks=[]):
@@ -39,6 +37,15 @@ class Layer:
         """
         ...
 
+    @abstractmethod
+    def post_processing_adjustment(self, data, **kwargs) -> Union[xr.DataArray, gpd.GeoDataFrame]:
+        """
+        Applies the standard post-processing adjustment used for rendering of the layer
+        :param are specific to the layer
+        :return: A rioxarray-format DataArray or a GeoPandas DataFrame
+        """
+        return data
+
     def mask(self, *layers):
         """
         Apply layers as masks
@@ -56,7 +63,7 @@ class Layer:
         """
         return LayerGroupBy(self.aggregate, zones, layer, self.masks)
 
-    def write(self, bbox, output_path, tile_degrees=None):
+    def write(self, bbox, output_path, tile_degrees=None, **kwargs):
         """
         Write the layer to a path. Does not apply masks.
 
@@ -76,6 +83,7 @@ class Layer:
             file_names = []
             for tile in tiles["geometry"]:
                 data = self.aggregate.get_data(tile.bounds)
+                data = self.post_processing_adjustment(data, **kwargs)
 
                 file_name = f"{output_path}/{uuid4()}.tif"
                 file_names.append(file_name)
@@ -83,6 +91,7 @@ class Layer:
                 write_layer(file_name, data)
         else:
             data = self.aggregate.get_data(bbox)
+            data = self.post_processing_adjustment(data, **kwargs)
             write_layer(output_path, data)
 
 
@@ -301,21 +310,23 @@ def get_image_collection(
 
     return data
 
-
 def write_layer(path, data):
     if isinstance(data, xr.DataArray):
-        # for rasters, need to write to locally first then copy to cloud storage
-        if path.startswith("s3://"):
-            tmp_path = f"{uuid4()}.tif"
-            data.rio.to_raster(raster_path=tmp_path, driver="COG")
-
-            s3 = boto3.client('s3')
-            s3.upload_file(tmp_path, path.split('/')[2], '/'.join(path.split('/')[3:]))
-
-            os.remove(tmp_path)
-        else:
-            data.rio.to_raster(raster_path=path, driver="COG")
+        write_dataarray(path, data)
     elif isinstance(data, gpd.GeoDataFrame):
         data.to_file(path, driver="GeoJSON")
     else:
-        raise NotImplementedError("Can only write DataArray or GeoDataFrame")
+        raise NotImplementedError("Can only write DataArray, Dataset, or GeoDataFrame")
+
+def write_dataarray(path, data):
+    # for rasters, need to write to locally first then copy to cloud storage
+    if path.startswith("s3://"):
+        tmp_path = f"{uuid4()}.tif"
+        data.rio.to_raster(raster_path=tmp_path, driver="COG")
+
+        s3 = boto3.client('s3')
+        s3.upload_file(tmp_path, path.split('/')[2], '/'.join(path.split('/')[3:]))
+
+        os.remove(tmp_path)
+    else:
+        data.rio.to_raster(raster_path=path, driver="COG")

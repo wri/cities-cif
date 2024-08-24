@@ -1,9 +1,10 @@
 import odc.stac
 import pystac_client
+from jupyterlab.utils import deprecated
 
 from .layer import Layer
 
-
+@deprecated
 class LandsatCollection2(Layer):
     def __init__(self, bands, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
         super().__init__(**kwargs)
@@ -29,8 +30,7 @@ class LandsatCollection2(Layer):
             fail_on_error=False,
         )
 
+        # TODO: Determine how to output xarray
+
         qa_lst = lc2.where((lc2.qa_pixel & 24) == 0)
         return qa_lst.drop_vars("qa_pixel")
-
-
-
