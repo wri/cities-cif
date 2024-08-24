@@ -10,7 +10,7 @@ from tools.general_tools import create_target_folder, is_valid_path
 # RUN_DUMPS is the master control for whether the writes and tests are executed
 # Setting RUN_DUMPS to True turns on code execution.
 # Values should normally be set to False in order to avoid unnecessary execution.
-RUN_DUMPS = True
+RUN_DUMPS = False
 
 # Specify None to write to a temporary default folder otherwise specify a valid custom target path.
 CUSTOM_DUMP_DIRECTORY = None
