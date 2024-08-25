@@ -27,7 +27,7 @@ class WorldPop(Layer):
                      .select(agesex_class)
                      )
 			)
-		world_pop = world_pop.mean()  # Should this be sum?
+		world_pop = world_pop.sum()
 
         data = get_image_collection(world_pop, bbox, 100, "world pop")
         return data.population

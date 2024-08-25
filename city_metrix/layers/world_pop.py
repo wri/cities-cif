@@ -17,7 +17,7 @@ class WorldPop(Layer):
                      .filterBounds(ee.Geometry.BBox(*bbox))
                      .filter(ee.Filter.inList('year', [2020]))
                      .select('population')
-                     .mean()
+                     .sum()
                      )
 
         data = get_image_collection(world_pop, bbox, 100, "world pop")
