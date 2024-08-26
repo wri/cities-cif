@@ -46,7 +46,7 @@ class NdviSentinel2(Layer):
 
         return xdata
 
-    def post_processing_adjustment(self, data, ndvi_threshold=0.4, convert_to_percentage=True, **kwargs):
+    def prepare_for_map_rendering(self, data, ndvi_threshold=0.4, convert_to_percentage=True, **kwargs):
         """
         Applies the standard post-processing adjustment used for rendering of NDVI including masking
         to a threshold and conversion to percentage values.

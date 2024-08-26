@@ -38,7 +38,7 @@ class Layer:
         ...
 
     @abstractmethod
-    def post_processing_adjustment(self, data, **kwargs) -> Union[xr.DataArray, gpd.GeoDataFrame]:
+    def prepare_for_map_rendering(self, data, **kwargs) -> Union[xr.DataArray, gpd.GeoDataFrame]:
         """
         Applies the standard post-processing adjustment used for rendering of the layer
         :param are specific to the layer
@@ -83,7 +83,7 @@ class Layer:
             file_names = []
             for tile in tiles["geometry"]:
                 data = self.aggregate.get_data(tile.bounds)
-                data = self.post_processing_adjustment(data, **kwargs)
+                data = self.prepare_for_map_rendering(data, **kwargs)
 
                 file_name = f"{output_path}/{uuid4()}.tif"
                 file_names.append(file_name)
@@ -91,7 +91,7 @@ class Layer:
                 write_layer(file_name, data)
         else:
             data = self.aggregate.get_data(bbox)
-            data = self.post_processing_adjustment(data, **kwargs)
+            data = self.prepare_for_map_rendering(data, **kwargs)
             write_layer(output_path, data)
 
 
