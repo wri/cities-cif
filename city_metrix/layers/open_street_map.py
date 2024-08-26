@@ -19,15 +19,13 @@ class OpenStreetMapClass(Enum):
     BUILDING = {'building': True}
     PARKING = {'amenity': ['parking'],
                'parking': True}
-	ECONOMIC_OPPORTUNITY = {'landuse': ['commercial', 'industrial', 'retail', 'institutional', 'education'],
+    ECONOMIC_OPPORTUNITY = {'landuse': ['commercial', 'industrial', 'retail', 'institutional', 'education'],
 							'building': ['office', 'commercial', 'industrial', 'retail', 'supermarket'],
 							'shop': True}
-	SCHOOLS = {'building': ['school',],
-				'amenity': ['school', 'kindergarten']
-				}
-	HIGHER_EDUCATION = {'amenity': ['college', 'university'],
-						'building': ['college', 'university']
-						}
+    SCHOOLS = {'building': ['school',],
+				'amenity': ['school', 'kindergarten']}
+    HIGHER_EDUCATION = {'amenity': ['college', 'university'],
+						'building': ['college', 'university']}
 
 
 class OpenStreetMap(Layer):
