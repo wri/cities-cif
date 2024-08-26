@@ -13,7 +13,7 @@ class Albedo(Layer):
         self.threshold = threshold
 
     def get_data(self, bbox):
-        S2 = ee.ImageCollection("COPERNICUS/S2_SR")
+        S2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
         S2C = ee.ImageCollection("COPERNICUS/S2_CLOUD_PROBABILITY")
 
         MAX_CLOUD_PROB = 30
