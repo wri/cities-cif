@@ -1,8 +1,6 @@
 # This code is mostly intended for manual execution
 # Execution configuration is specified in the conftest file
-
 import pytest
-import os
 
 from city_metrix.layers import (
     Albedo,
@@ -23,7 +21,7 @@ from city_metrix.layers import (
     TreeCanopyHeight,
     TreeCover,
     UrbanLandUse,
-    WorldPop
+    WorldPop, Layer
 )
 from .conftest import RUN_DUMPS, prep_output_path, verify_file_is_populated
 
@@ -86,8 +84,7 @@ def test_write_natural_areas(target_folder, bbox_info):
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
 def test_write_ndvi_sentinel2_gee(target_folder, bbox_info):
     file_path = prep_output_path(target_folder, 'ndvi_sentinel2_gee.tif')
-    (NdviSentinel2(year=2023)
-     .write(bbox_info.bounds, file_path, tile_degrees=None, ndvi_threshold=0.4, convert_to_percentage=True))
+    NdviSentinel2(year=2023).write(bbox_info.bounds, file_path, tile_degrees=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')

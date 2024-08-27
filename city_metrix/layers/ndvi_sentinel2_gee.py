@@ -1,5 +1,4 @@
 import ee
-from tools.xarray_tools import convert_ratio_to_percentage
 from .layer import Layer, get_image_collection
 
 class NdviSentinel2(Layer):
@@ -45,21 +44,3 @@ class NdviSentinel2(Layer):
         xdata = ndvi_data.to_dataarray()
 
         return xdata
-
-    def prepare_for_map_rendering(self, data, ndvi_threshold=0.4, convert_to_percentage=True, **kwargs):
-        """
-        Applies the standard post-processing adjustment used for rendering of NDVI including masking
-        to a threshold and conversion to percentage values.
-        :param ndvi_threshold: (float) minimum threshold for keeping values
-        :param convert_to_percentage: (bool) controls whether NDVI values are converted to a percentage
-        :return: A rioxarray-format DataArray
-        """
-        # Remove values less than the specified threshold
-        if ndvi_threshold is not None:
-            data = data.where(data >= ndvi_threshold)
-
-        # Convert to percentage in byte data_type
-        if convert_to_percentage is True:
-            data = convert_ratio_to_percentage(data)
-
-        return data
