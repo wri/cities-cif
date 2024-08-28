@@ -7,9 +7,10 @@ from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
 
 class UrbanLandUse(Layer):
-    def __init__(self, band='lulc', **kwargs):
+    def __init__(self, band='lulc', scale_meters=5, **kwargs):
         super().__init__(**kwargs)
         self.band = band
+        self.scale_meters = scale_meters
 
     def get_data(self, bbox):
         dataset = ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1")
@@ -27,6 +28,6 @@ class UrbanLandUse(Layer):
                                      .rename('lulc')
                                      )
 
-        data = get_image_collection(ulu, bbox, 5, "urban land use").lulc
+        data = get_image_collection(ulu, bbox, self.scale_meters, "urban land use").lulc
 
         return data

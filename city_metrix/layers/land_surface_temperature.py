@@ -5,12 +5,12 @@ from dask.diagnostics import ProgressBar
 import ee
 import xarray
 
-
 class LandSurfaceTemperature(Layer):
-    def __init__(self, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
+    def __init__(self, start_date="2013-01-01", end_date="2023-01-01", scale_meters=30, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
+        self.scale_meters = scale_meters
 
     def get_data(self, bbox):
         def cloud_mask(image):
@@ -31,5 +31,5 @@ class LandSurfaceTemperature(Layer):
             .map(apply_scale_factors) \
             .reduce(ee.Reducer.mean())
 
-        data = get_image_collection(ee.ImageCollection(l8_st), bbox, 30, "LST").ST_B10_mean
+        data = get_image_collection(ee.ImageCollection(l8_st), bbox, self.scale_meters, "LST").ST_B10_mean
         return data

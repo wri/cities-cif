@@ -4,13 +4,13 @@ from xrspatial.classify import reclassify
 from .layer import Layer
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 
-
 class NaturalAreas(Layer):
-    def __init__(self, **kwargs):
+    def __init__(self, scale_meters=10, **kwargs):
         super().__init__(**kwargs)
+        self.scale_meters = scale_meters
 
     def get_data(self, bbox):
-        esa_world_cover = EsaWorldCover().get_data(bbox)
+        esa_world_cover = EsaWorldCover(scale_meters=self.scale_meters).get_data(bbox)
         reclass_map = {
             EsaWorldCoverClass.TREE_COVER.value: 1,
             EsaWorldCoverClass.SHRUBLAND.value: 1,

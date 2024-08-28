@@ -19,32 +19,32 @@ class EsaWorldCoverClass(Enum):
     MANGROVES = 95
     MOSS_AND_LICHEN = 100
 
-
 class EsaWorldCover(Layer):
     STAC_CATALOG_URI = "https://services.terrascope.be/stac/"
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
 
-    def __init__(self, land_cover_class=None, year=2020, **kwargs):
+    def __init__(self, land_cover_class=None, year=2020, scale_meters=10, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
         self.year = year
+        self.scale_meters = scale_meters
 
     def get_data(self, bbox):
         if self.year == 2020:
             data = get_image_collection(
-                    ee.ImageCollection("ESA/WorldCover/v100"),
-                    bbox,
-                    10,
-                    "ESA world cover"
-                ).Map
+                ee.ImageCollection("ESA/WorldCover/v100"),
+                bbox,
+                self.scale_meters,
+                "ESA world cover"
+            ).Map
         elif self.year == 2021:
             data = get_image_collection(
-                    ee.ImageCollection("ESA/WorldCover/v200"),
-                    bbox,
-                    10,
-                    "ESA world cover"
-                ).Map
+                ee.ImageCollection("ESA/WorldCover/v200"),
+                bbox,
+                self.scale_meters,
+                "ESA world cover"
+            ).Map
 
         if self.land_cover_class:
             data = data.where(data == self.land_cover_class.value)

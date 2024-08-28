@@ -5,7 +5,6 @@ import xarray as xr
 import xee
 import ee
 
-
 class TreeCover(Layer):
     """
     Merged tropical and nontropical tree cover from WRI
@@ -13,10 +12,11 @@ class TreeCover(Layer):
     
     NO_DATA_VALUE = 255
 
-    def __init__(self, min_tree_cover=None, max_tree_cover=None, **kwargs):
+    def __init__(self, min_tree_cover=None, max_tree_cover=None, scale_meters=10, **kwargs):
         super().__init__(**kwargs)
         self.min_tree_cover = min_tree_cover
         self.max_tree_cover = max_tree_cover
+        self.scale_meters = scale_meters
 
     def get_data(self, bbox):
         tropics = ee.ImageCollection('projects/wri-datalab/TropicalTreeCover')
@@ -24,7 +24,7 @@ class TreeCover(Layer):
         merged_ttc = tropics.merge(nontropics)
         ttc_image = merged_ttc.reduce(ee.Reducer.mean()).rename('ttc')
 
-        data = get_image_collection(ee.ImageCollection(ttc_image), bbox, 10, "tree cover").ttc
+        data = get_image_collection(ee.ImageCollection(ttc_image), bbox, self.scale_meters, "tree cover").ttc
 
         if self.min_tree_cover is not None:
             data = data.where(data >= self.min_tree_cover)

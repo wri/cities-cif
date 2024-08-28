@@ -10,9 +10,10 @@ class NdviSentinel2(Layer):
     Notebook: https://github.com/wri/cities-cities4forests-indicators/blob/dev-eric/scripts/extract-VegetationCover.ipynb
     Reference: https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index
     """
-    def __init__(self, year=None, **kwargs):
+    def __init__(self, year=None, scale_meters=10, **kwargs):
         super().__init__(**kwargs)
         self.year = year
+        self.scale_meters = scale_meters
 
     def get_data(self, bbox):
         if self.year is None:
@@ -39,7 +40,7 @@ class NdviSentinel2(Layer):
         ndvi_mosaic = ndvi.qualityMosaic('NDVI')
 
         ic = ee.ImageCollection(ndvi_mosaic)
-        ndvi_data = get_image_collection(ic, bbox, 10, "NDVI")
+        ndvi_data = get_image_collection(ic, bbox, self.scale_meters, "NDVI")
 
         xdata = ndvi_data.to_dataarray()
 

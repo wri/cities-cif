@@ -5,10 +5,10 @@ import ee
 
 from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
-
 class WorldPop(Layer):
-    def __init__(self, **kwargs):
+    def __init__(self, scale_meters=100, **kwargs):
         super().__init__(**kwargs)
+        self.scale_meters = scale_meters
 
     def get_data(self, bbox):
         # load population
@@ -20,5 +20,5 @@ class WorldPop(Layer):
                      .mean()
                      )
 
-        data = get_image_collection(world_pop, bbox, 100, "world pop")
+        data = get_image_collection(world_pop, bbox, self.scale_meters, "world pop")
         return data.population

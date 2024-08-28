@@ -16,3 +16,4 @@ def test_ndvi_dimensions():
 
     assert actual_min == expected_min
     assert actual_max == expected_max
+
