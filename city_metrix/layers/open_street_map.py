@@ -29,7 +29,7 @@ class OpenStreetMapClass(Enum):
     TRANSIT_STOP = {'amenity':['ferry_terminal'],
                     'railway':['stop', 'platform', 'halt', 'tram_stop'],
                     'highway':['bus_stop', 'platform'],
-                    'public_transport': ['platform', 'stop_position'],
+                    'public_transport': ['platform', 'stop_position', 'stop_area'],
                     'station':['subway'],
                     'aerialway':['station']}
 
@@ -72,10 +72,3 @@ class OpenStreetMap(Layer):
         osm_feature = osm_feature.reset_index()[keep_col]
 
         return osm_feature
-
-    def write(self, output_path):
-        self.data['bbox'] = str(self.data.total_bounds)
-        self.data['osm_class'] = str(self.osm_class.value)
-
-        # Write to a GeoJSON file
-        self.data.to_file(output_path, driver='GeoJSON')
