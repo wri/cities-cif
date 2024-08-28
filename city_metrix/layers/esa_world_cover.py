@@ -3,7 +3,7 @@ from enum import Enum
 import xarray as xr
 import ee
 
-from .layer import Layer, get_utm_zone_epsg
+from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
 
 class EsaWorldCoverClass(Enum):
@@ -25,28 +25,26 @@ class EsaWorldCover(Layer):
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
 
-    def __init__(self, land_cover_class=None, **kwargs):
+    def __init__(self, land_cover_class=None, year=2020, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
+        self.year = year
 
     def get_data(self, bbox):
-        esa = ee.ImageCollection("ESA/WorldCover/v100")
-        crs = get_utm_zone_epsg(bbox)
-
-        ds = xr.open_dataset(
-            esa,
-            engine='ee',
-            scale=10,
-            crs=crs,
-            geometry=ee.Geometry.Rectangle(*bbox),
-            chunks={'X': 512, 'Y': 512},
-        )
-
-        with ProgressBar():
-            print(f"Extracting ESA world cover layer in bbox {bbox}:")
-            data = ds.Map.compute()
-
-        data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
+        if self.year == 2020:
+            data = get_image_collection(
+                    ee.ImageCollection("ESA/WorldCover/v100"),
+                    bbox,
+                    10,
+                    "ESA world cover"
+                ).Map
+        elif self.year == 2021:
+            data = get_image_collection(
+                    ee.ImageCollection("ESA/WorldCover/v200"),
+                    bbox,
+                    10,
+                    "ESA world cover"
+                ).Map
 
         if self.land_cover_class:
             data = data.where(data == self.land_cover_class.value)

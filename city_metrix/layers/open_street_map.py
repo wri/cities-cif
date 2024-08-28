@@ -9,7 +9,7 @@ from .layer import Layer
 class OpenStreetMapClass(Enum):
     OPEN_SPACE = {'leisure': ['park', 'nature_reserve', 'common', 'playground', 'pitch', 'track'],
                   'boundary': ['protected_area', 'national_park']}
-    OPEN_SPACE_HEAT = {'leisure': ['park', 'nature_reserve', 'common', 'playground', 'pitch', 'track', 'garden', 'golf_course', 'dog_park', 'recreation_ground', 'disc_golf_course'],
+    OPEN_SPACE_HEAT = {'leisure': ['park', 'nature_reserve', 'common', 'playground', 'pitch', 'garden', 'golf_course', 'dog_park', 'recreation_ground', 'disc_golf_course'],
                        'boundary': ['protected_area', 'national_park', 'forest_compartment', 'forest']}
     WATER = {'water': True,
              'natural': ['water'],
@@ -19,6 +19,13 @@ class OpenStreetMapClass(Enum):
     BUILDING = {'building': True}
     PARKING = {'amenity': ['parking'],
                'parking': True}
+    ECONOMIC_OPPORTUNITY = {'landuse': ['commercial', 'industrial', 'retail', 'institutional', 'education'],
+							'building': ['office', 'commercial', 'industrial', 'retail', 'supermarket'],
+							'shop': True}
+    SCHOOLS = {'building': ['school',],
+				'amenity': ['school', 'kindergarten']}
+    HIGHER_EDUCATION = {'amenity': ['college', 'university'],
+						'building': ['college', 'university']}
     TRANSIT_STOP = {'amenity':['ferry_terminal'],
                     'railway':['stop', 'platform', 'halt', 'tram_stop'],
                     'highway':['bus_stop', 'platform'],
@@ -26,17 +33,18 @@ class OpenStreetMapClass(Enum):
                     'station':['subway'],
                     'aerialway':['station']}
 
+
 class OpenStreetMap(Layer):
     def __init__(self, osm_class=None, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 
     def get_data(self, bbox):
-        north, south, east, west = bbox[3],  bbox[1], bbox[0], bbox[2]
+        north, south, east, west = bbox[3], bbox[1], bbox[0], bbox[2]
         # Set the OSMnx configuration to disable caching
         ox.settings.use_cache = False
         try:
-            osm_feature = ox.features_from_bbox(north, south, east, west, self.osm_class.value)
+            osm_feature = ox.features_from_bbox(bbox=(north, south, east, west), tags=self.osm_class.value)
         # When no feature in bbox, return an empty gdf
         except ox._errors.InsufficientResponseError as e:
             osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['osmid', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')

@@ -1,8 +1,14 @@
-from city_metrix.layers import LandsatCollection2, Albedo, LandSurfaceTemperature, EsaWorldCover, EsaWorldCoverClass, TreeCover
-from .conftest import MockLayer, MockMaskLayer, MockLargeLayer, ZONES, LARGE_ZONES
-
-import pytest
 import numpy as np
+
+from .conftest import (
+    LARGE_ZONES,
+    ZONES,
+    MockGroupByLayer,
+    MockLargeGroupByLayer,
+    MockLargeLayer,
+    MockLayer,
+    MockMaskLayer,
+)
 
 
 def test_count():
@@ -39,22 +45,13 @@ def test_masks():
             assert count == 100
 
 
-SAMPLE_BBOX = (-38.35530428121955, -12.821710300686393, -38.33813814352424, -12.80363249765361)
+def test_group_by_layer():
+    counts = MockLayer().groupby(ZONES, layer=MockGroupByLayer()).count()
+    assert all([count == {1: 50.0, 2: 50.0} for count in counts])
 
 
-def test_tree_cover():
-    assert pytest.approx(53.84184165912419, rel=0.001) == TreeCover().get_data(SAMPLE_BBOX).mean()
-
-
-def test_albedo():
-    assert Albedo().get_data(SAMPLE_BBOX).mean()
-
-
-def test_lst():
-    mean = LandSurfaceTemperature().get_data(SAMPLE_BBOX).mean()
-    assert mean
-
-
-def test_esa():
-    count = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP).get_data(SAMPLE_BBOX).count()
-    assert count
+def test_group_by_large_layer():
+    counts = (
+        MockLargeLayer().groupby(LARGE_ZONES, layer=MockLargeGroupByLayer()).count()
+    )
+    assert all([count == {1: 50.0, 2: 50.0} for count in counts])

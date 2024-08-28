@@ -2,7 +2,7 @@ import ee
 import xarray
 from dask.diagnostics import ProgressBar
 
-from .layer import Layer, get_utm_zone_epsg
+from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
 
 class Albedo(Layer):
@@ -13,7 +13,7 @@ class Albedo(Layer):
         self.threshold = threshold
 
     def get_data(self, bbox):
-        S2 = ee.ImageCollection("COPERNICUS/S2_SR")
+        S2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
         S2C = ee.ImageCollection("COPERNICUS/S2_CLOUD_PROBABILITY")
 
         MAX_CLOUD_PROB = 30
@@ -86,24 +86,9 @@ class Albedo(Layer):
         ## S2 MOSAIC AND ALBEDO
         dataset = get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
-        albedoMean = s2_albedo.reduce(ee.Reducer.mean())
-        albedoMean = albedoMean.reproject(crs=ee.Projection('epsg:4326'), scale=10)
-        crs = get_utm_zone_epsg(bbox)
+        albedo_mean = s2_albedo.reduce(ee.Reducer.mean())
 
-        ds = xarray.open_dataset(
-            ee.ImageCollection(albedoMean),
-            engine='ee',
-            scale=10,
-            crs=crs,
-            geometry=ee.Geometry.BBox(*bbox),
-            chunks={'X': 512, 'Y': 512},
-        )
-
-        with ProgressBar():
-            print(f"Calculating albedo layer in bbox {bbox}:")
-            ds = ds.compute()
-
-        data = ds.albedo_mean.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
+        data = get_image_collection(ee.ImageCollection(albedo_mean), bbox, 10, "albedo").albedo_mean
 
         if self.threshold is not None:
             return data.where(data < self.threshold)

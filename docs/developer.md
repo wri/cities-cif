@@ -11,7 +11,7 @@ The `city_metrix` library allows users of geospatial data to collect and apply z
 It provides two main functionalities:
 1. Extracting geospatial `layers` based on specific areas of interests (defined as geodataframe)' These data layers are collected from any cloud source (Google Earth Engine, AWS S3 public buckets, Public APIs). Two formats of data layers are handled in `city_metrix`: Rasters and vectors. 
     - Rasters data are collected and transformed into _arrays_ using `xarray` (GEE images collections are converted also into `arrays` using `xee`).
-    - Vectors adata are stored as `GeoDataFrame`.  
+    - Vectors data are stored as `GeoDataFrame`.  
 2. Measuring `indicators` using the extracted `layers` by implementing zonal statistics operations 
 
 The main package source code is located in the `city_metrix` directory.
@@ -79,6 +79,18 @@ Hopefully we already have the layers you need in `city_metrix/layers/` and you c
 
 4. Import the new layer class to [city_metrix/layers/\_\_init\_\_.py](../city_metrix/layers/__init__.py)
 
+5. Add a test to [tests/layers.py](../tests/layers.py) to ensure the new layer is working as expected.
+
+6. Add new dependencies to [setup.py](../setup.py) and [environment.yml](../environment.yml).
+
+7. Add a section to the get layers.ipynb notebook to demonstrate how to use the new layer.
+
+8. Create a PR to merge the new layer into the main branch with these in the PR description:
+    - Link to Jira ticket (if any)
+    - A brief description of the new layer
+    - A link to the Airtable record for the new layer
+    - Explain how to test the new layer
+
 
 ## Adding an Indicator
 Once you have all the data layers you need as inputs, here is the process to create an indicator using them.
@@ -90,6 +102,16 @@ Once you have all the data layers you need as inputs, here is the process to cre
 2. Define the indicator calculation function in a new file in [city_metrix/metrics](../city_metrix/metrics)
 
     Define a function for new indicator with the input of the calculation zones as a `GeoDataFrame` and output of the calculated indicators as a `GeoSeries`.
+
+3. Add a test to [tests/metrics.py](../tests/metrics.py) to ensure the new indicator is working as expected.
+
+4. Add new dependencies to [setup.py](../setup.py) and [environment.yml](../environment.yml).
+
+5. Create a PR to merge the new indicator into the main branch with these in the PR description:
+    - Link to Jira ticket (if any)
+    - A brief description of the new indicator
+    - A link to the Airtable record for the new indicator
+    - Explain how to test the new indicator
 
 
 ## Adding Cities

@@ -1,0 +1,39 @@
+name: build-image
+on:
+  workflow_dispatch:
+jobs:
+  build-image:
+    name: build-image
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Clean up Ubuntu
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf "/usr/local/share/boost"
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Get VERSION
+      run: echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
+    - name: Build Image
+      id: build-image
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: wri-cities-cif-environment
+        tags: latest ${{ env.VERSION }} ${{ github.sha }}
+        containerfiles: |
+          ./container/Containerfile
+    - name: Push image to container registry
+      id: push-image-to-registry
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ steps.build-image.outputs.image }}
+        tags: ${{ steps.build-image.outputs.tags }}
+        registry: ghcr.io/wri
+        username: ${{ secrets.REGISTRY_USER }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    - name: Print image url
+      run: echo "Image pushed to ${{ steps.push-image-to-registry.outputs.registry-paths }}"
