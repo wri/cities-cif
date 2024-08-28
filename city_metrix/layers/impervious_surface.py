@@ -12,7 +12,7 @@ class ImperviousSurface(Layer):
 
     def get_data(self, bbox):
         # load impervious_surface
-        dataset = ee.Image("Tsinghua/FROM-GLC/GAIA/v10").gt(0)  # change_year_index is zero if permeable as of 2018
+        dataset = ee.ImageCollection(ee.Image("Tsinghua/FROM-GLC/GAIA/v10").gt(0))  # change_year_index is zero if permeable as of 2018
         imperv_surf = ee.ImageCollection(dataset
                      .filterBounds(ee.Geometry.BBox(*bbox))
                      .select('change_year_index')
