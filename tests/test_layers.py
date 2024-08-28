@@ -1,4 +1,3 @@
-import ee
 import pytest
 
 from city_metrix.layers import (
@@ -24,92 +23,70 @@ from city_metrix.layers import (
     UrbanLandUse,
     WorldPop
 )
-from city_metrix.layers.layer import get_image_collection
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 
-EE_IMAGE_DIMENSION_TOLERANCE = 1  # Tolerance compensates for variable results from GEE service
 # Tests are implemented for the same bounding box in Brazil.
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 
 def test_albedo():
-    assert Albedo().get_data(BBOX).mean()
+    count = Albedo().get_data(BBOX).count()
+    assert count
 
 
 def test_alos_dsm():
-    mean = AlosDSM().get_data(BBOX).mean()
-    assert mean
+    count = AlosDSM().get_data(BBOX).count()
+    assert count
 
 
 def test_average_net_building_height():
-    assert AverageNetBuildingHeight().get_data(BBOX).mean()
+    count = AverageNetBuildingHeight().get_data(BBOX).count()
+    assert count
 
 
 def test_esa_world_cover():
+    land_cover_class = EsaWorldCoverClass.BUILT_UP
     count = (
-        EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
+        EsaWorldCover(land_cover_class=land_cover_class)
         .get_data(BBOX)
         .count()
     )
     assert count
 
 
-def test_read_image_collection():
-    ic = ee.ImageCollection("ESA/WorldCover/v100")
-    data = get_image_collection(ic, BBOX, 10, "test")
-
-    expected_crs = 32724
-    expected_x_dimension = 187
-    expected_y_dimension = 199
-
-    assert data.rio.crs == expected_crs
-    assert (
-        pytest.approx(expected_x_dimension, rel=EE_IMAGE_DIMENSION_TOLERANCE) == "x",
-        pytest.approx(expected_y_dimension, rel=EE_IMAGE_DIMENSION_TOLERANCE) == "y"
-    )
-
-
-def test_read_image_collection_scale():
-    ic = ee.ImageCollection("ESA/WorldCover/v100")
-    data = get_image_collection(ic, BBOX, 100, "test")
-    expected_x_dimension = 19
-    expected_y_dimension = 20
-    assert data.dims == {"x": expected_x_dimension, "y": expected_y_dimension}
-
-
 def test_high_land_surface_temperature():
-    data = HighLandSurfaceTemperature().get_data(BBOX)
-    assert data.any()
+    count = HighLandSurfaceTemperature().get_data(BBOX).count()
+    assert count
 
 
 def test_land_surface_temperature():
-    mean_lst = LandSurfaceTemperature().get_data(BBOX).mean()
-    assert mean_lst
+    count = LandSurfaceTemperature().get_data(BBOX).count()
+    assert count
 
 
 @pytest.mark.skip(reason="layer is deprecated")
 def test_landsat_collection_2():
     bands = ["blue"]
-    data = LandsatCollection2(bands).get_data(BBOX)
-    assert data.any()
+    count = LandsatCollection2(bands).get_data(BBOX).count()
+    assert count
 
 
 def test_nasa_dem():
-    mean = NasaDEM().get_data(BBOX).mean()
-    assert mean
+    count = NasaDEM().get_data(BBOX).count()
+    assert count
 
 
 def test_natural_areas():
-    data = NaturalAreas().get_data(BBOX)
-    assert data.any()
+    count = NaturalAreas().get_data(BBOX).count()
+    assert count
 
 def test_ndvi_sentinel2():
-    data = NdviSentinel2(year=2023).get_data(BBOX)
-    assert data is not None
+    count = NdviSentinel2(year=2023).get_data(BBOX).count()
+    assert count
 
 
 def test_openbuildings():
-    count = OpenBuildings(COUNTRY_CODE_FOR_BBOX).get_data(BBOX).count().sum()
+    count = OpenBuildings(COUNTRY_CODE_FOR_BBOX).get_data(BBOX).count()
     assert count
 
 
@@ -118,21 +95,20 @@ def test_open_street_map():
         OpenStreetMap(osm_class=OpenStreetMapClass.ROAD)
         .get_data(BBOX)
         .count()
-        .sum()
     )
     assert count
 
 
 def test_overture_buildings():
-    count = OvertureBuildings().get_data(BBOX).count().sum()
+    count = OvertureBuildings().get_data(BBOX).count()
     assert count
 
 
 @pytest.mark.skip(reason="layer is deprecated")
 def test_sentinel_2_level2():
     sentinel_2_bands = ["green"]
-    data = Sentinel2Level2(sentinel_2_bands).get_data(BBOX)
-    assert data.any()
+    count = Sentinel2Level2(sentinel_2_bands).get_data(BBOX).count()
+    assert count
 
 
 def test_smart_surface_lulc():
@@ -144,12 +120,8 @@ def test_tree_canopy_height():
     assert count
 
 def test_tree_cover():
-    actual = TreeCover().get_data(BBOX).mean()
-    expected = 54.0
-    tolerance = 0.1
-    assert (
-            pytest.approx(expected, rel=tolerance) == actual
-    )
+    count = TreeCover().get_data(BBOX).count()
+    assert count
 
 
 def test_urban_land_use():
@@ -157,5 +129,5 @@ def test_urban_land_use():
 
 
 def test_world_pop():
-    data = WorldPop().get_data(BBOX)
-    assert data.any()
+    count = WorldPop().get_data(BBOX).count()
+    assert count

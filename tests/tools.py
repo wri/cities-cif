@@ -10,7 +10,7 @@ def post_process_layer(data, value_threshold=0.4, convert_to_percentage=True):
     """
     # Remove values less than the specified threshold
     if value_threshold is not None:
-        data = data.where(data >= value_threshold)
+        data = data.where(data >= value_threshold, drop=True)
 
     # Convert to percentage in byte data_type
     if convert_to_percentage is True:
