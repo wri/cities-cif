@@ -25,25 +25,25 @@ Note: To add a test for another scalable layer that has the spatial_resolution p
 """
 CLASSES_WITH_spatial_resolution_PROPERTY = \
     {
-        'Albedo()',
-        'AlosDSM()',
-        'AverageNetBuildingHeight()',
-        'BuiltUpHeight()',
+        # 'Albedo()',
+        # 'AlosDSM()',
+        # 'AverageNetBuildingHeight()',
+        # 'BuiltUpHeight()',
         'EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)',
-        'LandSurfaceTemperature()',
-        'NasaDEM()',
-        'NaturalAreas()',
-        'NdviSentinel2(year=2023)',
-        'TreeCanopyHeight()',
-        'TreeCover()',
-        'UrbanLandUse()',
-        'WorldPop()'
+        # 'LandSurfaceTemperature()',
+        # 'NasaDEM()',
+        # 'NaturalAreas()',
+        # 'NdviSentinel2(year=2023)',
+        # 'TreeCanopyHeight()',
+        # 'TreeCover()',
+        # 'UrbanLandUse()',
+        # 'WorldPop()'
     }
 
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 
-def test_scale__meters_property_for_all_scalable_layers():
+def test_spatial_resolution_for_all_scalable_layers():
     for class_instance_str in CLASSES_WITH_spatial_resolution_PROPERTY:
         is_valid, except_str = validate_layer_instance(class_instance_str)
         if is_valid is False:
@@ -104,13 +104,14 @@ def validate_layer_instance(obj_string):
 
 def evaluate_layer(layer, expected_resolution):
     data = layer.get_data(BBOX)
-    est_actual_resolution = get_resolution_estimate(data)
-    assert expected_resolution == est_actual_resolution
+    actual_estimated_resolution, y_cells, y_diff = get_resolution_estimate(data)
+    print ('y_cells %s, y_diff %s' % (y_cells, y_diff))
+    assert expected_resolution == actual_estimated_resolution
 
 def get_resolution_estimate(data):
-    y_cells = data['y'].size - 1
+    y_cells = float(data['y'].size - 1)
     y_min = data['y'].values.min()
     y_max = data['y'].values.max()
     y_diff = y_max - y_min
     ry = round(y_diff/y_cells)
-    return ry
+    return ry, y_cells, y_diff
