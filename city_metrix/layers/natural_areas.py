@@ -5,12 +5,17 @@ from .layer import Layer
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 
 class NaturalAreas(Layer):
-    def __init__(self, scale_meters=10, **kwargs):
+    """
+    Attributes:
+        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+    """
+
+    def __init__(self, spatial_resolution=10, **kwargs):
         super().__init__(**kwargs)
-        self.scale_meters = scale_meters
+        self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
-        esa_world_cover = EsaWorldCover(scale_meters=self.scale_meters).get_data(bbox)
+        esa_world_cover = EsaWorldCover(spatial_resolution=self.spatial_resolution).get_data(bbox)
         reclass_map = {
             EsaWorldCoverClass.TREE_COVER.value: 1,
             EsaWorldCoverClass.SHRUBLAND.value: 1,

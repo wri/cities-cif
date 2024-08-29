@@ -6,9 +6,14 @@ import ee
 from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
 class WorldPop(Layer):
-    def __init__(self, scale_meters=100, **kwargs):
+    """
+    Attributes:
+        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+    """
+
+    def __init__(self, spatial_resolution=100, **kwargs):
         super().__init__(**kwargs)
-        self.scale_meters = scale_meters
+        self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
         # load population
@@ -20,5 +25,5 @@ class WorldPop(Layer):
                      .mean()
                      )
 
-        data = get_image_collection(world_pop, bbox, self.scale_meters, "world pop")
+        data = get_image_collection(world_pop, bbox, self.spatial_resolution, "world pop")
         return data.population

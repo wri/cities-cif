@@ -4,16 +4,18 @@ from .layer import Layer, get_image_collection
 class NdviSentinel2(Layer):
     """"
     NDVI = Sentinel-2 Normalized Difference Vegetation Index
-    param: year: The satellite imaging year.
+    Attributes:
+        year: The satellite imaging year.
+        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     return: a rioxarray-format DataArray
     Author of associated Jupyter notebook: Ted.Wong@wri.org
     Notebook: https://github.com/wri/cities-cities4forests-indicators/blob/dev-eric/scripts/extract-VegetationCover.ipynb
     Reference: https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index
     """
-    def __init__(self, year=None, scale_meters=10, **kwargs):
+    def __init__(self, year=None, spatial_resolution=10, **kwargs):
         super().__init__(**kwargs)
         self.year = year
-        self.scale_meters = scale_meters
+        self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
         if self.year is None:
@@ -40,7 +42,7 @@ class NdviSentinel2(Layer):
         ndvi_mosaic = ndvi.qualityMosaic('NDVI')
 
         ic = ee.ImageCollection(ndvi_mosaic)
-        ndvi_data = get_image_collection(ic, bbox, self.scale_meters, "NDVI")
+        ndvi_data = get_image_collection(ic, bbox, self.spatial_resolution, "NDVI")
 
         xdata = ndvi_data.to_dataarray()
 
