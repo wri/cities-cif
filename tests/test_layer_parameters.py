@@ -104,8 +104,8 @@ def validate_layer_instance(obj_string):
 
 def evaluate_layer(layer, expected_resolution):
     data = layer.get_data(BBOX)
-    actual_estimated_resolution, y_cells, y_diff = get_resolution_estimate(data)
-    print ('y_cells %s, y_diff %s' % (y_cells, y_diff))
+    actual_estimated_resolution, y_cells, y_min, y_max = get_resolution_estimate(data)
+    print ('y_cells %s, y_min %s, y_max %s' % (y_cells, y_min, y_max))
     assert expected_resolution == actual_estimated_resolution
 
 def get_resolution_estimate(data):
@@ -114,4 +114,4 @@ def get_resolution_estimate(data):
     y_max = data['y'].values.max()
     y_diff = y_max - y_min
     ry = round(y_diff/y_cells)
-    return ry, y_cells, y_diff
+    return ry, y_cells, y_min, y_max
