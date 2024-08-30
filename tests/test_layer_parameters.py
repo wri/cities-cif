@@ -168,7 +168,7 @@ def estimate_spatial_resolution(data):
         diff_distance = y_max - y_min
     elif crs_unit == 'degree':
         x_min = data['x'].values.min()
-        diff_distance = get_distance_between_geocoordinates(x_min, y_min, x_min, y_max)
+        diff_distance = get_distance_between_geocoordinates(y_min, x_min, y_max, x_min)
     else:
         raise Exception('Unhandled projection units: %s' % crs_unit)
 
