@@ -109,7 +109,8 @@ def evaluate_resolution__property(obj):
     data = obj.get_data(BBOX)
 
     expected_resolution = doubled_default_resolution
-    actual_estimated_resolution = estimate_spatial_resolution(data)
+    actual_estimated_resolution, crs_units, diff_distance, y_cells, x_min, y_min, y_max = estimate_spatial_resolution(data)
+    print (expected_resolution, actual_estimated_resolution, crs_units, diff_distance, y_cells, x_min, y_min, y_max)
 
     return expected_resolution, actual_estimated_resolution
 
@@ -153,9 +154,11 @@ def get_class_from_instance(obj):
 def estimate_spatial_resolution(data):
     y_cells = float(data['y'].size - 1)
 
+    x_min = None
     y_min = data['y'].values.min()
     y_max = data['y'].values.max()
 
+    crs_units = None
     try:
         crs = CRS.from_string(data.crs)
         crs_units = crs.axis_info[0].unit_name
@@ -164,19 +167,16 @@ def estimate_spatial_resolution(data):
         crs_units = 'metre'
 
     if crs_units == 'metre' or crs_units == 'm':
-        y_diff = y_max - y_min
+        diff_distance = y_max - y_min
     elif crs_units == 'foot':
         feet_to_meter = 0.3048
-        y_diff = (y_max - y_min) * feet_to_meter
+        diff_distance = (y_max - y_min) / feet_to_meter
     elif crs_units == 'degree':
-        lat1 = y_min
-        lat2 = y_max
-        lon1 = data['x'].values.min()
-        lon2 = lon1
-        y_diff = get_distance_between_geocoordinates(lat1, lon1, lat2, lon2)
+        x_min = data['x'].values.min()
+        diff_distance = get_distance_between_geocoordinates(x_min, y_min, x_min, y_max)
     else:
         raise Exception('Unhandled projection units: %s' % crs_units)
 
-    ry = round(y_diff / y_cells)
+    ry = round(diff_distance / y_cells)
 
-    return ry
+    return ry, crs_units, diff_distance, y_cells, x_min, y_min, y_max
