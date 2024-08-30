@@ -106,8 +106,7 @@ def validate_layer_instance(obj_string):
 
 def evaluate_layer(layer, expected_resolution):
     data = layer.get_data(BBOX)
-    actual_estimated_resolution, uu = get_spatial_resolution_estimate(data)
-    print ('uu %s' % uu)
+    actual_estimated_resolution = get_spatial_resolution_estimate(data)
     assert expected_resolution == actual_estimated_resolution
 
 def get_spatial_resolution_estimate(data):
@@ -117,16 +116,21 @@ def get_spatial_resolution_estimate(data):
     y_max = data['y'].values.max()
 
     crs = CRS.from_string(data.crs)
-    uu = crs.axis_info[0].unit_name
-    if uu == 'metre':
+    crs_units = crs.axis_info[0].unit_name
+    if crs_units == 'metre':
         y_diff = y_max - y_min
-    else:
+    elif crs_units == 'foot':
+        feet_to_meter = 0.3048
+        y_diff = (y_max - y_min) * feet_to_meter
+    elif crs_units == 'degree':
         lat1 = y_min
-        lat2 = y_min
+        lat2 = y_max
         lon1 = data['x'].values.min()
-        lon2 = data['x'].values.max()
+        lon2 = lon1
         y_diff = get_distance_between_geocoordinates(lat1, lon1, lat2, lon2)
+    else:
+        raise Exception('Unhandled projection units: %s' % crs_units)
 
     ry = round(y_diff / y_cells)
 
-    return ry, uu
+    return ry
