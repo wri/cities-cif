@@ -108,9 +108,11 @@ def evaluate_resolution__property(obj):
 
     data = obj.get_data(BBOX)
 
+
+
     expected_resolution = doubled_default_resolution
-    actual_estimated_resolution, crs_units, diff_distance, y_cells, x_min, y_min, y_max = estimate_spatial_resolution(data)
-    print (expected_resolution, actual_estimated_resolution, crs_units, diff_distance, y_cells, x_min, y_min, y_max)
+    actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max = estimate_spatial_resolution(data)
+    print (expected_resolution, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max)
 
     return expected_resolution, actual_estimated_resolution
 
@@ -158,25 +160,18 @@ def estimate_spatial_resolution(data):
     y_min = data['y'].values.min()
     y_max = data['y'].values.max()
 
-    crs_units = None
-    try:
-        crs = CRS.from_string(data.crs)
-        crs_units = crs.axis_info[0].unit_name
-    except:
-        # if xarray doesn't have crs property, assume meters
-        crs_units = 'metre'
+    crs_string = data.rio.crs.data['init']
+    crs = CRS.from_string(crs_string)
+    crs_unit = crs.axis_info[0].unit_name
 
-    if crs_units == 'metre' or crs_units == 'm':
+    if crs_unit == 'metre' or crs_unit == 'm':
         diff_distance = y_max - y_min
-    elif crs_units == 'foot':
-        feet_to_meter = 0.3048
-        diff_distance = (y_max - y_min) / feet_to_meter
-    elif crs_units == 'degree':
+    elif crs_unit == 'degree':
         x_min = data['x'].values.min()
         diff_distance = get_distance_between_geocoordinates(x_min, y_min, x_min, y_max)
     else:
-        raise Exception('Unhandled projection units: %s' % crs_units)
+        raise Exception('Unhandled projection units: %s' % crs_unit)
 
     ry = round(diff_distance / y_cells)
 
-    return ry, crs_units, diff_distance, y_cells, x_min, y_min, y_max
+    return ry, crs, crs_unit, diff_distance, y_cells, x_min, y_min, y_max
