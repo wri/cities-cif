@@ -5,7 +5,7 @@ import shutil
 from collections import namedtuple
 
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
-from tools.general_tools import create_target_folder, is_valid_path
+from tests.tools.general_tools import create_target_folder, is_valid_path
 
 # RUN_DUMPS is the master control for whether the writes and tests are executed
 # Setting RUN_DUMPS to True turns on code execution.

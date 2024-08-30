@@ -1,21 +1,23 @@
+from pyproj import CRS
 from city_metrix.layers import (
     Layer,
-    Albedo,
-    AlosDSM,
-    AverageNetBuildingHeight,
-    BuiltUpHeight,
+    # Albedo,
+    # AlosDSM,
+    # AverageNetBuildingHeight,
+    # BuiltUpHeight,
     EsaWorldCover,
     EsaWorldCoverClass,
-    LandSurfaceTemperature,
-    NasaDEM,
-    NaturalAreas,
-    NdviSentinel2,
-    TreeCanopyHeight,
-    TreeCover,
-    UrbanLandUse,
-    WorldPop
+    # LandSurfaceTemperature,
+    # NasaDEM,
+    # NaturalAreas,
+    # NdviSentinel2,
+    # TreeCanopyHeight,
+    # TreeCover,
+    # UrbanLandUse,
+    # WorldPop
 )
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
+from tests.tools.spatial_tools import get_distance_between_geocoordinates
 
 """
 Note: To add a test for another scalable layer that has the spatial_resolution property:
@@ -104,14 +106,27 @@ def validate_layer_instance(obj_string):
 
 def evaluate_layer(layer, expected_resolution):
     data = layer.get_data(BBOX)
-    actual_estimated_resolution, y_cells, y_min, y_max = get_resolution_estimate(data)
-    print ('y_cells %s, y_min %s, y_max %s' % (y_cells, y_min, y_max))
+    actual_estimated_resolution, uu = get_spatial_resolution_estimate(data)
+    print ('uu %s' % uu)
     assert expected_resolution == actual_estimated_resolution
 
-def get_resolution_estimate(data):
+def get_spatial_resolution_estimate(data):
     y_cells = float(data['y'].size - 1)
+
     y_min = data['y'].values.min()
     y_max = data['y'].values.max()
-    y_diff = y_max - y_min
-    ry = round(y_diff/y_cells)
-    return ry, y_cells, y_min, y_max
+
+    crs = CRS.from_string(data.crs)
+    uu = crs.axis_info[0].unit_name
+    if uu == 'metre':
+        y_diff = y_max - y_min
+    else:
+        lat1 = y_min
+        lat2 = y_min
+        lon1 = data['x'].values.min()
+        lon2 = data['x'].values.max()
+        y_diff = get_distance_between_geocoordinates(lat1, lon1, lat2, lon2)
+
+    ry = round(y_diff / y_cells)
+
+    return ry, uu
