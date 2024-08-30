@@ -19,44 +19,99 @@ from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 from tests.tools.spatial_tools import get_distance_between_geocoordinates
 
 """
-Note: To add a test for another scalable layer that has the spatial_resolution property:
+Evaluation of spatial_resolution property 
+To add a test for a scalable layer that has the spatial_resolution property:
 1. Add the class name to the city_metrix.layers import statement above
-2. Specify a minimal class instance in the set below. Do no specify the spatial_resolution
-   property in the instance definition.
+2. Copy an existing test_*_spatial_resolution() test
+   a. rename for the new layer
+   b. specify a minimal class instance for the layer, not specifying the spatial_resolution attribute.
 """
-CLASSES_WITH_SPATIAL_RESOLUTION_PROPERTY = \
-    {
-        Albedo(),
-        AlosDSM(),
-        AverageNetBuildingHeight(),
-        BuiltUpHeight(),
-        EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP),
-        LandSurfaceTemperature(),
-        NasaDEM(),
-        NaturalAreas(),
-        NdviSentinel2(year=2023),
-        TreeCanopyHeight(),
-        TreeCover(),
-        UrbanLandUse(),
-        WorldPop()
-    }
 
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 
-def test_spatial_resolution_for_all_scalable_layers():
-    for obj in CLASSES_WITH_SPATIAL_RESOLUTION_PROPERTY:
-        is_valid, except_str = validate_layer_instance(obj)
-        if is_valid is False:
-            raise Exception(except_str)
+def test_albedo_spatial_resolution():
+    class_instance = Albedo()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
 
-        cls = get_class_from_instance(obj)
+def test_alos_dsm_spatial_resolution():
+    class_instance = AlosDSM()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
 
-        # Double the spatial_resolution for the specified Class
-        doubled_default_resolution = 2 * cls.spatial_resolution
-        obj.spatial_resolution=doubled_default_resolution
+def test_average_net_building_height_spatial_resolution():
+    class_instance = AverageNetBuildingHeight()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
 
-        evaluate_layer(obj, doubled_default_resolution)
+def test_built_up_height_spatial_resolution():
+    class_instance = BuiltUpHeight()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
+
+def test_esa_world_cover_spatial_resolution():
+    class_instance = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
+
+def test_land_surface_temperature_spatial_resolution():
+    class_instance = LandSurfaceTemperature()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
+
+def test_nasa_dem_spatial_resolution():
+    class_instance = NasaDEM()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
+
+def test_natural_areas_spatial_resolution():
+    class_instance = NaturalAreas()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
+
+def test_ndvi_sentinel2_spatial_resolution():
+    class_instance = NdviSentinel2(year=2023)
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
+
+def test_tree_canopy_height_spatial_resolution():
+    class_instance = TreeCanopyHeight()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
+
+def test_tree_cover_spatial_resolution():
+    class_instance = TreeCover()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
+
+def test_urban_land_use_spatial_resolution():
+    class_instance = UrbanLandUse()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
+
+def test_world_pop_spatial_resolution():
+    class_instance = WorldPop()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert doubled_default_resolution == actual_estimated_resolution
+
+def evaluate_resolution__property(obj):
+    is_valid, except_str = validate_layer_instance(obj)
+    if is_valid is False:
+        raise Exception(except_str)
+
+    cls = get_class_from_instance(obj)
+
+    # Double the spatial_resolution for the specified Class
+    doubled_default_resolution = 2 * cls.spatial_resolution
+    obj.spatial_resolution=doubled_default_resolution
+
+    data = obj.get_data(BBOX)
+
+    expected_resolution = doubled_default_resolution
+    actual_estimated_resolution = estimate_spatial_resolution(data)
+
+    return expected_resolution, actual_estimated_resolution
 
 
 def test_function_validate_layer_instance():
@@ -95,11 +150,6 @@ def get_class_from_instance(obj):
     cls = obj.__class__()
     return cls
 
-def evaluate_layer(layer, expected_resolution):
-    data = layer.get_data(BBOX)
-    actual_estimated_resolution = estimate_spatial_resolution(data)
-    assert expected_resolution == actual_estimated_resolution
-
 def estimate_spatial_resolution(data):
     y_cells = float(data['y'].size - 1)
 
@@ -113,7 +163,7 @@ def estimate_spatial_resolution(data):
         # if xarray doesn't have crs property, assume meters
         crs_units = 'metre'
 
-    if crs_units == 'metre':
+    if crs_units == 'metre' or crs_units == 'm':
         y_diff = y_max - y_min
     elif crs_units == 'foot':
         feet_to_meter = 0.3048
