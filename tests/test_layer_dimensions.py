@@ -1,6 +1,6 @@
 from city_metrix.layers import NdviSentinel2
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
-from tests.tools import post_process_layer
+from tests.tools.general_tools import post_process_layer
 
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1

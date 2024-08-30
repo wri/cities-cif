@@ -1,20 +1,20 @@
 from pyproj import CRS
 from city_metrix.layers import (
     Layer,
-    # Albedo,
-    # AlosDSM,
-    # AverageNetBuildingHeight,
-    # BuiltUpHeight,
+    Albedo,
+    AlosDSM,
+    AverageNetBuildingHeight,
+    BuiltUpHeight,
     EsaWorldCover,
     EsaWorldCoverClass,
-    # LandSurfaceTemperature,
-    # NasaDEM,
-    # NaturalAreas,
-    # NdviSentinel2,
-    # TreeCanopyHeight,
-    # TreeCover,
-    # UrbanLandUse,
-    # WorldPop
+    LandSurfaceTemperature,
+    NasaDEM,
+    NaturalAreas,
+    NdviSentinel2,
+    TreeCanopyHeight,
+    TreeCover,
+    UrbanLandUse,
+    WorldPop
 )
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 from tests.tools.spatial_tools import get_distance_between_geocoordinates
