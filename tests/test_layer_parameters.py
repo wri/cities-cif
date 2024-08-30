@@ -111,8 +111,8 @@ def evaluate_resolution__property(obj):
 
 
     expected_resolution = doubled_default_resolution
-    actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max = estimate_spatial_resolution(data)
-    print (expected_resolution, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max)
+    tt, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max = estimate_spatial_resolution(data)
+    print (tt, expected_resolution, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max)
 
     return expected_resolution, actual_estimated_resolution
 
@@ -160,7 +160,10 @@ def estimate_spatial_resolution(data):
     y_min = data['y'].values.min()
     y_max = data['y'].values.max()
 
-    crs_string = data.rio.crs.data['init']
+    try:
+        crs_string = data.crs
+    except:
+        crs_string = data.rio.crs.data['init']
     crs = CRS.from_string(crs_string)
     crs_unit = crs.axis_info[0].unit_name
 
@@ -174,4 +177,5 @@ def estimate_spatial_resolution(data):
 
     ry = round(diff_distance / y_cells)
 
-    return ry, crs, crs_unit, diff_distance, y_cells, x_min, y_min, y_max
+    tt = type(data)
+    return tt, ry, crs, crs_unit, diff_distance, y_cells, x_min, y_min, y_max
