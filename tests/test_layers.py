@@ -27,6 +27,8 @@ from city_metrix.layers import (
 from city_metrix.layers.layer import get_image_collection
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 
+dummy_test = 0
+
 EE_IMAGE_DIMENSION_TOLERANCE = 1  # Tolerance compensates for variable results from GEE service
 # Tests are implemented for the same bounding box in Brazil.
 COUNTRY_CODE_FOR_BBOX = 'BRA'
