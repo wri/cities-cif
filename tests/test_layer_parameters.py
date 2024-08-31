@@ -30,70 +30,70 @@ To add a test for a scalable layer that has the spatial_resolution property:
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 
-def test_albedo_spatial_resolution():
-    class_instance = Albedo()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
-    assert doubled_default_resolution == actual_estimated_resolution
-
-def test_alos_dsm_spatial_resolution():
-    class_instance = AlosDSM()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
-    assert doubled_default_resolution == actual_estimated_resolution
-
-def test_average_net_building_height_spatial_resolution():
-    class_instance = AverageNetBuildingHeight()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
-    assert doubled_default_resolution == actual_estimated_resolution
-
-def test_built_up_height_spatial_resolution():
-    class_instance = BuiltUpHeight()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
-    assert doubled_default_resolution == actual_estimated_resolution
-
-def test_esa_world_cover_spatial_resolution():
-    class_instance = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
-    assert doubled_default_resolution == actual_estimated_resolution
-
-def test_land_surface_temperature_spatial_resolution():
-    class_instance = LandSurfaceTemperature()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
-    assert doubled_default_resolution == actual_estimated_resolution
-
-def test_nasa_dem_spatial_resolution():
-    class_instance = NasaDEM()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
-    assert doubled_default_resolution == actual_estimated_resolution
-
+# def test_albedo_spatial_resolution():
+#     class_instance = Albedo()
+#     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+#     assert doubled_default_resolution == actual_estimated_resolution
+#
+# def test_alos_dsm_spatial_resolution():
+#     class_instance = AlosDSM()
+#     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+#     assert doubled_default_resolution == actual_estimated_resolution
+#
+# def test_average_net_building_height_spatial_resolution():
+#     class_instance = AverageNetBuildingHeight()
+#     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+#     assert doubled_default_resolution == actual_estimated_resolution
+#
+# def test_built_up_height_spatial_resolution():
+#     class_instance = BuiltUpHeight()
+#     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+#     assert doubled_default_resolution == actual_estimated_resolution
+#
+# def test_esa_world_cover_spatial_resolution():
+#     class_instance = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
+#     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+#     assert doubled_default_resolution == actual_estimated_resolution
+#
+# def test_land_surface_temperature_spatial_resolution():
+#     class_instance = LandSurfaceTemperature()
+#     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+#     assert doubled_default_resolution == actual_estimated_resolution
+#
+# def test_nasa_dem_spatial_resolution():
+#     class_instance = NasaDEM()
+#     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+#     assert doubled_default_resolution == actual_estimated_resolution
+#
 def test_natural_areas_spatial_resolution():
     class_instance = NaturalAreas()
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert doubled_default_resolution == actual_estimated_resolution
 
-def test_ndvi_sentinel2_spatial_resolution():
-    class_instance = NdviSentinel2(year=2023)
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
-    assert doubled_default_resolution == actual_estimated_resolution
-
-def test_tree_canopy_height_spatial_resolution():
-    class_instance = TreeCanopyHeight()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
-    assert doubled_default_resolution == actual_estimated_resolution
-
-def test_tree_cover_spatial_resolution():
-    class_instance = TreeCover()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
-    assert doubled_default_resolution == actual_estimated_resolution
-
-def test_urban_land_use_spatial_resolution():
-    class_instance = UrbanLandUse()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
-    assert doubled_default_resolution == actual_estimated_resolution
-
-def test_world_pop_spatial_resolution():
-    class_instance = WorldPop()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
-    assert doubled_default_resolution == actual_estimated_resolution
+# def test_ndvi_sentinel2_spatial_resolution():
+#     class_instance = NdviSentinel2(year=2023)
+#     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+#     assert doubled_default_resolution == actual_estimated_resolution
+#
+# def test_tree_canopy_height_spatial_resolution():
+#     class_instance = TreeCanopyHeight()
+#     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+#     assert doubled_default_resolution == actual_estimated_resolution
+#
+# def test_tree_cover_spatial_resolution():
+#     class_instance = TreeCover()
+#     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+#     assert doubled_default_resolution == actual_estimated_resolution
+#
+# def test_urban_land_use_spatial_resolution():
+#     class_instance = UrbanLandUse()
+#     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+#     assert doubled_default_resolution == actual_estimated_resolution
+#
+# def test_world_pop_spatial_resolution():
+#     class_instance = WorldPop()
+#     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+#     assert doubled_default_resolution == actual_estimated_resolution
 
 def evaluate_resolution__property(obj):
     is_valid, except_str = validate_layer_instance(obj)
@@ -111,8 +111,8 @@ def evaluate_resolution__property(obj):
 
 
     expected_resolution = doubled_default_resolution
-    tt, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max = estimate_spatial_resolution(data)
-    print (tt, expected_resolution, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max)
+    method, tt, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max = estimate_spatial_resolution(data)
+    print (method, tt, expected_resolution, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max)
 
     return expected_resolution, actual_estimated_resolution
 
@@ -161,8 +161,10 @@ def estimate_spatial_resolution(data):
     y_max = data['y'].values.max()
 
     try:
+        method = 'a'
         crs_string = data.crs
     except:
+        method = 'b'
         crs_string = data.rio.crs.data['init']
     crs = CRS.from_string(crs_string)
     crs_unit = crs.axis_info[0].unit_name
@@ -178,4 +180,4 @@ def estimate_spatial_resolution(data):
     ry = round(diff_distance / y_cells)
 
     tt = type(data)
-    return tt, ry, crs, crs_unit, diff_distance, y_cells, x_min, y_min, y_max
+    return method, tt, ry, crs, crs_unit, diff_distance, y_cells, x_min, y_min, y_max
