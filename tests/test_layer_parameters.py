@@ -171,14 +171,17 @@ def estimate_spatial_resolution(data):
         crs_unit = crs.axis_info[0].unit_name
     except:
         method = 'b'
-        # crs_string = data.rio.crs.data['init']
-        crs = data.rio.crs
-        crs_unit = data.rio.crs.linear_units
+        crs_string = data.rio.crs.data['init']
+        # crs = data.rio.crs
+        # crs_unit = data.rio.crs.linear_units
+        crs = CRS.from_string(crs_string)
+        crs_unit = crs.axis_info[0].unit_name
 
     if crs_unit == 'metre':
         diff_distance = y_max - y_min
     elif crs_unit == 'degree' or crs_unit == 'm':
-        x_min = data['x'].values.min()
+        # x_min = data['x'].values.min()
+        x_min = data.coords['x'].values.min()
         diff_distance = get_distance_between_geocoordinates(y_min, x_min, y_max, x_min)
     else:
         raise Exception('Unhandled projection units: %s' % crs_unit)
