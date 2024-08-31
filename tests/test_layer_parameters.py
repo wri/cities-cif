@@ -112,8 +112,8 @@ def evaluate_resolution__property(obj):
 
 
     expected_resolution = doubled_default_resolution
-    tt, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max = estimate_spatial_resolution(data)
-    print (tt, expected_resolution, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max)
+    method, tt, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max = estimate_spatial_resolution(data)
+    print (method, tt, expected_resolution, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, x_min, y_min, y_max)
 
     return expected_resolution, actual_estimated_resolution
 
@@ -158,21 +158,21 @@ def estimate_spatial_resolution(data):
     y_cells = float(data['y'].size - 1)
 
     x_min = None
-    y_min = data['y'].values.min()
-    y_max = data['y'].values.max()
+    # y_min = data['y'].values.min()
+    # y_max = data['y'].values.max()
+    y_min = data.coords['y'].values.min()
+    y_max = data.coords['y'].values.max()
 
-    crs = data.rio.crs
-    crs_unit = data.rio.crs.linear_units
-    # try:
-    #     method = 'a'
-    #     # crs_string = data.crs
-    #     crs = data.rio.crs
-    #     crs_unit = data.rio.crs.linear_units
-    # except:
-    #     method = 'b'
-    #     crs_string = data.rio.crs.data['init']
-    #     crs = CRS.from_string(crs_string)
-    #     crs_unit = crs.axis_info[0].unit_name
+    try:
+        method = 'a'
+        crs_string = data.crs
+        crs = CRS.from_string(crs_string)
+        crs_unit = crs.axis_info[0].unit_name
+    except:
+        method = 'b'
+        # crs_string = data.rio.crs.data['init']
+        crs = data.rio.crs
+        crs_unit = data.rio.crs.linear_units
 
     if crs_unit == 'metre' or crs_unit == 'm':
         diff_distance = y_max - y_min
@@ -185,4 +185,4 @@ def estimate_spatial_resolution(data):
     ry = round(diff_distance / y_cells)
 
     tt = type(data)
-    return tt, ry, crs, crs_unit, diff_distance, y_cells, x_min, y_min, y_max
+    return method, tt, ry, crs, crs_unit, diff_distance, y_cells, x_min, y_min, y_max
