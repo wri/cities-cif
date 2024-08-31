@@ -178,7 +178,10 @@ def estimate_spatial_resolution(data):
     try:
         method = 'a'
         crs_string = data.crs
-        crs = CRS.from_string(crs_string)
+        if crs_string.startswith('PROJCS['):
+            crs = CRS.from_wkt(crs_string)
+        else:
+            crs = CRS.from_string(crs_string)
         crs_unit = crs.axis_info[0].unit_name
     except:
         method = 'b'
