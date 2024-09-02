@@ -28,7 +28,7 @@ setup(
         "s3fs",
         "dask>=2023.11.0",
         "boto3",
-        "exactextract",
+        "exactextract<=0.2.0.dev252",
         "overturemaps",
         "scikit-learn>=1.5.1",
     ],
