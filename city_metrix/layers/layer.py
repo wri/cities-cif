@@ -275,7 +275,17 @@ def get_image_collection(
     :return:
     """
 
+# TODO may not be reprojecting!!!!
+
     crs = get_utm_zone_epsg(bbox)
+
+    ds_orig = xr.open_dataset(
+        image_collection,
+        engine='ee',
+        scale=scale,
+        geometry=ee.Geometry.Rectangle(*bbox),
+        chunks={'X': 512, 'Y': 512},
+    )
 
     ds = xr.open_dataset(
         image_collection,
@@ -289,6 +299,15 @@ def get_image_collection(
     with ProgressBar():
         print(f"Extracting layer {name} from Google Earth Engine for bbox {bbox}:")
         data = ds.compute()
+
+    x_val_orig = ds_orig.coords['lon'].values.min()
+    x_val_modified = ds.coords['X'].values.min()
+
+    crs_orig = ds_orig.attrs['crs']
+    crs_modified = ds.attrs['crs']
+    print('CRS: %s, Org_x: %s' % (crs_orig, x_val_orig))
+    print('CRS: %s, Modified_x: %s' % (crs_modified, x_val_modified))
+
 
     # get in rioxarray format
     data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
