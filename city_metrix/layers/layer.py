@@ -284,7 +284,6 @@ def get_image_collection(
         engine='ee',
         scale=scale,
         geometry=ee.Geometry.Rectangle(*bbox),
-        chunks={'X': 512, 'Y': 512},
     )
 
     ds = xr.open_dataset(
@@ -305,10 +304,10 @@ def get_image_collection(
     print('CRS: %s' % (crs_orig))
     print('CRS: %s' % (crs_modified))
 
-    x_val_orig = ds_orig.coords['lon'].values.min()
-    x_val_modified = ds.coords['X'].values.min()
-    print('Org_x: %s' % (x_val_orig))
-    print('Modified_x: %s' % (x_val_modified))
+    # x_val_orig = ds_orig.coords['lon'].values.min()
+    # x_val_modified = ds.coords['X'].values.min()
+    # print('Org_x: %s' % (x_val_orig))
+    # print('Modified_x: %s' % (x_val_modified))
 
 
 
