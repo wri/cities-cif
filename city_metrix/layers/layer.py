@@ -300,13 +300,16 @@ def get_image_collection(
         print(f"Extracting layer {name} from Google Earth Engine for bbox {bbox}:")
         data = ds.compute()
 
-    x_val_orig = ds_orig.coords['lon'].values.min()
-    x_val_modified = ds.coords['X'].values.min()
-
     crs_orig = ds_orig.attrs['crs']
     crs_modified = ds.attrs['crs']
-    print('CRS: %s, Org_x: %s' % (crs_orig, x_val_orig))
-    print('CRS: %s, Modified_x: %s' % (crs_modified, x_val_modified))
+    print('CRS: %s' % (crs_orig))
+    print('CRS: %s' % (crs_modified))
+
+    x_val_orig = ds_orig.coords['lon'].values.min()
+    x_val_modified = ds.coords['X'].values.min()
+    print('Org_x: %s' % (x_val_orig))
+    print('Modified_x: %s' % (x_val_modified))
+
 
 
     # get in rioxarray format
