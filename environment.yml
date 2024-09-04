@@ -5,13 +5,13 @@ dependencies:
   - python=3.10
   - earthengine-api=0.1.379
   - geocube=0.4.2
-  - geopandas=0.14.1
+  - geopandas=0.14.4
   - rioxarray=0.15.0
   - odc-stac=0.3.8
   - pystac-client=0.7.5
   - pytest=7.4.3
   - xarray-spatial=0.3.7
-  - xee=0.0.3
+  - xee=0.0.15
   - utm=0.7.0
   - osmnx=1.9.0
   - dask[complete]=2023.11.0

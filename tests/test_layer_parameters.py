@@ -16,8 +16,7 @@ from city_metrix.layers import (
     UrbanLandUse,
     WorldPop, OpenStreetMap
 )
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_BRA_SALVADOR_ADM4, BBOX_BRA_BRASILIA
-from tests.tools.spatial_tools import get_distance_between_geocoordinates
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 
 """
 Evaluation of spatial_resolution property 
@@ -36,82 +35,66 @@ def test_albedo_spatial_resolution():
     class_instance = Albedo()
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
 
 def test_alos_dsm_spatial_resolution():
     class_instance = AlosDSM()
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
 
 def test_average_net_building_height_spatial_resolution():
     class_instance = AverageNetBuildingHeight()
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
 
 def test_built_up_height_spatial_resolution():
     class_instance = BuiltUpHeight()
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
 
 def test_esa_world_cover_spatial_resolution():
     class_instance = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
 
 def test_land_surface_temperature_spatial_resolution():
     class_instance = LandSurfaceTemperature()
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
 
 def test_nasa_dem_spatial_resolution():
     class_instance = NasaDEM()
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
 
 def test_natural_areas_spatial_resolution():
     class_instance = NaturalAreas()
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
 
 def test_ndvi_sentinel2_spatial_resolution():
     class_instance = NdviSentinel2(year=2023)
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
 
 def test_tree_canopy_height_spatial_resolution():
     class_instance = TreeCanopyHeight()
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
 
 def test_tree_cover_spatial_resolution():
     class_instance = TreeCover()
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
 
 def test_urban_land_use_spatial_resolution():
     class_instance = UrbanLandUse()
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
 
 def test_world_pop_spatial_resolution():
     class_instance = WorldPop()
     doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
     assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
-    # assert 1==2
-
-# def evaluate_resolution__property(obj):
-#     data = obj.get_data(BBOX)
 
 def evaluate_resolution__property(obj):
     is_valid, except_str = validate_layer_instance(obj)
@@ -126,10 +109,9 @@ def evaluate_resolution__property(obj):
     data = obj.get_data(BBOX)
 
     expected_resolution = doubled_default_resolution
-    tt, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, y_min, y_max = estimate_spatial_resolution(data)
-    print (tt, expected_resolution, actual_estimated_resolution, crs, crs_units, diff_distance, y_cells, y_min, y_max)
+    estimated_actual_resolution = estimate_spatial_resolution(data)
 
-    return expected_resolution, actual_estimated_resolution
+    return expected_resolution, estimated_actual_resolution
 
 
 def test_function_validate_layer_instance():
@@ -173,24 +155,15 @@ def estimate_spatial_resolution(data):
     y_min = data.coords['y'].values.min()
     y_max = data.coords['y'].values.max()
 
-    try:
-        crs_string = data.crs
-        if crs_string.startswith('PROJCS['):
-            crs = CRS.from_wkt(crs_string)
-        else:
-            crs = CRS.from_string(crs_string)
-            crs_unit = crs.axis_info[0].unit_name
-    except:
-        crs_string = data.rio.crs.data['init']
-        crs = CRS.from_string(crs_string)
-        crs_unit = crs.axis_info[0].unit_name
+    crs_string = data.rio.crs.data['init']
+    crs = CRS.from_string(crs_string)
+    crs_unit = crs.axis_info[0].unit_name
 
     if crs_unit == 'metre':
         diff_distance = y_max - y_min
     else:
         raise Exception('Unhandled projection units: %s for projection: %s' % (crs_unit, crs_string))
 
-    ry = round(diff_distance / y_cells)
+    estimated_actual_resolution = round(diff_distance / y_cells)
 
-    tt = type(data)
-    return tt, ry, crs, crs_unit, diff_distance, y_cells, y_min, y_max
+    return estimated_actual_resolution

@@ -17,7 +17,6 @@ import numpy as np
 import utm
 import shapely.geometry as geometry
 import pandas as pd
-from pyproj import Transformer
 
 MAX_TILE_SIZE = 0.5
 
@@ -275,9 +274,10 @@ def get_image_collection(
     :param name: optional name to print while reporting progress
     :return:
     """
+
     crs = get_utm_zone_epsg(bbox)
 
-    # Use a higher version for xee  https://github.com/google/Xee/issues/118
+    # See link regarding bug in crs specification shttps://github.com/google/Xee/issues/118
     ds = xr.open_dataset(
         image_collection,
         engine='ee',
