@@ -8,6 +8,12 @@ import ee
 
 
 class HighLandSurfaceTemperature(Layer):
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+    """
     THRESHOLD_ADD = 3
 
     def __init__(self, start_date="2013-01-01", end_date="2023-01-01", spatial_resolution=30, **kwargs):
