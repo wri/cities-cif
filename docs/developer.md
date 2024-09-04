@@ -132,7 +132,5 @@ Ensure the columns in the `GeoDataFrame` align with the [boundaries table](https
 You can run the tests by setting the credentials above and running the following:
 
 ```
-cd ./tests
-pytest layers.py
-pytest metrics.py
+pytest
 ```
