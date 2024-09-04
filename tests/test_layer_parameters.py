@@ -1,3 +1,4 @@
+import pytest
 from pyproj import CRS
 from city_metrix.layers import (
     Layer,
@@ -5,8 +6,7 @@ from city_metrix.layers import (
     AlosDSM,
     AverageNetBuildingHeight,
     BuiltUpHeight,
-    EsaWorldCover,
-    EsaWorldCoverClass,
+    EsaWorldCover, EsaWorldCoverClass,
     LandSurfaceTemperature,
     NasaDEM,
     NaturalAreas,
@@ -14,123 +14,156 @@ from city_metrix.layers import (
     TreeCanopyHeight,
     TreeCover,
     UrbanLandUse,
-    WorldPop
+    WorldPop, OpenStreetMap
 )
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
-from tests.tools.spatial_tools import get_distance_between_geocoordinates
 
 """
-Note: To add a test for another scalable layer that has the spatial_resolution property:
+Evaluation of spatial_resolution property 
+To add a test for a scalable layer that has the spatial_resolution property:
 1. Add the class name to the city_metrix.layers import statement above
-2. Specify a minimal class instance in the set below. Do no specify the spatial_resolution
-   property in the instance definition.
+2. Copy an existing test_*_spatial_resolution() test
+   a. rename for the new layer
+   b. specify a minimal class instance for the layer, not specifying the spatial_resolution attribute.
 """
-CLASSES_WITH_spatial_resolution_PROPERTY = \
-    {
-        # 'Albedo()',
-        # 'AlosDSM()',
-        # 'AverageNetBuildingHeight()',
-        # 'BuiltUpHeight()',
-        'EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)',
-        # 'LandSurfaceTemperature()',
-        # 'NasaDEM()',
-        # 'NaturalAreas()',
-        # 'NdviSentinel2(year=2023)',
-        # 'TreeCanopyHeight()',
-        # 'TreeCover()',
-        # 'UrbanLandUse()',
-        # 'WorldPop()'
-    }
 
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
+RESOLUTION_TOLERANCE = 1
 
-def test_spatial_resolution_for_all_scalable_layers():
-    for class_instance_str in CLASSES_WITH_spatial_resolution_PROPERTY:
-        is_valid, except_str = validate_layer_instance(class_instance_str)
-        if is_valid is False:
-            raise Exception(except_str)
+def test_albedo_spatial_resolution():
+    class_instance = Albedo()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
 
-        class_instance = eval(class_instance_str)
+def test_alos_dsm_spatial_resolution():
+    class_instance = AlosDSM()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
 
-        # Double the spatial_resolution for the specified Class
-        doubled_default_resolution = 2 * class_instance.spatial_resolution
-        class_instance.spatial_resolution=doubled_default_resolution
+def test_average_net_building_height_spatial_resolution():
+    class_instance = AverageNetBuildingHeight()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
 
-        evaluate_layer(class_instance, doubled_default_resolution)
+def test_built_up_height_spatial_resolution():
+    class_instance = BuiltUpHeight()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+
+def test_esa_world_cover_spatial_resolution():
+    class_instance = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+
+def test_land_surface_temperature_spatial_resolution():
+    class_instance = LandSurfaceTemperature()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+
+def test_nasa_dem_spatial_resolution():
+    class_instance = NasaDEM()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+
+def test_natural_areas_spatial_resolution():
+    class_instance = NaturalAreas()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+
+def test_ndvi_sentinel2_spatial_resolution():
+    class_instance = NdviSentinel2(year=2023)
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+
+def test_tree_canopy_height_spatial_resolution():
+    class_instance = TreeCanopyHeight()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+
+def test_tree_cover_spatial_resolution():
+    class_instance = TreeCover()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+
+def test_urban_land_use_spatial_resolution():
+    class_instance = UrbanLandUse()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+
+def test_world_pop_spatial_resolution():
+    class_instance = WorldPop()
+    doubled_default_resolution, actual_estimated_resolution =  evaluate_resolution__property(class_instance)
+    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+
+def evaluate_resolution__property(obj):
+    is_valid, except_str = validate_layer_instance(obj)
+    if is_valid is False:
+        raise Exception(except_str)
+
+    # Double the default scale for testing
+    cls = get_class_from_instance(obj)
+    doubled_default_resolution = 2 * cls.spatial_resolution
+    obj.spatial_resolution=doubled_default_resolution
+
+    data = obj.get_data(BBOX)
+
+    expected_resolution = doubled_default_resolution
+    estimated_actual_resolution = estimate_spatial_resolution(data)
+
+    return expected_resolution, estimated_actual_resolution
 
 
 def test_function_validate_layer_instance():
-    is_valid, except_str = validate_layer_instance(Albedo())
-    assert is_valid is False
     is_valid, except_str = validate_layer_instance('t')
     assert is_valid is False
-    is_valid, except_str = validate_layer_instance('Layer()')
+    is_valid, except_str = validate_layer_instance(EsaWorldCoverClass.BUILT_UP)
     assert is_valid is False
-    is_valid, except_str = validate_layer_instance('OpenStreetMap()')
+    is_valid, except_str = validate_layer_instance(OpenStreetMap())
     assert is_valid is False
-    is_valid, except_str = validate_layer_instance('Albedo(spatial_resolution = 2)')
+    is_valid, except_str = validate_layer_instance(Albedo(spatial_resolution = 2))
     assert is_valid is False
 
-def validate_layer_instance(obj_string):
+def validate_layer_instance(obj):
     is_valid = True
     except_str = None
-    obj_eval = None
 
-    if not type(obj_string) == str:
+    if not obj.__class__.__bases__[0] == Layer:
         is_valid = False
-        except_str = "Specified object '%s' must be specified as a string." % obj_string
-        return is_valid, except_str
-
-    try:
-        obj_eval = eval(obj_string)
-    except:
-        is_valid = False
-        except_str = "Specified object '%s' is not a class instance." % obj_string
-        return is_valid, except_str
-
-    if not type(obj_eval).__bases__[0] == Layer:
-        is_valid = False
-        except_str = "Specified object '%s' is not a valid Layer class instance." % obj_string
-    elif not hasattr(obj_eval, 'spatial_resolution'):
-        is_valid = False
-        except_str = "Specified class '%s' does not have the spatial_resolution property." % obj_string
-    elif not obj_string.find('spatial_resolution') == -1:
-        is_valid = False
-        except_str = "Do not specify spatial_resolution property value in object '%s'." % obj_string
-    elif obj_eval.spatial_resolution is None:
-        is_valid = False
-        except_str = "Class signature cannot specify None for default value for class."
+        except_str = "Specified object '%s' is not a valid Layer class instance." % obj
+    else:
+        cls = get_class_from_instance(obj)
+        cls_name = type(cls).__name__
+        if not hasattr(obj, 'spatial_resolution'):
+            is_valid = False
+            except_str = "Class '%s' does not have spatial_resolution property." % cls_name
+        elif not obj.spatial_resolution == cls.spatial_resolution:
+            is_valid = False
+            except_str = "Do not specify spatial_resolution property value for class '%s'." % cls_name
+        elif cls.spatial_resolution is None:
+            is_valid = False
+            except_str = "Signature of class %s must specify a non-null default value for spatial_resolution. Please correct." % cls_name
 
     return is_valid, except_str
 
-def evaluate_layer(layer, expected_resolution):
-    data = layer.get_data(BBOX)
-    actual_estimated_resolution = get_spatial_resolution_estimate(data)
-    assert expected_resolution == actual_estimated_resolution
+def get_class_from_instance(obj):
+    cls = obj.__class__()
+    return cls
 
-def get_spatial_resolution_estimate(data):
+def estimate_spatial_resolution(data):
     y_cells = float(data['y'].size - 1)
+    y_min = data.coords['y'].values.min()
+    y_max = data.coords['y'].values.max()
 
-    y_min = data['y'].values.min()
-    y_max = data['y'].values.max()
+    crs_string = data.rio.crs.data['init']
+    crs = CRS.from_string(crs_string)
+    crs_unit = crs.axis_info[0].unit_name
 
-    crs = CRS.from_string(data.crs)
-    crs_units = crs.axis_info[0].unit_name
-    if crs_units == 'metre':
-        y_diff = y_max - y_min
-    elif crs_units == 'foot':
-        feet_to_meter = 0.3048
-        y_diff = (y_max - y_min) * feet_to_meter
-    elif crs_units == 'degree':
-        lat1 = y_min
-        lat2 = y_max
-        lon1 = data['x'].values.min()
-        lon2 = lon1
-        y_diff = get_distance_between_geocoordinates(lat1, lon1, lat2, lon2)
+    if crs_unit == 'metre':
+        diff_distance = y_max - y_min
     else:
-        raise Exception('Unhandled projection units: %s' % crs_units)
+        raise Exception('Unhandled projection units: %s for projection: %s' % (crs_unit, crs_string))
 
-    ry = round(y_diff / y_cells)
+    estimated_actual_resolution = round(diff_distance / y_cells)
 
-    return ry
+    return estimated_actual_resolution

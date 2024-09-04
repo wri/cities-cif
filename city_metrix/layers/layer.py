@@ -277,6 +277,7 @@ def get_image_collection(
 
     crs = get_utm_zone_epsg(bbox)
 
+    # See link regarding bug in crs specification shttps://github.com/google/Xee/issues/118
     ds = xr.open_dataset(
         image_collection,
         engine='ee',
