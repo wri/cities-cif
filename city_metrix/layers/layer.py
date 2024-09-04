@@ -17,6 +17,7 @@ import numpy as np
 import utm
 import shapely.geometry as geometry
 import pandas as pd
+from pyproj import Transformer
 
 MAX_TILE_SIZE = 0.5
 
@@ -274,18 +275,9 @@ def get_image_collection(
     :param name: optional name to print while reporting progress
     :return:
     """
-
-# TODO may not be reprojecting!!!!
-
     crs = get_utm_zone_epsg(bbox)
 
-    ds_orig = xr.open_dataset(
-        image_collection,
-        engine='ee',
-        scale=scale,
-        geometry=ee.Geometry.Rectangle(*bbox),
-    )
-
+    # Use a higher version for xee  https://github.com/google/Xee/issues/118
     ds = xr.open_dataset(
         image_collection,
         engine='ee',
@@ -298,18 +290,6 @@ def get_image_collection(
     with ProgressBar():
         print(f"Extracting layer {name} from Google Earth Engine for bbox {bbox}:")
         data = ds.compute()
-
-    crs_orig = ds_orig.attrs['crs']
-    crs_modified = ds.attrs['crs']
-    print('CRS: %s' % (crs_orig))
-    print('CRS: %s' % (crs_modified))
-
-    # x_val_orig = ds_orig.coords['lon'].values.min()
-    # x_val_modified = ds.coords['X'].values.min()
-    # print('Org_x: %s' % (x_val_orig))
-    # print('Modified_x: %s' % (x_val_modified))
-
-
 
     # get in rioxarray format
     data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
