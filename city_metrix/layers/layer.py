@@ -274,10 +274,12 @@ def get_image_collection(
     :param name: optional name to print while reporting progress
     :return:
     """
+    if scale is None:
+        raise Exception("Spatial_resolution cannot be None.")
 
     crs = get_utm_zone_epsg(bbox)
 
-    # See link regarding bug in crs specification shttps://github.com/google/Xee/issues/118
+    # See link regarding bug in crs specification https://github.com/google/Xee/issues/118
     ds = xr.open_dataset(
         image_collection,
         engine='ee',

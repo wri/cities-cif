@@ -55,3 +55,12 @@ def convert_ratio_to_percentage(data):
     values_as_percent.rio.write_crs(source_crs, inplace=True)
 
     return values_as_percent
+
+def get_class_default_spatial_resolution(obj):
+    cls = get_class_from_instance(obj)
+    default_spatial_resolution = cls.spatial_resolution
+    return default_spatial_resolution
+
+def get_class_from_instance(obj):
+    cls = obj.__class__()
+    return cls
