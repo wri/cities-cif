@@ -30,7 +30,7 @@ There are 2 ways to install dependencies. Choose one...
 
 ### Conda
 
-`conda env create -f environment.yml`
+`conda env create -f environment.yml` or `conda env update -f environment.yml`
 
 ### Setuptools
 
