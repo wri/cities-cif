@@ -19,6 +19,13 @@ class OpenStreetMapClass(Enum):
     BUILDING = {'building': True}
     PARKING = {'amenity': ['parking'],
                'parking': True}
+    ECONOMIC_OPPORTUNITY = {'landuse': ['commercial', 'industrial', 'retail', 'institutional', 'education'],
+							'building': ['office', 'commercial', 'industrial', 'retail', 'supermarket'],
+							'shop': True}
+    SCHOOLS = {'building': ['school',],
+				'amenity': ['school', 'kindergarten']}
+    HIGHER_EDUCATION = {'amenity': ['college', 'university'],
+						'building': ['college', 'university']}
 
 
 class OpenStreetMap(Layer):
@@ -54,3 +61,10 @@ class OpenStreetMap(Layer):
         osm_feature = osm_feature.reset_index()[keep_col]
 
         return osm_feature
+
+    def write(self, output_path):
+        self.data['bbox'] = str(self.data.total_bounds)
+        self.data['osm_class'] = str(self.osm_class.value)
+
+        # Write to a GeoJSON file
+        self.data.to_file(output_path, driver='GeoJSON')

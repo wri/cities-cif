@@ -66,7 +66,7 @@ class SmartSurfaceLULC(Layer):
             # cap is flat to the terminus of the road
             # join style is mitred so intersections are squared
             roads_osm['geometry'] = roads_osm.apply(lambda row: row['geometry'].buffer(
-                row['lanes'] * 3.048,
+                row['lanes'] * 3.048 / 2,
                 cap_style=CAP_STYLE.flat,
                 join_style=JOIN_STYLE.mitre),
                 axis=1

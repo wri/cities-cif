@@ -1,4 +1,5 @@
 from .albedo import Albedo
+from .ndvi_sentinel2_gee import NdviSentinel2
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .land_surface_temperature import LandSurfaceTemperature
 from .tree_cover import TreeCover

@@ -11,6 +11,8 @@ The Cities Indicator Framework (CIF) is a set of Python tools to make it easier 
 * `pip install git+https://github.com/wri/cities-cif/releases/latest` gives you the latest stable release.
 * `pip install git+https://github.com/wri/cities-cif` gives you the main branch with is not stable.
 
+NOTE: If you have already installed the package and want to update to the latest code you may need to add the `--force-reinstall` flag
+
 ## PR Review
 
 0. Prerequisites
@@ -28,7 +30,7 @@ There are 2 ways to install dependencies. Choose one...
 
 ### Conda
 
-`conda env create -f environment.yml`
+`conda env create -f environment.yml` or `conda env update -f environment.yml`
 
 ### Setuptools
 
