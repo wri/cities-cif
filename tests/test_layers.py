@@ -79,7 +79,8 @@ def test_high_land_surface_temperature():
     assert data.any()
 
 
-def test_impervious_surface_hello():
+def test_impervious_surface():
+    from tests.fixtures.bbox_constants import BBOX_BRAZIL_LAURO_DE_FREITAS_1
     data = ImperviousSurface().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1)
     assert data.any()
 
