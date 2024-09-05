@@ -84,7 +84,7 @@ def test_high_land_surface_temperature():
 
 
 def test_impervious_surface():
-    data = ImperviousSurface().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1)
+    data = ImperviousSurface().get_data(BBOX)
     assert data.any()
 
 
