@@ -27,7 +27,7 @@ class OpenStreetMapClass(Enum):
     HIGHER_EDUCATION = {'amenity': ['college', 'university'],
 						'building': ['college', 'university']}
     TRANSIT_STOP = {'amenity':['ferry_terminal'],
-                    'railway':['stop', 'platform', 'halt', 'tram_stop'],
+                    'railway':['stop', 'platform', 'halt', 'tram_stop', 'subway_entrance', 'station'],
                     'highway':['bus_stop', 'platform'],
                     'public_transport': ['platform', 'stop_position', 'stop_area'],
                     'station':['subway'],
