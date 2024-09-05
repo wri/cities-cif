@@ -2,6 +2,7 @@ name: Dev CIF API CI/CD
 
 on:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
