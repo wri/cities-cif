@@ -78,9 +78,11 @@ def test_high_land_surface_temperature():
     data = HighLandSurfaceTemperature().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1)
     assert data.any()
 
-def test_impervious_surface():
+
+def test_impervious_surface_hello():
     data = ImperviousSurface().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1)
     assert data.any()
+
 
 def test_land_surface_temperature():
     mean_lst = LandSurfaceTemperature().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).mean()
