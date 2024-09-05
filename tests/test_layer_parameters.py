@@ -1,4 +1,6 @@
 import pytest
+import numpy as np
+from skimage.metrics import structural_similarity as ssim
 from pyproj import CRS
 from city_metrix.layers import (
     Layer,
@@ -30,94 +32,137 @@ To add a test for a scalable layer that has the spatial_resolution property:
 
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
-RESOLUTION_TOLERANCE = 1
+RESOLUTION_COMPARISON_TOLERANCE = 1
+DOWNSIZE_FACTOR = 2
 
-def test_albedo_spatial_resolution():
+def test_albedo_downsampled_spatial_resolution():
     class_instance = Albedo()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_alos_dsm_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_alos_dsm_downsampled_spatial_resolution():
     class_instance = AlosDSM()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_average_net_building_height_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_average_net_building_height_downsampled_spatial_resolution():
     class_instance = AverageNetBuildingHeight()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_built_up_height_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_built_up_height_downsampled_spatial_resolution():
     class_instance = BuiltUpHeight()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_esa_world_cover_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_esa_world_cover_downsampled_spatial_resolution():
     class_instance = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_high_land_surface_temperature_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_high_land_surface_temperature_downsampled_spatial_resolution():
     class_instance = HighLandSurfaceTemperature()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_land_surface_temperature_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_land_surface_temperature_downsampled_spatial_resolution():
     class_instance = LandSurfaceTemperature()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_nasa_dem_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_nasa_dem_downsampled_spatial_resolution():
     class_instance = NasaDEM()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_natural_areas_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_natural_areas_downsampled_spatial_resolution():
     class_instance = NaturalAreas()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_ndvi_sentinel2_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_ndvi_sentinel2_downsampled_spatial_resolution():
     class_instance = NdviSentinel2(year=2023)
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_tree_canopy_height_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_tree_canopy_height_downsampled_spatial_resolution():
     class_instance = TreeCanopyHeight()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_tree_cover_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_tree_cover_downsampled_spatial_resolution():
     class_instance = TreeCover()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_urban_land_use_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_urban_land_use_downsampled_spatial_resolution():
     class_instance = UrbanLandUse()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_world_pop_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_world_pop_downsampled_spatial_resolution():
     class_instance = WorldPop()
-    doubled_default_resolution, actual_estimated_resolution =  evaluate_doubled_resolution_property(class_instance)
-    assert pytest.approx(doubled_default_resolution, rel=RESOLUTION_TOLERANCE) == actual_estimated_resolution
+    default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = get_sample_data(class_instance)
+    downsizing_is_within_tolerances = evaluate_raster_value(default_res_data, downsized_res_data)
 
-def test_halved_spatial_resolution():
+    assert pytest.approx(target_downsized_res, rel=RESOLUTION_COMPARISON_TOLERANCE) == estimated_actual_res
+    assert downsizing_is_within_tolerances
+
+def test_halved_up_sampled_spatial_resolution():
     class_instance = Albedo()
     halved_default_resolution = get_class_default_spatial_resolution(class_instance) / 2
-    class_instance.spatial_resolution=halved_default_resolution
 
     expected_resolution = halved_default_resolution
-    estimated_actual_resolution = get_modified_resolution_data(class_instance)
+    modified_data = get_modified_resolution_data(class_instance, halved_default_resolution)
+    estimated_actual_resolution = estimate_spatial_resolution(modified_data)
 
     assert expected_resolution == estimated_actual_resolution
 
 def test_null_spatial_resolution():
     class_instance = Albedo()
-    class_instance.spatial_resolution=None
+    spatial_resolution=None
 
     with pytest.raises(Exception) as e_info:
-        get_modified_resolution_data(class_instance)
+        get_modified_resolution_data(class_instance, spatial_resolution)
 
 def test_function_validate_layer_instance():
     is_valid, except_str = validate_layer_instance('t')
@@ -129,26 +174,31 @@ def test_function_validate_layer_instance():
     is_valid, except_str = validate_layer_instance(Albedo(spatial_resolution = 2))
     assert is_valid is False
 
-def evaluate_doubled_resolution_property(obj):
-    is_valid, except_str = validate_layer_instance(obj)
+def get_sample_data(class_instance):
+    is_valid, except_str = validate_layer_instance(class_instance)
     if is_valid is False:
         raise Exception(except_str)
 
-    # Double the default scale for testing
-    doubled_default_resolution = 2 * get_class_default_spatial_resolution(obj)
-    obj.spatial_resolution=doubled_default_resolution
+    default_res = get_class_default_spatial_resolution(class_instance)
+    downsized_resolution = DOWNSIZE_FACTOR * default_res
 
-    expected_resolution = doubled_default_resolution
-    estimated_actual_resolution = get_modified_resolution_data(obj)
+    downsized_res_data = get_modified_resolution_data(class_instance, downsized_resolution)
+    default_res_data = get_modified_resolution_data(class_instance, default_res)
 
-    return expected_resolution, estimated_actual_resolution
+    estimated_actual_resolution = estimate_spatial_resolution(downsized_res_data)
 
-def get_modified_resolution_data(obj):
-    data = obj.get_data(BBOX)
-    estimated_actual_resolution = estimate_spatial_resolution(data)
+    return default_res_data, downsized_res_data, downsized_resolution, estimated_actual_resolution
 
-    return estimated_actual_resolution
+def get_crs_from_image_data(image_data):
+    crs_string = image_data.rio.crs.data['init']
+    crs = CRS.from_string(crs_string)
+    return crs
 
+
+def get_modified_resolution_data(class_instance, spatial_resolution):
+    class_instance.spatial_resolution = spatial_resolution
+    data = class_instance.get_data(BBOX)
+    return data
 
 def validate_layer_instance(obj):
     is_valid = True
@@ -177,15 +227,59 @@ def estimate_spatial_resolution(data):
     y_min = data.coords['y'].values.min()
     y_max = data.coords['y'].values.max()
 
-    crs_string = data.rio.crs.data['init']
-    crs = CRS.from_string(crs_string)
+    crs = get_crs_from_image_data(data)
     crs_unit = crs.axis_info[0].unit_name
 
     if crs_unit == 'metre':
         diff_distance = y_max - y_min
     else:
-        raise Exception('Unhandled projection units: %s for projection: %s' % (crs_unit, crs_string))
+        raise Exception('Unhandled projection units: %s for projection: %s' % (crs_unit, crs.srs))
 
     estimated_actual_resolution = round(diff_distance / y_cells)
 
     return estimated_actual_resolution
+
+def get_populate_ratio(dataset):
+    raw_data_size = dataset.values.size
+    populated_raw_data = dataset.values[(~np.isnan(dataset.values)) & (dataset.values > 0)]
+    populated_data_raw_size = populated_raw_data.size
+    populated_raw_data_ratio = populated_data_raw_size/raw_data_size
+    return populated_raw_data_ratio
+
+def evaluate_raster_value(raw_data, downsized_data):
+    # Below values where determined through trial and error evaluation of results in QGIS
+    ratio_tolerance = 0.2
+    normalized_rmse_tolerance = 0.3
+    ssim_index_tolerance = 0.6
+
+    populated_raw_data_ratio = get_populate_ratio(raw_data)
+    populated_downsized_data_ratio = get_populate_ratio(raw_data)
+    ratio_eval = are_numbers_within_tolerance(populated_raw_data_ratio, populated_downsized_data_ratio, ratio_tolerance)
+
+    filled_raw_data = raw_data.fillna(0)
+    filled_downsized_data = downsized_data.fillna(0)
+
+    # Resample raw_data to match the resolution of downsized_data
+    resampled_raw_data = filled_raw_data.interp_like(filled_downsized_data).fillna(0)
+
+    # Convert xarray DataArrays to numpy arrays
+    processed_downsized_data_np = filled_downsized_data.values
+    processed_raw_data_np = resampled_raw_data.values
+
+    # Calculate and evaluate normalized Mean Squared Error (MSE)
+    max_val = processed_downsized_data_np.max() \
+        if processed_downsized_data_np.max() > processed_raw_data_np.max() else processed_raw_data_np.max()
+    normalized_rmse = np.sqrt(np.mean(np.square(processed_downsized_data_np - processed_raw_data_np))) / max_val
+    matching_rmse = True if normalized_rmse < normalized_rmse_tolerance else False
+
+    # Calculate and evaluate Structural Similarity Index (SSIM)
+    ssim_index, _ = ssim(processed_downsized_data_np, processed_raw_data_np, full=True, data_range=max_val)
+    matching_ssim = True if ssim_index > ssim_index_tolerance else False
+
+    results_match = True if (ratio_eval & matching_rmse & matching_ssim) else False
+
+    return results_match
+
+def are_numbers_within_tolerance(num1, num2, tolerance):
+    diff = abs(num1 - num2)
+    return True if diff <= tolerance else False

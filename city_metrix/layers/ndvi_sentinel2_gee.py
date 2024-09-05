@@ -42,8 +42,7 @@ class NdviSentinel2(Layer):
         ndvi_mosaic = ndvi.qualityMosaic('NDVI')
 
         ic = ee.ImageCollection(ndvi_mosaic)
-        ndvi_data = get_image_collection(ic, bbox, self.spatial_resolution, "NDVI")
+        ndvi_data = (get_image_collection(ic, bbox, self.spatial_resolution, "NDVI")
+                     .NDVI)
 
-        xdata = ndvi_data.to_dataarray()
-
-        return xdata
+        return ndvi_data
