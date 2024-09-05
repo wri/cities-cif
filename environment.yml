@@ -25,6 +25,6 @@ dependencies:
   - cdsapi=0.7.0
   - pytz=2024.1
   - timezonefinder=6.5.2
+  - exactextract=0.2.0.dev252
   - pip:
-      - git+https://github.com/isciences/exactextract
       - overturemaps==0.6.0

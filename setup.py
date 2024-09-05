@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="city_metrix",
-    version="0.1.1",
+    version="0.1.2",
     description="Module to calculate various metrics on cities.",
     packages=find_packages(),
     include_package_data=True,
@@ -28,7 +28,7 @@ setup(
         "s3fs",
         "dask>=2023.11.0",
         "boto3",
-        "exactextract",
+        "exactextract<=0.2.0.dev252",
         "overturemaps",
         "scikit-learn>=1.5.0",
         "cdsapi",

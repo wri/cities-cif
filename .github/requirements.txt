@@ -19,4 +19,4 @@ scikit-learn==1.5.0
 cdsapi==0.7.0
 timezonefinder==6.5.2
 overturemaps==0.6.0
-git+https://github.com/isciences/exactextract
+exactextract==0.2.0.dev252
