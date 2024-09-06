@@ -4,12 +4,20 @@ from dask.diagnostics import ProgressBar
 
 from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
-
 class Albedo(Layer):
-    def __init__(self, start_date="2021-01-01", end_date="2022-01-01", threshold=None, **kwargs):
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+        threshold: threshold value for filtering the retrieval
+    """
+
+    def __init__(self, start_date="2021-01-01", end_date="2022-01-01", spatial_resolution=10, threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
+        self.spatial_resolution = spatial_resolution
         self.threshold = threshold
 
     def get_data(self, bbox):
@@ -30,7 +38,7 @@ class Albedo(Layer):
             nb_cloudy_pixels = is_cloud.reduceRegion(
                 reducer=ee.Reducer.sum().unweighted(),
                 geometry=geom,
-                scale=10,
+                scale=self.spatial_resolution,
                 maxPixels=1e9
             )
             return s2wc.updateMask(is_cloud.eq(0)).set('nb_cloudy_pixels',
@@ -88,7 +96,9 @@ class Albedo(Layer):
         s2_albedo = dataset.map(calc_s2_albedo)
         albedo_mean = s2_albedo.reduce(ee.Reducer.mean())
 
-        data = get_image_collection(ee.ImageCollection(albedo_mean), bbox, 10, "albedo").albedo_mean
+        data = (get_image_collection(
+            ee.ImageCollection(albedo_mean), bbox, self.spatial_resolution, "albedo")
+                .albedo_mean)
 
         if self.threshold is not None:
             return data.where(data < self.threshold)

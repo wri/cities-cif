@@ -50,6 +50,4 @@ class Sentinel2Level2(Layer):
         cloud_masked = s2.where(s2 != 0).where(s2.scl != 3).where(s2.scl != 8).where(s2.scl != 9).where(
             s2.scl != 10)
 
-        # TODO: Determine how to output as an xarray
-
         return cloud_masked.drop_vars("scl")

@@ -5,10 +5,15 @@ import ee
 
 from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
-
 class AverageNetBuildingHeight(Layer):
-    def __init__(self, **kwargs):
+    """
+    Attributes:
+        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+    """
+
+    def __init__(self, spatial_resolution=100, **kwargs):
         super().__init__(**kwargs)
+        self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
         # https://ghsl.jrc.ec.europa.eu/ghs_buH2023.php
@@ -18,6 +23,8 @@ class AverageNetBuildingHeight(Layer):
         # GLOBE - ee.Image("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_GLOBE_R2023A")
 
         anbh = ee.Image("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_GLOBE_R2023A")
-        data = get_image_collection(ee.ImageCollection(anbh), bbox, 100, "average net building height").b1
+        data = (get_image_collection(
+            ee.ImageCollection(anbh), bbox, self.spatial_resolution, "average net building height")
+                .b1)
         
         return data
