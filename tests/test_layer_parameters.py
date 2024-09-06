@@ -2,6 +2,8 @@ import pytest
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from pyproj import CRS
+from xrspatial import quantile
+
 from city_metrix.layers import (
     Layer,
     Albedo,
@@ -254,19 +256,28 @@ def evaluate_raster_value(raw_data, downsized_data):
 
     populated_raw_data_ratio = get_populate_ratio(raw_data)
     populated_downsized_data_ratio = get_populate_ratio(raw_data)
-    ratio_eval = are_numbers_within_tolerance(populated_raw_data_ratio, populated_downsized_data_ratio, ratio_tolerance)
+    diff = abs(populated_raw_data_ratio - populated_downsized_data_ratio)
+    ratio_eval = True if diff <= ratio_tolerance else False
 
     filled_raw_data = raw_data.fillna(0)
     filled_downsized_data = downsized_data.fillna(0)
 
-    # Resample raw_data to match the resolution of downsized_data
-    resampled_raw_data = filled_raw_data.interp_like(filled_downsized_data).fillna(0)
+    # Resample raw_data to match the resolution of the downsized_data.
+    # This operation is necessary in order to use RMSE and SSIM since they require matching array dimensions.
+    # Interpolation is set to quadratic method to intentionally not match method used by xee. (TODO Find documentation)
+    # For future releases of this method, we may need to control the interpolation to match what was used
+    # for a specific layer.
+    # Note: Initial investigations using the unresampled-raw and downsized data with evaluation by
+    # mean value, quantiles,and standard deviation were unsuccessful due to false failures on valid downsized images.
+    resampled_filled_raw_data = (filled_raw_data
+                                 .interp_like(filled_downsized_data, method='quadratic')
+                                 .fillna(0))
 
     # Convert xarray DataArrays to numpy arrays
+    processed_raw_data_np = resampled_filled_raw_data.values
     processed_downsized_data_np = filled_downsized_data.values
-    processed_raw_data_np = resampled_raw_data.values
 
-    # Calculate and evaluate normalized Mean Squared Error (MSE)
+    # Calculate and evaluate normalized Root Mean Squared Error (RMSE)
     max_val = processed_downsized_data_np.max() \
         if processed_downsized_data_np.max() > processed_raw_data_np.max() else processed_raw_data_np.max()
     normalized_rmse = np.sqrt(np.mean(np.square(processed_downsized_data_np - processed_raw_data_np))) / max_val
@@ -279,7 +290,3 @@ def evaluate_raster_value(raw_data, downsized_data):
     results_match = True if (ratio_eval & matching_rmse & matching_ssim) else False
 
     return results_match
-
-def are_numbers_within_tolerance(num1, num2, tolerance):
-    diff = abs(num1 - num2)
-    return True if diff <= tolerance else False
