@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from pyproj import CRS
+from xarray.core.ops import fillna
 from xrspatial import quantile
 
 from city_metrix.layers import (
@@ -248,45 +249,62 @@ def get_populate_ratio(dataset):
     populated_raw_data_ratio = populated_data_raw_size/raw_data_size
     return populated_raw_data_ratio
 
+def fill_ndarray(data):
+    # Note offset avoids situation where dataset has only one value besides nan
+    min_vals = data[~np.isnan(data)].mean()-.01
+    filled_data = np.nan_to_num(data, copy=True, nan=min_vals, posinf=None, neginf=None)
+    return filled_data
+
+def get_normalized_quantile(ndarray, q):
+    normalized_data = (ndarray - ndarray.min()) / (ndarray.max() - ndarray.min())
+    normalized_quantile = np.quantile(normalized_data, q)
+    return round(normalized_quantile, 2)
+
+def get_normalized_stdev(ndarray):
+    mean = abs(np.mean(ndarray))
+    std_dev = np.std(ndarray)
+    normalized_std_dev = std_dev / mean
+    return round(normalized_std_dev, 2)
+
 def evaluate_raster_value(raw_data, downsized_data):
-    # Below values where determined through trial and error evaluation of results in QGIS
-    ratio_tolerance = 0.2
-    normalized_rmse_tolerance = 0.3
-    ssim_index_tolerance = 0.6
+    # Below tolerances where determined through trial and error evaluation of results in QGIS
 
     populated_raw_data_ratio = get_populate_ratio(raw_data)
-    populated_downsized_data_ratio = get_populate_ratio(raw_data)
-    diff = abs(populated_raw_data_ratio - populated_downsized_data_ratio)
-    ratio_eval = True if diff <= ratio_tolerance else False
+    populated_downsized_data_ratio = get_populate_ratio(downsized_data)
+    ratio_diff = abs(populated_raw_data_ratio - populated_downsized_data_ratio)
+    ratio_eval = True if ratio_diff <= 0.2 else False
 
-    filled_raw_data = raw_data.fillna(0)
-    filled_downsized_data = downsized_data.fillna(0)
+    # Fill nan values so that all cells are included in stats
+    filled_raw_data = fill_ndarray(raw_data.values)
+    filled_downsized_data = fill_ndarray(downsized_data.values)
 
-    # Resample raw_data to match the resolution of the downsized_data.
-    # This operation is necessary in order to use RMSE and SSIM since they require matching array dimensions.
-    # Interpolation is set to quadratic method to intentionally not match method used by xee. (TODO Find documentation)
-    # For future releases of this method, we may need to control the interpolation to match what was used
-    # for a specific layer.
-    # Note: Initial investigations using the unresampled-raw and downsized data with evaluation by
-    # mean value, quantiles,and standard deviation were unsuccessful due to false failures on valid downsized images.
-    resampled_filled_raw_data = (filled_raw_data
-                                 .interp_like(filled_downsized_data, method='quadratic')
-                                 .fillna(0))
+    if (((filled_raw_data.max() - filled_raw_data.min()) == 0) or
+            ((filled_downsized_data.max() - filled_downsized_data.min()) ==0)):
+        nq_evals = False
+        stnaratio_eval = False
 
-    # Convert xarray DataArrays to numpy arrays
-    processed_raw_data_np = resampled_filled_raw_data.values
-    processed_downsized_data_np = filled_downsized_data.values
+    else:
+        # Examine the general distribution of the data using 0.25, .50, and 0.75 quantiles
+        nq25_raw_data = get_normalized_quantile(filled_raw_data, 0.25)
+        nq50_raw_data = get_normalized_quantile(filled_raw_data, 0.5)
+        nq75_raw_data = get_normalized_quantile(filled_raw_data, 0.75)
+        nq25_downsized_data = get_normalized_quantile(filled_downsized_data, 0.25)
+        nq50_downsized_data = get_normalized_quantile(filled_downsized_data, 0.5)
+        nq75_downsized_data = get_normalized_quantile(filled_downsized_data, 0.75)
 
-    # Calculate and evaluate normalized Root Mean Squared Error (RMSE)
-    max_val = processed_downsized_data_np.max() \
-        if processed_downsized_data_np.max() > processed_raw_data_np.max() else processed_raw_data_np.max()
-    normalized_rmse = np.sqrt(np.mean(np.square(processed_downsized_data_np - processed_raw_data_np))) / max_val
-    matching_rmse = True if normalized_rmse < normalized_rmse_tolerance else False
+        # Hacky adjustment of tolerance for coarse rasterization
+        nq_tolerance = 0.1 if filled_downsized_data.size > 100 else 0.2
+        nq25_eval = True if abs(nq25_raw_data - nq25_downsized_data) <= nq_tolerance else False
+        nq50_eval = True if abs(nq50_raw_data - nq50_downsized_data) <= nq_tolerance else False
+        nq75_eval = True if abs(nq75_raw_data - nq75_downsized_data) <= nq_tolerance else False
+        nq_evals = True if (nq25_eval & nq50_eval & nq75_eval) else False
 
-    # Calculate and evaluate Structural Similarity Index (SSIM)
-    ssim_index, _ = ssim(processed_downsized_data_np, processed_raw_data_np, full=True, data_range=max_val)
-    matching_ssim = True if ssim_index > ssim_index_tolerance else False
+        nstdev_raw_data = get_normalized_stdev(filled_raw_data)
+        nstdev_downsized_data = get_normalized_stdev(filled_downsized_data)
 
-    results_match = True if (ratio_eval & matching_rmse & matching_ssim) else False
+        # Hacky adjustment of tolerance for coarse rasterization
+        std_tol = 0.2 if (filled_downsized_data.size > 100 and ratio_diff > 0.1) else 0.6
+        stnaratio_eval = True if abs(nstdev_raw_data - nstdev_downsized_data) <= std_tol else False
 
-    return results_match
+    eval_summary = True if (ratio_eval & nq_evals & stnaratio_eval) else False
+    return eval_summary
