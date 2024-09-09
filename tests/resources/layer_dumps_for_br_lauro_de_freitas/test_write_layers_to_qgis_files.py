@@ -62,9 +62,7 @@ def test_write_built_up_vegetation(target_folder, bbox_info, target_spatial_reso
 def test_write_esa_world_cover(target_folder, bbox_info, target_spatial_resolution_multiplier):
     file_path = prep_output_path(target_folder, 'esa_world_cover.tif')
     target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(EsaWorldCover())
-
-    built_up_class = EsaWorldCoverClass.BUILT_UP
-    EsaWorldCover(land_cover_class=built_up_class, spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
+    EsaWorldCover(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
     assert verify_file_is_populated(file_path)
 
 # @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
@@ -103,12 +101,12 @@ def test_write_esa_world_cover(target_folder, bbox_info, target_spatial_resoluti
 #     NaturalAreas(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
 #     assert verify_file_is_populated(file_path)
 #
-# @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
-# def test_write_ndvi_sentinel2_gee(target_folder, bbox_info, target_spatial_resolution_multiplier):
-#     file_path = prep_output_path(target_folder, 'ndvi_sentinel2_gee.tif')
-#     target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(NdviSentinel2())
-#     NdviSentinel2(year=2023, spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
-#     assert verify_file_is_populated(file_path)
+@pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
+def test_write_ndvi_sentinel2_gee(target_folder, bbox_info, target_spatial_resolution_multiplier):
+    file_path = prep_output_path(target_folder, 'ndvi_sentinel2_gee.tif')
+    target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(NdviSentinel2())
+    NdviSentinel2(year=2023, spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
+    assert verify_file_is_populated(file_path)
 #
 # @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
 # def test_write_openbuildings(target_folder, bbox_info, target_spatial_resolution_multiplier):

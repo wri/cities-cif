@@ -166,6 +166,23 @@ def test_null_spatial_resolution():
     with pytest.raises(Exception) as e_info:
         get_modified_resolution_data(class_instance, spatial_resolution)
 
+def test_albedo_threshold():
+    threshold=0.1
+    data = Albedo(threshold=threshold).get_data(BBOX)
+    max_albedo = data.values[~np.isnan(data.values)].max()
+
+    assert threshold > max_albedo,\
+        f"Maximum value ({max_albedo}) in Albedo dataset is not < threshold of {threshold}."
+
+def test_ndvi_sentinel2_threshold():
+    ndvi_threshold=0.4
+    data = NdviSentinel2(year=2023, ndvi_threshold=ndvi_threshold).get_data(BBOX)
+    min_ndvi = data.values[~np.isnan(data.values)].min()
+
+    assert ndvi_threshold <= min_ndvi,\
+        f"Minimum value ({min_ndvi}) in NDVI dataset is not >= threshold of {ndvi_threshold}."
+
+
 def test_function_validate_layer_instance():
     is_valid, except_str = validate_layer_instance('t')
     assert is_valid is False
