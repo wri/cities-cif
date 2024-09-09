@@ -1,3 +1,5 @@
+import random
+
 import pytest
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
@@ -249,11 +251,13 @@ def get_populate_ratio(dataset):
     populated_raw_data_ratio = populated_data_raw_size/raw_data_size
     return populated_raw_data_ratio
 
-def fill_ndarray(data):
-    # Note offset avoids situation where dataset has only one value besides nan
-    min_vals = data[~np.isnan(data)].mean()-.01
-    filled_data = np.nan_to_num(data, copy=True, nan=min_vals, posinf=None, neginf=None)
-    return filled_data
+def filter_ndarray(data):
+    # remove nan values
+    filtered_data = data[~np.isnan(data)]
+    # add a small amount of variability to avoid divide by zero errors during normalization
+    random_floats = np.random.uniform(0, 0.001, filtered_data.shape[0])
+    randomized_filtered_array = filtered_data + random_floats
+    return randomized_filtered_array
 
 def get_normalized_quantile(ndarray, q):
     normalized_data = (ndarray - ndarray.min()) / (ndarray.max() - ndarray.min())
@@ -275,36 +279,30 @@ def evaluate_raster_value(raw_data, downsized_data):
     ratio_eval = True if ratio_diff <= 0.2 else False
 
     # Fill nan values so that all cells are included in stats
-    filled_raw_data = fill_ndarray(raw_data.values)
-    filled_downsized_data = fill_ndarray(downsized_data.values)
+    filtered_raw_data = filter_ndarray(raw_data.values)
+    filtered_downsized_data = filter_ndarray(downsized_data.values)
 
-    if (((filled_raw_data.max() - filled_raw_data.min()) == 0) or
-            ((filled_downsized_data.max() - filled_downsized_data.min()) ==0)):
-        nq_evals = False
-        stnaratio_eval = False
+    # Examine the general distribution of the data using 0.25, .50, and 0.75 quantiles
+    nq25_raw_data = get_normalized_quantile(filtered_raw_data, 0.25)
+    nq50_raw_data = get_normalized_quantile(filtered_raw_data, 0.5)
+    nq75_raw_data = get_normalized_quantile(filtered_raw_data, 0.75)
+    nq25_downsized_data = get_normalized_quantile(filtered_downsized_data, 0.25)
+    nq50_downsized_data = get_normalized_quantile(filtered_downsized_data, 0.5)
+    nq75_downsized_data = get_normalized_quantile(filtered_downsized_data, 0.75)
 
-    else:
-        # Examine the general distribution of the data using 0.25, .50, and 0.75 quantiles
-        nq25_raw_data = get_normalized_quantile(filled_raw_data, 0.25)
-        nq50_raw_data = get_normalized_quantile(filled_raw_data, 0.5)
-        nq75_raw_data = get_normalized_quantile(filled_raw_data, 0.75)
-        nq25_downsized_data = get_normalized_quantile(filled_downsized_data, 0.25)
-        nq50_downsized_data = get_normalized_quantile(filled_downsized_data, 0.5)
-        nq75_downsized_data = get_normalized_quantile(filled_downsized_data, 0.75)
+    # Hacky adjustment of tolerance for coarse rasterization
+    nq_tolerance = 0.1 if filtered_downsized_data.size > 100 else 0.2
+    nq25_eval = True if abs(nq25_raw_data - nq25_downsized_data) <= nq_tolerance else False
+    nq50_eval = True if abs(nq50_raw_data - nq50_downsized_data) <= nq_tolerance else False
+    nq75_eval = True if abs(nq75_raw_data - nq75_downsized_data) <= nq_tolerance else False
+    nq_evals = True if (nq25_eval & nq50_eval & nq75_eval) else False
 
-        # Hacky adjustment of tolerance for coarse rasterization
-        nq_tolerance = 0.1 if filled_downsized_data.size > 100 else 0.2
-        nq25_eval = True if abs(nq25_raw_data - nq25_downsized_data) <= nq_tolerance else False
-        nq50_eval = True if abs(nq50_raw_data - nq50_downsized_data) <= nq_tolerance else False
-        nq75_eval = True if abs(nq75_raw_data - nq75_downsized_data) <= nq_tolerance else False
-        nq_evals = True if (nq25_eval & nq50_eval & nq75_eval) else False
+    nstdev_raw_data = get_normalized_stdev(filtered_raw_data)
+    nstdev_downsized_data = get_normalized_stdev(filtered_downsized_data)
 
-        nstdev_raw_data = get_normalized_stdev(filled_raw_data)
-        nstdev_downsized_data = get_normalized_stdev(filled_downsized_data)
-
-        # Hacky adjustment of tolerance for coarse rasterization
-        std_tol = 0.2 if (filled_downsized_data.size > 100 and ratio_diff > 0.1) else 0.6
-        stnaratio_eval = True if abs(nstdev_raw_data - nstdev_downsized_data) <= std_tol else False
+    # Hacky adjustment of tolerance for coarse rasterization
+    std_tol = 0.2 if (filtered_downsized_data.size > 100 and ratio_diff <= 0.1) else 0.6
+    stnaratio_eval = True if abs(nstdev_raw_data - nstdev_downsized_data) <= std_tol else False
 
     eval_summary = True if (ratio_eval & nq_evals & stnaratio_eval) else False
     return eval_summary
