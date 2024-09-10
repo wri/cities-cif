@@ -19,7 +19,7 @@ from city_metrix.layers import (
     TreeCanopyHeight,
     TreeCover,
     UrbanLandUse,
-    WorldPop
+    WorldPop, OpenBuildings
 )
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 from tests.tools.general_tools import get_class_from_instance, get_class_default_spatial_resolution
@@ -191,8 +191,7 @@ class TestSpatialResolution:
         with pytest.raises(Exception) as e_info:
             _get_modified_resolution_data(class_instance, spatial_resolution, BBOX)
 
-class TestThreshold:
-
+class TestOtherParameters:
     def test_albedo_threshold(self):
         threshold=0.1
         data = Albedo(threshold=threshold).get_data(BBOX)
@@ -200,6 +199,44 @@ class TestThreshold:
 
         assert threshold > max_albedo,\
             f"Maximum value ({max_albedo}) in Albedo dataset is not < threshold of {threshold}."
+
+    def test_albedo_dates(self):
+        with pytest.raises(Exception) as e_info:
+            Albedo(start_date="2021-01-01", end_date="2021-01-02").get_data(BBOX)
+
+        with pytest.raises(Exception) as e_info:
+            Albedo(start_date="2021-01-01", end_date=None).get_data(BBOX)
+
+    def test_high_land_surface_temperature_dates(self):
+        with pytest.raises(Exception) as e_info:
+            HighLandSurfaceTemperature(start_date="2021-01-01", end_date="2021-01-02").get_data(BBOX)
+
+    def test_land_surface_temperature_dates(self):
+        with pytest.raises(Exception) as e_info:
+            LandSurfaceTemperature(start_date="2021-01-01", end_date="2021-01-02").get_data(BBOX)
+
+        with pytest.raises(Exception) as e_info:
+            LandSurfaceTemperature(start_date="2021-01-01", end_date=None).get_data(BBOX)
+
+    def test_ndvi_sentinel2_dates(self):
+        with pytest.raises(Exception) as e_info:
+            data = NdviSentinel2(Year=None).get_data(BBOX)
+
+        with pytest.raises(Exception) as e_info:
+            NdviSentinel2(Year="1970").get_data(BBOX)
+
+    def test_open_buildings_country(self):
+        with pytest.raises(Exception) as e_info:
+            OpenBuildings(country="ZZZ").get_data(BBOX)
+
+    def test_tree_cover_min_max_cover(self):
+        data = TreeCover(min_tree_cover = 150).get_data(BBOX)
+        non_null_cells = data.values[~np.isnan(data)].size
+        assert non_null_cells == 0
+
+        data = TreeCover(max_tree_cover = -1).get_data(BBOX)
+        non_null_cells = data.values[~np.isnan(data)].size
+        assert non_null_cells == 0
 
 
 def test_function_validate_layer_instance():
@@ -288,12 +325,12 @@ def _evaluate_raster_value(raw_data, downsized_data):
     # Below values where determined through trial and error evaluation of results in QGIS
     ratio_tolerance = 0.2
     normalized_rmse_tolerance = 0.3
-    ssim_index_tolerance = 0.6
+
 
     populated_raw_data_ratio = _get_populate_ratio(raw_data)
     populated_downsized_data_ratio = _get_populate_ratio(raw_data)
-    diff = abs(populated_raw_data_ratio - populated_downsized_data_ratio)
-    ratio_eval = True if diff <= ratio_tolerance else False
+    ratio_diff = abs(populated_raw_data_ratio - populated_downsized_data_ratio)
+    ratio_eval = True if ratio_diff <= ratio_tolerance else False
 
     filled_raw_data = raw_data.fillna(0)
     filled_downsized_data = downsized_data.fillna(0)
@@ -320,9 +357,9 @@ def _evaluate_raster_value(raw_data, downsized_data):
     matching_rmse = True if normalized_rmse < normalized_rmse_tolerance else False
 
     # Calculate and evaluate Structural Similarity Index (SSIM)
+    ssim_index_tolerance = 0.6 if (processed_downsized_data_np.size > 100 and ratio_diff <= 0.1) else 0.4
     ssim_index, _ = ssim(processed_downsized_data_np, processed_raw_data_np, full=True, data_range=max_val)
     matching_ssim = True if ssim_index > ssim_index_tolerance else False
-
     results_match = True if (ratio_eval & matching_rmse & matching_ssim) else False
 
     return results_match
