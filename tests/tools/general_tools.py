@@ -1,4 +1,26 @@
+import os
+import tempfile
 import numpy as np
+
+def is_valid_path(path: str):
+    return os.path.exists(path)
+
+def create_target_folder(folder_path, delete_existing_files: bool):
+    if os.path.isdir(folder_path) is False:
+        os.makedirs(folder_path)
+    elif delete_existing_files is True:
+        remove_all_files_in_directory(folder_path)
+
+def remove_all_files_in_directory(directory):
+    # Iterate over all the files in the directory
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+        try:
+            # Check if it is a file and remove it
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            print(f"Error: {e}")
 
 def post_process_layer(data, value_threshold=0.4, convert_to_percentage=True):
     """
@@ -33,3 +55,12 @@ def convert_ratio_to_percentage(data):
     values_as_percent.rio.write_crs(source_crs, inplace=True)
 
     return values_as_percent
+
+def get_class_default_spatial_resolution(obj):
+    cls = get_class_from_instance(obj)
+    default_spatial_resolution = cls.spatial_resolution
+    return default_spatial_resolution
+
+def get_class_from_instance(obj):
+    cls = obj.__class__()
+    return cls

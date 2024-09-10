@@ -1,5 +1,5 @@
 import pytest
-
+import numpy as np
 from city_metrix.layers import (
     Albedo,
     AlosDSM,
@@ -8,6 +8,7 @@ from city_metrix.layers import (
     EsaWorldCover,
     EsaWorldCoverClass,
     HighLandSurfaceTemperature,
+    ImperviousSurface,
     LandsatCollection2,
     LandSurfaceTemperature,
     NasaDEM,
@@ -30,104 +31,86 @@ COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 
 def test_albedo():
-    count = Albedo().get_data(BBOX).count()
-    assert count
-
+    data = Albedo().get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_alos_dsm():
-    count = AlosDSM().get_data(BBOX).count()
-    assert count
-
+    data = AlosDSM().get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_average_net_building_height():
-    count = AverageNetBuildingHeight().get_data(BBOX).count()
-    assert count
-
+    data = AverageNetBuildingHeight().get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_esa_world_cover():
     land_cover_class = EsaWorldCoverClass.BUILT_UP
-    count = (
-        EsaWorldCover(land_cover_class=land_cover_class)
-        .get_data(BBOX)
-        .count()
-    )
-    assert count
-
+    data = EsaWorldCover(land_cover_class=land_cover_class).get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_high_land_surface_temperature():
-    count = HighLandSurfaceTemperature().get_data(BBOX).count()
-    assert count
+    data = HighLandSurfaceTemperature().get_data(BBOX)
+    assert np.size(data) > 0
 
+def test_impervious_surface():
+    data = ImperviousSurface().get_data(BBOX)
+    assert data.any()
 
 def test_land_surface_temperature():
-    count = LandSurfaceTemperature().get_data(BBOX).count()
-    assert count
-
+    data = LandSurfaceTemperature().get_data(BBOX)
+    assert np.size(data) > 0
 
 @pytest.mark.skip(reason="layer is deprecated")
 def test_landsat_collection_2():
     bands = ["blue"]
-    count = LandsatCollection2(bands).get_data(BBOX).count()
-    assert count
-
+    data = LandsatCollection2(bands).get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_nasa_dem():
-    count = NasaDEM().get_data(BBOX).count()
-    assert count
-
+    data = NasaDEM().get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_natural_areas():
-    count = NaturalAreas().get_data(BBOX).count()
-    assert count
+    data = NaturalAreas().get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_ndvi_sentinel2():
-    count = NdviSentinel2(year=2023).get_data(BBOX).count()
-    assert count
-
+    data = NdviSentinel2(year=2023).get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_openbuildings():
-    count = OpenBuildings(COUNTRY_CODE_FOR_BBOX).get_data(BBOX).count()
-    assert count
-
+    data = OpenBuildings(COUNTRY_CODE_FOR_BBOX).get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_open_street_map():
-    count = (
-        OpenStreetMap(osm_class=OpenStreetMapClass.ROAD)
-        .get_data(BBOX)
-        .count()
-    )
-    assert count
-
+    data = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_overture_buildings():
-    count = OvertureBuildings().get_data(BBOX).count()
-    assert count
-
+    data = OvertureBuildings().get_data(BBOX)
+    assert np.size(data) > 0
 
 @pytest.mark.skip(reason="layer is deprecated")
 def test_sentinel_2_level2():
     sentinel_2_bands = ["green"]
-    count = Sentinel2Level2(sentinel_2_bands).get_data(BBOX).count()
-    assert count
-
+    data = Sentinel2Level2(sentinel_2_bands).get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_smart_surface_lulc():
-    count = SmartSurfaceLULC().get_data(BBOX).count()
-    assert count
+    data = SmartSurfaceLULC().get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_tree_canopy_height():
-    count = TreeCanopyHeight().get_data(BBOX).count()
-    assert count
+    data = TreeCanopyHeight().get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_tree_cover():
-    count = TreeCover().get_data(BBOX).count()
-    assert count
-
+    data = TreeCover().get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_urban_land_use():
-    assert UrbanLandUse().get_data(BBOX).count()
-
+    data = UrbanLandUse().get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_world_pop():
-    count = WorldPop().get_data(BBOX).count()
-    assert count
+    data = WorldPop().get_data(BBOX)
+    assert np.size(data) > 0

@@ -7,8 +7,14 @@ from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
 
 class BuiltUpHeight(Layer):
-    def __init__(self, **kwargs):
+    """
+    Attributes:
+        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+    """
+
+    def __init__(self, spatial_resolution=100, **kwargs):
         super().__init__(**kwargs)
+        self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
         # Notes for Heat project:
@@ -18,6 +24,6 @@ class BuiltUpHeight(Layer):
         # ee.ImageCollection("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_R2023A")
         
         built_height = ee.Image("JRC/GHSL/P2023A/GHS_BUILT_H/2018")
-        data = get_image_collection(ee.ImageCollection(built_height), bbox, 100, "built up height")
+        data = get_image_collection(ee.ImageCollection(built_height), bbox, self.spatial_resolution, "built up height")
         return data.built_height
 

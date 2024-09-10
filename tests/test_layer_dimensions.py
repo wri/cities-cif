@@ -3,8 +3,8 @@ import pytest
 
 from city_metrix.layers import NdviSentinel2, TreeCover, Albedo, AlosDSM
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
-from tests.tools import post_process_layer
 from city_metrix.layers.layer import get_image_collection
+from tests.tools.general_tools import post_process_layer
 
 EE_IMAGE_DIMENSION_TOLERANCE = 1  # Tolerance compensates for variable results from GEE service
 COUNTRY_CODE_FOR_BBOX = 'BRA'
