@@ -1,4 +1,5 @@
 import os
+import shutil
 import tempfile
 import numpy as np
 
@@ -19,6 +20,8 @@ def remove_all_files_in_directory(directory):
             # Check if it is a file and remove it
             if os.path.isfile(file_path):
                 os.remove(file_path)
+            else:
+                shutil.rmtree(file_path)
         except Exception as e:
             print(f"Error: {e}")
 
