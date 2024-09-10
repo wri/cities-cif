@@ -9,14 +9,17 @@ from city_metrix.layers import (
     AverageNetBuildingHeight,
     BuiltUpHeight,
     EsaWorldCover, EsaWorldCoverClass,
+    HighLandSurfaceTemperature,
+    ImperviousSurface,
     LandSurfaceTemperature,
     NasaDEM,
     NaturalAreas,
     NdviSentinel2,
+    OpenStreetMap,
     TreeCanopyHeight,
     TreeCover,
     UrbanLandUse,
-    WorldPop, OpenStreetMap, HighLandSurfaceTemperature
+    WorldPop
 )
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 from tests.tools.general_tools import get_class_from_instance, get_class_default_spatial_resolution
@@ -83,6 +86,15 @@ class TestSpatialResolution:
 
     def test_high_land_surface_temperature_downsampled_spatial_resolution(self):
         class_instance = HighLandSurfaceTemperature()
+        default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = (
+            _get_sample_data(class_instance, BBOX, DOWNSIZE_FACTOR))
+        downsizing_is_within_tolerances = _evaluate_raster_value(default_res_data, downsized_res_data)
+
+        assert pytest.approx(target_downsized_res, rel=RESOLUTION_TOLERANCE) == estimated_actual_res
+        assert downsizing_is_within_tolerances
+
+    def test_impervious_surface_downsampled_spatial_resolution(self):
+        class_instance = ImperviousSurface()
         default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = (
             _get_sample_data(class_instance, BBOX, DOWNSIZE_FACTOR))
         downsizing_is_within_tolerances = _evaluate_raster_value(default_res_data, downsized_res_data)

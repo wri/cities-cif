@@ -4,7 +4,7 @@ from city_metrix.layers import (
     Albedo,
     AlosDSM,
     AverageNetBuildingHeight,
-    NdviSentinel2,
+    BuiltUpHeight,
     EsaWorldCover,
     EsaWorldCoverClass,
     HighLandSurfaceTemperature,
@@ -13,6 +13,7 @@ from city_metrix.layers import (
     LandSurfaceTemperature,
     NasaDEM,
     NaturalAreas,
+    NdviSentinel2,
     OpenBuildings,
     OpenStreetMap,
     OpenStreetMapClass,
@@ -42,6 +43,10 @@ def test_average_net_building_height():
     data = AverageNetBuildingHeight().get_data(BBOX)
     assert np.size(data) > 0
 
+def test_built_up_height():
+    data = BuiltUpHeight().get_data(BBOX)
+    assert np.size(data) > 0
+
 def test_esa_world_cover():
     land_cover_class = EsaWorldCoverClass.BUILT_UP
     data = EsaWorldCover(land_cover_class=land_cover_class).get_data(BBOX)
@@ -53,7 +58,7 @@ def test_high_land_surface_temperature():
 
 def test_impervious_surface():
     data = ImperviousSurface().get_data(BBOX)
-    assert data.any()
+    assert np.size(data) > 0
 
 def test_land_surface_temperature():
     data = LandSurfaceTemperature().get_data(BBOX)
