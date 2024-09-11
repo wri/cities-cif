@@ -25,7 +25,6 @@ from city_metrix.layers import (
     UrbanLandUse,
     WorldPop
 )
-from city_metrix.layers.built_up_vegetation import BuiltUpVegetation
 from city_metrix.layers.layer import get_image_collection
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 
@@ -45,12 +44,6 @@ def test_alos_dsm():
 
 def test_average_net_building_height():
     assert AverageNetBuildingHeight().get_data(BBOX).mean()
-
-
-def test_built_up_vegetation():
-    p =  BuiltUpVegetation().get_data(BBOX)
-
-    assert 1==1
 
 
 def test_esa_world_cover():
