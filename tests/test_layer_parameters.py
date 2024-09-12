@@ -190,6 +190,8 @@ class TestSpatialResolution:
 
         with pytest.raises(Exception) as e_info:
             _get_modified_resolution_data(class_instance, spatial_resolution, BBOX)
+        msg_correct = False if str(e_info.value).find("Spatial_resolution cannot be None.") == -1 else True
+        assert msg_correct
 
 class TestOtherParameters:
     def test_albedo_threshold(self):
@@ -203,31 +205,48 @@ class TestOtherParameters:
     def test_albedo_dates(self):
         with pytest.raises(Exception) as e_info:
             Albedo(start_date="2021-01-01", end_date="2021-01-02").get_data(BBOX)
+        msg_correct = False if str(e_info.value).find("max() arg is an empty sequence") == -1 else True
+        assert msg_correct
 
         with pytest.raises(Exception) as e_info:
             Albedo(start_date="2021-01-01", end_date=None).get_data(BBOX)
+        msg_correct = False if str(e_info.value).find("max() arg is an empty sequence") == -1 else True
+        assert msg_correct
 
     def test_high_land_surface_temperature_dates(self):
         with pytest.raises(Exception) as e_info:
             HighLandSurfaceTemperature(start_date="2021-01-01", end_date="2021-01-02").get_data(BBOX)
+        msg_correct = False if str(e_info.value).find("Dictionary does not contain key: 'date'") == -1 else True
+        assert msg_correct
 
     def test_land_surface_temperature_dates(self):
         with pytest.raises(Exception) as e_info:
             LandSurfaceTemperature(start_date="2021-01-01", end_date="2021-01-02").get_data(BBOX)
+        msg_correct = False if str(e_info.value).find("max() arg is an empty sequence") == -1 else True
+        assert msg_correct
 
         with pytest.raises(Exception) as e_info:
             LandSurfaceTemperature(start_date="2021-01-01", end_date=None).get_data(BBOX)
+        msg_correct = False if str(e_info.value).find("max() arg is an empty sequence") == -1 else True
+        assert msg_correct
 
     def test_ndvi_sentinel2_dates(self):
         with pytest.raises(Exception) as e_info:
-            data = NdviSentinel2(Year=None).get_data(BBOX)
+            data = NdviSentinel2(year=None).get_data(BBOX)
+        msg_correct = False if str(e_info.value).find("get_data() requires a year value") == -1 else True
+        assert msg_correct
 
         with pytest.raises(Exception) as e_info:
-            NdviSentinel2(Year="1970").get_data(BBOX)
+            NdviSentinel2(year="1970").get_data(BBOX)
+        msg_correct = False if str(e_info.value).find("max() arg is an empty sequence") == -1 else True
+        assert msg_correct
 
     def test_open_buildings_country(self):
         with pytest.raises(Exception) as e_info:
             OpenBuildings(country="ZZZ").get_data(BBOX)
+
+        msg_correct = False if str(e_info.value).find("projects/sat-io/open-datasets/VIDA_COMBINED/ZZZ' not found.") == -1 else True
+        assert msg_correct
 
     def test_tree_cover_min_max_cover(self):
         data = TreeCover(min_tree_cover = 150).get_data(BBOX)
