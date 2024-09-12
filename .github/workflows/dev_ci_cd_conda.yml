@@ -32,6 +32,7 @@ jobs:
         $CONDA/bin/conda install gdal --yes
         $CONDA/bin/conda upgrade numpy --yes
         $CONDA/bin/conda install pytest --yes
+        $CONDA/bin/conda init
         $CONDA/bin/conda activate cities-cif
     - name: Run Tests
       shell: bash -l {0}
