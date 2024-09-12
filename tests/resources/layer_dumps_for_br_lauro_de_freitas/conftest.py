@@ -4,7 +4,7 @@ import os
 import shutil
 from collections import namedtuple
 
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_BRA_LAURO_DE_FREITAS_2
 from tests.tools.general_tools import create_target_folder, is_valid_path
 
 # RUN_DUMPS is the master control for whether the writes and tests are executed
@@ -18,13 +18,13 @@ SPATIAL_RESOLUTION_MULTIPLIER = 1
 
 # Both the tests and QGIS file are implemented for the same bounding box in Brazil.
 COUNTRY_CODE_FOR_BBOX = 'BRA'
-BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
+BBOX = BBOX_BRA_LAURO_DE_FREITAS_2
 
 # Specify None to write to a temporary default folder otherwise specify a valid custom target path.
 CUSTOM_DUMP_DIRECTORY = None
 
 def pytest_configure(config):
-    qgis_project_file = 'layers_for_br_lauro_de_freitas.qgz'
+    qgis_project_file = 'layers_for_br_lauro_de_freitas2.qgz'
 
     source_folder = os.path.dirname(__file__)
     target_folder = get_target_folder_path()
