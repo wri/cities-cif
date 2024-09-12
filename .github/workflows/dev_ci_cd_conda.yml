@@ -26,9 +26,9 @@ jobs:
         sudo apt install -y gdal-bin libgdal-dev
     - name: Install Packages
       run: |
-        conda env create --name env --file=.github/environment.yml
-        conda install gdal
-        conda upgrade numpy
+        conda env create --name env --file=.github/environment.yml --yes
+        conda install gdal --yes
+        conda upgrade numpy --yes
         source ~/.bashrc
         conda init -q
         conda activate env
