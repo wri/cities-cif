@@ -29,6 +29,7 @@ jobs:
         conda env create --name env --file=.github/environment.yml
         conda install gdal
         conda upgrade numpy
+        source ~/.bashrc
         conda init -q
         conda activate env
     - name: Run Tests
