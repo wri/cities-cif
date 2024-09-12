@@ -1,4 +1,4 @@
-name: Dev CIF API CI/CD PIP
+name: Dev CIF API CI/CD Conda
 
 on:
   pull_request:
