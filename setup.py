@@ -30,8 +30,9 @@ setup(
         "boto3",
         "exactextract<=0.2.0.dev252",
         "overturemaps",
-        "scikit-learn>=1.5.0",
         "cdsapi",
         "timezonefinder"
+        "scikit-learn>=1.5.1",
+        "scikit-image>=0.24.0"
     ],
 )

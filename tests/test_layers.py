@@ -9,6 +9,7 @@ from city_metrix.layers import (
     EsaWorldCover,
     EsaWorldCoverClass,
     HighLandSurfaceTemperature,
+    ImperviousSurface,
     LandsatCollection2,
     LandSurfaceTemperature,
     NasaDEM,
@@ -85,6 +86,11 @@ def test_read_image_collection_scale():
 
 def test_high_land_surface_temperature():
     data = HighLandSurfaceTemperature().get_data(BBOX)
+    assert data.any()
+
+
+def test_impervious_surface():
+    data = ImperviousSurface().get_data(BBOX)
     assert data.any()
 
 

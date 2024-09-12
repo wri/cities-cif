@@ -4,13 +4,18 @@ from xrspatial.classify import reclassify
 from .layer import Layer
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 
-
 class NaturalAreas(Layer):
-    def __init__(self, **kwargs):
+    """
+    Attributes:
+        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+    """
+
+    def __init__(self, spatial_resolution=10, **kwargs):
         super().__init__(**kwargs)
+        self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
-        esa_world_cover = EsaWorldCover().get_data(bbox)
+        esa_world_cover = EsaWorldCover(spatial_resolution=self.spatial_resolution).get_data(bbox)
         reclass_map = {
             EsaWorldCoverClass.TREE_COVER.value: 1,
             EsaWorldCoverClass.SHRUBLAND.value: 1,
