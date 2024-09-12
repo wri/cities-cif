@@ -19,6 +19,7 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
+        auto-update-conda: true
         python-version: ${{ matrix.python-version }}
     - name: Install Linux dependencies
       run: |
@@ -29,7 +30,9 @@ jobs:
         conda env create --name env --file=.github/environment.yml --yes
         conda install gdal --yes
         conda upgrade numpy --yes
-        source ~/.bashrc
+    - name: Initialize Environment
+      shell: bash -el {0}
+      run: |
         conda init --all --quiet
         conda activate env
     - name: Run Tests
