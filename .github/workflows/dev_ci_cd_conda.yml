@@ -32,9 +32,10 @@ jobs:
         $CONDA/bin/conda install gdal --yes
         $CONDA/bin/conda upgrade numpy --yes
         $CONDA/bin/conda install pytest --yes
+        source /home/runner/.bashrc
     - name: Activate environment
+      shell: bash -l {0}
       run: |
-        source ~/.bashrc
         $CONDA/bin/conda init
         $CONDA/bin/conda activate cities-cif
     - name: Run Tests
