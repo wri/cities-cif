@@ -27,7 +27,7 @@ jobs:
     - name: Install Packages
       run: |
         conda update -n base conda
-        conda install --yes --file requirements.txt
+        conda install --yes --file .github/requirements.txt
         conda install gdal
         conda upgrade numpy
     - name: Run Tests
