@@ -27,14 +27,14 @@ jobs:
     - name: Install Packages
       run: |
         conda env update --file=.github/environment.yml --name base
-    - name: Install GDAL
+    - name: Install other packages
       run: |
         conda install gdal --yes
         conda upgrade numpy --yes
+        conda install pytest --yes
     - name: Run Tests
       env:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}     
       run: |
-          conda install pytest
           pytest tests
