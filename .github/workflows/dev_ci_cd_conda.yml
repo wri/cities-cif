@@ -18,13 +18,6 @@ jobs:
             shell: bash -l {0}
     steps:
     - uses: actions/checkout@v4
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-        miniconda-version: "latest"
-        channels: bioconda, conda-forge, defaults
-        use-only-tar-bz2: true  # IMPORTANT: This needs to be set for caching to work properly!
-        auto-update-conda: true
-        auto-activate-base: true
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
@@ -36,13 +29,11 @@ jobs:
         sudo apt install -y gdal-bin libgdal-dev
     - name: Install Packages
       run: |
-        conda env create --name env --file=.github/environment.yml --yes
+        conda env update --file=.github/environment.yml --name base --yes
+    - name: Install GDAL
+      run: |
         conda install gdal --yes
         conda upgrade numpy --yes
-    - name: Initialize Environment
-      run: |
-        source ~/.bashrc
-        conda activate env
     - name: Run Tests
       env:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
