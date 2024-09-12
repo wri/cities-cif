@@ -27,7 +27,7 @@ jobs:
     - name: Install Packages
       run: |
         conda update -n base conda
-        conda install --yes --file .github/setup.py
+        conda create -f .github/environment.yml
         conda install gdal
         conda upgrade numpy
     - name: Run Tests
