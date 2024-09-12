@@ -30,7 +30,7 @@ jobs:
         conda install gdal --yes
         conda upgrade numpy --yes
         source ~/.bashrc
-        conda init -q
+        conda init --all --quiet
         conda activate env
     - name: Run Tests
       env:
