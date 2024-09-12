@@ -26,6 +26,12 @@ class OpenStreetMapClass(Enum):
 				'amenity': ['school', 'kindergarten']}
     HIGHER_EDUCATION = {'amenity': ['college', 'university'],
 						'building': ['college', 'university']}
+    TRANSIT_STOP = {'amenity':['ferry_terminal'],
+                    'railway':['stop', 'platform', 'halt', 'tram_stop', 'subway_entrance', 'station'],
+                    'highway':['bus_stop', 'platform'],
+                    'public_transport': ['platform', 'stop_position', 'stop_area'],
+                    'station':['subway'],
+                    'aerialway':['station']}
 
 
 class OpenStreetMap(Layer):
@@ -44,11 +50,16 @@ class OpenStreetMap(Layer):
             osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['osmid', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
             osm_feature.crs = "EPSG:4326"
 
-        # Filter out Point and LineString (if the feature is not ROAD)
-        if self.osm_class != OpenStreetMapClass.ROAD:
-            osm_feature = osm_feature[osm_feature.geom_type.isin(['Polygon', 'MultiPolygon'])]
-        else:
+        # Filter by geo_type
+        if self.osm_class == OpenStreetMapClass.ROAD:
+            # Filter out Point
             osm_feature = osm_feature[osm_feature.geom_type != 'Point']
+        elif self.osm_class == OpenStreetMapClass.TRANSIT_STOP:
+            # Keep Point
+            osm_feature = osm_feature[osm_feature.geom_type == 'Point']
+        else:
+            # Filter out Point and LineString
+            osm_feature = osm_feature[osm_feature.geom_type.isin(['Polygon', 'MultiPolygon'])]
 
         # keep only columns desired to reduce file size
         keep_col = ['osmid', 'geometry']
@@ -61,10 +72,3 @@ class OpenStreetMap(Layer):
         osm_feature = osm_feature.reset_index()[keep_col]
 
         return osm_feature
-
-    def write(self, output_path):
-        self.data['bbox'] = str(self.data.total_bounds)
-        self.data['osm_class'] = str(self.osm_class.value)
-
-        # Write to a GeoJSON file
-        self.data.to_file(output_path, driver='GeoJSON')
