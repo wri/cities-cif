@@ -32,17 +32,17 @@ jobs:
         $CONDA/bin/conda install gdal --yes
         $CONDA/bin/conda upgrade numpy --yes
         $CONDA/bin/conda install pytest --yes
-    - name: Activate environment
-      shell: bash -l {0}
-      run: |
         source ~/.bashrc
+    - name: Activate environment
+      run: |
+        shell: bash -l {0}
         conda init
         conda activate base
         conda activate cities-cif
     - name: Run Tests
-      shell: bash -l {0}
       env:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
+          shell: bash -l {0}
           $CONDA/bin/pytest tests
