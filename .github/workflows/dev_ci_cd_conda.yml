@@ -26,16 +26,16 @@ jobs:
         sudo apt install -y gdal-bin libgdal-dev
     - name: Install Packages in environment.yml file
       run: |
-        conda env update --file=.github/environment.yml --name base
+        $CONDA/bin/conda env update --file=.github/environment.yml --name base
     - name: Install other packages
       run: |
-        conda install gdal --yes
-        conda upgrade numpy --yes
-        conda install pytest --yes
+        $CONDA/bin/conda install gdal --yes
+        $CONDA/bin/conda upgrade numpy --yes
+        $CONDA/bin/conda install pytest --yes
     - name: Run Tests
       shell: bash -l {0}
       env:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}     
       run: |
-          pytest tests
+          $CONDA/bin/pytest tests
