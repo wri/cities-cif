@@ -12,7 +12,7 @@ class NdviSentinel2(Layer):
     Notebook: https://github.com/wri/cities-cities4forests-indicators/blob/dev-eric/scripts/extract-VegetationCover.ipynb
     Reference: https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index
     """
-    def __init__(self, year=None, spatial_resolution=10, **kwargs):
+    def __init__(self, year=2021, spatial_resolution=10, **kwargs):
         super().__init__(**kwargs)
         self.year = year
         self.spatial_resolution = spatial_resolution
