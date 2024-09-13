@@ -1,6 +1,10 @@
 import os
-import tempfile
+import shapely.geometry as geometry
 import numpy as np
+import geopandas as gpd
+from geopandas import GeoDataFrame
+from city_metrix.layers.layer import get_utm_zone_epsg
+
 
 def is_valid_path(path: str):
     return os.path.exists(path)
@@ -64,3 +68,46 @@ def get_class_default_spatial_resolution(obj):
 def get_class_from_instance(obj):
     cls = obj.__class__()
     return cls
+
+def write_metric(metrics, zones: GeoDataFrame, source_column_name, target_path):
+    metrics = zones.merge(metrics, left_index=True, right_index=True)
+    metrics.rename(columns={source_column_name: 'metric'}, inplace=True)
+    
+    # Project to local utm
+    zone_bounds = zones.geometry[0].envelope.bounds
+    target_epsg_crs = get_utm_zone_epsg(zone_bounds).partition('EPSG:')[2]
+    projected_metrics = metrics.to_crs(epsg=target_epsg_crs, inplace=False)
+
+    projected_metrics.to_file(target_path)
+
+def create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size):
+    x, y = (min_x, min_y)
+    geom_array = []
+
+    # Polygon Size
+    while y < (max_y - 0.000001):
+        while x < (max_x - 0.000001):
+            geom = geometry.Polygon(
+                [
+                    (x, y),
+                    (x, y + cell_size),
+                    (x + cell_size, y + cell_size),
+                    (x + cell_size, y),
+                    (x, y),
+                ]
+            )
+            geom_array.append(geom)
+            x += cell_size
+        x = min_x
+        y += cell_size
+
+    fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs("EPSG:4326")
+    return fishnet
+
+def get_zones_from_bbox_info(bbox_info, cell_size):
+    min_x = bbox_info.bounds[0]
+    min_y = bbox_info.bounds[1]
+    max_x = bbox_info.bounds[2]
+    max_y = bbox_info.bounds[3]
+    zones = create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size)
+    return zones

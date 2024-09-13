@@ -7,8 +7,14 @@ from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
 
 class ImperviousSurface(Layer):
-    def __init__(self, **kwargs):
+    """
+    Attributes:
+        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+    """
+
+    def __init__(self, spatial_resolution=100, **kwargs):
         super().__init__(**kwargs)
+        self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
         # load impervious_surface
@@ -19,5 +25,5 @@ class ImperviousSurface(Layer):
                                          .sum()
                                          )
 
-        data = get_image_collection(imperv_surf, bbox, 100, "imperv surf")
+        data = get_image_collection(imperv_surf, bbox, self.spatial_resolution, "imperv surf")
         return data.change_year_index

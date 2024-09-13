@@ -7,15 +7,17 @@ class NdviSentinel2(Layer):
     Attributes:
         year: The satellite imaging year.
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+        ndvi_threshold: minimum NDVI value for retrieval
     return: a rioxarray-format DataArray
     Author of associated Jupyter notebook: Ted.Wong@wri.org
     Notebook: https://github.com/wri/cities-cities4forests-indicators/blob/dev-eric/scripts/extract-VegetationCover.ipynb
     Reference: https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index
     """
-    def __init__(self, year=None, spatial_resolution=10, **kwargs):
+    def __init__(self, year=None, spatial_resolution=10, ndvi_threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.year = year
         self.spatial_resolution = spatial_resolution
+        self.ndvi_threshold = ndvi_threshold
 
     def get_data(self, bbox):
         if self.year is None:
@@ -45,4 +47,7 @@ class NdviSentinel2(Layer):
         ndvi_data = (get_image_collection(ic, bbox, self.spatial_resolution, "NDVI")
                      .NDVI)
 
-        return ndvi_data
+        if self.ndvi_threshold is not None:
+            return ndvi_data.where(ndvi_data >= self.ndvi_threshold)
+        else:
+            return ndvi_data
