@@ -15,6 +15,12 @@ jobs:
         python-version: ["3.10"]
     steps:
     - uses: actions/checkout@v4
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: cities-cif
+        environment-file: .github/environment.yml
+        python-version: ${{ matrix.python-version }}
+        auto-activate-base: true
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
@@ -24,25 +30,15 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y gdal-bin libgdal-dev
-    - name: Install Packages in environment.yml file
-      run: |
-        $CONDA/bin/conda env update --file=.github/environment.yml
     - name: Install other packages
       run: |
-        $CONDA/bin/conda install gdal --yes
-        $CONDA/bin/conda upgrade numpy --yes
-        $CONDA/bin/conda install pytest --yes
-        source ~/.bashrc
-    - name: Activate environment
-      shell: bash -l {0}
-      run: |
-        conda init
-        conda activate base
-        conda activate cities-cif
+        conda install gdal --yes
+        conda upgrade numpy --yes
+        conda install pytest --yes
     - name: Run Tests
-      shell: bash -l {0}
+      shell: bash -l
       env:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
-          $CONDA/bin/pytest tests
+          pytest tests
