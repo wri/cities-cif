@@ -34,15 +34,15 @@ jobs:
         $CONDA/bin/conda install pytest --yes
         source ~/.bashrc
     - name: Activate environment
+      shell: bash -l {0}
       run: |
-        shell: bash -l {0}
         conda init
         conda activate base
         conda activate cities-cif
     - name: Run Tests
+      shell: bash -l {0}
       env:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
-          shell: bash -l {0}
           $CONDA/bin/pytest tests
