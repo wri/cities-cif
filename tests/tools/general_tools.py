@@ -25,23 +25,6 @@ def remove_all_files_in_directory(directory):
         except Exception as e:
             print(f"Error: {e}")
 
-def post_process_layer(data, value_threshold=0.4, convert_to_percentage=True):
-    """
-    Applies the standard post-processing adjustment used for rendering of NDVI including masking
-    to a threshold and conversion to percentage values.
-    :param value_threshold: (float) minimum threshold for keeping values
-    :param convert_to_percentage: (bool) controls whether NDVI values are converted to a percentage
-    :return: A rioxarray-format DataArray
-    """
-    # Remove values less than the specified threshold
-    if value_threshold is not None:
-        data = data.where(data >= value_threshold, drop=True)
-
-    # Convert to percentage in byte data_type
-    if convert_to_percentage is True:
-        data = convert_ratio_to_percentage(data)
-
-    return data
 
 def convert_ratio_to_percentage(data):
     """
