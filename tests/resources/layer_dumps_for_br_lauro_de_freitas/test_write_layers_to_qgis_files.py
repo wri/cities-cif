@@ -68,12 +68,12 @@ class TestLayerWrite:
         HighLandSurfaceTemperature(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
         assert verify_file_is_populated(file_path)
 
-    # @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
-    # def test_write_impervious_surface(self, target_folder, bbox_info, target_spatial_resolution_multiplier):
-    #     file_path = prep_output_path(target_folder, 'impervious_surface.tif')
-    #     target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(ImperviousSurface())
-    #     LandSurfaceTemperature(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
-    #     assert verify_file_is_populated(file_path)
+    @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
+    def test_write_impervious_surface(self, target_folder, bbox_info, target_spatial_resolution_multiplier):
+        file_path = prep_output_path(target_folder, 'impervious_surface.tif')
+        target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(ImperviousSurface())
+        LandSurfaceTemperature(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
+        assert verify_file_is_populated(file_path)
 
     @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
     def test_write_land_surface_temperature(self, target_folder, bbox_info, target_spatial_resolution_multiplier):
