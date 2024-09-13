@@ -9,6 +9,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     strategy:
       max-parallel: 4
       matrix:
@@ -21,10 +24,10 @@ jobs:
         environment-file: .github/environment.yml
         python-version: ${{ matrix.python-version }}
         auto-activate-base: true
+        auto-update-conda: true
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
-        auto-update-conda: true
         python-version: ${{ matrix.python-version }}
     - name: Install Linux dependencies
       run: |
@@ -32,11 +35,8 @@ jobs:
         sudo apt install -y gdal-bin libgdal-dev
     - name: Install other packages
       run: |
-        conda install gdal --yes
-        conda upgrade numpy --yes
         conda install pytest --yes
     - name: Run Tests
-      shell: bash -l
       env:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
