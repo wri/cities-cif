@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.10
-  - earthengine-api=0.1.379
+  - earthengine-api=0.1.411
   - geocube=0.4.2
   - geopandas=0.14.4
   - rioxarray=0.15.0
