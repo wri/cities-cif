@@ -23,7 +23,6 @@ jobs:
         activate-environment: cities-cif
         environment-file: .github/environment.yml
         python-version: ${{ matrix.python-version }}
-        auto-activate-base: true
         auto-update-conda: true
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
