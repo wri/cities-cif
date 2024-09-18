@@ -23,12 +23,12 @@ class WorldPopAgeSex(Layer):
     def get_data(self, bbox):
         # load population
         dataset = ee.ImageCollection('WorldPop/GP/100m/pop_age_sex')
-        world_pop = ee.ImageCollection(dataset
-                                       .filterBounds(ee.Geometry.BBox(*bbox))
-                                       .filter(ee.Filter.inList('year', [self.year]))
-                                       .select(self.agesex_classes)
-                                       .sum()
-                                       )
+        world_pop = dataset.filterBounds(ee.Geometry.BBox(*bbox))\
+                           .filter(ee.Filter.inList('year', [self.year]))\
+                           .select(self.agesex_classes)\
+                           .mean()
+
+        world_pop = ee.ImageCollection(world_pop.reduce(ee.Reducer.sum()).rename('sum_age_sex_group'))
 
         data = get_image_collection(world_pop, bbox, self.spatial_resolution, "world pop age sex")
-        return data.population
+        return data.sum_age_sex_group
