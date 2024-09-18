@@ -122,5 +122,5 @@ def test_world_pop():
     assert np.size(data) > 0
 
 def test_world_pop_age_sex():
-    data = WorldPopAgeSex(agesex_classes=['M_70'], year=2020).get_data(BBOX)
+    data = WorldPopAgeSex().get_data(BBOX)
     assert np.size(data) > 0

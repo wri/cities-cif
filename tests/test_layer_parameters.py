@@ -8,18 +8,21 @@ from city_metrix.layers import (
     AlosDSM,
     AverageNetBuildingHeight,
     BuiltUpHeight,
-    EsaWorldCover, EsaWorldCoverClass,
+    EsaWorldCover, 
+    EsaWorldCoverClass,
     HighLandSurfaceTemperature,
     ImperviousSurface,
     LandSurfaceTemperature,
     NasaDEM,
     NaturalAreas,
     NdviSentinel2,
+    OpenBuildings,
     OpenStreetMap,
     TreeCanopyHeight,
     TreeCover,
     UrbanLandUse,
-    WorldPop, OpenBuildings
+    WorldPop, 
+    WorldPopAgeSex
 )
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 from tests.tools.general_tools import get_class_from_instance, get_class_default_spatial_resolution
@@ -167,6 +170,15 @@ class TestSpatialResolution:
 
     def test_world_pop_downsampled_spatial_resolution(self):
         class_instance = WorldPop()
+        default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = (
+            _get_sample_data(class_instance, BBOX, DOWNSIZE_FACTOR))
+        downsizing_is_within_tolerances = _evaluate_raster_value(default_res_data, downsized_res_data)
+
+        assert pytest.approx(target_downsized_res, rel=RESOLUTION_TOLERANCE) == estimated_actual_res
+        assert downsizing_is_within_tolerances
+    
+    def test_world_pop_age_sex_downsampled_spatial_resolution(self):
+        class_instance = WorldPopAgeSex()
         default_res_data, downsized_res_data, target_downsized_res, estimated_actual_res = (
             _get_sample_data(class_instance, BBOX, DOWNSIZE_FACTOR))
         downsizing_is_within_tolerances = _evaluate_raster_value(default_res_data, downsized_res_data)
