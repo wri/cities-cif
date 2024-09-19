@@ -197,7 +197,7 @@ class SmartSurfaceLULC(Layer):
                 like=esa_1m,
                 fill=0
             ).Value
-            feature_1m = feature_1m.rio.reproject_match(snap_to)
+            feature_1m = feature_1m.rio.reproject_match(esa_1m)
 
         # Combine rasters
         datasets = [esa_1m, feature_1m]
