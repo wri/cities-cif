@@ -89,31 +89,31 @@ class SmartSurfaceLULC(Layer):
         # classify buildings
         if len(buildings) > 0:
             # Unclassified ULU
-            if (buildings['ULU'] == 0):
+            if buildings['ULU'] == 0:
                 # large building = low slope 
-                if (buildings['Area_m'] >= 1034):
-                    buildings['Value'] == 46
+                if buildings['Area_m'] >= 1034:
+                    buildings['Value'] = 46
                 # small building & high ANBH = low slope 
                 elif (buildings['Area_m'] < 1034) & (buildings['ANBH'] >= 11):
-                    buildings['Value'] == 46
+                    buildings['Value'] = 46
                 # small building & low ANBH = high slope 
                 elif (buildings['Area_m'] < 1034) & (buildings['ANBH'] < 11):
-                    buildings['Value'] == 43
+                    buildings['Value'] = 43
                 else:
                     buildings['Value'] = 40
             
             # Residential ULU
             # residential = high slope 
-            elif (buildings['ULU'] == 2):
+            elif buildings['ULU'] == 2:
                 buildings['Value'] = 41
 
             # Non-residential
-            elif (buildings['ULU'] == 1):
+            elif buildings['ULU'] == 1:
                 # small building & high ANBH = low slope 
                 if (buildings['Area_m'] < 1034) & (buildings['ANBH'] >= 11):
                     buildings['Value'] = 45
                 # large building = low slope 
-                elif (buildings['Area_m'] >= 1034):
+                elif buildings['Area_m'] >= 1034:
                     buildings['Value'] = 45
                 # small building & low ANBH = high slope 
                 elif (buildings['Area_m'] < 1034) & (buildings['ANBH'] < 11):
