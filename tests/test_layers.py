@@ -48,7 +48,7 @@ def test_average_net_building_height():
 
 
 def test_era_5_hottest_day():
-    mean = Era5HottestDay().get_data(BBOX_BRAZIL_LAURO_DE_FREITAS_1).mean()
+    mean = Era5HottestDay().get_data(BBOX).mean()
     assert mean
     
 

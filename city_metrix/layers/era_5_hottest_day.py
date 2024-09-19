@@ -91,22 +91,23 @@ class Era5HottestDay(Layer):
                              '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00',
                              '20:00', '21:00', '22:00', '23:00'],
                     'area': [max_lat, min_lon, min_lat, max_lon],
-                    'format': 'netcdf',
+                    'data_format': 'netcdf',
+                    'download_format': 'unarchived'
                 },
                 f'download_{i}.nc')
             
             dataarray = xr.open_dataset(f'download_{i}.nc')
 
             # Subset times for the day
-            times = [time.astype('datetime64[s]').astype(datetime).replace(tzinfo=pytz.UTC) for time in dataarray['time'].values]
+            times = [valid_time.astype('datetime64[s]').astype(datetime).replace(tzinfo=pytz.UTC) for valid_time in dataarray['valid_time'].values]
             indices = [i for i, value in enumerate(times) if value in utc_times]
-            subset_dataarray = dataarray.isel(time=indices)
+            subset_dataarray = dataarray.isel(valid_time=indices)
 
             dataarray_list.append(subset_dataarray)
 
             # Remove local file
             os.remove(f'download_{i}.nc')
 
-        data = xr.concat(dataarray_list, dim='time')
+        data = xr.concat(dataarray_list, dim='valid_time')
 
         return data
