@@ -4,17 +4,19 @@ import pandas as pd
 import geopandas as gpd
 from shapely.geometry import CAP_STYLE, JOIN_STYLE
 from shapely.geometry import box
-import psutil
 from exactextract import exact_extract
-import pickle
-import importlib.resources as pkg_resources
+from geocube.api.core import make_geocube
 import warnings
-warnings.filterwarnings('ignore',category=UserWarning)
+from rasterio.enums import Resampling
+from xrspatial.classify import reclassify
+warnings.filterwarnings('ignore', category=UserWarning)
 
-from .layer import Layer, get_utm_zone_epsg, create_fishnet_grid, MAX_TILE_SIZE
+from .layer import Layer, get_utm_zone_epsg
+from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
+from .average_net_building_height import AverageNetBuildingHeight
+from .urban_land_use import UrbanLandUse
 from .overture_buildings import OvertureBuildings
-from ..models.building_classifier.building_classifier import BuildingClassifier
 
 
 class SmartSurfaceLULC(Layer):
@@ -25,12 +27,37 @@ class SmartSurfaceLULC(Layer):
     def get_data(self, bbox):
         crs = get_utm_zone_epsg(bbox)
 
-        # load building roof slope classifier
-        with pkg_resources.files('city_metrix.models.building_classifier').joinpath('building_classifier.pkl').open('rb') as f:
-            clf = pickle.load(f)
-
         # ESA world cover
-        esa_1m = BuildingClassifier().get_data_esa_reclass(bbox, crs)
+        esa_world_cover = EsaWorldCover(year=2021).get_data(bbox)
+        # ESA reclass and upsample
+        def get_data_esa_reclass(esa_world_cover):
+            reclass_map = {
+                EsaWorldCoverClass.TREE_COVER.value: 1,
+                EsaWorldCoverClass.SHRUBLAND.value: 1,
+                EsaWorldCoverClass.GRASSLAND.value: 1,
+                EsaWorldCoverClass.CROPLAND.value: 1,
+                EsaWorldCoverClass.BUILT_UP.value: 2,
+                EsaWorldCoverClass.BARE_OR_SPARSE_VEGETATION.value: 3,
+                EsaWorldCoverClass.SNOW_AND_ICE.value: 20,
+                EsaWorldCoverClass.PERMANENT_WATER_BODIES.value: 20,
+                EsaWorldCoverClass.HERBACEOUS_WET_LAND.value: 20,
+                EsaWorldCoverClass.MANGROVES.value: 20,
+                EsaWorldCoverClass.MOSS_AND_LICHEN.value: 3
+            }
+
+            # Perform the reclassification
+            reclassified_esa = reclassify(esa_world_cover, bins=list(reclass_map.keys()), new_values=list(reclass_map.values()))
+
+            esa_1m = reclassified_esa.rio.reproject(
+                dst_crs=crs,
+                resolution=1,
+                resampling=Resampling.nearest
+            )
+
+            return esa_1m
+
+        esa_1m = get_data_esa_reclass(esa_world_cover)
+
 
         # Open space
         open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).to_crs(crs).reset_index()
@@ -48,10 +75,10 @@ class SmartSurfaceLULC(Layer):
             roads_osm['lanes'] = pd.to_numeric(roads_osm['lanes'], errors='coerce')
             # Get the average number of lanes per highway class
             lanes = (roads_osm.drop(columns='geometry')
-                    .groupby('highway')
-                    # Calculate average and round up
-                    .agg(avg_lanes=('lanes', lambda x: np.ceil(np.nanmean(x)) if not np.isnan(x).all() else np.NaN))
-                    )
+                     .groupby('highway')
+                     # Calculate average and round up
+                     .agg(avg_lanes=('lanes', lambda x: np.ceil(np.nanmean(x)) if not np.isnan(x).all() else np.NaN))
+                     )
             # Handle NaN values in avg_lanes
             lanes['avg_lanes'] = lanes['avg_lanes'].fillna(2)
 
@@ -78,8 +105,30 @@ class SmartSurfaceLULC(Layer):
 
 
         # Building
-        ulu_lulc_1m = BuildingClassifier().get_data_ulu(bbox, crs, esa_1m)
-        anbh_1m = BuildingClassifier().get_data_anbh(bbox, esa_1m)
+        # Read ULU land cover
+        ulu_lulc = UrbanLandUse().get_data(bbox)
+        # Reclassify ULU
+        # 0-Unclassified: 0 (open space)
+        # 1-Non-residential: 1 (non-res)
+        # 2-Residential: 2 (Atomistic), 3 (Informal), 4 (Formal), 5 (Housing project)
+        mapping = {0: 0, 1: 1, 2: 2, 3: 2, 4: 2, 5: 2}
+        for from_val, to_val in mapping.items():
+            ulu_lulc = ulu_lulc.where(ulu_lulc != from_val, to_val)
+        ulu_lulc_1m = ulu_lulc.rio.reproject(
+            dst_crs=crs, 
+            shape=esa_1m.shape, 
+            resampling=Resampling.nearest, 
+            nodata=0
+        )
+
+        # Load ANBH layer
+        anbh_data = AverageNetBuildingHeight().get_data(bbox)
+        anbh_1m = anbh_data.rio.reproject_match(
+            match_data_array=esa_1m, 
+            resampling=Resampling.nearest, 
+            nodata=0
+        )
+
         # get building features
         buildings = OvertureBuildings().get_data(bbox).to_crs(crs)
         # extract ULU, ANBH, and Area_m
@@ -102,7 +151,7 @@ class SmartSurfaceLULC(Layer):
                     return 43
                 else:
                     return 40
-            
+
             # Residential ULU
             # residential = high slope
             elif building['ULU'] == 2:
@@ -121,7 +170,7 @@ class SmartSurfaceLULC(Layer):
                     return 42
                 else:
                     return 40
-            
+
             # Default value
             else:
                 return 40
@@ -137,8 +186,18 @@ class SmartSurfaceLULC(Layer):
 
 
         # combine features: open space, water, road, building, parking
-        feature_df = pd.concat([open_space_osm[['geometry','Value']], water_osm[['geometry','Value']], roads_osm[['geometry','Value']], buildings[['geometry','Value']], parking_osm[['geometry','Value']]], axis=0)
-        feature_1m = BuildingClassifier().rasterize_polygon(feature_df, esa_1m)
+        feature_df = pd.concat([open_space_osm[['geometry', 'Value']], water_osm[['geometry', 'Value']], roads_osm[['geometry', 'Value']], buildings[['geometry', 'Value']], parking_osm[['geometry', 'Value']]], axis=0)
+        # rasterize
+        if feature_df.empty:
+            feature_1m = xr.zeros_like(esa_1m)
+        else:
+            feature_1m = make_geocube(
+                vector_data=feature_df,
+                measurements=["Value"],
+                like=esa_1m,
+                fill=0
+            ).Value
+            feature_1m = feature_1m.rio.reproject_match(snap_to)
 
         # Combine rasters
         datasets = [esa_1m, feature_1m]
@@ -146,7 +205,6 @@ class SmartSurfaceLULC(Layer):
         aligned_datasets = [ds.drop_vars('time', errors='ignore') for ds in datasets]
         # use chunk 512x512
         aligned_datasets = [ds.chunk({'x': 512, 'y': 512}) for ds in aligned_datasets]
-        lulc = xr.concat(aligned_datasets, dim='Value').max(dim='Value')
-        lulc = lulc.compute()
+        lulc = xr.concat(aligned_datasets, dim='Value').max(dim='Value').compute()
 
         return lulc
