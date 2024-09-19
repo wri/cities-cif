@@ -86,43 +86,50 @@ class SmartSurfaceLULC(Layer):
         buildings['ULU'] = exact_extract(ulu_lulc_1m, buildings, ["majority"], output='pandas')['majority']
         buildings['ANBH'] = exact_extract(anbh_1m, buildings, ["mean"], output='pandas')['mean']
         buildings['Area_m'] = buildings.geometry.area
-        # classify buildings
-        if len(buildings) > 0:
+
+        # function to classify each building
+        def classify_building(building):
             # Unclassified ULU
-            if buildings['ULU'] == 0:
-                # large building = low slope 
-                if buildings['Area_m'] >= 1034:
-                    buildings['Value'] = 46
-                # small building & high ANBH = low slope 
-                elif (buildings['Area_m'] < 1034) & (buildings['ANBH'] >= 11):
-                    buildings['Value'] = 46
-                # small building & low ANBH = high slope 
-                elif (buildings['Area_m'] < 1034) & (buildings['ANBH'] < 11):
-                    buildings['Value'] = 43
+            if building['ULU'] == 0:
+                # large building = low slope
+                if building['Area_m'] >= 1034:
+                    return 46
+                # small building & high ANBH = low slope
+                elif (building['Area_m'] < 1034) & (building['ANBH'] >= 11):
+                    return 46
+                # small building & low ANBH = high slope
+                elif (building['Area_m'] < 1034) & (building['ANBH'] < 11):
+                    return 43
                 else:
-                    buildings['Value'] = 40
+                    return 40
             
             # Residential ULU
-            # residential = high slope 
-            elif buildings['ULU'] == 2:
-                buildings['Value'] = 41
+            # residential = high slope
+            elif building['ULU'] == 2:
+                return 41
 
             # Non-residential
-            elif buildings['ULU'] == 1:
-                # small building & high ANBH = low slope 
-                if (buildings['Area_m'] < 1034) & (buildings['ANBH'] >= 11):
-                    buildings['Value'] = 45
-                # large building = low slope 
-                elif buildings['Area_m'] >= 1034:
-                    buildings['Value'] = 45
-                # small building & low ANBH = high slope 
-                elif (buildings['Area_m'] < 1034) & (buildings['ANBH'] < 11):
-                    buildings['Value'] = 42
+            elif building['ULU'] == 1:
+                # small building & high ANBH = low slope
+                if (building['Area_m'] < 1034) & (building['ANBH'] >= 11):
+                    return 45
+                # large building = low slope
+                elif building['Area_m'] >= 1034:
+                    return 45
+                # small building & low ANBH = high slope
+                elif (building['Area_m'] < 1034) & (building['ANBH'] < 11):
+                    return 42
                 else:
-                    buildings['Value'] = 40
-
+                    return 40
+            
+            # Default value
             else:
-                buildings['Value'] = 40
+                return 40
+
+        # classify buildings
+        if len(buildings) > 0:
+            buildings['Value'] = buildings.apply(classify_building, axis=1)
+
 
         # Parking
         parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(bbox).to_crs(crs).reset_index()
