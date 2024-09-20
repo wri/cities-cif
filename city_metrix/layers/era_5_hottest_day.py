@@ -109,5 +109,7 @@ class Era5HottestDay(Layer):
             os.remove(f'download_{i}.nc')
 
         data = xr.concat(dataarray_list, dim='valid_time')
+        # xarray.Dataset to xarray.DataArray
+        data = data.to_array()
 
         return data

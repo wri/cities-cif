@@ -1,4 +1,3 @@
-
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -15,15 +14,15 @@ def era_5_met_preprocessing(zones: GeoDataFrame) -> GeoSeries:
     """
     era_5_data = Era5HottestDay().get_data(zones.total_bounds)
 
-    t2m_var = era_5_data['t2m'].values
-    u10_var = era_5_data['u10'].values
-    v10_var = era_5_data['v10'].values
-    sst_var = era_5_data['sst'].values
-    cdir_var = era_5_data['cdir'].values
-    sw_var = era_5_data['msdrswrfcs'].values
-    lw_var = era_5_data['msdwlwrfcs'].values
-    d2m_var = era_5_data['d2m'].values
-    time_var = era_5_data['time'].values
+    t2m_var = era_5_data.sel(variable='t2m').values
+    u10_var = era_5_data.sel(variable='u10').values
+    v10_var = era_5_data.sel(variable='v10').values
+    sst_var = era_5_data.sel(variable='sst').values
+    cdir_var = era_5_data.sel(variable='cdir').values
+    sw_var = era_5_data.sel(variable='msdrswrfcs').values
+    lw_var = era_5_data.sel(variable='msdwlwrfcs').values
+    d2m_var = era_5_data.sel(variable='d2m').values
+    time_var = era_5_data['valid_time'].values
     lat_var = era_5_data['latitude'].values
     lon_var = era_5_data['longitude'].values
 
