@@ -5,12 +5,19 @@ from dask.diagnostics import ProgressBar
 import ee
 import xarray
 
-
 class LandSurfaceTemperature(Layer):
-    def __init__(self, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+    """
+
+    def __init__(self, start_date="2013-01-01", end_date="2023-01-01", spatial_resolution=30, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
+        self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
         def cloud_mask(image):
@@ -31,5 +38,5 @@ class LandSurfaceTemperature(Layer):
             .map(apply_scale_factors) \
             .reduce(ee.Reducer.mean())
 
-        data = get_image_collection(ee.ImageCollection(l8_st), bbox, 30, "LST").ST_B10_mean
+        data = get_image_collection(ee.ImageCollection(l8_st), bbox, self.spatial_resolution, "LST").ST_B10_mean
         return data

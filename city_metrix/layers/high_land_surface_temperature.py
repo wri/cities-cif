@@ -8,19 +8,26 @@ import ee
 
 
 class HighLandSurfaceTemperature(Layer):
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+    """
     THRESHOLD_ADD = 3
 
-    def __init__(self, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
+    def __init__(self, start_date="2013-01-01", end_date="2023-01-01", spatial_resolution=30, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
+        self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
         hottest_date = self.get_hottest_date(bbox)
         start_date = (hottest_date - datetime.timedelta(days=45)).strftime("%Y-%m-%d")
         end_date = (hottest_date + datetime.timedelta(days=45)).strftime("%Y-%m-%d")
 
-        lst = LandSurfaceTemperature(start_date, end_date).get_data(bbox)
+        lst = LandSurfaceTemperature(start_date, end_date, self.spatial_resolution).get_data(bbox)
         lst_mean = lst.mean(dim=['x', 'y'])
         high_lst = lst.where(lst >= (lst_mean + self.THRESHOLD_ADD))
         return high_lst

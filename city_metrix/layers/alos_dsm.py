@@ -6,8 +6,14 @@ from .layer import Layer, get_image_collection
 
 
 class AlosDSM(Layer):
-    def __init__(self, **kwargs):
+    """
+    Attributes:
+        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+    """
+
+    def __init__(self, spatial_resolution=30, **kwargs):
         super().__init__(**kwargs)
+        self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
         dataset = ee.ImageCollection("JAXA/ALOS/AW3D30/V3_2")
@@ -16,6 +22,6 @@ class AlosDSM(Layer):
                                       .select('DSM')
                                       .mean()
                                       )
-        data = get_image_collection(alos_dsm, bbox, 30, "ALOS DSM").DSM
+        data = get_image_collection(alos_dsm, bbox, self.spatial_resolution, "ALOS DSM").DSM
 
         return data
