@@ -1,13 +1,16 @@
 from geopandas import GeoDataFrame, GeoSeries
+from city_metrix.layers import OpenStreetMap, OpenStreetMapClass, WorldPop
+from city_metrix.layers.layer import get_utm_zone_epsg
 
-from city_metrix.layers import EsaWorldCover, EsaWorldCoverClass, OpenStreetMap, OpenStreetMapClass
 
 
-def urban_open_space(zones: GeoDataFrame) -> GeoSeries:
-    built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
-    open_space = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE)
-
-    open_space_in_built_land = open_space.mask(built_up_land).groupby(zones).count()
-    built_land_counts = built_up_land.groupby(zones).count()
-
-    return open_space_in_built_land.fillna(0) / built_land_counts
+def percentpop_euclideanprox_openspace(zones: GeoDataFrame, distance=400) -> GeoSeries:
+# (Later add agesex_classes)
+    open_space = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE, buffer_distance=distance).groupby(zones)
+    population = WorldPop.get_data(bbox).fillna(0)
+    open_space = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE, buffer_distance=distance)
+    population = WorldPop()
+    population_masked_byzone = population.mask(open_space).groupby(zones)
+    population_byzone = population.groupby(zones)
+    result = (population_masked_byzone.mean() * population_masked_byzone.count()) / (population_byzone.mean() * population_byzone.count())
+    return result
