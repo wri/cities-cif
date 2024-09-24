@@ -17,15 +17,16 @@ jobs:
       matrix:
         python-version: ["3.10"]
     steps:
+    - name: Preserve $HOME set in the container
+      run: echo HOME=/root >> "$GITHUB_ENV"
     - name: Add ERA5 API key
       run: |
         cat <<EOF > $HOME/.cdsapirc
         url: ${{ secrets.ERA5_URL }}
         key: ${{ secrets.ERA5_KEY }}
         EOF
-            
     - uses: actions/checkout@v4
-    - uses: conda-incubator/setup-miniconda@v2
+    - uses: conda-incubator/setup-miniconda@v3
       with:
         activate-environment: cities-cif
         environment-file: environment.yml
@@ -40,4 +41,4 @@ jobs:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
-          pytest tests
+          pytest
