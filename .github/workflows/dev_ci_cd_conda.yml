@@ -20,7 +20,7 @@ jobs:
     - name: Preserve $HOME set in the container
       run: |
         echo $HOME
-        echo HOME=/home/runner >> "$GITHUB_ENV"
+        echo HOME=$HOME >> "$GITHUB_ENV"
     - name: Add ERA5 API key
       run: |
         cat <<EOF > $HOME/.cdsapirc
@@ -28,7 +28,7 @@ jobs:
         key: ${{ secrets.ERA5_KEY }}
         EOF
     - uses: actions/checkout@v4
-    - uses: conda-incubator/setup-miniconda@v3
+    - uses: conda-incubator/setup-miniconda@v2
       with:
         activate-environment: cities-cif
         environment-file: environment.yml
