@@ -23,8 +23,7 @@ from city_metrix.layers import (
     TreeCanopyHeight,
     TreeCover,
     UrbanLandUse,
-    WorldPop,
-	WorldPopAgeSex
+    WorldPop
 )
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 
@@ -119,8 +118,4 @@ def test_urban_land_use():
 
 def test_world_pop():
     data = WorldPop().get_data(BBOX)
-    assert np.size(data) > 0
-
-def test_world_pop_age_sex():
-    data = WorldPopAgeSex().get_data(BBOX)
     assert np.size(data) > 0
