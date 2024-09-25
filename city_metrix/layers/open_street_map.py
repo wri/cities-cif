@@ -3,8 +3,7 @@ import osmnx as ox
 import geopandas as gpd
 import pandas as pd
 
-from .layer import Layer
-from .layer import get_utm_zone_epsg
+from .layer import Layer, get_utm_zone_epsg
 
 
 class OpenStreetMapClass(Enum):
@@ -36,10 +35,9 @@ class OpenStreetMapClass(Enum):
 
 
 class OpenStreetMap(Layer):
-    def __init__(self, osm_class=None, buffer_distance=None, **kwargs):
+    def __init__(self, osm_class=None, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
-        self.buffer_distance = buffer_distance  # meters
 
     def get_data(self, bbox):
         north, south, east, west = bbox[3], bbox[1], bbox[0], bbox[2]
@@ -73,10 +71,7 @@ class OpenStreetMap(Layer):
             keep_col.append('lanes')
         osm_feature = osm_feature.reset_index()[keep_col]
 
-        if self.buffer_distance is not None:
-            target_crs = get_utm_zone_epsg(bbox)
-            osm_feature_utm = osm_feature.to_crs(target_crs)
-            osm_feature_utm_buffered = osm_feature_utm.buffer(self.buffer_distance)
-            osm_feature = osm_feature_utm_buffered.to_crs("EPSG:4326")
+        crs = get_utm_zone_epsg(bbox)
+        osm_feature = osm_feature.to_crs(crs)
 
         return osm_feature
