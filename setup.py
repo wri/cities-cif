@@ -5,12 +5,6 @@ setup(
     version="0.1.2",
     description="Module to calculate various metrics on cities.",
     packages=find_packages(),
-    include_package_data=True,
-    package_data={
-        'city_metrix.models.building_classifier': [
-            'building_classifier.pkl',
-        ],
-    },
     author="Justin Terry",
     license="MIT",
     install_requires=[
