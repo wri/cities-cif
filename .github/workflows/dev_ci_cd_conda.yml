@@ -19,8 +19,8 @@ jobs:
     steps:
     - name: Set up .cdsapirc
       run: |
-        echo "url: ${{ secrets.ERA5_URL }}" > ~/.cdsapirc
-        echo "key: ${{ secrets.ERA5_KEY }}" >> ~/.cdsapirc
+        echo "url: ${{ secrets.ERA5_URL }}" > $HOME/.cdsapirc
+        echo "key: ${{ secrets.ERA5_KEY }}" >> $HOME/.cdsapirc
     # - name: Preserve $HOME set in the container
     #   run: |
     #     echo $HOME
