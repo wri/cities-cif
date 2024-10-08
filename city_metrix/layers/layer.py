@@ -70,8 +70,8 @@ class Layer:
         if tile_degrees is not None:
             has_buffer = True if buffer_meters is not None and buffer_meters != 0 else False
             if has_buffer:
-                max_degrees_offset = meters_to_max_degrees_offset(bbox, buffer_meters)
-                clipped_tiles = create_fishnet_grid(*bbox, tile_degrees, max_degrees_offset)
+                lon_degree_offset, lat_degree_offset = meters_to_offset_degrees(bbox, buffer_meters)
+                clipped_tiles = create_fishnet_grid(*bbox, tile_degrees, lon_degree_offset, lat_degree_offset)
                 unbuffered_tiles = create_fishnet_grid(*bbox, tile_degrees)
             else:
                 clipped_tiles = create_fishnet_grid(*bbox, tile_degrees)
@@ -253,17 +253,17 @@ def get_utm_zone_epsg(bbox) -> str:
     return f"EPSG:{epsg}"
 
 
-def create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size, tile_buffer=0):
+def create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size, lon_degree_buffer=0, lat_degree_buffer=0):
     x, y = (min_x, min_y)
     geom_array = []
 
     # Polygon Size
     while y < max_y:
         while x < max_x:
-            cell_min_x = x - tile_buffer
-            cell_min_y = y - tile_buffer
-            cell_max_x = x + cell_size + tile_buffer
-            cell_max_y = y + cell_size + tile_buffer
+            cell_min_x = x - lon_degree_buffer
+            cell_min_y = y - lat_degree_buffer
+            cell_max_x = x + cell_size + lon_degree_buffer
+            cell_max_y = y + cell_size + lat_degree_buffer
             geom = geometry.Polygon(
                 [
                     (cell_min_x, cell_min_y),
@@ -361,7 +361,7 @@ def write_dataarray(path, data):
     else:
         data.rio.to_raster(raster_path=path, driver="COG")
 
-def meters_to_max_degrees_offset(bbox, offset_meters):
+def meters_to_offset_degrees(bbox, offset_meters):
     min_lat = bbox[1]
     max_lat = bbox[3]
     center_lat = (min_lat + max_lat) / 2
@@ -371,6 +371,4 @@ def meters_to_max_degrees_offset(bbox, offset_meters):
     lon_degree_offset = offset_meters/ (earth_radius_meters * math.cos(center_lat) / 360)
     lat_degree_offset = offset_meters / meters_per_degree_of_lat
 
-    max_offset = max(lon_degree_offset, lat_degree_offset)
-
-    return max_offset
+    return abs(lon_degree_offset), abs(lat_degree_offset)
