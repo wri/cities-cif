@@ -6,6 +6,7 @@ from osgeo import gdal
 
 import ee
 import boto3
+import math
 from dask.diagnostics import ProgressBar
 from ee import ImageCollection
 from geocube.api.core import make_geocube
@@ -54,7 +55,7 @@ class Layer:
         """
         return LayerGroupBy(self.aggregate, zones, layer, self.masks)
 
-    def write(self, bbox, output_path, tile_degrees=None, **kwargs):
+    def write(self, bbox, output_path, tile_degrees=None, buffer_meters=None, **kwargs):
         """
         Write the layer to a path. Does not apply masks.
 
@@ -62,35 +63,56 @@ class Layer:
         :param output_path: local or s3 path to output to
         :param tile_degrees: optional param to tile the results into multiple files with a VRT.
             Degrees to tile by. `output_path` should be a folder path to store the tiles.
+        : param buffer_meters: tile buffer distance in meters
         :return:
         """
 
         if tile_degrees is not None:
-            tiles = create_fishnet_grid(*bbox, tile_degrees)
+            has_buffer = True if buffer_meters is not None and buffer_meters != 0 else False
+            if has_buffer:
+                max_degrees_offset = meters_to_max_degrees_offset(bbox, buffer_meters)
+                clipped_tiles = create_fishnet_grid(*bbox, tile_degrees, max_degrees_offset)
+                unbuffered_tiles = create_fishnet_grid(*bbox, tile_degrees)
+            else:
+                clipped_tiles = create_fishnet_grid(*bbox, tile_degrees)
+                unbuffered_tiles = None
 
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
 
             file_names = []
-            tile_serial_id = 1
             tile_dict = {"tile_name": [], "geometry": []}
-            for tile in tiles["geometry"]:
-                data = self.aggregate.get_data(tile.bounds)
+            unbuffered_tile_dict = {"tile_name": [], "geometry": []}
+            for index in range(0, len(clipped_tiles)):
+                clipped_geom = clipped_tiles.iloc[index]['geometry']
+                data = self.aggregate.get_data(clipped_geom.bounds)
 
+                tile_serial_id = index + 1
                 file_name = 'tile_%s.tif' % (str(tile_serial_id).zfill(3))
                 file_path = os.path.join(output_path, file_name)
                 file_names.append(file_path)
                 write_layer(file_path, data)
 
                 tile_dict['tile_name'].append(file_name)
-                tile_dict['geometry'].append(tile)
+                tile_dict['geometry'].append(clipped_geom)
 
-                tile_serial_id += 1
+                if has_buffer:
+                    unbuffered_geom = unbuffered_tiles.iloc[index]['geometry']
+                    unbuffered_tile_dict['tile_name'].append(file_name)
+                    unbuffered_tile_dict['geometry'].append(unbuffered_geom)
+
 
             # Write tile polygons to geojson file
             gdf = gpd.GeoDataFrame(tile_dict, crs='EPSG:4326')
             tile_grid_file_path = os.path.join(output_path, 'tile_grid.geojson')
             gdf.to_file(tile_grid_file_path)
+
+            # write unbuffered grid
+            if has_buffer:
+                gdf = gpd.GeoDataFrame(unbuffered_tile_dict, crs='EPSG:4326')
+                unbuffered_tile_grid_file_path = os.path.join(output_path, 'tile_grid_unbuffered.geojson')
+                gdf.to_file(unbuffered_tile_grid_file_path)
+
         else:
             data = self.aggregate.get_data(bbox)
             write_layer(output_path, data)
@@ -231,20 +253,24 @@ def get_utm_zone_epsg(bbox) -> str:
     return f"EPSG:{epsg}"
 
 
-def create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size):
+def create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size, tile_buffer=0):
     x, y = (min_x, min_y)
     geom_array = []
 
     # Polygon Size
     while y < max_y:
         while x < max_x:
+            cell_min_x = x - tile_buffer
+            cell_min_y = y - tile_buffer
+            cell_max_x = x + cell_size + tile_buffer
+            cell_max_y = y + cell_size + tile_buffer
             geom = geometry.Polygon(
                 [
-                    (x, y),
-                    (x, y + cell_size),
-                    (x + cell_size, y + cell_size),
-                    (x + cell_size, y),
-                    (x, y),
+                    (cell_min_x, cell_min_y),
+                    (cell_min_x, cell_max_y),
+                    (cell_max_x, cell_max_y),
+                    (cell_max_x, cell_min_y),
+                    (cell_min_x, cell_min_y),
                 ]
             )
             geom_array.append(geom)
@@ -334,3 +360,17 @@ def write_dataarray(path, data):
         os.remove(tmp_path)
     else:
         data.rio.to_raster(raster_path=path, driver="COG")
+
+def meters_to_max_degrees_offset(bbox, offset_meters):
+    min_lat = bbox[1]
+    max_lat = bbox[3]
+    center_lat = (min_lat + max_lat) / 2
+
+    meters_per_degree_of_lat = 111111
+    earth_radius_meters = 40075000
+    lon_degree_offset = offset_meters/ (earth_radius_meters * math.cos(center_lat) / 360)
+    lat_degree_offset = offset_meters / meters_per_degree_of_lat
+
+    max_offset = max(lon_degree_offset, lat_degree_offset)
+
+    return max_offset
