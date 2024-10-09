@@ -20,3 +20,7 @@ from .alos_dsm import AlosDSM
 from .overture_buildings import OvertureBuildings
 from .nasa_dem import NasaDEM
 from .impervious_surface import ImperviousSurface
+from.glad_lulc import LandCoverGlad
+from.glad_lulc import LandCoverSimplifiedGlad
+from.glad_lulc import LandCoverHabitatGlad
+from.glad_lulc import LandCoverHabitatChangeGlad
