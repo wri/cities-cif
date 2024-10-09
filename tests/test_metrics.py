@@ -37,6 +37,13 @@ def test_natural_areas():
     assert expected_zone_size == actual_indicator_size
 
 
+def test_pop_open_space():
+    indicator = pop_open_space(ZONES)
+    expected_zone_size = ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
+
 def test_urban_open_space():
     indicator = urban_open_space(ZONES)
     expected_zone_size = ZONES.geometry.size
