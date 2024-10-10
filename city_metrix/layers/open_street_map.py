@@ -3,7 +3,7 @@ import osmnx as ox
 import geopandas as gpd
 import pandas as pd
 
-from .layer import Layer
+from .layer import Layer, get_utm_zone_epsg
 
 
 class OpenStreetMapClass(Enum):
@@ -70,5 +70,8 @@ class OpenStreetMap(Layer):
         if 'highway' in keep_col and 'lanes' in osm_feature.columns:
             keep_col.append('lanes')
         osm_feature = osm_feature.reset_index()[keep_col]
+
+        crs = get_utm_zone_epsg(bbox)
+        osm_feature = osm_feature.to_crs(crs)
 
         return osm_feature
