@@ -43,6 +43,7 @@ To run the module,
 
   1. You need access to Google Earth Engine
   2. Install <https://cloud.google.com/sdk/docs/install>
+  3. If you want to use the ERA5 layer, you need to install the [Climate Data Store (CDS) Application Program Interface (API)](https://cds.climate.copernicus.eu/api-how-to)
 
 ### Interactive development
 

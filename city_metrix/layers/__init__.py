@@ -19,4 +19,5 @@ from .tree_canopy_height import TreeCanopyHeight
 from .alos_dsm import AlosDSM
 from .overture_buildings import OvertureBuildings
 from .nasa_dem import NasaDEM
+from .era_5_hottest_day import Era5HottestDay
 from .impervious_surface import ImperviousSurface
