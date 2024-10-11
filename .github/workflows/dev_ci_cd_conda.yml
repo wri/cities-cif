@@ -17,10 +17,16 @@ jobs:
       matrix:
         python-version: ["3.10"]
     steps:
-    - name: Set up .cdsapirc
+    - name: Preserve $HOME set in the container
       run: |
-        echo "url: ${{ secrets.ERA5_URL }}" > ~/.cdsapirc
-        echo "key: ${{ secrets.ERA5_KEY }}" >> ~/.cdsapirc
+        echo $HOME
+        echo HOME=$HOME >> "$GITHUB_ENV"
+    - name: Add ERA5 API key
+      run: |
+        cat <<EOF > $HOME/.cdsapirc
+        url: ${{ secrets.ERA5_URL }}
+        key: ${{ secrets.ERA5_KEY }}
+        EOF
     - uses: actions/checkout@v4
     - uses: conda-incubator/setup-miniconda@v2
       with:
