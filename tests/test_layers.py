@@ -48,7 +48,7 @@ def test_built_up_height():
     data = BuiltUpHeight().get_data(BBOX)
     assert np.size(data) > 0
 
-# @pytest.mark.skip(reason="CDS API needs personal access token file to run")
+@pytest.mark.skip(reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
     data = Era5HottestDay().get_data(BBOX)
     assert np.size(data) > 0
