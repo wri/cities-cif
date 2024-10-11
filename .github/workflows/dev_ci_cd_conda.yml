@@ -19,8 +19,8 @@ jobs:
     steps:
     - name: Set up .cdsapirc
       run: |
-        echo "url: ${{ secrets.ERA5_URL }}" > $HOME/.cdsapirc
-        echo "key: ${{ secrets.ERA5_KEY }}" >> $HOME/.cdsapirc
+        echo "url: ${{ secrets.ERA5_URL }}" > ~/.cdsapirc
+        echo "key: ${{ secrets.ERA5_KEY }}" >> ~/.cdsapirc
     - uses: actions/checkout@v4
     - uses: conda-incubator/setup-miniconda@v2
       with:
