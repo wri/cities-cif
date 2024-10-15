@@ -77,7 +77,8 @@ class Layer:
             for tile in tiles["geometry"]:
                 data = self.aggregate.get_data(tile.bounds)
 
-                file_name = 'tile_%s.tif' % (str(tile_serial_id).zfill(3))
+                tile_suffix = str(tile_serial_id).zfill(3)
+                file_name = f'tile_{tile_suffix}.tif'
                 file_path = os.path.join(output_path, file_name)
                 file_names.append(file_path)
                 write_layer(file_path, data)
@@ -88,9 +89,9 @@ class Layer:
                 tile_serial_id += 1
 
             # Write tile polygons to geojson file
-            gdf = gpd.GeoDataFrame(tile_dict, crs='EPSG:4326')
+            tile_grid_gdf = gpd.GeoDataFrame(tile_dict, crs='EPSG:4326')
             tile_grid_file_path = os.path.join(output_path, 'tile_grid.geojson')
-            gdf.to_file(tile_grid_file_path)
+            tile_grid_gdf.to_file(tile_grid_file_path)
         else:
             data = self.aggregate.get_data(bbox)
             write_layer(output_path, data)
