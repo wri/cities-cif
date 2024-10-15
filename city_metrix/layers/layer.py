@@ -81,41 +81,42 @@ class Layer:
                 os.makedirs(output_path)
 
             file_names = []
-            tile_dict = {"tile_name": [], "geometry": []}
-            unbuffered_tile_dict = {"tile_name": [], "geometry": []}
+            tile_cells = {"tile_name": [], "geometry": []}
+            unbuffered_tile_cells = {"tile_name": [], "geometry": []}
             for index in range(0, len(clipped_tiles)):
                 clipped_geom = clipped_tiles.iloc[index]['geometry']
                 data = self.aggregate.get_data(clipped_geom.bounds)
 
                 tile_serial_id = index + 1
-                file_name = 'tile_%s.tif' % (str(tile_serial_id).zfill(3))
+                tile_suffix = str(tile_serial_id).zfill(3)
+                file_name = f'tile_{tile_suffix}.tif'
                 file_path = os.path.join(output_path, file_name)
                 file_names.append(file_path)
                 write_layer(file_path, data)
 
-                tile_dict['tile_name'].append(file_name)
-                tile_dict['geometry'].append(clipped_geom)
+                # Save tile for later write to geojson
+                tile_cells['tile_name'].append(file_name)
+                tile_cells['geometry'].append(clipped_geom)
 
+                # for buffered tiling, also save unbuffered geometry for later write to geojson
                 if has_buffer:
+                    unbuffered_tile_cells['tile_name'].append(file_name)
                     unbuffered_geom = unbuffered_tiles.iloc[index]['geometry']
-                    unbuffered_tile_dict['tile_name'].append(file_name)
-                    unbuffered_tile_dict['geometry'].append(unbuffered_geom)
+                    unbuffered_tile_cells['geometry'].append(unbuffered_geom)
 
+            # Write the clipped tile polygons to geojson file
+            clipped_tile_grid = gpd.GeoDataFrame(tile_cells, crs='EPSG:4326')
+            clipped_tile_grid_file_path = os.path.join(output_path, 'tile_grid.geojson')
+            clipped_tile_grid.to_file(clipped_tile_grid_file_path)
 
-            # Write tile polygons to geojson file
-            gdf = gpd.GeoDataFrame(tile_dict, crs='EPSG:4326')
-            tile_grid_file_path = os.path.join(output_path, 'tile_grid.geojson')
-            gdf.to_file(tile_grid_file_path)
-
-            # write unbuffered grid
+            # if tiling is buffered than also write the unbuffered tile grid
             if has_buffer:
-                gdf = gpd.GeoDataFrame(unbuffered_tile_dict, crs='EPSG:4326')
+                unbuffered_tile_grid = gpd.GeoDataFrame(unbuffered_tile_cells, crs='EPSG:4326')
                 unbuffered_tile_grid_file_path = os.path.join(output_path, 'tile_grid_unbuffered.geojson')
-                gdf.to_file(unbuffered_tile_grid_file_path)
-
+                unbuffered_tile_grid.to_file(unbuffered_tile_grid_file_path)
         else:
-            data = self.aggregate.get_data(bbox)
-            write_layer(output_path, data)
+            clipped_geom = self.aggregate.get_data(bbox)
+            write_layer(output_path, clipped_geom)
 
 
 class LayerGroupBy:
