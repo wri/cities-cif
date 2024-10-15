@@ -60,17 +60,17 @@ class SmartSurfaceLULC(Layer):
 
 
         # Open space
-        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).to_crs(crs).reset_index()
+        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).reset_index()
         open_space_osm['Value'] = 10
 
 
         # Water
-        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox).to_crs(crs).reset_index()
+        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox).reset_index()
         water_osm['Value'] = 20
 
 
         # Roads
-        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox).to_crs(crs).reset_index()
+        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox).reset_index()
         if len(roads_osm) > 0:
             roads_osm['lanes'] = pd.to_numeric(roads_osm['lanes'], errors='coerce')
             # Get the average number of lanes per highway class
@@ -130,7 +130,7 @@ class SmartSurfaceLULC(Layer):
         )
 
         # get building features
-        buildings = OvertureBuildings().get_data(bbox).to_crs(crs)
+        buildings = OvertureBuildings().get_data(bbox)
         # extract ULU, ANBH, and Area_m
         buildings['ULU'] = exact_extract(ulu_lulc_1m, buildings, ["majority"], output='pandas')['majority']
         buildings['ANBH'] = exact_extract(anbh_1m, buildings, ["mean"], output='pandas')['mean']
@@ -181,7 +181,7 @@ class SmartSurfaceLULC(Layer):
 
 
         # Parking
-        parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(bbox).to_crs(crs).reset_index()
+        parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(bbox).reset_index()
         parking_osm['Value'] = 50
 
 
