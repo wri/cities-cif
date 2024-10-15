@@ -367,8 +367,8 @@ def meters_to_offset_degrees(bbox, offset_meters):
     center_lat = (min_lat + max_lat) / 2
 
     meters_per_degree_of_lat = 111111
-    earth_radius_meters = 40075000
-    lon_degree_offset = offset_meters/ (earth_radius_meters * math.cos(center_lat) / 360)
+    earth_circumference_meters = 40075000
+    lon_degree_offset = offset_meters/ (earth_circumference_meters * math.cos(center_lat) / 360)
     lat_degree_offset = offset_meters / meters_per_degree_of_lat
 
     return abs(lon_degree_offset), abs(lat_degree_offset)
