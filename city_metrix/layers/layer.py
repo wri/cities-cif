@@ -9,7 +9,7 @@ import boto3
 from dask.diagnostics import ProgressBar
 from ee import ImageCollection
 from geocube.api.core import make_geocube
-from shapely.geometry import box
+from shapely.geometry import box, polygon
 from xrspatial import zonal_stats
 import geopandas as gpd
 import xarray as xr
@@ -72,13 +72,26 @@ class Layer:
                 os.makedirs(output_path)
 
             file_names = []
+            tile_serial_id = 1
+            tile_dict = {"tile_name": [], "geometry": []}
             for tile in tiles["geometry"]:
                 data = self.aggregate.get_data(tile.bounds)
 
-                file_name = f"{output_path}/{uuid4()}.tif"
-                file_names.append(file_name)
+                tile_suffix = str(tile_serial_id).zfill(3)
+                file_name = f'tile_{tile_suffix}.tif'
+                file_path = os.path.join(output_path, file_name)
+                file_names.append(file_path)
+                write_layer(file_path, data)
 
-                write_layer(file_name, data)
+                tile_dict['tile_name'].append(file_name)
+                tile_dict['geometry'].append(tile)
+
+                tile_serial_id += 1
+
+            # Write tile polygons to geojson file
+            tile_grid_gdf = gpd.GeoDataFrame(tile_dict, crs='EPSG:4326')
+            tile_grid_file_path = os.path.join(output_path, 'tile_grid.geojson')
+            tile_grid_gdf.to_file(tile_grid_file_path)
         else:
             data = self.aggregate.get_data(bbox)
             write_layer(output_path, data)

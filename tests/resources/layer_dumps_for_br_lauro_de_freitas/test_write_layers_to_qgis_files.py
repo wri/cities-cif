@@ -35,6 +35,13 @@ def test_write_albedo(target_folder, bbox_info, target_spatial_resolution_multip
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
+def test_write_albedo_tiled(target_folder, bbox_info, target_spatial_resolution_multiplier):
+    file_path = prep_output_path(target_folder, 'albedo_tiled.tif')
+    target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(Albedo())
+    Albedo(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=0.01)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
 def test_write_alos_dsm(target_folder, bbox_info, target_spatial_resolution_multiplier):
     file_path = prep_output_path(target_folder, 'alos_dsm.tif')
     target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(AlosDSM())
