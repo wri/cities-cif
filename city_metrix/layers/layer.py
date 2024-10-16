@@ -67,57 +67,62 @@ class Layer:
         :return:
         """
 
-        if tile_degrees is not None:
-            has_buffer = True if buffer_meters is not None and buffer_meters != 0 else False
-            if has_buffer:
-                lon_degree_offset, lat_degree_offset = meters_to_offset_degrees(bbox, buffer_meters)
-                clipped_tiles = create_fishnet_grid(*bbox, tile_degrees, lon_degree_offset, lat_degree_offset)
-                unbuffered_tiles = create_fishnet_grid(*bbox, tile_degrees)
-            else:
-                clipped_tiles = create_fishnet_grid(*bbox, tile_degrees)
-                unbuffered_tiles = None
+        if tile_degrees is None:
+            clipped_data = self.aggregate.get_data(bbox)
+            write_layer(output_path, clipped_data)
+        else:
+            tile_grid, unbuffered_tile_grid = _get_tile_boundaries(bbox, tile_degrees, buffer_meters)
 
+            # write raster data to files
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
 
-            file_names = []
-            tile_cells = {"tile_name": [], "geometry": []}
-            unbuffered_tile_cells = {"tile_name": [], "geometry": []}
-            for index in range(0, len(clipped_tiles)):
-                clipped_geom = clipped_tiles.iloc[index]['geometry']
-                data = self.aggregate.get_data(clipped_geom.bounds)
+            for tile in tile_grid:
+                tile_name = tile['tile_name']
+                tile_geom = tile['geometry']
 
-                tile_serial_id = index + 1
-                tile_suffix = str(tile_serial_id).zfill(3)
-                file_name = f'tile_{tile_suffix}.tif'
-                file_path = os.path.join(output_path, file_name)
-                file_names.append(file_path)
-                write_layer(file_path, data)
+                file_path = os.path.join(output_path, tile_name)
+                clipped_data = self.aggregate.get_data(tile_geom.bounds)
+                write_layer(file_path, clipped_data)
 
-                # Save tile for later write to geojson
-                tile_cells['tile_name'].append(file_name)
-                tile_cells['geometry'].append(clipped_geom)
+            # write tile grid to geojson file
+            _write_tile_grid(tile_grid, output_path, 'tile_grid.geojson')
 
-                # for buffered tiling, also save unbuffered geometry for later write to geojson
-                if has_buffer:
-                    unbuffered_tile_cells['tile_name'].append(file_name)
-                    unbuffered_geom = unbuffered_tiles.iloc[index]['geometry']
-                    unbuffered_tile_cells['geometry'].append(unbuffered_geom)
+            # if tiles were buffered, also write unbuffered tile grid to geojson file
+            if unbuffered_tile_grid:
+                _write_tile_grid(unbuffered_tile_grid, output_path, 'tile_grid_unbuffered.geojson')
 
-            # Write the clipped tile polygons to geojson file
-            clipped_tile_grid = gpd.GeoDataFrame(tile_cells, crs='EPSG:4326')
-            clipped_tile_grid_file_path = os.path.join(output_path, 'tile_grid.geojson')
-            clipped_tile_grid.to_file(clipped_tile_grid_file_path)
 
-            # if tiling is buffered than also write the unbuffered tile grid
-            if has_buffer:
-                unbuffered_tile_grid = gpd.GeoDataFrame(unbuffered_tile_cells, crs='EPSG:4326')
-                unbuffered_tile_grid_file_path = os.path.join(output_path, 'tile_grid_unbuffered.geojson')
-                unbuffered_tile_grid.to_file(unbuffered_tile_grid_file_path)
-        else:
-            clipped_geom = self.aggregate.get_data(bbox)
-            write_layer(output_path, clipped_geom)
+def _get_tile_boundaries(bbox, tile_degrees, buffer_meters):
+    has_buffer = True if buffer_meters is not None and buffer_meters != 0 else False
+    if has_buffer:
+        lon_degree_offset, lat_degree_offset = meters_to_offset_degrees(bbox, buffer_meters)
+        tiles = create_fishnet_grid(*bbox, tile_degrees, lon_degree_offset, lat_degree_offset)
+        unbuffered_tiles = create_fishnet_grid(*bbox, tile_degrees)
+    else:
+        tiles = create_fishnet_grid(*bbox, tile_degrees)
+        unbuffered_tiles = None
 
+    tile_grid = []
+    unbuffered_tile_grid = []
+    for index in range(0, len(tiles)):
+        tile_serial_id = index + 1
+        tile_suffix = str(tile_serial_id).zfill(3)
+        tile_name = f'tile_{tile_suffix}.tif'
+
+        tile_geom = tiles.iloc[index]['geometry']
+        tile_grid.append({"tile_name": tile_name, "geometry": tile_geom})
+
+        if has_buffer:
+            unbuffered_tile_geom = unbuffered_tiles.iloc[index]['geometry']
+            unbuffered_tile_grid.append({"tile_name": tile_name, "geometry": unbuffered_tile_geom})
+
+    return tile_grid, unbuffered_tile_grid
+
+def _write_tile_grid(tile_grid, output_path, target_file_name):
+    tile_grid = gpd.GeoDataFrame(tile_grid, crs='EPSG:4326')
+    tile_grid_file_path = str(os.path.join(output_path, target_file_name))
+    tile_grid.to_file(tile_grid_file_path)
 
 class LayerGroupBy:
     def __init__(self, aggregate, zones, layer=None, masks=[]):
