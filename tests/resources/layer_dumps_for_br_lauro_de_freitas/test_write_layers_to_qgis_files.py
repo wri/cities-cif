@@ -55,6 +55,7 @@ def test_write_albedo_tiled_buffered(target_folder, bbox_info, target_spatial_re
 
     assert file_count == 6
 
+
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
 def test_write_alos_dsm(target_folder, bbox_info, target_spatial_resolution_multiplier):
     file_path = prep_output_path(target_folder, 'alos_dsm.tif')
