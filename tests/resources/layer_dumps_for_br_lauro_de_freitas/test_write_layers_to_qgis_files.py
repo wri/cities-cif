@@ -23,7 +23,7 @@ from city_metrix.layers import (
     UrbanLandUse,
     WorldPop, Layer, ImperviousSurface
 )
-from .conftest import RUN_DUMPS, prep_output_path, verify_file_is_populated
+from .conftest import RUN_DUMPS, prep_output_path, verify_file_is_populated, get_file_count_in_folder
 from ...tools.general_tools import get_class_default_spatial_resolution
 
 
@@ -35,11 +35,26 @@ def test_write_albedo(target_folder, bbox_info, target_spatial_resolution_multip
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
-def test_write_albedo_tiled(target_folder, bbox_info, target_spatial_resolution_multiplier):
+def test_write_albedo_tiled_unbuffered(target_folder, bbox_info, target_spatial_resolution_multiplier):
     file_path = prep_output_path(target_folder, 'albedo_tiled.tif')
     target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(Albedo())
-    Albedo(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=0.01)
-    assert verify_file_is_populated(file_path)
+    (Albedo(spatial_resolution=target_resolution).
+     write(bbox_info.bounds, file_path, tile_degrees=0.01, buffer_meters=None))
+    file_count = get_file_count_in_folder(file_path)
+
+    assert file_count == 5
+
+@pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
+def test_write_albedo_tiled_buffered(target_folder, bbox_info, target_spatial_resolution_multiplier):
+    buffer_meters = 500
+    file_path = prep_output_path(target_folder, 'albedo_tiled.tif')
+    target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(Albedo())
+    (Albedo(spatial_resolution=target_resolution).
+     write(bbox_info.bounds, file_path, tile_degrees=0.01, buffer_meters=buffer_meters))
+    file_count = get_file_count_in_folder(file_path)
+
+    assert file_count == 6
+
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
 def test_write_alos_dsm(target_folder, bbox_info, target_spatial_resolution_multiplier):
