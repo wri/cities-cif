@@ -5,6 +5,7 @@ import zipfile
 
 from .layer import Layer
 
+
 class Cams(Layer):
     def __init__(self, start_date="2023-01-01", end_date="2023-12-01", **kwargs):
         super().__init__(**kwargs)
@@ -13,7 +14,7 @@ class Cams(Layer):
 
     def get_data(self, bbox):
         min_lon, min_lat, max_lon, max_lat = bbox
-        
+
         c = cdsapi.Client()
         c.retrieve(
             'cams-global-reanalysis-eac4',
@@ -45,7 +46,12 @@ class Cams(Layer):
             dataarray_list.append(dataarray)
 
         # not all variables have 'model_level', concatenate without 'model_level' dimension
-        dataarray_list = [dataarray.squeeze().drop_vars(['model_level', 'latitude', 'longitude'], errors='ignore') for dataarray in dataarray_list]
+        dataarray_list = [
+            dataarray.squeeze(dim='model_level').drop_vars(['model_level'])
+            if 'model_level' in dataarray.dims
+            else dataarray
+            for dataarray in dataarray_list
+        ]
         data = xr.merge(dataarray_list)
         # xarray.Dataset to xarray.DataArray
         data = data.to_array()
@@ -57,4 +63,3 @@ class Cams(Layer):
         os.rmdir('cams_download')
 
         return data
-    
