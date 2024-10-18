@@ -52,6 +52,13 @@ class Cams(Layer):
             else dataarray
             for dataarray in dataarray_list
         ]
+        # drop coordinate ['latitude','longitude'] if uses 360 degree system
+        dataarray_list = [
+            dataarray.drop_vars(['latitude', 'longitude'])
+            if (dataarray['longitude'].values > 180).any()
+            else dataarray
+            for dataarray in dataarray_list
+        ]
         data = xr.merge(dataarray_list)
         # xarray.Dataset to xarray.DataArray
         data = data.to_array()
