@@ -8,18 +8,20 @@ from city_metrix.layers import (
     AlosDSM,
     AverageNetBuildingHeight,
     BuiltUpHeight,
-    EsaWorldCover, EsaWorldCoverClass,
+    EsaWorldCover, 
+    EsaWorldCoverClass,
     HighLandSurfaceTemperature,
     ImperviousSurface,
     LandSurfaceTemperature,
     NasaDEM,
     NaturalAreas,
     NdviSentinel2,
+    OpenBuildings,
     OpenStreetMap,
     TreeCanopyHeight,
     TreeCover,
     UrbanLandUse,
-    WorldPop, OpenBuildings
+    WorldPop
 )
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 from tests.tools.general_tools import get_class_from_instance, get_class_default_spatial_resolution
