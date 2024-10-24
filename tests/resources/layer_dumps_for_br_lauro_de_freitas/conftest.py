@@ -74,3 +74,10 @@ def prep_output_path(output_folder, file_name):
 def verify_file_is_populated(file_path):
     is_populated = True if os.path.getsize(file_path) > 0 else False
     return is_populated
+
+def get_file_count_in_folder(dir_path):
+    count = 0
+    for path in os.scandir(dir_path):
+        if path.is_file():
+            count += 1
+    return count
