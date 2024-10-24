@@ -7,36 +7,29 @@ from .layer import Layer
 
 
 class Cams(Layer):
-    def __init__(self, start_date="2023-01-01", end_date="2023-12-01", species, **kwargs):
+    def __init__(self, start_date="2023-01-01", end_date="2023-12-31", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
-		if species in ("particulate_matter_2.5um", "particulate_matter_10um", "carbon_monoxide", "nitrogen_dioxide", "ozone", "sulphur_dioxide"):
-		    self.species = species
-		else:
-		    raise Exception("Selected species not supported")
 
     def get_data(self, bbox):
         min_lon, min_lat, max_lon, max_lat = bbox
 
         c = cdsapi.Client()
-		query_dict = {
+        c.retrieve(
+            'cams-global-reanalysis-eac4',
+            {
+                'variable': [
+                    "2m_temperature", "mean_sea_level_pressure",
+                    "particulate_matter_2.5um", "particulate_matter_10um",
+                    "carbon_monoxide", "nitrogen_dioxide", "ozone", "sulphur_dioxide"
+                ],
                 "model_level": ["60"],
                 "date": [f"{self.start_date}/{self.end_date}"],
                 'time': ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
                 'area': [max_lat, min_lon, min_lat, max_lon],
                 'data_format': 'netcdf_zip',
-            }
-		if self.species in ("particulate_matter_2.5um", "particulate_matter_10um"):
-		    query_dict['variable'] = [self.species]
-		else:
-		    query_dict['variable'] = [
-			        "2m_temperature", "mean_sea_level_pressure", self.species
-			    ]
-
-        c.retrieve(
-            'cams-global-reanalysis-eac4',
-            query_dict,
+            },
             'cams_download.zip')
 
         # extract the ZIP file
@@ -58,7 +51,6 @@ class Cams(Layer):
             else dataarray
             for dataarray in dataarray_list
         ]
-
         # drop coordinate ['latitude','longitude'] if uses 360 degree system
         dataarray_list = [
             dataarray.drop_vars(['latitude', 'longitude'])
@@ -67,6 +59,17 @@ class Cams(Layer):
             for dataarray in dataarray_list
         ]
         data = xr.merge(dataarray_list)
+
+        # unit conversion
+        # particulate matter: concentration * 10^9
+        for var in ['pm2p5', 'pm10']:
+            data[var].values = data[var].values * (10 ** 9)
+        # other: concentration x pressure / (287.058 * temp) * 10^9
+        for var in ['co', 'no2', 'go3', 'so2']:
+            data[var].values = data[var].values * data['msl'].values / (287.058 * data['t2m'].values) * (10 ** 9)
+
+        # drop pressure and temperature
+        data = data.drop_vars(['msl', 't2m'])
         # xarray.Dataset to xarray.DataArray
         data = data.to_array()
 
