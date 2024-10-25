@@ -13,7 +13,7 @@ class VegetationWaterMap(Layer):
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
 
-    def __init__(self, start_date="2018-01-01", end_date="2022-12-31", spatial_resolution=30, **kwargs):
+    def __init__(self, start_date="2018-01-01", end_date="2022-12-31", spatial_resolution=10, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
@@ -78,9 +78,6 @@ class VegetationWaterMap(Layer):
         # https://en.wikipedia.org/wiki/Error_function#Cumulative_distribution_function
         def eeCdf(t):
             return ee.Image(0.5).multiply(ee.Image(1).add(ee.Image(t).divide(ee.Image(2).sqrt()).erf()))
-
-        def invCdf(p):
-            return ee.Image(2).sqrt().multiply(ee.Image(p).multiply(2).subtract(1).erfInv())
 
         # /////green normalized Difference///////
         def significanceGreen(gtrend, glinearfit, SampleNumber):
@@ -218,6 +215,7 @@ class VegetationWaterMap(Layer):
         vegwatermap = get_map_vegwaterchange(s2cloudmasked)
 
         data = get_image_collection(ee.ImageCollection(vegwatermap), bbox, self.spatial_resolution, "vegetation water map")
+        # xarray.dataset to xarray.dataarray
         data = data.to_array()
 
         return data
