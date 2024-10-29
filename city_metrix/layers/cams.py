@@ -58,13 +58,16 @@ class Cams(Layer):
             else dataarray
             for dataarray in dataarray_list
         ]
+        dataarray_list[0] = dataarray_list[0].assign_coords(dataarray_list[1].coords)
         data = xr.merge(dataarray_list)
 
         # unit conversion
         # particulate matter: concentration * 10^9
+        # target unit is ug/m3
         for var in ['pm2p5', 'pm10']:
             data[var].values = data[var].values * (10 ** 9)
         # other: concentration x pressure / (287.058 * temp) * 10^9
+        # target unit is ug/m3
         for var in ['co', 'no2', 'go3', 'so2']:
             data[var].values = data[var].values * data['msl'].values / (287.058 * data['t2m'].values) * (10 ** 9)
 
