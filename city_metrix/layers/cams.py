@@ -51,14 +51,11 @@ class Cams(Layer):
             else dataarray
             for dataarray in dataarray_list
         ]
-        # drop coordinate ['latitude','longitude'] if uses 360 degree system
+        # assign coordinate with last dataarray to fix 1) use 360 degree system issue 2) slightly different lat lons
         dataarray_list = [
-            dataarray.drop_vars(['latitude', 'longitude'])
-            if (dataarray['longitude'].values > 180).any()
-            else dataarray
+            dataarray.assign_coords(dataarray_list[-1].coords) 
             for dataarray in dataarray_list
         ]
-        dataarray_list[0] = dataarray_list[0].assign_coords(dataarray_list[1].coords)
         data = xr.merge(dataarray_list)
 
         # unit conversion
