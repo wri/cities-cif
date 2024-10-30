@@ -32,16 +32,23 @@ class Cams(Layer):
             },
             'cams_download.zip')
 
+        # If data files from earlier runs not deleted, save new files with postpended numbers
+        existing_cams_downloads = [fname for fname in os.listdir('.') if fname[:13] == 'cams_download' and fname[-3:] != 'zip']
+        num_id = len(existing_cams_downloads)
+        while f'cams_download_{num_id}' in existing_cams_downloads:
+            num_id += 1
+        fname = 'cams_download{0}'.format(['', '_{0}'.format(num_id)][int(num_id > 0)])
+        os.makedirs(fname, exist_ok=True)
+        
         # extract the ZIP file
-        os.makedirs('cams_download', exist_ok=True)
         with zipfile.ZipFile('cams_download.zip', 'r') as zip_ref:
             # Extract all the contents of the ZIP file to the specified directory
-            zip_ref.extractall('cams_download')
+            zip_ref.extractall(fname)
 
         # load netcdf files
         dataarray_list = []
-        for nc_file in os.listdir('cams_download'):
-            dataarray = xr.open_dataset(f'cams_download/{nc_file}')
+        for nc_file in os.listdir(fname):
+            dataarray = xr.open_dataset(f'{fname}/{nc_file}')
             dataarray_list.append(dataarray)
 
         # not all variables have 'model_level', concatenate without 'model_level' dimension
@@ -75,8 +82,12 @@ class Cams(Layer):
 
         # Remove local files
         os.remove('cams_download.zip')
-        for nc_file in os.listdir('cams_download'):
-            os.remove(f'cams_download/{nc_file}')
-        os.rmdir('cams_download')
+        try:  # Workaround for elusive permission error
+            for nc_file in os.listdir(fname):
+                os.remove(f'{fname}/{nc_file}')
+            os.rmdir(fname)
+        except:
+            pass
 
-        return data
+        centerlat, centerlon = (min_lat + max_lat) / 2, (min_lon + max_lon) / 2
+        return data.sel(latitude=centerlat, longitude=centerlon, method="nearest")
