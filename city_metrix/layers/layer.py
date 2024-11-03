@@ -92,14 +92,13 @@ class Layer:
                 _write_tile_grid(unbuffered_tile_grid, output_path, 'tile_grid_unbuffered.geojson')
 
 
-def _get_tile_boundaries(bbox, tile_degrees, buffer_meters):
-    has_buffer = True if buffer_meters is not None and buffer_meters != 0 else False
+def _get_tile_boundaries(bbox, tile_side_meters, tile_buffer_meters):
+    has_buffer = True if tile_buffer_meters is not None and tile_buffer_meters != 0 else False
     if has_buffer:
-        lon_degree_offset, lat_degree_offset = offset_degrees_for_bbox_centroid(bbox, buffer_meters)
-        tiles = create_fishnet_grid(*bbox, tile_degrees, lon_degree_offset, lat_degree_offset)
-        unbuffered_tiles = create_fishnet_grid(*bbox, tile_degrees)
+        tiles = create_fishnet_grid(*bbox, tile_side_meters, tile_buffer_meters)
+        unbuffered_tiles = create_fishnet_grid(*bbox, tile_side_meters)
     else:
-        tiles = create_fishnet_grid(*bbox, tile_degrees)
+        tiles = create_fishnet_grid(*bbox, tile_side_meters)
         unbuffered_tiles = None
 
     tile_grid = []
@@ -258,20 +257,25 @@ def get_utm_zone_epsg(bbox) -> str:
     return f"EPSG:{epsg}"
 
 
-def create_fishnet_grid(min_lon, min_lat, max_lon, max_lat, cell_size_m, lon_degree_buffer=0, lat_degree_buffer=0):
+def create_fishnet_grid(min_lon, min_lat, max_lon, max_lat, tile_side_meters, tile_buffer_meters=0):
     lon_coord, lat_coord = (min_lon, min_lat)
     geom_array = []
 
     center_lat = (min_lat + max_lat) / 2
-    lon_cell_offset, lat_cell_offset = offset_meters_to_geographic_degrees(center_lat, cell_size_m)
+    lon_side_offset, lat_side_offset = offset_meters_to_geographic_degrees(center_lat, tile_side_meters)
+    if tile_buffer_meters == 0:
+        lon_buffer_offset = 0
+        lat_buffer_offset = 0
+    else:
+        lon_buffer_offset, lat_buffer_offset = offset_meters_to_geographic_degrees(center_lat, tile_buffer_meters)
 
     # Polygon Size
     while lat_coord < max_lat:
         while lon_coord < max_lon:
-            cell_min_lon = lon_coord - lon_degree_buffer
-            cell_min_lat = lat_coord - lat_degree_buffer
-            cell_max_lon = lon_coord + lon_cell_offset + lon_degree_buffer
-            cell_max_lat = lat_coord + lat_cell_offset + lat_degree_buffer
+            cell_min_lon = lon_coord - lon_buffer_offset
+            cell_min_lat = lat_coord - lat_buffer_offset
+            cell_max_lon = lon_coord + lon_side_offset + lon_buffer_offset
+            cell_max_lat = lat_coord + lat_side_offset + lat_buffer_offset
             geom = geometry.Polygon(
                 [
                     (cell_min_lon, cell_min_lat),
@@ -282,10 +286,10 @@ def create_fishnet_grid(min_lon, min_lat, max_lon, max_lat, cell_size_m, lon_deg
                 ]
             )
             geom_array.append(geom)
-            lon_coord += lon_cell_offset
+            lon_coord += lon_side_offset
         lon_coord = min_lon
 
-        lat_coord += lat_cell_offset
+        lat_coord += lat_side_offset
 
     fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs("EPSG:4326")
     fishnet["fishnet_geometry"] = fishnet["geometry"]
@@ -370,18 +374,8 @@ def write_dataarray(path, data):
     else:
         data.rio.to_raster(raster_path=path, driver="COG")
 
-
-def offset_degrees_for_bbox_centroid(bbox, offset_meters):
-    min_lat = bbox[1]
-    max_lat = bbox[3]
-    center_lat = (min_lat + max_lat) / 2
-
-    lon_degree_offset, lat_degree_offset = offset_meters_to_geographic_degrees(center_lat, offset_meters)
-
-    return lon_degree_offset, lat_degree_offset
-
-
 def offset_meters_to_geographic_degrees(decimal_latitude, length_m):
+    # TODO consider replacing this spherical calculation with ellipsoidal
     earth_radius_m = 6378137
     rad = 180/math.pi
 
