@@ -11,6 +11,10 @@ from city_metrix.layers import (
     EsaWorldCoverClass,
     HighLandSurfaceTemperature,
     ImperviousSurface,
+    LandCoverGlad,
+    LandCoverHabitatGlad,
+    LandCoverHabitatChangeGlad,
+    LandCoverSimplifiedGlad,
     LandsatCollection2,
     LandSurfaceTemperature,
     NasaDEM,
@@ -70,6 +74,22 @@ def test_high_land_surface_temperature():
 
 def test_impervious_surface():
     data = ImperviousSurface().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_land_cover_glad():
+    data = LandCoverGlad().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_land_cover_habitat_glad():
+    data = LandCoverHabitatGlad().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_land_cover_habitat_change():
+    data = LandCoverHabitatChangeGlad().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_land_cover_simplified_glad():
+    data = LandCoverSimplifiedGlad().get_data(BBOX)
     assert np.size(data) > 0
 
 def test_land_surface_temperature():
