@@ -96,12 +96,11 @@ class Era5HottestDay(Layer):
                 },
                 f'download_{i}.nc')
             
-            dataarray = xr.open_dataset(f'download_{i}.nc')
-
-            # Subset times for the day
-            times = [valid_time.astype('datetime64[s]').astype(datetime).replace(tzinfo=pytz.UTC) for valid_time in dataarray['valid_time'].values]
-            indices = [i for i, value in enumerate(times) if value in utc_times]
-            subset_dataarray = dataarray.isel(valid_time=indices)
+            with xr.open_dataset(f'download_{i}.nc') as dataarray:
+                # Subset times for the day
+                times = [valid_time.astype('datetime64[s]').astype(datetime).replace(tzinfo=pytz.UTC) for valid_time in dataarray['valid_time'].values]
+                indices = [i for i, value in enumerate(times) if value in utc_times]
+                subset_dataarray = dataarray.isel(valid_time=indices).load()
 
             dataarray_list.append(subset_dataarray)
 
