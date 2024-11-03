@@ -48,8 +48,8 @@ class Cams(Layer):
         # load netcdf files
         dataarray_list = []
         for nc_file in os.listdir(fname):
-            dataarray = xr.open_dataset(f'{fname}/{nc_file}')
-            dataarray_list.append(dataarray)
+            with xr.open_dataset(f'{fname}/{nc_file}') as dataarray:
+                dataarray_list.append(dataarray)
 
         # not all variables have 'model_level', concatenate without 'model_level' dimension
         dataarray_list = [
