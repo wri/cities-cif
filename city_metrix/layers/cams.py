@@ -33,13 +33,13 @@ class Cams(Layer):
             'cams_download.zip')
 
         # If data files from earlier runs not deleted, save new files with postpended numbers
-        existing_cams_downloads = [fname for fname in os.listdir('.') if fname[:13] == 'cams_download' and fname[-3:] != 'zip']
+        existing_cams_downloads = [fname for fname in os.listdir('.') if fname.startswith('cams_download') and not fname.endswith('.zip')]
         num_id = len(existing_cams_downloads)
         while f'cams_download_{num_id}' in existing_cams_downloads:
             num_id += 1
-        fname = 'cams_download{0}'.format(['', '_{0}'.format(num_id)][int(num_id > 0)])
+        fname = f'cams_download{"" if num_id == 0 else f"_{num_id}"}'
         os.makedirs(fname, exist_ok=True)
-        
+
         # extract the ZIP file
         with zipfile.ZipFile('cams_download.zip', 'r') as zip_ref:
             # Extract all the contents of the ZIP file to the specified directory
@@ -60,7 +60,7 @@ class Cams(Layer):
         ]
         # assign coordinate with last dataarray to fix 1) use 360 degree system issue 2) slightly different lat lons
         dataarray_list = [
-            dataarray.assign_coords(dataarray_list[-1].coords) 
+            dataarray.assign_coords(dataarray_list[-1].coords)
             for dataarray in dataarray_list
         ]
         data = xr.merge(dataarray_list)
@@ -82,12 +82,17 @@ class Cams(Layer):
 
         # Remove local files
         os.remove('cams_download.zip')
-        try:  # Workaround for elusive permission error
+        # Workaround for elusive permission error
+        try:  
             for nc_file in os.listdir(fname):
                 os.remove(f'{fname}/{nc_file}')
             os.rmdir(fname)
         except:
             pass
 
-        centerlat, centerlon = (min_lat + max_lat) / 2, (min_lon + max_lon) / 2
-        return data.sel(latitude=centerlat, longitude=centerlon, method="nearest")
+        # Select the nearest data point based on latitude and longitude
+        center_lon = (min_lon + max_lon) / 2
+        center_lat = (min_lat + max_lat) / 2
+        data = data.sel(latitude=center_lat, longitude=center_lon, method="nearest")
+
+        return data
