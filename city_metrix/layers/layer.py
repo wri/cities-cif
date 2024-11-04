@@ -19,7 +19,7 @@ import utm
 import shapely.geometry as geometry
 import pandas as pd
 
-MAX_TILE_SIZE = 0.5
+MAX_TILE_SIDE_SIZE_METERS = 60000 # Approx. 0.5 degrees latitudinal offset. TODO How selected?
 
 class Layer:
     def __init__(self, aggregate=None, masks=[]):
@@ -136,7 +136,7 @@ class LayerGroupBy:
         return self._zonal_stats("count")
 
     def _zonal_stats(self, stats_func):
-        if box(*self.zones.total_bounds).area <= MAX_TILE_SIZE**2:
+        if box(*self.zones.total_bounds).area <= MAX_TILE_SIDE_SIZE_METERS**2:
             stats = self._zonal_stats_tile(self.zones, [stats_func])
         else:
             stats = self._zonal_stats_fishnet(stats_func)
@@ -160,7 +160,7 @@ class LayerGroupBy:
 
     def _zonal_stats_fishnet(self, stats_func):
         # fishnet GeoDataFrame into smaller tiles
-        fishnet = create_fishnet_grid(*self.zones.total_bounds, MAX_TILE_SIZE)
+        fishnet = create_fishnet_grid(*self.zones.total_bounds, MAX_TILE_SIDE_SIZE_METERS)
 
         # spatial join with fishnet grid and then intersect geometries with fishnet tiles
         joined = self.zones.sjoin(fishnet)
