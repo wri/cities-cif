@@ -55,14 +55,14 @@ class Layer:
         """
         return LayerGroupBy(self.aggregate, zones, layer, self.masks)
 
-    def write(self, bbox, output_path, tile_side_meters=None, buffer_meters=None, **kwargs):
+    def write(self, bbox, output_path, tile_side_meters=None, tile_buffer_meters=None, **kwargs):
         """
         Write the layer to a path. Does not apply masks.
 
         :param bbox: (min x, min y, max x, max y)
         :param output_path: local or s3 path to output to
         :param tile_side_meters: optional param to tile the results into multiple files specified as tile length on a side in meters
-        : param buffer_meters: tile buffer distance in meters
+        : param tile_buffer_meters: tile buffer distance in meters
         :return:
         """
 
@@ -70,7 +70,7 @@ class Layer:
             clipped_data = self.aggregate.get_data(bbox)
             write_layer(output_path, clipped_data)
         else:
-            tile_grid, unbuffered_tile_grid = _get_tile_boundaries(bbox, tile_side_meters, buffer_meters)
+            tile_grid, unbuffered_tile_grid = _get_tile_boundaries(bbox, tile_side_meters, tile_buffer_meters)
 
             # write raster data to files
             if not os.path.exists(output_path):

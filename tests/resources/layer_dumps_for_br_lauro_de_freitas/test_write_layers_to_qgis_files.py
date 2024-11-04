@@ -39,10 +39,11 @@ def test_write_albedo_tiled_unbuffered(target_folder, bbox_info, target_spatial_
     file_path = prep_output_path(target_folder, 'albedo_tiled.tif')
     target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(Albedo())
     (Albedo(spatial_resolution=target_resolution).
-     write(bbox_info.bounds, file_path, tile_side_meters=1000, buffer_meters=None))
+     write(bbox_info.bounds, file_path, tile_side_meters=1000, tile_buffer_meters=None))
     file_count = get_file_count_in_folder(file_path)
 
-    assert file_count == 7
+    expected_file_count = 7 # includes 6 tiles and one geojson file
+    assert file_count == expected_file_count
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
 def test_write_albedo_tiled_buffered(target_folder, bbox_info, target_spatial_resolution_multiplier):
@@ -50,10 +51,11 @@ def test_write_albedo_tiled_buffered(target_folder, bbox_info, target_spatial_re
     file_path = prep_output_path(target_folder, 'albedo_tiled_buffered.tif')
     target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(Albedo())
     (Albedo(spatial_resolution=target_resolution).
-     write(bbox_info.bounds, file_path, tile_side_meters=1000, buffer_meters=buffer_meters))
+     write(bbox_info.bounds, file_path, tile_side_meters=1000, tile_buffer_meters=buffer_meters))
     file_count = get_file_count_in_folder(file_path)
 
-    assert file_count == 8
+    expected_file_count = 8 # includes 6 tiles and two geojson files
+    assert file_count == expected_file_count
 
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
