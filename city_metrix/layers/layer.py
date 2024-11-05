@@ -19,7 +19,7 @@ import utm
 import shapely.geometry as geometry
 import pandas as pd
 
-MAX_TILE_SIZE = 0.5
+MAX_TILE_SIDE_SIZE_METERS = 60000 # Approx. 0.5 degrees latitudinal offset. TODO How selected?
 
 class Layer:
     def __init__(self, aggregate=None, masks=[]):
@@ -55,23 +55,22 @@ class Layer:
         """
         return LayerGroupBy(self.aggregate, zones, layer, self.masks)
 
-    def write(self, bbox, output_path, tile_degrees=None, buffer_meters=None, **kwargs):
+    def write(self, bbox, output_path, tile_side_meters=None, tile_buffer_meters=None, **kwargs):
         """
         Write the layer to a path. Does not apply masks.
 
         :param bbox: (min x, min y, max x, max y)
         :param output_path: local or s3 path to output to
-        :param tile_degrees: optional param to tile the results into multiple files with a VRT.
-            Degrees to tile by. `output_path` should be a folder path to store the tiles.
-        : param buffer_meters: tile buffer distance in meters
+        :param tile_side_meters: optional param to tile the results into multiple files specified as tile length on a side in meters
+        : param tile_buffer_meters: tile buffer distance in meters
         :return:
         """
 
-        if tile_degrees is None:
+        if tile_side_meters is None:
             clipped_data = self.aggregate.get_data(bbox)
             write_layer(output_path, clipped_data)
         else:
-            tile_grid, unbuffered_tile_grid = _get_tile_boundaries(bbox, tile_degrees, buffer_meters)
+            tile_grid, unbuffered_tile_grid = _get_tile_boundaries(bbox, tile_side_meters, tile_buffer_meters)
 
             # write raster data to files
             if not os.path.exists(output_path):
@@ -93,14 +92,13 @@ class Layer:
                 _write_tile_grid(unbuffered_tile_grid, output_path, 'tile_grid_unbuffered.geojson')
 
 
-def _get_tile_boundaries(bbox, tile_degrees, buffer_meters):
-    has_buffer = True if buffer_meters is not None and buffer_meters != 0 else False
+def _get_tile_boundaries(bbox, tile_side_meters, tile_buffer_meters):
+    has_buffer = True if tile_buffer_meters is not None and tile_buffer_meters != 0 else False
     if has_buffer:
-        lon_degree_offset, lat_degree_offset = meters_to_offset_degrees(bbox, buffer_meters)
-        tiles = create_fishnet_grid(*bbox, tile_degrees, lon_degree_offset, lat_degree_offset)
-        unbuffered_tiles = create_fishnet_grid(*bbox, tile_degrees)
+        tiles = create_fishnet_grid(*bbox, tile_side_meters, tile_buffer_meters)
+        unbuffered_tiles = create_fishnet_grid(*bbox, tile_side_meters)
     else:
-        tiles = create_fishnet_grid(*bbox, tile_degrees)
+        tiles = create_fishnet_grid(*bbox, tile_side_meters)
         unbuffered_tiles = None
 
     tile_grid = []
@@ -138,7 +136,7 @@ class LayerGroupBy:
         return self._zonal_stats("count")
 
     def _zonal_stats(self, stats_func):
-        if box(*self.zones.total_bounds).area <= MAX_TILE_SIZE**2:
+        if box(*self.zones.total_bounds).area <= MAX_TILE_SIDE_SIZE_METERS**2:
             stats = self._zonal_stats_tile(self.zones, [stats_func])
         else:
             stats = self._zonal_stats_fishnet(stats_func)
@@ -162,7 +160,7 @@ class LayerGroupBy:
 
     def _zonal_stats_fishnet(self, stats_func):
         # fishnet GeoDataFrame into smaller tiles
-        fishnet = create_fishnet_grid(*self.zones.total_bounds, MAX_TILE_SIZE)
+        fishnet = create_fishnet_grid(*self.zones.total_bounds, MAX_TILE_SIDE_SIZE_METERS)
 
         # spatial join with fishnet grid and then intersect geometries with fishnet tiles
         joined = self.zones.sjoin(fishnet)
@@ -259,30 +257,39 @@ def get_utm_zone_epsg(bbox) -> str:
     return f"EPSG:{epsg}"
 
 
-def create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size, lon_degree_buffer=0, lat_degree_buffer=0):
-    x, y = (min_x, min_y)
+def create_fishnet_grid(min_lon, min_lat, max_lon, max_lat, tile_side_meters, tile_buffer_meters=0):
+    lon_coord, lat_coord = (min_lon, min_lat)
     geom_array = []
 
+    center_lat = (min_lat + max_lat) / 2
+    lon_side_offset, lat_side_offset = offset_meters_to_geographic_degrees(center_lat, tile_side_meters)
+    if tile_buffer_meters == 0:
+        lon_buffer_offset = 0
+        lat_buffer_offset = 0
+    else:
+        lon_buffer_offset, lat_buffer_offset = offset_meters_to_geographic_degrees(center_lat, tile_buffer_meters)
+
     # Polygon Size
-    while y < max_y:
-        while x < max_x:
-            cell_min_x = x - lon_degree_buffer
-            cell_min_y = y - lat_degree_buffer
-            cell_max_x = x + cell_size + lon_degree_buffer
-            cell_max_y = y + cell_size + lat_degree_buffer
+    while lat_coord < max_lat:
+        while lon_coord < max_lon:
+            cell_min_lon = lon_coord - lon_buffer_offset
+            cell_min_lat = lat_coord - lat_buffer_offset
+            cell_max_lon = lon_coord + lon_side_offset + lon_buffer_offset
+            cell_max_lat = lat_coord + lat_side_offset + lat_buffer_offset
             geom = geometry.Polygon(
                 [
-                    (cell_min_x, cell_min_y),
-                    (cell_min_x, cell_max_y),
-                    (cell_max_x, cell_max_y),
-                    (cell_max_x, cell_min_y),
-                    (cell_min_x, cell_min_y),
+                    (cell_min_lon, cell_min_lat),
+                    (cell_min_lon, cell_max_lat),
+                    (cell_max_lon, cell_max_lat),
+                    (cell_max_lon, cell_min_lat),
+                    (cell_min_lon, cell_min_lat),
                 ]
             )
             geom_array.append(geom)
-            x += cell_size
-        x = min_x
-        y += cell_size
+            lon_coord += lon_side_offset
+        lon_coord = min_lon
+
+        lat_coord += lat_side_offset
 
     fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs("EPSG:4326")
     fishnet["fishnet_geometry"] = fishnet["geometry"]
@@ -367,14 +374,12 @@ def write_dataarray(path, data):
     else:
         data.rio.to_raster(raster_path=path, driver="COG")
 
-def meters_to_offset_degrees(bbox, offset_meters):
-    min_lat = bbox[1]
-    max_lat = bbox[3]
-    center_lat = (min_lat + max_lat) / 2
+def offset_meters_to_geographic_degrees(decimal_latitude, length_m):
+    # TODO consider replacing this spherical calculation with ellipsoidal
+    earth_radius_m = 6378137
+    rad = 180/math.pi
 
-    meters_per_degree_of_lat = 111111
-    earth_circumference_meters = 40075000
-    lon_degree_offset = offset_meters/ (earth_circumference_meters * math.cos(center_lat) / 360)
-    lat_degree_offset = offset_meters / meters_per_degree_of_lat
+    lon_degree_offset = abs((length_m / (earth_radius_m * math.cos(math.pi*decimal_latitude/180))) * rad)
+    lat_degree_offset = abs((length_m / earth_radius_m) * rad)
 
-    return abs(lon_degree_offset), abs(lat_degree_offset)
+    return lon_degree_offset, lat_degree_offset
