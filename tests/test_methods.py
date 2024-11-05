@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from city_metrix.layers.layer import create_fishnet_grid, offset_meters_to_geographic_degrees
 from .conftest import (
     LARGE_ZONES,
@@ -9,7 +10,6 @@ from .conftest import (
     MockLayer,
     MockMaskLayer,
 )
-
 
 def test_count():
     counts = MockLayer().groupby(ZONES).count()
@@ -33,7 +33,7 @@ def test_fishnetted_mean():
     assert means.size == 100
     assert all([mean == i for i, mean in enumerate(means)])
 
-def test_fishnet():
+def test_fishnet_in_meters():
     min_x = -38.3
     min_y = -80.1
     max_x = -38.2
@@ -41,7 +41,7 @@ def test_fishnet():
     tile_side_meters = 1000
     tile_buffer_meters = 100
     result_fishnet = (
-        create_fishnet_grid(min_x, min_y, max_x, max_y, tile_side_meters, tile_buffer_meters))
+        create_fishnet_grid(min_x, min_y, max_x, max_y, tile_side_meters, tile_buffer_meters, tile_units_in_degrees=False))
 
     actual_count = result_fishnet.geometry.count()
     expected_count = 24
@@ -77,3 +77,23 @@ def test_group_by_large_layer():
         MockLargeLayer().groupby(LARGE_ZONES, layer=MockLargeGroupByLayer()).count()
     )
     assert all([count == {1: 50.0, 2: 50.0} for count in counts])
+
+def test_extreme_large_degrees():
+    min_x = 100
+    min_y = 45
+    max_x = 100.5
+    max_y = 45.5
+    cell_size_degrees = 1
+
+    with pytest.raises(Exception):
+        create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size_degrees)
+
+def test_extreme_small_meters():
+    min_x = 100
+    min_y = 45
+    max_x = 100.5
+    max_y = 45.5
+    cell_size_meters= 1
+
+    with pytest.raises(Exception) as e_info:
+        create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size_meters, tile_units_in_degrees=False)

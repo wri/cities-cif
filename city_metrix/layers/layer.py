@@ -19,7 +19,7 @@ import utm
 import shapely.geometry as geometry
 import pandas as pd
 
-MAX_TILE_SIDE_SIZE_METERS = 60000 # Approx. 0.5 degrees latitudinal offset. TODO How selected?
+MAX_TILE_SIZE_DEGREES = 0.5 # TODO Why was this value selected?
 
 class Layer:
     def __init__(self, aggregate=None, masks=[]):
@@ -55,22 +55,22 @@ class Layer:
         """
         return LayerGroupBy(self.aggregate, zones, layer, self.masks)
 
-    def write(self, bbox, output_path, tile_side_meters=None, tile_buffer_meters=None, **kwargs):
+    def write(self, bbox, output_path, tile_degrees=None, buffer_size=None, **kwargs):
         """
         Write the layer to a path. Does not apply masks.
 
         :param bbox: (min x, min y, max x, max y)
         :param output_path: local or s3 path to output to
-        :param tile_side_meters: optional param to tile the results into multiple files specified as tile length on a side in meters
-        : param tile_buffer_meters: tile buffer distance in meters
+        :param tile_degrees: optional param to tile the results into multiple files specified as tile length on a side
+        :param buffer_size: tile buffer distance
         :return:
         """
 
-        if tile_side_meters is None:
+        if tile_degrees is None:
             clipped_data = self.aggregate.get_data(bbox)
             write_layer(output_path, clipped_data)
         else:
-            tile_grid, unbuffered_tile_grid = _get_tile_boundaries(bbox, tile_side_meters, tile_buffer_meters)
+            tile_grid, unbuffered_tile_grid = _get_tile_boundaries(bbox, tile_degrees, buffer_size)
 
             # write raster data to files
             if not os.path.exists(output_path):
@@ -92,13 +92,13 @@ class Layer:
                 _write_tile_grid(unbuffered_tile_grid, output_path, 'tile_grid_unbuffered.geojson')
 
 
-def _get_tile_boundaries(bbox, tile_side_meters, tile_buffer_meters):
-    has_buffer = True if tile_buffer_meters is not None and tile_buffer_meters != 0 else False
+def _get_tile_boundaries(bbox, tile_degrees, buffer_size):
+    has_buffer = True if buffer_size is not None and buffer_size != 0 else False
     if has_buffer:
-        tiles = create_fishnet_grid(*bbox, tile_side_meters, tile_buffer_meters)
-        unbuffered_tiles = create_fishnet_grid(*bbox, tile_side_meters)
+        tiles = create_fishnet_grid(*bbox, tile_degrees, buffer_size)
+        unbuffered_tiles = create_fishnet_grid(*bbox, tile_degrees)
     else:
-        tiles = create_fishnet_grid(*bbox, tile_side_meters)
+        tiles = create_fishnet_grid(*bbox, tile_degrees)
         unbuffered_tiles = None
 
     tile_grid = []
@@ -136,7 +136,7 @@ class LayerGroupBy:
         return self._zonal_stats("count")
 
     def _zonal_stats(self, stats_func):
-        if box(*self.zones.total_bounds).area <= MAX_TILE_SIDE_SIZE_METERS**2:
+        if box(*self.zones.total_bounds).area <= MAX_TILE_SIZE_DEGREES**2:
             stats = self._zonal_stats_tile(self.zones, [stats_func])
         else:
             stats = self._zonal_stats_fishnet(stats_func)
@@ -160,7 +160,7 @@ class LayerGroupBy:
 
     def _zonal_stats_fishnet(self, stats_func):
         # fishnet GeoDataFrame into smaller tiles
-        fishnet = create_fishnet_grid(*self.zones.total_bounds, MAX_TILE_SIDE_SIZE_METERS)
+        fishnet = create_fishnet_grid(*self.zones.total_bounds, MAX_TILE_SIZE_DEGREES)
 
         # spatial join with fishnet grid and then intersect geometries with fishnet tiles
         joined = self.zones.sjoin(fishnet)
@@ -257,17 +257,29 @@ def get_utm_zone_epsg(bbox) -> str:
     return f"EPSG:{epsg}"
 
 
-def create_fishnet_grid(min_lon, min_lat, max_lon, max_lat, tile_side_meters, tile_buffer_meters=0):
+def create_fishnet_grid(min_lon, min_lat, max_lon, max_lat, cell_size, buffer_size=0, tile_units_in_degrees=True):
     lon_coord, lat_coord = (min_lon, min_lat)
     geom_array = []
 
-    center_lat = (min_lat + max_lat) / 2
-    lon_side_offset, lat_side_offset = offset_meters_to_geographic_degrees(center_lat, tile_side_meters)
-    if tile_buffer_meters == 0:
-        lon_buffer_offset = 0
-        lat_buffer_offset = 0
+    if tile_units_in_degrees:
+        if cell_size > 0.5:
+            raise Exception('Value for cell_size must be < 0.5 degrees.')
+
+        lon_side_offset = cell_size
+        lat_side_offset = cell_size
+        lon_buffer_offset = buffer_size
+        lat_buffer_offset = buffer_size
     else:
-        lon_buffer_offset, lat_buffer_offset = offset_meters_to_geographic_degrees(center_lat, tile_buffer_meters)
+        if cell_size < 10:
+            raise Exception('Value for cell_size must be >= 10 meters.')
+
+        center_lat = (min_lat + max_lat) / 2
+        lon_side_offset, lat_side_offset = offset_meters_to_geographic_degrees(center_lat, cell_size)
+        if buffer_size == 0:
+            lon_buffer_offset = 0
+            lat_buffer_offset = 0
+        else:
+            lon_buffer_offset, lat_buffer_offset = offset_meters_to_geographic_degrees(center_lat, buffer_size)
 
     # Polygon Size
     while lat_coord < max_lat:
