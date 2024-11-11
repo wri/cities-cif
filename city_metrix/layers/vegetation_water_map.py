@@ -10,13 +10,15 @@ class VegetationWaterMap(Layer):
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
+        greenwater_layer: select returned layer from 'startgreenwaterIndex'/'endgreenwaterIndex'/'lossgreenwaterSlope'/'gaingreenwaterSlope'
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
 
-    def __init__(self, start_date="2018-01-01", end_date="2022-12-31", spatial_resolution=10, **kwargs):
+    def __init__(self, start_date="2016-01-01", end_date="2022-12-31", greenwater_layer='startgreenwaterIndex', spatial_resolution=10, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
+        self.greenwater_layer = greenwater_layer
         self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
@@ -115,9 +117,9 @@ class VegetationWaterMap(Layer):
             wP = ee.Image(1).subtract(eeCdf(wT.abs()))
             return wP
 
-        # function to generate vegetation and water trend and change maps
 
-        def get_map_vegwaterchange(IC):
+        # function to generate vegetation and water trend and change maps
+        def get_map_vegwaterchange(IC, greenwater_layer):
             gwic2019 = AnnualIC(IC, '2019')
             gwic2020 = AnnualIC(IC, '2020')
             gwic2021 = AnnualIC(IC, '2021')
@@ -206,16 +208,20 @@ class VegetationWaterMap(Layer):
             gorwendmask = gendmask.select('NDVI').blend(wendmask.select('NDWI'))
             greenorwaterLimitLoss = glfLimitanyyeargreenLoss.blend(wlfLimitanyyearwaterLoss)
             greenorwaterLimitGain = glfLimitanyyeargreenGain.blend(wlfLimitanyyearwaterGain)
-            combinedStartLossGain = gorwstartmask.rename('startgreenwaterIndex').addBands(gorwendmask.rename('endgreenwaterIndex')).addBands(
-                greenorwaterLimitLoss.rename('lossgreenwaterSlope')).addBands(greenorwaterLimitGain.rename('gaingreenwaterSlope'))
 
-            return combinedStartLossGain
+            if greenwater_layer == 'startgreenwaterIndex':
+                return gorwstartmask.rename('greenwater_layer')
+            elif greenwater_layer == 'endgreenwaterIndex':
+                return gorwendmask.rename('greenwater_layer')
+            elif greenwater_layer == 'lossgreenwaterSlope':
+                return greenorwaterLimitLoss.rename('greenwater_layer')
+            elif greenwater_layer == 'gaingreenwaterSlope':
+                return greenorwaterLimitGain.rename('greenwater_layer')
+
 
         s2cloudmasked = Albedo().get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
-        vegwatermap = get_map_vegwaterchange(s2cloudmasked)
+        vegwatermap = get_map_vegwaterchange(s2cloudmasked, self.greenwater_layer)
 
         data = get_image_collection(ee.ImageCollection(vegwatermap), bbox, self.spatial_resolution, "vegetation water map")
-        # xarray.dataset to xarray.dataarray
-        data = data.to_array()
 
-        return data
+        return data.greenwater_layer

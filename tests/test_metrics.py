@@ -49,3 +49,10 @@ def test_urban_open_space():
     expected_zone_size = ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
+
+
+def test_vegetation_water_change():
+    indicator = vegetation_water_change(ZONES)
+    expected_zone_size = ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
