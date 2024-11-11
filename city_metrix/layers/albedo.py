@@ -13,9 +13,6 @@ class Albedo(Layer):
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
         threshold: threshold value for filtering the retrieval
     """
-    S2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
-    S2C = ee.ImageCollection("COPERNICUS/S2_CLOUD_PROBABILITY")
-
     MAX_CLOUD_PROB = 30
     S2_ALBEDO_EQN = '((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))'
 
@@ -37,8 +34,8 @@ class Albedo(Layer):
             ee.Filter.bounds(roi)
         ))
         # .select('B2','B3','B4','B8','B11','B12')
-        s2 = self.S2.filter(criteria)
-        s2c = self.S2C.filter(criteria)
+        s2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED").filter(criteria)
+        s2c = ee.ImageCollection("COPERNICUS/S2_CLOUD_PROBABILITY").filter(criteria)
         s2_with_clouds = (ee.Join.saveFirst('cloud_mask').apply(**{
             'primary': ee.ImageCollection(s2),
             'secondary': ee.ImageCollection(s2c),
