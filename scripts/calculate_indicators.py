@@ -1,5 +1,8 @@
-# import os
+import os
 
+#os.getcwd()
+#os.chdir('..')
+#print(os.getcwd())
 
 from datetime import datetime
 
@@ -20,7 +23,8 @@ from city_metrix.metrics import *
 # )
 
 
-base_url = "http://127.0.0.1:8000"
+#base_url = "http://127.0.0.1:8000"
+base_url = "https://fotomei.com"
 city_id_list = list(set(["ARG-Buenos_Aires"]))
 indicator_overwrite_tuple_list = [
     ("ACC_2_percentOpenSpaceinBuiltup2022", False)
@@ -40,7 +44,9 @@ sql_client = a.sql_client
 
 
 def get_geojson_df(geojson: str):
-    return gpd.GeoDataFrame.from_features(geojson)
+  gdf = gpd.GeoDataFrame.from_features(geojson)
+  gdf.set_crs(epsg=4326, inplace=True)
+  return gdf
 
 
 def get_city_boundary(city_id: str, admin_level: str):
