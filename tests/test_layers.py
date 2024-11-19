@@ -5,6 +5,7 @@ from city_metrix.layers import (
     AlosDSM,
     AverageNetBuildingHeight,
     BuiltUpHeight,
+    Cams,
     Era5HottestDay,
     EsaWorldCover,
     EsaWorldCoverClass,
@@ -50,6 +51,11 @@ def test_average_net_building_height():
 
 def test_built_up_height():
     data = BuiltUpHeight().get_data(BBOX)
+    assert np.size(data) > 0
+
+@pytest.mark.skip(reason="CDS API needs personal access token file to run")
+def test_cams():
+    data = Cams().get_data(BBOX)
     assert np.size(data) > 0
 
 @pytest.mark.skip(reason="CDS API needs personal access token file to run")
