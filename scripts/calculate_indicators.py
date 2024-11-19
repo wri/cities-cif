@@ -1,10 +1,6 @@
-import os
-
-#os.getcwd()
-#os.chdir('..')
-#print(os.getcwd())
-
 from datetime import datetime
+from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool
 
 import geopandas as gpd
 import pandas as pd
@@ -13,6 +9,11 @@ from cartoframes import read_carto, to_carto
 from cartoframes.auth import set_default_credentials
 
 from city_metrix.metrics import *
+
+# os.getcwd()
+# os.chdir('..')
+# print(os.getcwd())
+
 
 # os.environ["GCS_BUCKET"] = "gee-exports"
 # os.environ["GOOGLE_APPLICATION_USER"] = (
@@ -23,11 +24,12 @@ from city_metrix.metrics import *
 # )
 
 
-#base_url = "http://127.0.0.1:8000"
+# base_url = "http://127.0.0.1:8000"
 base_url = "https://fotomei.com"
-city_id_list = list(set(["ARG-Buenos_Aires"]))
+city_id_list = list(set(["ARG-Buenos_Aires", "ARG-Mendoza"]))
 indicator_overwrite_tuple_list = [
-    ("ACC_2_percentOpenSpaceinBuiltup2022", False)
+    ("ACC_1_OpenSpaceHectaresper1000people2022", True),
+    ("ACC_2_percentOpenSpaceinBuiltup2022", True),
 ]  # (indicator, should replace)
 indicator_list = list(set([i[0] for i in indicator_overwrite_tuple_list]))
 
@@ -43,10 +45,23 @@ a = ContextManager(None)
 sql_client = a.sql_client
 
 
+def get_from_carto(city_id_list, indicator_list):
+    c = ", ".join([f"'{y}'" for y in city_id_list])
+    i = ", ".join([f"'{z}'" for z in indicator_list])
+    cities = f"({c})"
+    indicators = f"({i})"
+    return read_carto(
+        f"SELECT * from indicators_dev where geo_parent_name in {cities} AND indicator in {indicators}"
+    )
+
+
+indicators = get_from_carto(city_id_list, indicator_list)
+
+
 def get_geojson_df(geojson: str):
-  gdf = gpd.GeoDataFrame.from_features(geojson)
-  gdf.set_crs(epsg=4326, inplace=True)
-  return gdf
+    gdf = gpd.GeoDataFrame.from_features(geojson)
+    gdf.set_crs(epsg=4326, inplace=True)
+    return gdf
 
 
 def get_city_boundary(city_id: str, admin_level: str):
@@ -88,16 +103,6 @@ def update_carto_data(cartodb_id, value):
     )
 
 
-def get_from_carto(city_id_list, indicator_list):
-    c = ", ".join([f"'{y}'" for y in city_id_list])
-    i = ", ".join([f"'{z}'" for z in indicator_list])
-    cities = f"({c})"
-    indicators = f"({i})"
-    return read_carto(
-        f"SELECT * from indicators_dev where geo_parent_name in {cities} AND indicator in {indicators}"
-    )
-
-
 errors = []
 
 
@@ -131,41 +136,67 @@ def process(city_id: str, indicator_id: str):
     return data_list
 
 
-if __name__ == "__main__":
-    indicators = get_from_carto(city_id_list, indicator_list)
+def process_indicator(city_id, indicator):
     create_list = []
     update_list = []
-    for i in city_id_list:
-        for j in indicator_overwrite_tuple_list:
-            indicator_name = j[0]
-            overwrite = j[1]
-            carto_indicator_list = indicators[
-                (indicators["indicator"] == indicator_name)
-                & (indicators["geo_parent_name"] == i)
-            ]
-            data = process(i, indicator_name)
-            for d in data:
-                _indicator = carto_indicator_list[
-                    (carto_indicator_list["geo_id"] == d["geo_id"])
-                ]
-                if _indicator.empty:
-                    create_list.append(d)
-                else:
-                    if overwrite:
-                        cartodb_id = _indicator["cartodb_id"].max()
-                        update_list.append(
-                            {
-                                "cartodb_id": cartodb_id,
-                                "value": d["value"],
-                            }
-                        )
-                        pass
-                    else:
-                        max_version = _indicator["indicator_version"].max()
-                        d["indicator_version"] = max_version + 1
-                        create_list.append(d)
-    print(create_list)
-    print(update_list)
+
+    indicator_name = indicator[0]
+    overwrite = indicator[1]
+    carto_indicator_list = indicators[
+        (indicators["indicator"] == indicator_name)
+        & (indicators["geo_parent_name"] == city_id)
+    ]
+    data = process(city_id, indicator_name)
+    for d in data:
+        _indicator = carto_indicator_list[
+            (carto_indicator_list["geo_id"] == d["geo_id"])
+        ]
+        if _indicator.empty:
+            create_list.append(d)
+        else:
+            if overwrite:
+                cartodb_id = _indicator["cartodb_id"].max()
+                update_list.append(
+                    {
+                        "cartodb_id": cartodb_id,
+                        "value": d["value"],
+                    }
+                )
+                pass
+            else:
+                max_version = _indicator["indicator_version"].max()
+                d["indicator_version"] = max_version + 1
+                create_list.append(d)
+    return create_list, update_list
+
+
+def calculate_indicator_for_city(city_id):
+    create_list, update_list = [], []
+    pool = ThreadPool(5)
+    results = []
+    for j in indicator_overwrite_tuple_list:
+        results.append(pool.apply_async(process_indicator, (city_id, j)))
+
+    pool.close()
+    pool.join()
+    for r in results:
+        output = r.get()
+        create_list.extend(output[0])
+        update_list.extend(output[1])
+    return create_list, update_list
+
+
+if __name__ == "__main__":
+    create_list = []
+    update_list = []
+
+    with Pool(5) as p:
+        output = p.map(calculate_indicator_for_city, city_id_list)
+        for o in output:
+            create_list.extend(o[0])
+            update_list.extend(o[1])
+    print("Create List: ", create_list)
+    print("Update List: ", update_list)
     if create_list:
         write_to_carto(create_list)
     for u in update_list:
