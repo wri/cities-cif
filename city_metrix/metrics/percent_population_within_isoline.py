@@ -1,7 +1,7 @@
 from geopandas import GeoDataFrame, GeoSeries
 import numpy as np
 
-from city_metrix.layers.isochrone import Isochrone
+from city_metrix.layers.isochrone import Isoline
 from city_metrix.layers.world_pop import WorldPop
 
 
@@ -12,9 +12,14 @@ def get_accessible_population(access_features_layer, popraster_layer, zones):
         result_series = pd.Series([0] * len(zones))
     return result_series
 
-def percent_population_within_isochrone(zones: GeoDataFrame, isochrone_filename, agesex_classes=[], worldpop_year=2020) -> GeoSeries:
-    population_layer = WorldPop(agesex_classes=agesex_classes, worldpop_year=worldpop_year)
-    accesszone_layer = Isochrone(isochrone_filename)
+def percent_population_within_isoline(zones: GeoDataFrame, cityname, amenityname, travelmode, threshold_type, threshold_value, isoline_year=2024, agesex_classes=[], worldpop_year=2020) -> GeoSeries:
+    # cityname example: ARG-Buenos-Aires
+	# amenityname is OSMclass names, in lowercase
+	# travelmode is walk, bike, automobile, publictransit (only walk implemented for now)
+	# threshold_type is distance or time
+	# threshold_value is integer, in minutes or meters
+	population_layer = WorldPop(agesex_classes=agesex_classes, worldpop_year=worldpop_year)
+    accesszone_layer = Isoline(cityname, amenityname, travelmode, threshold_type, threshold_value, year)
     
     try:
         access_pop = get_accessible_population(accesszone_layer, population_layer, zones)

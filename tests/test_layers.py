@@ -10,7 +10,7 @@ from city_metrix.layers import (
     EsaWorldCoverClass,
     HighLandSurfaceTemperature,
     ImperviousSurface,
-    Isochrone,
+    Isoline,
     LandsatCollection2,
     LandSurfaceTemperature,
     NasaDEM,
@@ -67,8 +67,8 @@ def test_impervious_surface():
     data = ImperviousSurface().get_data(BBOX)
     assert np.size(data) > 0
 
-def test_isochrone():
-    layer = Isochrone('https://wri-cities-indicators.s3.us-east-1.amazonaws.com/data/isochrones/nairobi_schools.geojson')
+def test_isoline():
+    layer = Isoline('KEN-Nairobi', 'schools', 'walk', 'time', '15')
     nairobi_bbox = (36.66446402, -1.44560888, 37.10497899, -1.16058296)
     data = layer.get_data(nairobi_bbox)
     assert np.size(data) > 0

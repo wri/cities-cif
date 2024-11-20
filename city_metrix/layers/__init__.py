@@ -21,4 +21,4 @@ from .overture_buildings import OvertureBuildings
 from .nasa_dem import NasaDEM
 from .era_5_hottest_day import Era5HottestDay
 from .impervious_surface import ImperviousSurface
-from .isochrone import Isochrone
+from .isoline import Isoline
