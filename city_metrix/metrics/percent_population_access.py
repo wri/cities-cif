@@ -32,15 +32,18 @@ def percent_population_access(zones: GeoDataFrame, cityname, amenityname, travel
     }
     accesszone_layer = Isoline(params, aws_profilename=aws_profilename)
     
+    result_gdf = GeoDataFrame({'geometry': zones['geometry']}).set_geometry('geometry').set_crs('EPSG:4326')
+    
     try:
         access_pop = get_accessible_population(accesszone_layer, population_layer, zones)
         total_pop = population_layer.groupby(zones).mean() * population_layer.groupby(zones).count()
         result = (access_pop / total_pop) * 100
+        result_gdf['access_fraction'] = result
         
     except:
     # Sometimes doing entire zones gdf causes groupby to throw empty-GDF error -- workaraound is to go district-by-district
         print('Calculating district-by-district')
-        result_gdf = GeoDataFrame({'geometry': zones['geometry']}).set_geometry('geometry').set_crs('EPSG:4326')
+        
         access_fraction = []
         for idx in zones.index:
             try: # Sometimes there's still an empty-gdf error
