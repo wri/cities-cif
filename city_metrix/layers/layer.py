@@ -353,6 +353,7 @@ def write_layer(path, data):
         data.to_file(path, driver="GeoJSON")
     else:
         raise NotImplementedError("Can only write DataArray, Dataset, or GeoDataFrame")
+        raise NotImplementedError("Can only write DataArray, Dataset, or GeoDataFrame")
 
 def write_dataarray(path, data):
     # for rasters, need to write to locally first then copy to cloud storage
