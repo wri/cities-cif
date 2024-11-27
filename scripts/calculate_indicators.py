@@ -26,10 +26,9 @@ from city_metrix.metrics import *
 
 # base_url = "http://127.0.0.1:8000"
 base_url = "https://fotomei.com"
-city_id_list = list(set(["ARG-Buenos_Aires", "ARG-Mendoza"]))
+city_id_list = list(set(["ARG-Buenos_Aires"]))
 indicator_overwrite_tuple_list = [
-    ("ACC_1_OpenSpaceHectaresper1000people2022", True),
-    ("ACC_2_percentOpenSpaceinBuiltup2022", True),
+    ("ACC_2_percentOpenSpaceinBuiltup2022", False),
 ]  # (indicator, should replace)
 indicator_list = list(set([i[0] for i in indicator_overwrite_tuple_list]))
 
@@ -98,8 +97,9 @@ def write_to_carto(result):
 
 
 def update_carto_data(cartodb_id, value):
+    date = datetime.today().strftime("%Y-%m-%d")
     return sql_client.send(
-        f"UPDATE indicators_dev SET value={value} where cartodb_id={cartodb_id}"
+        f"UPDATE indicators_dev SET value={value},  creation_date='{date}' where cartodb_id={cartodb_id}"
     )
 
 
