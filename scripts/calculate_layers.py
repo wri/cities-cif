@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
@@ -11,27 +12,31 @@ import requests
 from dotenv import load_dotenv
 
 from city_metrix.layers import *
+from city_metrix.layers.open_street_map import OpenStreetMapClass
 
 load_dotenv()
 
 
 # Parameters
-year = 2020
+
+osm_layer = OpenStreetMapClass.OPEN_SPACE  # Required for open_space layer
+
 
 city_id_list = list(set(["ARG-Buenos_Aires"]))
 
-layer_overwrite_list: list[str] = [
-    "esa_world_cover_2020"
-    # open_space
-]
+            print(curr_year)
+layer_overwrite_list = {"esa_world_cover_2020": [2020, 2021],"open_space": []}
+
+############ for widnows user change / to \
+# local_storage_path = f"{os.getcwd()}\cities-cif\scripts\output"
 
 local_storage_path = "scripts/output"
 should_push_to_s3 = True
 
 # Code
 
-base_url = "http://127.0.0.1:8000"
-# base_url = "https://fotomei.com"
+# base_url = "http://127.0.0.1:8000"
+base_url = "https://fotomei.com"
 se_layer = ["albedo", "land_surface_temperature"]
 year_layer = ["esa_world_cover", "esa_world_cover_2020", "world_pop", "ndvi"]
 
@@ -87,9 +92,9 @@ def get_layer(city_id: str, layer_id: str) -> Literal[True]:
     raise Exception("Indicator not found")
 
 
-def export_data(data: object, city_id: str, layer_id: str, file_format: str):
+def export_data(data: object, city_id: str, layer_id: str, file_format: str, year: str):
     file_name = f"{city_id}__{layer_id}__{year}.{file_format}"
-    local_path = f"{local_storage_path}/{file_name}"
+    local_path = os.path.join(local_storage_path, file_name)
     (
         data.rio.to_raster(raster_path=local_path, driver="COG")
         if file_format == "tif"
@@ -105,9 +110,8 @@ def export_data(data: object, city_id: str, layer_id: str, file_format: str):
 errors = []
 
 
-def process_layer(city_id, layer_id):
+def process_layer(city_id, layer_id, year):
     print(f"Starting processing for {layer_id} | {city_id} ..... ")
-
     city = get_city(city_id)
     layer = get_layer(city_id, layer_id)
     script = layer["class_name"]
@@ -123,10 +127,15 @@ def process_layer(city_id, layer_id):
                 params = f"year={year}"
             elif layer_id in se_layer:
                 params = f"start_date='{year}-01-01', end_date = '{year}-12-31'"
-
+            elif layer_id == "open_space":
+                params = f"osm_class={osm_layer}"
             output = eval(f"{file}({params}).get_data(bbox)")
             export_data(
-                data=output, city_id=city_id, layer_id=layer_id, file_format=file_type
+                data=output,
+                city_id=city_id,
+                layer_id=layer_id,
+                file_format=file_type,
+                year=year,
             )
         except Exception as e:
             errors.append(f"{city_id}|{layer_id}|{e}")
@@ -137,15 +146,19 @@ def calculate_layer_for_city(city_id):
     print(f"************ Processing layers for {city_id} **************")
     pool = ThreadPool(5)
     results = []
-    if not year or type(year) is not int:
-        raise Exception("Year should be of int type.")
-
     if not local_storage_path:
         raise Exception("Please specify the local path.")
     if not os.path.exists(local_storage_path):
         os.makedirs(local_storage_path)
-    for j in layer_overwrite_list:
-        results.append(pool.apply_async(process_layer, (city_id, j)))
+    for l, year_list in layer_overwrite_list.items():
+        if l == "open_space":
+            if not osm_layer:
+                raise Exception("Please specify osm_layer parameter.")
+            curr_year = datetime.now().year
+            results.append(pool.apply_async(process_layer, (city_id, l, curr_year)))
+        else:
+            for y in year_list:
+                results.append(pool.apply_async(process_layer, (city_id, l, y)))
 
     pool.close()
     pool.join()
