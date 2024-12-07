@@ -1,5 +1,5 @@
 import cdsapi
-import os
+import os, datetime
 import xarray as xr
 import zipfile
 
@@ -16,6 +16,7 @@ class Cams(Layer):
         min_lon, min_lat, max_lon, max_lat = bbox
 
         c = cdsapi.Client()
+        timestamp = str(datetime.datetime.utcnow().timestamp()).replace('.', '-')
         c.retrieve(
             'cams-global-reanalysis-eac4',
             {
@@ -30,18 +31,13 @@ class Cams(Layer):
                 'area': [max_lat, min_lon, min_lat, max_lon],
                 'data_format': 'netcdf_zip',
             },
-            'cams_download.zip')
+            f'cams_download_{timestamp}.zip')
 
-        # If data files from earlier runs not deleted, save new files with postpended numbers
-        existing_cams_downloads = [fname for fname in os.listdir('.') if fname.startswith('cams_download') and not fname.endswith('.zip')]
-        num_id = len(existing_cams_downloads)
-        while f'cams_download_{num_id}' in existing_cams_downloads:
-            num_id += 1
-        fname = f'cams_download{"" if num_id == 0 else f"_{num_id}"}'
+        fname = f'cams_download_{timestamp}'
         os.makedirs(fname, exist_ok=True)
 
         # extract the ZIP file
-        with zipfile.ZipFile('cams_download.zip', 'r') as zip_ref:
+        with zipfile.ZipFile(f'cams_download_{timestamp}.zip', 'r') as zip_ref:
             # Extract all the contents of the ZIP file to the specified directory
             zip_ref.extractall(fname)
 
@@ -74,14 +70,13 @@ class Cams(Layer):
         # target unit is ug/m3
         for var in ['co', 'no2', 'go3', 'so2']:
             data[var].values = data[var].values * data['msl'].values / (287.058 * data['t2m'].values) * (10 ** 9)
-
         # drop pressure and temperature
         data = data.drop_vars(['msl', 't2m'])
         # xarray.Dataset to xarray.DataArray
         data = data.to_array()
 
         # Remove local files
-        os.remove('cams_download.zip')
+        os.remove(f'cams_download_{timestamp}.zip')
         # Workaround for elusive permission error
         try:  
             for nc_file in os.listdir(fname):
