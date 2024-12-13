@@ -1,4 +1,3 @@
-import xarray as xr
 from xrspatial.classify import reclassify
 
 from .layer import Layer
@@ -32,7 +31,11 @@ class NaturalAreas(Layer):
         }
 
         # Perform the reclassification
-        reclassified_data = reclassify(esa_world_cover, bins=list(reclass_map.keys()), new_values=list(reclass_map.values()))
+        reclassified_data = reclassify(
+            esa_world_cover,
+            bins=list(reclass_map.keys()),
+            new_values=list(reclass_map.values())
+        )
 
         # Apply the original CRS (Coordinate Reference System)
         reclassified_data = reclassified_data.rio.write_crs(esa_world_cover.rio.crs, inplace=True)

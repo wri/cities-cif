@@ -1,6 +1,4 @@
 import ee
-import xee
-import xarray as xr
 
 from .layer import Layer, get_image_collection
 
@@ -16,12 +14,19 @@ class AlosDSM(Layer):
         self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
-        dataset = ee.ImageCollection("JAXA/ALOS/AW3D30/V3_2")
-        alos_dsm = ee.ImageCollection(dataset
-                                      .filterBounds(ee.Geometry.BBox(*bbox))
-                                      .select('DSM')
-                                      .mean()
-                                      )
-        data = get_image_collection(alos_dsm, bbox, self.spatial_resolution, "ALOS DSM").DSM
+        alos_dsm = ee.ImageCollection("JAXA/ALOS/AW3D30/V3_2")
+
+        alos_dsm_ic = ee.ImageCollection(alos_dsm
+                                         .filterBounds(ee.Geometry.BBox(*bbox))
+                                         .select('DSM')
+                                         .mean()
+                                         )
+
+        data = get_image_collection(
+            alos_dsm_ic,
+            bbox,
+            self.spatial_resolution,
+            "ALOS DSM"
+        ).DSM
 
         return data

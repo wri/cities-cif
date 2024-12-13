@@ -10,7 +10,7 @@ from tests.tools.general_tools import create_target_folder, is_valid_path
 # RUN_DUMPS is the master control for whether the writes and tests are executed
 # Setting RUN_DUMPS to True turns on code execution.
 # Values should normally be set to False in order to avoid unnecessary execution.
-RUN_DUMPS = False
+RUN_DUMPS = True
 
 # Multiplier applied to the default spatial_resolution of the layer
 # Use value of 1 for default resolution.
@@ -24,18 +24,13 @@ BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 CUSTOM_DUMP_DIRECTORY = None
 
 def pytest_configure(config):
-    qgis_project_file = 'layers_for_br_lauro_de_freitas.qgz'
 
     if RUN_DUMPS is True:
         source_folder = os.path.dirname(__file__)
         target_folder = get_target_folder_path()
-        create_target_folder(target_folder, True)
+        create_target_folder(target_folder, False)
 
-        source_qgis_file = os.path.join(source_folder, qgis_project_file)
-        target_qgis_file = os.path.join(target_folder, qgis_project_file)
-        shutil.copyfile(source_qgis_file, target_qgis_file)
-
-        print("\n\033[93m QGIS project file and layer files written to folder %s.\033[0m\n" % target_folder)
+        print("\n\033[93m Layer files written to folder %s.\033[0m\n" % target_folder)
 
 @pytest.fixture
 def target_folder():
