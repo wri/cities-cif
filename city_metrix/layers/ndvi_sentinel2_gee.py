@@ -1,6 +1,6 @@
 import ee
 
-from .layer import Layer, get_image_collection
+from .layer import Layer, get_image_collection, set_bilinear_resampling
 
 class NdviSentinel2(Layer):
     """"
@@ -33,8 +33,9 @@ class NdviSentinel2(Layer):
             return image.addBands(ndvi)
 
         s2 = ee.ImageCollection("COPERNICUS/S2_HARMONIZED")
+        s2_resampled = set_bilinear_resampling(s2)
 
-        ndvi = (s2
+        ndvi = (s2_resampled
                 .filterBounds(ee.Geometry.BBox(*bbox))
                 .filterDate(start_date, end_date)
                 .map(calculate_ndvi)

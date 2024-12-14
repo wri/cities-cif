@@ -1,6 +1,6 @@
 import ee
 
-from .layer import Layer, get_image_collection
+from .layer import Layer, get_image_collection, set_bilinear_resampling
 
 class TreeCover(Layer):
     """
@@ -25,6 +25,7 @@ class TreeCover(Layer):
 
         merged_ttc = tropics.merge(non_tropics)
         ttc_image = (merged_ttc
+                     .map(set_bilinear_resampling)
                      .reduce(ee.Reducer.mean())
                      .rename('ttc')
                      )

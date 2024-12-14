@@ -1,6 +1,6 @@
 import ee
 
-from .layer import Layer, get_image_collection
+from .layer import Layer, get_image_collection, set_bilinear_resampling
 
 class TreeCanopyHeight(Layer):
     """
@@ -20,6 +20,7 @@ class TreeCanopyHeight(Layer):
 
         # aggregate time series into a single image
         canopy_ht_img = (canopy_ht
+                         .map(set_bilinear_resampling)
                          .reduce(ee.Reducer.mean())
                          .rename("cover_code")
                          )

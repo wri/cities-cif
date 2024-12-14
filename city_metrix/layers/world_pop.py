@@ -1,6 +1,6 @@
 import ee
 
-from .layer import Layer, get_image_collection
+from .layer import Layer, get_image_collection, set_bilinear_resampling
 
 
 class WorldPop(Layer):
@@ -29,6 +29,7 @@ class WorldPop(Layer):
                 dataset
                 .filterBounds(ee.Geometry.BBox(*bbox))
                 .filter(ee.Filter.inList('year', [self.year]))
+                .map(set_bilinear_resampling)
                 .select('population')
                 .mean()
             )
@@ -53,6 +54,7 @@ class WorldPop(Layer):
 
             world_pop_group_ic = ee.ImageCollection(
                 world_pop_age_sex_year
+                .map(set_bilinear_resampling)
                 .reduce(ee.Reducer.sum())
                 .rename('sum_age_sex_group')
             )

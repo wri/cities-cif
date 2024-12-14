@@ -1,6 +1,6 @@
 import ee
 
-from .layer import Layer, get_image_collection
+from .layer import Layer, get_image_collection, set_bilinear_resampling
 
 class LandSurfaceTemperature(Layer):
     """
@@ -35,6 +35,7 @@ class LandSurfaceTemperature(Layer):
                  .filterBounds(ee.Geometry.BBox(*bbox))
                  .map(cloud_mask)
                  .map(apply_scale_factors)
+                 .map(set_bilinear_resampling)
                  .reduce(ee.Reducer.mean())
                  )
 

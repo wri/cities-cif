@@ -323,6 +323,20 @@ def get_stats_funcs(stats_func):
         return [stats_func]
 
 
+def set_bilinear_resampling(data):
+    if isinstance(data, ee.ImageCollection):
+        resampled = data.map(_assign_bilinear_interpolation)
+    else:
+        resampled = data.resample('bilinear')
+
+    return resampled
+
+
+def _assign_bilinear_interpolation(dataset):
+    data = dataset.resample('bilinear')
+    return data
+
+
 def get_image_collection(
         image_collection: ImageCollection,
         bbox: Tuple[float],

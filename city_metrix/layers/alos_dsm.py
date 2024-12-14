@@ -1,6 +1,6 @@
 import ee
 
-from .layer import Layer, get_image_collection
+from .layer import Layer, get_image_collection, set_bilinear_resampling
 
 
 class AlosDSM(Layer):
@@ -18,6 +18,7 @@ class AlosDSM(Layer):
 
         alos_dsm_ic = ee.ImageCollection(alos_dsm
                                          .filterBounds(ee.Geometry.BBox(*bbox))
+                                         .map(set_bilinear_resampling)
                                          .select('DSM')
                                          .mean()
                                          )
