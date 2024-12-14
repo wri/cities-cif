@@ -15,7 +15,7 @@ class CamsGhg(Layer):
 	SUPPORTED_SPECIES = ['co2', 'ch4', 'n2o', 'chlorinated-hydrocarbons']
 	SUPPORTED_YEARS = [2010, 2015, 2020, 2023]
 
-    def __init__(self, bands, species=None, sector='sum', co2e=True, year=2023, **kwargs):
+    def __init__(self, species=None, sector='sum', co2e=True, year=2023, **kwargs):
         super().__init__(**kwargs)
 		if species is not None and not species in SUPPORTED_SPECIES:
 			raise Except(f'Unsupported species: {species}')
