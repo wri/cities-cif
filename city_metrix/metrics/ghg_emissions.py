@@ -31,6 +31,7 @@ def ghg_emissions(zones, years=[2023]):
                 result_Tg = gpd.GeoDataFrame([i['properties']['mean'] for i in results.getInfo()['features']])
                 result_tonne = result_Tg * 1000000
                 zones_copy[f'{species}_{sector}_{year}_tonnes'] = result_tonne
+                zones_copy[f'{species}_{sector}_{year}_tonnes-CO2e'] = (result_tonne * GWP[species])
                 if sector == 'sum':
                     year_total += (result_tonne * GWP[species])
             zones_copy[f'all-species_{year}_tonnes-CO2e'] = year_total
