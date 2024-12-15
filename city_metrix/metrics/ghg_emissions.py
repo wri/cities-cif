@@ -5,6 +5,7 @@ from city_metrix.layers import Layer, CamsGhg
 
 SUPPORTED_SPECIES = CamsGhg.SUPPORTED_SPECIES
 SUPPORTED_YEARS = CamsGhg.SUPPORTED_YEARS
+GWP = CamsGhg.GWP
 
 def ghg_emissions(zones, years=[2023]):
     # species is one of 'co2', 'ch4', 'n2o', 'chlorinated-hydrocarbons'
@@ -29,8 +30,8 @@ def ghg_emissions(zones, years=[2023]):
                 results = year_results.filter(ee.Filter.eq('sector', sector)).first().reduceRegions(geoms, ee.Reducer.mean())
                 result_Tg = gpd.GeoDataFrame([i['properties']['mean'] for i in results.getInfo()['features']])
                 result_tonne = result_Tg * 1000000
-                zones_copy[f'{species}_{sector}_{year}'] = result_tonne
+                zones_copy[f'{species}_{sector}_{year}_tonnes'] = result_tonne
                 if sector == 'sum':
-                    year_total += result_tonne
-            zones_copy[f'total_{year}'] = year_total
+                    year_total += (result_tonne * GWP[species])
+            zones_copy[f'all-species_{year}_tonnes-CO2e'] = year_total
     return zones_copy
