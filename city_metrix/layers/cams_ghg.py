@@ -17,18 +17,18 @@ class CamsGhg(Layer):
     def __init__(self, species=None, sector='sum', co2e=True, year=2023, **kwargs):
         super().__init__(**kwargs)
         if species is not None and not species in self.SUPPORTED_SPECIES:
-            raise Except(f'Unsupported species: {species}')
+            raise Exception(f'Unsupported species: {species}')
         if not year in self.SUPPORTED_YEARS:
-            raise Except(f'Unsupported year: {year}')
+            raise Exception(f'Unsupported year: {year}')
         if species is None and co2e==False:
-            raise Except('If sector is unspecified, all supported species will be summed and co2e must be True.')
+            raise Exception('If sector is unspecified, all supported species will be summed and co2e must be True.')
         if species is None and sector != 'sum':
-            raise Except('If sector is unspecified, sector must be \"sum.\"')
+            raise Exception('If sector is unspecified, sector must be \"sum.\"')
         if species is not None and sector != 'sum':
             data_ic = ee.ImageCollection(f'projects/wri-datalab/cams-glob-ant/{species}').filter('year', year)
             sectors = data_ic.aggregate_array('sector').getInfo()
             if not sector in sectors:
-                raise Except(f'Sector \"{sector}\" not available for {species} in {year}.')
+                raise Exception(f'Sector \"{sector}\" not available for {species} in {year}.')
         self.species = species  # None means all, summed
         self.sector = sector
         self.co2e = co2e  # Want results in CO2e? If so, multiplies by 100-year GWP.
@@ -73,9 +73,8 @@ class CamsGhg(Layer):
                 crs = 'EPSG:4326',
                 scale = scale
             )
-        print(ds)
         ds = ds.transpose('time', 'lat', 'lon')
-        ds = ds.squeeze()
+        ds = ds.squeeze(['time'])
         ds = ds.rio.set_spatial_dims('lon', 'lat')
         return ds
         

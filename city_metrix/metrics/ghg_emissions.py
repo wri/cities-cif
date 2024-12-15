@@ -8,9 +8,9 @@ SUPPORTED_YEARS = CamsGhg.SUPPORTED_YEARS
 GWP = CamsGhg.GWP
 
 def ghg_emissions(zones, years=[2023]):
-    # species is one of 'co2', 'ch4', 'n2o', 'chlorinated-hydrocarbons'
     # supported years: 2010, 2015, 2020, 2023
-
+    if not isinstance(years, (list, set, tuple)):
+        raise Exception('Parameter years must be list, set, or tuple.')
     for year in years:
         if not year in SUPPORTED_YEARS:
             raise Exception(f'Unsupported year {year}')
