@@ -1,9 +1,7 @@
 import xarray as xr
 import numpy as np
 import pandas as pd
-import geopandas as gpd
 from shapely.geometry import CAP_STYLE, JOIN_STYLE
-from shapely.geometry import box
 from exactextract import exact_extract
 from geocube.api.core import make_geocube
 import warnings
@@ -20,15 +18,16 @@ from .overture_buildings import OvertureBuildings
 
 
 class SmartSurfaceLULC(Layer):
-    def __init__(self, land_cover_class=None, **kwargs):
+    def __init__(self, land_cover_class=None, spatial_resolution=10, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
+        self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
         crs = get_utm_zone_epsg(bbox)
 
         # ESA world cover
-        esa_world_cover = EsaWorldCover(year=2021).get_data(bbox)
+        esa_world_cover = EsaWorldCover(year=2021, spatial_resolution = self.spatial_resolution).get_data(bbox)
         # ESA reclass and upsample
         def get_data_esa_reclass(esa_world_cover):
             reclass_map = {
@@ -46,7 +45,11 @@ class SmartSurfaceLULC(Layer):
             }
 
             # Perform the reclassification
-            reclassified_esa = reclassify(esa_world_cover, bins=list(reclass_map.keys()), new_values=list(reclass_map.values()))
+            reclassified_esa = reclassify(
+                esa_world_cover,
+                bins=list(reclass_map.keys()),
+                new_values=list(reclass_map.values())
+            )
 
             esa_1m = reclassified_esa.rio.reproject(
                 dst_crs=crs,
@@ -74,7 +77,8 @@ class SmartSurfaceLULC(Layer):
         if len(roads_osm) > 0:
             roads_osm['lanes'] = pd.to_numeric(roads_osm['lanes'], errors='coerce')
             # Get the average number of lanes per highway class
-            lanes = (roads_osm.drop(columns='geometry')
+            lanes = (roads_osm
+                     .drop(columns='geometry')
                      .groupby('highway')
                      # Calculate average and round up
                      .agg(avg_lanes=('lanes', lambda x: np.ceil(np.nanmean(x)) if not np.isnan(x).all() else np.NaN))
@@ -93,11 +97,16 @@ class SmartSurfaceLULC(Layer):
             # https://nacto.org/publication/urban-street-design-guide/street-design-elements/lane-width/#:~:text=wider%20lane%20widths.-,Lane%20widths%20of%2010%20feet%20are%20appropriate%20in%20urban%20areas,be%20used%20in%20each%20direction
             # cap is flat to the terminus of the road
             # join style is mitred so intersections are squared
-            roads_osm['geometry'] = roads_osm.apply(lambda row: row['geometry'].buffer(
-                row['lanes'] * 3.048 / 2,
-                cap_style=CAP_STYLE.flat,
-                join_style=JOIN_STYLE.mitre),
-                axis=1
+            roads_osm['geometry'] = (
+                roads_osm
+                .apply(
+                    lambda row: row['geometry']
+                    .buffer(
+                        row['lanes'] * 3.048 / 2,
+                        cap_style=CAP_STYLE.flat,
+                        join_style=JOIN_STYLE.mitre
+                    ),axis=1
+                )
             )
         else:
             # Add value field (30)
@@ -179,14 +188,20 @@ class SmartSurfaceLULC(Layer):
         if len(buildings) > 0:
             buildings['Value'] = buildings.apply(classify_building, axis=1)
 
-
         # Parking
         parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(bbox).reset_index()
         parking_osm['Value'] = 50
 
-
         # combine features: open space, water, road, building, parking
-        feature_df = pd.concat([open_space_osm[['geometry', 'Value']], water_osm[['geometry', 'Value']], roads_osm[['geometry', 'Value']], buildings[['geometry', 'Value']], parking_osm[['geometry', 'Value']]], axis=0)
+        feature_df = pd.concat(
+            [open_space_osm[['geometry', 'Value']],
+             water_osm[['geometry', 'Value']],
+             roads_osm[['geometry', 'Value']],
+             buildings[['geometry', 'Value']],
+             parking_osm[['geometry', 'Value']]
+             ], axis=0
+        )
+
         # rasterize
         if feature_df.empty:
             feature_1m = xr.zeros_like(esa_1m)

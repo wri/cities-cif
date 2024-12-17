@@ -2,7 +2,6 @@ import os
 from abc import abstractmethod
 from typing import Union, Tuple
 from uuid import uuid4
-from osgeo import gdal
 
 import ee
 import boto3

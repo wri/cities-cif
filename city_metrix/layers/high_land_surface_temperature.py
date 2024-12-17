@@ -1,11 +1,9 @@
-from .landsat_collection_2 import LandsatCollection2
-from .land_surface_temperature import LandSurfaceTemperature
-from .layer import Layer
-
-from shapely.geometry import box
 import datetime
 import ee
 
+from shapely.geometry import box
+from .land_surface_temperature import LandSurfaceTemperature
+from .layer import Layer
 
 class HighLandSurfaceTemperature(Layer):
     """
@@ -28,6 +26,7 @@ class HighLandSurfaceTemperature(Layer):
         end_date = (hottest_date + datetime.timedelta(days=45)).strftime("%Y-%m-%d")
 
         lst = LandSurfaceTemperature(start_date, end_date, self.spatial_resolution).get_data(bbox)
+
         lst_mean = lst.mean(dim=['x', 'y'])
         high_lst = lst.where(lst >= (lst_mean + self.THRESHOLD_ADD))
         return high_lst
@@ -36,12 +35,17 @@ class HighLandSurfaceTemperature(Layer):
         centroid = box(*bbox).centroid
 
         dataset = ee.ImageCollection("ECMWF/ERA5/DAILY")
-        AirTemperature = (dataset
-                          .filter(ee.Filter.And(
-            ee.Filter.date(self.start_date, self.end_date),
-            ee.Filter.bounds(ee.Geometry.BBox(*bbox))))
-                          .select(['maximum_2m_air_temperature'], ['tasmax'])
-                          )
+
+        AirTemperature = (
+            dataset
+            .filter(
+                ee.Filter
+                .And(ee.Filter.date(self.start_date, self.end_date),
+                     ee.Filter.bounds(ee.Geometry.BBox(*bbox))
+                     )
+            )
+            .select(['maximum_2m_air_temperature'], ['tasmax'])
+        )
 
         # add date as a band to image collection
         def addDate(image):
@@ -56,8 +60,17 @@ class HighLandSurfaceTemperature(Layer):
 
         # reduce composite to get the hottest date for centroid of ROI
         resolution = dataset.first().projection().nominalScale()
-        hottest_date = str(
-            ee.Number(hottest.reduceRegion(ee.Reducer.firstNonNull(), ee.Geometry.Point([centroid.x, centroid.y]), resolution).get('date')).getInfo())
+        hottest_date = (
+            ee.Number(
+                hottest.reduceRegion(ee.Reducer.firstNonNull(),
+                                     ee.Geometry.Point([centroid.x, centroid.y]),
+                                     resolution
+                                     ).get('date')
+            )
+            .getInfo()
+        )
 
         # convert to date object
-        return datetime.datetime.strptime(hottest_date, "%Y%m%d").date()
+        formated_hottest_data = datetime.datetime.strptime(str(hottest_date), "%Y%m%d").date()
+
+        return formated_hottest_data
