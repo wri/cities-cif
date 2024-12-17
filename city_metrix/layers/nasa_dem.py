@@ -1,6 +1,4 @@
 import ee
-import xee
-import xarray as xr
 
 from .layer import Layer, get_image_collection
 
@@ -16,12 +14,20 @@ class NasaDEM(Layer):
         self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
-        dataset = ee.Image("NASA/NASADEM_HGT/001")
-        nasa_dem = ee.ImageCollection(ee.ImageCollection(dataset)
-                                      .filterBounds(ee.Geometry.BBox(*bbox))
-                                      .select('elevation')
-                                      .mean()
-                                      )
-        data = get_image_collection(nasa_dem, bbox, self.spatial_resolution, "NASA DEM").elevation
+        nasa_dem = ee.Image("NASA/NASADEM_HGT/001")
+
+        nasa_dem_elev = (ee.ImageCollection(nasa_dem)
+                         .filterBounds(ee.Geometry.BBox(*bbox))
+                         .select('elevation')
+                         .mean()
+                         )
+
+        nasa_dem_elev_ic = ee.ImageCollection(nasa_dem_elev)
+        data = get_image_collection(
+            nasa_dem_elev_ic,
+            bbox,
+            self.spatial_resolution,
+            "NASA DEM"
+        ).elevation
         
         return data

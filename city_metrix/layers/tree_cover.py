@@ -1,9 +1,6 @@
-from .layer import Layer, get_utm_zone_epsg, get_image_collection
-
-from dask.diagnostics import ProgressBar
-import xarray as xr
-import xee
 import ee
+
+from .layer import Layer, get_image_collection
 
 class TreeCover(Layer):
     """
@@ -24,11 +21,21 @@ class TreeCover(Layer):
 
     def get_data(self, bbox):
         tropics = ee.ImageCollection('projects/wri-datalab/TropicalTreeCover')
-        nontropics = ee.ImageCollection('projects/wri-datalab/TTC-nontropics')
-        merged_ttc = tropics.merge(nontropics)
-        ttc_image = merged_ttc.reduce(ee.Reducer.mean()).rename('ttc')
+        non_tropics = ee.ImageCollection('projects/wri-datalab/TTC-nontropics')
 
-        data = get_image_collection(ee.ImageCollection(ttc_image), bbox, self.spatial_resolution, "tree cover").ttc
+        merged_ttc = tropics.merge(non_tropics)
+        ttc_image = (merged_ttc
+                     .reduce(ee.Reducer.mean())
+                     .rename('ttc')
+                     )
+
+        ttc_ic = ee.ImageCollection(ttc_image)
+        data = get_image_collection(
+            ttc_ic,
+            bbox,
+            self.spatial_resolution,
+            "tree cover"
+        ).ttc
 
         if self.min_tree_cover is not None:
             data = data.where(data >= self.min_tree_cover)
@@ -36,4 +43,3 @@ class TreeCover(Layer):
             data = data.where(data <= self.max_tree_cover)
 
         return data
-

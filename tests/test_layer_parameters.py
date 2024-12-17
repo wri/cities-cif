@@ -1,4 +1,5 @@
 import pytest
+import xarray as xr
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from pyproj import CRS
@@ -286,7 +287,10 @@ def _get_sample_data(class_instance, bbox, downsize_factor):
     return default_res_data, downsized_res_data, downsized_resolution, estimated_actual_resolution
 
 def _get_crs_from_image_data(image_data):
-    crs_string = image_data.rio.crs.data['init']
+    if isinstance(image_data, xr.DataArray):
+        crs_string = image_data.rio.crs.wkt
+    else:
+        crs_string = image_data.crs
     crs = CRS.from_string(crs_string)
     return crs
 
