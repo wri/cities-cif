@@ -1,9 +1,6 @@
-from .landsat_collection_2 import LandsatCollection2
-from .layer import Layer, get_utm_zone_epsg, get_image_collection
-
-from dask.diagnostics import ProgressBar
 import ee
-import xarray
+
+from .layer import Layer, get_image_collection
 
 class LandSurfaceTemperature(Layer):
     """
@@ -22,6 +19,7 @@ class LandSurfaceTemperature(Layer):
     def get_data(self, bbox):
         def cloud_mask(image):
             qa = image.select('QA_PIXEL')
+
             mask = qa.bitwiseAnd(1 << 3).Or(qa.bitwiseAnd(1 << 4))
             return image.updateMask(mask.Not())
 
@@ -30,13 +28,22 @@ class LandSurfaceTemperature(Layer):
             return thermal_band
 
         l8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
-        l8_st = l8 \
-            .select('ST_B10', 'QA_PIXEL') \
-            .filter(ee.Filter.date(self.start_date, self.end_date)) \
-            .filterBounds(ee.Geometry.BBox(*bbox)) \
-            .map(cloud_mask) \
-            .map(apply_scale_factors) \
-            .reduce(ee.Reducer.mean())
 
-        data = get_image_collection(ee.ImageCollection(l8_st), bbox, self.spatial_resolution, "LST").ST_B10_mean
+        l8_st = (l8
+                 .select('ST_B10', 'QA_PIXEL')
+                 .filter(ee.Filter.date(self.start_date, self.end_date))
+                 .filterBounds(ee.Geometry.BBox(*bbox))
+                 .map(cloud_mask)
+                 .map(apply_scale_factors)
+                 .reduce(ee.Reducer.mean())
+                 )
+
+        l8_st_ic = ee.ImageCollection(l8_st)
+        data = get_image_collection(
+            l8_st_ic,
+            bbox,
+            self.spatial_resolution,
+            "LST"
+        ).ST_B10_mean
+
         return data

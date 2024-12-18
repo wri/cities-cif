@@ -1,7 +1,7 @@
 import xarray as xr
 import ee
 
-from .layer import Layer, get_utm_zone_epsg, get_image_collection
+from .layer import Layer, get_image_collection
 
 
 class LandCoverGlad(Layer):
@@ -17,8 +17,9 @@ class LandCoverGlad(Layer):
         self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
+        lcluc_ic = ee.ImageCollection(ee.Image(f'projects/glad/GLCLU2020/LCLUC_{self.year}'))
         data = get_image_collection(
-            ee.ImageCollection(ee.Image(f'projects/glad/GLCLU2020/LCLUC_{self.year}')),
+            lcluc_ic,
             bbox,
             self.spatial_resolution,
             "GLAD Land Cover"
@@ -80,7 +81,8 @@ class LandCoverHabitatGlad(Layer):
         self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
-        simplified_glad = LandCoverSimplifiedGlad(year=self.year, spatial_resolution=self.spatial_resolution).get_data(bbox)
+        simplified_glad = (LandCoverSimplifiedGlad(year=self.year, spatial_resolution=self.spatial_resolution)
+                           .get_data(bbox))
         # Copy the original data
         data = simplified_glad.copy(deep=True)
 
@@ -108,8 +110,10 @@ class LandCoverHabitatChangeGlad(Layer):
         self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
-        habitat_glad_start = LandCoverHabitatGlad(year=self.start_year, spatial_resolution=self.spatial_resolution).get_data(bbox)
-        habitat_glad_end = LandCoverHabitatGlad(year=self.end_year, spatial_resolution=self.spatial_resolution).get_data(bbox)
+        habitat_glad_start = (LandCoverHabitatGlad(year=self.start_year, spatial_resolution=self.spatial_resolution)
+                              .get_data(bbox))
+        habitat_glad_end = (LandCoverHabitatGlad(year=self.end_year, spatial_resolution=self.spatial_resolution)
+                            .get_data(bbox))
 
         # Class 01: Became habitat between start year and end year
         class_01 = ((habitat_glad_start == 0) & (habitat_glad_end == 1))

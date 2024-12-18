@@ -1,9 +1,6 @@
 import ee
-import xarray
-from dask.diagnostics import ProgressBar
 
-from .layer import Layer, get_utm_zone_epsg, get_image_collection
-
+from .layer import Layer, get_image_collection
 
 class Albedo(Layer):
     """
@@ -22,34 +19,71 @@ class Albedo(Layer):
         self.end_date = end_date
         self.spatial_resolution = spatial_resolution
         self.threshold = threshold
+    
+    ## METHODS
+    ## get cloudmasked image collection
+    def mask_and_count_clouds(self, s2wc, geom):
+        s2wc = ee.Image(s2wc)
+        geom = ee.Geometry(geom.geometry())
+        is_cloud = (ee.Image(s2wc.get('cloud_mask'))
+                    .gt(self.MAX_CLOUD_PROB)
+                    .rename('is_cloud')
+                    )
 
-    # get cloudmasked image collection
+        nb_cloudy_pixels = is_cloud.reduceRegion(
+            reducer=ee.Reducer.sum().unweighted(),
+            geometry=geom,
+            scale=self.spatial_resolution,
+            maxPixels=1e9
+        )
+        mask = (s2wc
+                .updateMask(is_cloud.eq(0))
+                .set('nb_cloudy_pixels',nb_cloudy_pixels.getNumber('is_cloud'))
+                .divide(10000)
+                )
+
+        return mask
+
     def mask_clouds_and_rescale(self, im):
-        clouds = ee.Image(im.get('cloud_mask')).select('probability')
-        return im.updateMask(clouds.lt(self.MAX_CLOUD_PROB)).divide(10000)
+        clouds = ee.Image(im.get('cloud_mask')
+                          ).select('probability')
+        mask = im.updateMask(clouds
+                             .lt(self.MAX_CLOUD_PROB)
+                             ).divide(10000)
+
+        return mask
 
     def get_masked_s2_collection(self, roi, start, end):
         criteria = (ee.Filter.And(
             ee.Filter.date(start, end),
             ee.Filter.bounds(roi)
         ))
-        # .select('B2','B3','B4','B8','B11','B12')
-        s2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED").filter(criteria)
+        s2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED").filter(criteria)  # .select('B2','B3','B4','B8','B11','B12')
         s2c = ee.ImageCollection("COPERNICUS/S2_CLOUD_PROBABILITY").filter(criteria)
-        s2_with_clouds = (ee.Join.saveFirst('cloud_mask').apply(**{
-            'primary': ee.ImageCollection(s2),
-            'secondary': ee.ImageCollection(s2c),
-            'condition': ee.Filter.equals(**{'leftField': 'system:index', 'rightField': 'system:index'})
-        }))
+        s2_with_clouds = (
+            ee.Join.saveFirst('cloud_mask')
+            .apply(**{
+                'primary': ee.ImageCollection(s2),
+                'secondary': ee.ImageCollection(s2c),
+                'condition': ee.Filter.equals(**{'leftField': 'system:index', 'rightField': 'system:index'})
+            })
+        )
+
+        def _mcc(im):
+            return self.mask_and_count_clouds(im, roi)
+            # s2_with_clouds=ee.ImageCollection(s2_with_clouds).map(_mcc)
 
         # s2_with_clouds=s2_with_clouds.limit(image_limit,'nb_cloudy_pixels')
-        s2_with_clouds = ee.ImageCollection(s2_with_clouds).map(
-            self.mask_clouds_and_rescale)  # .limit(image_limit,'CLOUDY_PIXEL_PERCENTAGE')
-        return ee.ImageCollection(s2_with_clouds)
+        s2_with_clouds = (ee.ImageCollection(s2_with_clouds)
+                          .map(mask_clouds_and_rescale)
+                          )  # .limit(image_limit,'CLOUDY_PIXEL_PERCENTAGE')
+
+        s2_with_clouds_ic = ee.ImageCollection(s2_with_clouds)
+
+        return s2_with_clouds_ic
 
     def get_data(self, bbox):
         # calculate albedo for images
-
         # weights derived from
         # S. Bonafoni and A. Sekertekin, "Albedo Retrieval From Sentinel-2 by New Narrow-to-Broadband Conversion Coefficients," in IEEE Geoscience and Remote Sensing Letters, vol. 17, no. 9, pp. 1618-1622, Sept. 2020, doi: 10.1109/LGRS.2020.2967085.
         def calc_s2_albedo(image):
@@ -67,14 +101,23 @@ class Albedo(Layer):
                 'SWIR1': image.select('B11'),
                 'SWIR2': image.select('B12')
             }
-            return image.expression(self.S2_ALBEDO_EQN, config).double().rename('albedo')
+
+            albedo = image.expression(S2_ALBEDO_EQN, config).double().rename('albedo')
+
+            return albedo
 
         # S2 MOSAIC AND ALBEDO
         dataset = self.get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
         albedo_mean = s2_albedo.reduce(ee.Reducer.mean())
 
-        data = (get_image_collection(ee.ImageCollection(albedo_mean), bbox, self.spatial_resolution, "albedo").albedo_mean)
+        albedo_mean_ic = ee.ImageCollection(albedo_mean)
+        data = get_image_collection(
+            albedo_mean_ic,
+            bbox,
+            self.spatial_resolution,
+            "albedo"
+        ).albedo_mean
 
         if self.threshold is not None:
             return data.where(data < self.threshold)

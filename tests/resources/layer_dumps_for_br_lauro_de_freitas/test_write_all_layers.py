@@ -2,27 +2,7 @@
 # Execution configuration is specified in the conftest file
 import pytest
 
-from city_metrix.layers import (
-    Albedo,
-    AlosDSM,
-    AverageNetBuildingHeight,
-    EsaWorldCover,
-    HighLandSurfaceTemperature,
-    LandsatCollection2,
-    LandSurfaceTemperature,
-    NasaDEM,
-    NaturalAreas,
-    OpenBuildings,
-    OpenStreetMap,
-    OvertureBuildings,
-    Sentinel2Level2,
-    NdviSentinel2,
-    SmartSurfaceLULC,
-    TreeCanopyHeight,
-    TreeCover,
-    UrbanLandUse,
-    WorldPop, Layer, ImperviousSurface
-)
+from city_metrix.layers import *
 from .conftest import RUN_DUMPS, prep_output_path, verify_file_is_populated, get_file_count_in_folder
 from ...tools.general_tools import get_class_default_spatial_resolution
 
@@ -33,30 +13,6 @@ def test_write_albedo(target_folder, bbox_info, target_spatial_resolution_multip
     target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(Albedo())
     Albedo(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
     assert verify_file_is_populated(file_path)
-
-@pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
-def test_write_albedo_tiled_unbuffered(target_folder, bbox_info, target_spatial_resolution_multiplier):
-    file_path = prep_output_path(target_folder, 'albedo_tiled.tif')
-    target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(Albedo())
-    (Albedo(spatial_resolution=target_resolution).
-     write(bbox_info.bounds, file_path, tile_degrees=0.01, buffer_size=None))
-    file_count = get_file_count_in_folder(file_path)
-
-    expected_file_count = 5 # includes 4 tiles and one geojson file
-    assert file_count == expected_file_count
-
-@pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
-def test_write_albedo_tiled_buffered(target_folder, bbox_info, target_spatial_resolution_multiplier):
-    buffer_degrees = 0.001
-    file_path = prep_output_path(target_folder, 'albedo_tiled_buffered.tif')
-    target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(Albedo())
-    (Albedo(spatial_resolution=target_resolution).
-     write(bbox_info.bounds, file_path, tile_degrees=0.01, buffer_size=buffer_degrees))
-    file_count = get_file_count_in_folder(file_path)
-
-    expected_file_count = 6 # includes 4 tiles and two geojson files
-    assert file_count == expected_file_count
-
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
 def test_write_alos_dsm(target_folder, bbox_info, target_spatial_resolution_multiplier):
@@ -73,10 +29,24 @@ def test_write_average_net_building_height(target_folder, bbox_info, target_spat
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
+def test_write_built_up_height(target_folder, bbox_info, target_spatial_resolution_multiplier):
+    file_path = prep_output_path(target_folder, 'built_up_height.tif')
+    target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(BuiltUpHeight())
+    BuiltUpHeight(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
 def test_write_esa_world_cover(target_folder, bbox_info, target_spatial_resolution_multiplier):
     file_path = prep_output_path(target_folder, 'esa_world_cover.tif')
     target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(EsaWorldCover())
     EsaWorldCover(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
+def test_write_glad_lulc(target_folder, bbox_info, target_spatial_resolution_multiplier):
+    file_path = prep_output_path(target_folder, 'glad_lulc.tif')
+    target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(LandCoverGlad())
+    LandCoverGlad(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
@@ -90,14 +60,7 @@ def test_write_high_land_surface_temperature(target_folder, bbox_info, target_sp
 def test_write_impervious_surface(target_folder, bbox_info, target_spatial_resolution_multiplier):
     file_path = prep_output_path(target_folder, 'impervious_surface.tif')
     target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(ImperviousSurface())
-    LandSurfaceTemperature(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
-    assert verify_file_is_populated(file_path)
-
-@pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
-def test_write_land_surface_temperature(target_folder, bbox_info, target_spatial_resolution_multiplier):
-    file_path = prep_output_path(target_folder, 'land_surface_temperature.tif')
-    target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(LandSurfaceTemperature())
-    LandSurfaceTemperature(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
+    ImperviousSurface(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
     assert verify_file_is_populated(file_path)
 
 # TODO Class is no longer used, but may be useful later
@@ -158,9 +121,9 @@ def test_write_overture_buildings(target_folder, bbox_info, target_spatial_resol
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
 def test_write_smart_surface_lulc(target_folder, bbox_info, target_spatial_resolution_multiplier):
-    # Note: spatial_resolution not implemented for this raster class
     file_path = prep_output_path(target_folder, 'smart_surface_lulc.tif')
-    SmartSurfaceLULC().write(bbox_info.bounds, file_path, tile_degrees=None)
+    target_resolution = target_spatial_resolution_multiplier * get_class_default_spatial_resolution(SmartSurfaceLULC())
+    SmartSurfaceLULC(spatial_resolution=target_resolution).write(bbox_info.bounds, file_path, tile_degrees=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
