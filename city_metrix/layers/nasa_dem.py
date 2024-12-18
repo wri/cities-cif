@@ -1,6 +1,6 @@
 import ee
 
-from .layer import Layer, get_image_collection
+from .layer import Layer, get_image_collection, set_bilinear_resampling
 
 
 class NasaDEM(Layer):
@@ -18,6 +18,7 @@ class NasaDEM(Layer):
 
         nasa_dem_elev = (ee.ImageCollection(nasa_dem)
                          .filterBounds(ee.Geometry.BBox(*bbox))
+                         .map(set_bilinear_resampling)
                          .select('elevation')
                          .mean()
                          )

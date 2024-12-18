@@ -1,6 +1,6 @@
 import ee
 
-from .layer import Layer, get_image_collection
+from .layer import Layer, get_image_collection, set_bilinear_resampling
 
 class Albedo(Layer):
     """
@@ -115,7 +115,10 @@ class Albedo(Layer):
         ## S2 MOSAIC AND ALBEDO
         dataset = get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
-        albedo_mean = s2_albedo.reduce(ee.Reducer.mean())
+        albedo_mean = (s2_albedo
+                       .map(set_bilinear_resampling)
+                       .reduce(ee.Reducer.mean())
+                       )
 
         albedo_mean_ic = ee.ImageCollection(albedo_mean)
         data = get_image_collection(
