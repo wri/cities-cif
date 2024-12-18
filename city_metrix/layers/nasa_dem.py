@@ -1,6 +1,6 @@
 import ee
 
-from .layer import Layer, get_image_collection, set_bilinear_resampling
+from .layer import Layer, get_image_collection, set_resampling_method
 
 
 class NasaDEM(Layer):
@@ -9,16 +9,17 @@ class NasaDEM(Layer):
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
 
-    def __init__(self, spatial_resolution=30, **kwargs):
+    def __init__(self, spatial_resolution=30, resampling_method='bilinear', **kwargs):
         super().__init__(**kwargs)
         self.spatial_resolution = spatial_resolution
+        self.resampling_method = resampling_method
 
     def get_data(self, bbox):
         nasa_dem = ee.Image("NASA/NASADEM_HGT/001")
 
         nasa_dem_elev = (ee.ImageCollection(nasa_dem)
                          .filterBounds(ee.Geometry.BBox(*bbox))
-                         .map(set_bilinear_resampling)
+                         .map(lambda x: set_resampling_method(x, self.resampling_method),)
                          .select('elevation')
                          .mean()
                          )

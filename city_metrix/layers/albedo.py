@@ -1,6 +1,7 @@
 import ee
 
-from .layer import Layer, get_image_collection, set_bilinear_resampling
+from .layer import Layer, get_image_collection, set_resampling_method
+
 
 class Albedo(Layer):
     """
@@ -11,11 +12,13 @@ class Albedo(Layer):
         threshold: threshold value for filtering the retrieval
     """
 
-    def __init__(self, start_date="2021-01-01", end_date="2022-01-01", spatial_resolution=10, threshold=None, **kwargs):
+    def __init__(self, start_date="2021-01-01", end_date="2022-01-01", spatial_resolution=10,
+                 resampling_method='bilinear', threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.spatial_resolution = spatial_resolution
+        self.resampling_method = resampling_method
         self.threshold = threshold
 
     def get_data(self, bbox):
@@ -116,7 +119,7 @@ class Albedo(Layer):
         dataset = get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
         albedo_mean = (s2_albedo
-                       .map(set_bilinear_resampling)
+                       .map(lambda x: set_resampling_method(x, self.resampling_method),)
                        .reduce(ee.Reducer.mean())
                        )
 
@@ -132,3 +135,5 @@ class Albedo(Layer):
             return data.where(data < self.threshold)
 
         return data
+
+

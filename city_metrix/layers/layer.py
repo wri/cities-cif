@@ -323,17 +323,17 @@ def get_stats_funcs(stats_func):
         return [stats_func]
 
 
-def set_bilinear_resampling(data):
-    if isinstance(data, ee.ImageCollection):
-        resampled = data.map(_assign_bilinear_interpolation)
+def set_resampling_method(dataset, resampling_method):
+    valid_raster_resampling_methods = ['bilinear', 'bicubic', 'nearest']
+
+    if resampling_method not in valid_raster_resampling_methods:
+        raise ValueError(f'Invalid resampling method ({resampling_method}). '
+                         f'Valid methods: ({valid_raster_resampling_methods})')
+
+    if resampling_method != 'nearest':
+        data = dataset.resample(resampling_method)
     else:
-        resampled = data.resample('bilinear')
-
-    return resampled
-
-
-def _assign_bilinear_interpolation(dataset):
-    data = dataset.resample('bilinear')
+        data = dataset
     return data
 
 
