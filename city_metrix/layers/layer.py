@@ -18,7 +18,7 @@ import utm
 import shapely.geometry as geometry
 import pandas as pd
 
-MAX_TILE_SIZE_DEGREES = 0.5 # TODO Why was this value selected?
+MAX_TILE_SIZE_DEGREES = 0.2 # TODO Why was this value selected?
 
 class Layer:
     def __init__(self, aggregate=None, masks=[]):
@@ -133,6 +133,9 @@ class LayerGroupBy:
 
     def count(self):
         return self._zonal_stats("count")
+
+    def sum(self):
+        return self._zonal_stats("sum")
 
     def _zonal_stats(self, stats_func):
         if box(*self.zones.total_bounds).area <= MAX_TILE_SIZE_DEGREES**2:
@@ -313,6 +316,8 @@ def _aggregate_stats(df, stats_func):
     elif stats_func == "mean":
         # mean must weight by number of pixels used for each tile
         return (df["mean"] * df["count"]).sum() / df["count"].sum()
+    elif stats_func == "sum":
+        return df["sum"].sum()
 
 
 def get_stats_funcs(stats_func):
