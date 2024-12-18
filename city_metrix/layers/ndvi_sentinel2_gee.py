@@ -1,4 +1,5 @@
 import ee
+
 from .layer import Layer, get_image_collection
 
 class NdviSentinel2(Layer):
@@ -32,6 +33,7 @@ class NdviSentinel2(Layer):
             return image.addBands(ndvi)
 
         s2 = ee.ImageCollection("COPERNICUS/S2_HARMONIZED")
+
         ndvi = (s2
                 .filterBounds(ee.Geometry.BBox(*bbox))
                 .filterDate(start_date, end_date)
@@ -41,8 +43,11 @@ class NdviSentinel2(Layer):
 
         ndvi_mosaic = ndvi.qualityMosaic('NDVI')
 
-        ic = ee.ImageCollection(ndvi_mosaic)
-        ndvi_data = (get_image_collection(ic, bbox, self.spatial_resolution, "NDVI")
-                     .NDVI)
+        ndvi_mosaic_ic = ee.ImageCollection(ndvi_mosaic)
+        ndvi_data = get_image_collection(
+            ndvi_mosaic_ic,
+            bbox,
+            self.spatial_resolution, "NDVI"
+        ).NDVI
 
         return ndvi_data
