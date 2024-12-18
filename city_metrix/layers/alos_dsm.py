@@ -7,6 +7,7 @@ class AlosDSM(Layer):
     """
     Attributes:
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+        resampling_method: interpolation method used by Google Earth Engine. AlosDSM default is 'bilinear'. All options are: ('bilinear', 'bicubic', 'default').
     """
 
     def __init__(self, spatial_resolution=30, resampling_method='bilinear', **kwargs):

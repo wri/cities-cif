@@ -324,16 +324,17 @@ def get_stats_funcs(stats_func):
 
 
 def set_resampling_method(dataset, resampling_method):
-    valid_raster_resampling_methods = ['bilinear', 'bicubic', 'nearest']
+    valid_raster_resampling_methods = ['bilinear', 'bicubic', 'default']
 
     if resampling_method not in valid_raster_resampling_methods:
-        raise ValueError(f'Invalid resampling method ({resampling_method}). '
-                         f'Valid methods: ({valid_raster_resampling_methods})')
+        raise ValueError(f"Invalid resampling method ('{resampling_method}'). "
+                         f"Valid methods: {valid_raster_resampling_methods}")
 
-    if resampling_method != 'nearest':
-        data = dataset.resample(resampling_method)
-    else:
+    if resampling_method == 'default':
         data = dataset
+    else:
+        data = dataset.resample(resampling_method)
+
     return data
 
 

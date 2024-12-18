@@ -48,9 +48,10 @@ def test_read_image_collection_scale():
     )
 
 def test_albedo_metrics():
-    # data = Albedo(spatial_resolution=10, resampling_method='nearest').get_data(BBOX)
+    data = Albedo(spatial_resolution=10).get_data(BBOX)
+    # data = Albedo(spatial_resolution=10, resampling_method='default').get_data(BBOX)
     # data = Albedo(spatial_resolution=10, resampling_method='bilinear').get_data(BBOX)
-    data = Albedo(spatial_resolution=10, resampling_method='bicubic').get_data(BBOX)
+    # data = Albedo(spatial_resolution=10, resampling_method='bicubic').get_data(BBOX)
 
     # Bounding values
     expected_min_value = _convert_fraction_to_rounded_percent(0.03)
