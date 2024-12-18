@@ -7,7 +7,7 @@ class NasaDEM(Layer):
     """
     Attributes:
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
-        resampling_method: interpolation method used by Google Earth Engine. NasaDEM default is 'bilinear'. All options are: ('bilinear', 'bicubic', 'default').
+        resampling_method: interpolation method used by Google Earth Engine. NasaDEM default is 'bilinear'. All options are: ('bilinear', 'bicubic', None).
     """
 
     def __init__(self, spatial_resolution=30, resampling_method='bilinear', **kwargs):
@@ -18,12 +18,19 @@ class NasaDEM(Layer):
     def get_data(self, bbox):
         nasa_dem = ee.Image("NASA/NASADEM_HGT/001")
 
-        nasa_dem_elev = (ee.ImageCollection(nasa_dem)
-                         .filterBounds(ee.Geometry.BBox(*bbox))
-                         .map(lambda x: set_resampling_method(x, self.resampling_method),)
-                         .select('elevation')
-                         .mean()
-                         )
+        if self.resampling_method is not None:
+            nasa_dem_elev = (ee.ImageCollection(nasa_dem)
+                             .filterBounds(ee.Geometry.BBox(*bbox))
+                             .map(lambda x: set_resampling_method(x, self.resampling_method), )
+                             .select('elevation')
+                             .mean()
+                             )
+        else:
+            nasa_dem_elev = (ee.ImageCollection(nasa_dem)
+                             .filterBounds(ee.Geometry.BBox(*bbox))
+                             .select('elevation')
+                             .mean()
+                             )
 
         nasa_dem_elev_ic = ee.ImageCollection(nasa_dem_elev)
         data = get_image_collection(

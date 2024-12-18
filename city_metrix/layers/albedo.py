@@ -9,7 +9,7 @@ class Albedo(Layer):
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
-        resampling_method: interpolation method used by Google Earth Engine. Albedo default is 'bilinear'. All options are: ('bilinear', 'bicubic', 'default').
+        resampling_method: interpolation method used by Google Earth Engine. Albedo default is 'bilinear'. All options are: ('bilinear', 'bicubic', None).
         threshold: threshold value for filtering the retrieval
     """
 
@@ -119,10 +119,16 @@ class Albedo(Layer):
         ## S2 MOSAIC AND ALBEDO
         dataset = get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
-        albedo_mean = (s2_albedo
-                       .map(lambda x: set_resampling_method(x, self.resampling_method),)
-                       .reduce(ee.Reducer.mean())
-                       )
+
+        if self.resampling_method is not None:
+            albedo_mean = (s2_albedo
+                           .map(lambda x: set_resampling_method(x, self.resampling_method))
+                           .reduce(ee.Reducer.mean())
+                           )
+        else:
+            albedo_mean = (s2_albedo
+                           .reduce(ee.Reducer.mean())
+                           )
 
         albedo_mean_ic = ee.ImageCollection(albedo_mean)
         data = get_image_collection(
