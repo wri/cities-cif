@@ -51,8 +51,22 @@ def test_urban_open_space():
     assert expected_zone_size == actual_indicator_size
 
 
-def test_vegetation_water_change():
-    indicator = vegetation_water_change(ZONES)
+def test_vegetation_water_change_gain_area():
+    indicator = vegetation_water_change_gain_area(ZONES)
+    expected_zone_size = ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
+
+def test_vegetation_water_change_loss_area():
+    indicator = vegetation_water_change_loss_area(ZONES)
+    expected_zone_size = ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
+
+def test_vegetation_water_change_gain_loss_ratio():
+    indicator = vegetation_water_change_gain_loss_ratio(ZONES)
     expected_zone_size = ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size

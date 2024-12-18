@@ -1,4 +1,3 @@
-import xarray as xr
 import ee
 
 from .layer import Layer, get_image_collection
@@ -46,13 +45,16 @@ class VegetationWaterMap(Layer):
             bluestThres = bluest.updateMask(bluest.select('NDWI').gte(NDWIthreshold))
             greenestnowater = greenest.updateMask(bluestThres.select('NDWI').unmask().Not())
             return greenestnowater
+
         def AnnualImgWater(ic, year):
             bluest = ic.select('NDWI').reduce(ee.Reducer.median()).rename('NDWI').addBands(ee.Image(year).rename('time_start')).float()
             return bluest
+
         def AnnualImgWatermask(ic, year):
             bluest = ic.qualityMosaic('NDWI').select('NDWI').addBands(ee.Image(year).rename('time_start')).float()
             bluestThres = bluest.updateMask(bluest.select('NDWI').gte(NDWIthreshold))
             return bluestThres
+
         def AnnualImgGreenmask(ic, year):
             greenest = ic.qualityMosaic('NDVI').select('NDVI').addBands(ee.Image(year).rename('time_start')).float()
             greenestThres = greenest.updateMask(greenest.select('NDVI').gte(NDVIthreshold))
@@ -222,6 +224,11 @@ class VegetationWaterMap(Layer):
         s2cloudmasked = Albedo().get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
         vegwatermap = get_map_vegwaterchange(s2cloudmasked, self.greenwater_layer)
 
-        data = get_image_collection(ee.ImageCollection(vegwatermap), bbox, self.spatial_resolution, "vegetation water map")
+        data = get_image_collection(
+            ee.ImageCollection(vegwatermap), 
+            bbox, 
+            self.spatial_resolution, 
+            "vegetation water map"
+        ).greenwater_layer
 
-        return data.greenwater_layer
+        return data

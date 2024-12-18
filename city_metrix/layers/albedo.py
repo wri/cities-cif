@@ -75,7 +75,7 @@ class Albedo(Layer):
 
         # s2_with_clouds=s2_with_clouds.limit(image_limit,'nb_cloudy_pixels')
         s2_with_clouds = (ee.ImageCollection(s2_with_clouds)
-                          .map(mask_clouds_and_rescale)
+                          .map(self.mask_clouds_and_rescale)
                           )  # .limit(image_limit,'CLOUDY_PIXEL_PERCENTAGE')
 
         s2_with_clouds_ic = ee.ImageCollection(s2_with_clouds)
@@ -102,7 +102,7 @@ class Albedo(Layer):
                 'SWIR2': image.select('B12')
             }
 
-            albedo = image.expression(S2_ALBEDO_EQN, config).double().rename('albedo')
+            albedo = image.expression(self.S2_ALBEDO_EQN, config).double().rename('albedo')
 
             return albedo
 
