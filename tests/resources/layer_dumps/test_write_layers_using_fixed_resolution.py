@@ -3,7 +3,7 @@
 import pytest
 
 from city_metrix.layers import *
-from .conftest import RUN_DUMPS, prep_output_path, verify_file_is_populated, get_file_count_in_folder
+from .conftest import RUN_DUMPS, prep_output_path, verify_file_is_populated
 
 TARGET_RESOLUTION = 5
 
