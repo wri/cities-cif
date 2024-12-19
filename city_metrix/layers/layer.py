@@ -325,6 +325,18 @@ def get_stats_funcs(stats_func):
         return [stats_func]
 
 
+def set_resampling_method(image: ee.Image, resampling_method: str):
+    valid_raster_resampling_methods = ['bilinear', 'bicubic']
+
+    if resampling_method not in valid_raster_resampling_methods:
+        raise ValueError(f"Invalid resampling method ('{resampling_method}'). "
+                         f"Valid methods: {valid_raster_resampling_methods}")
+
+    data = image.resample(resampling_method)
+
+    return data
+
+
 def get_image_collection(
         image_collection: ImageCollection,
         bbox: Tuple[float],
