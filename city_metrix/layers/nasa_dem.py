@@ -1,4 +1,6 @@
 import ee
+import xee
+import xarray as xr
 
 from .layer import Layer, get_image_collection
 
@@ -29,5 +31,5 @@ class NasaDEM(Layer):
             self.spatial_resolution,
             "NASA DEM"
         ).elevation
-        
+
         return data

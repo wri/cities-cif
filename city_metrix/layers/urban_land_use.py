@@ -1,3 +1,6 @@
+from dask.diagnostics import ProgressBar
+import xarray as xr
+import xee
 import ee
 
 from .layer import Layer, get_image_collection

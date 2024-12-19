@@ -1,3 +1,4 @@
+import xarray as xr
 from xrspatial.classify import reclassify
 
 from .layer import Layer
