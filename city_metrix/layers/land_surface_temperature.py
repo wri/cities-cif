@@ -1,6 +1,8 @@
+from .landsat_collection_2 import LandsatCollection2
+from .layer import Layer, get_utm_zone_epsg, get_image_collection
+from dask.diagnostics import ProgressBar
 import ee
-
-from .layer import Layer, get_image_collection
+import xarray
 
 class LandSurfaceTemperature(Layer):
     """

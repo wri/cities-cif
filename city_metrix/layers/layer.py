@@ -2,6 +2,8 @@ import os
 from abc import abstractmethod
 from typing import Union, Tuple
 from uuid import uuid4
+# This osgeo import is essential for proper functioning. Do not remove.
+from osgeo import gdal
 
 import ee
 import boto3
