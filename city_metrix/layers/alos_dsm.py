@@ -3,7 +3,7 @@ import xee
 import xarray as xr
 
 
-from .layer import Layer, get_image_collection, set_resampling_method
+from .layer import Layer, get_image_collection, set_resampling_for_continuous_raster
 
 
 class AlosDSM(Layer):
@@ -13,29 +13,28 @@ class AlosDSM(Layer):
         resampling_method: interpolation method used by Google Earth Engine. Default is 'bilinear'. All options are: ('bilinear', 'bicubic', None).
     """
 
-    def __init__(self, spatial_resolution=30, resampling_method='bilinear', **kwargs):
+    def __init__(self, spatial_resolution:int=30, resampling_method:str='bilinear', **kwargs):
         super().__init__(**kwargs)
         self.spatial_resolution = spatial_resolution
         self.resampling_method = resampling_method
 
-    def get_data(self, bbox):
+    def get_data(self, bbox: tuple[float, float, float, float]):
         alos_dsm = ee.ImageCollection("JAXA/ALOS/AW3D30/V3_2")
 
-        if self.resampling_method is not None:
-            alos_dsm_ic = ee.ImageCollection(
-                alos_dsm
-                .filterBounds(ee.Geometry.BBox(*bbox))
-                .map(lambda x: set_resampling_method(x, self.resampling_method), )
-                .select('DSM')
-                .mean()
-            )
-        else:
-            alos_dsm_ic = ee.ImageCollection(
-                alos_dsm
-                .filterBounds(ee.Geometry.BBox(*bbox))
-                .select('DSM')
-                .mean()
-            )
+        alos_dsm_ic = ee.ImageCollection(
+            alos_dsm
+            .filterBounds(ee.Geometry.BBox(*bbox))
+            .select('DSM')
+            .map(lambda x:
+                 set_resampling_for_continuous_raster(x,
+                                                      self.resampling_method,
+                                                      self.spatial_resolution,
+                                                      bbox
+                                                      )
+                 )
+            .mean()
+        )
+
 
         data = get_image_collection(
             alos_dsm_ic,

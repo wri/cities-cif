@@ -7,6 +7,7 @@ from .conftest import RUN_DUMPS, prep_output_path, verify_file_is_populated
 
 TARGET_RESOLUTION = 5
 TARGET_RESAMPLING_METHOD = 'bilinear'
+# TARGET_RESAMPLING_METHOD = None
 
 @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
 def test_write_albedo_fixed_res(target_folder, bbox_info, target_spatial_resolution_multiplier):

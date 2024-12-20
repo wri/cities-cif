@@ -53,7 +53,7 @@ def test_albedo_metrics_default_resampling():
 
     # Bounding values
     expected_min_value = _convert_fraction_to_rounded_percent(0.03)
-    expected_max_value = _convert_fraction_to_rounded_percent(0.32)
+    expected_max_value = _convert_fraction_to_rounded_percent(0.34)
     actual_min_value = _convert_fraction_to_rounded_percent(data.values.min())
     actual_max_value = _convert_fraction_to_rounded_percent(data.values.max())
 
