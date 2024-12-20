@@ -325,6 +325,29 @@ def get_stats_funcs(stats_func):
         return [stats_func]
 
 
+def set_resampling_for_continuous_raster(image: ee.Image, resampling_method: str, resolution: int,
+                                         bbox: tuple[float, float, float, float]):
+    """
+    Function sets the resampling method on the GEE query dictionary for use on continuous raster layers.
+    GEE only supports bilinear and bicubic interpolation methods.
+    """
+    valid_raster_resampling_methods = ['bilinear', 'bicubic', None]
+
+    if resampling_method not in valid_raster_resampling_methods:
+        raise ValueError(f"Invalid resampling method ('{resampling_method}'). "
+                         f"Valid methods: {valid_raster_resampling_methods}")
+
+    if resampling_method is None:
+        data = image
+    else:
+        crs = get_utm_zone_epsg(bbox)
+        data = (image
+                .resample(resampling_method)
+                .reproject(crs=crs, scale=resolution))
+
+    return data
+
+
 def get_image_collection(
         image_collection: ImageCollection,
         bbox: Tuple[float],

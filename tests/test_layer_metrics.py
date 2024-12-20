@@ -47,8 +47,23 @@ def test_read_image_collection_scale():
         pytest.approx(expected_y_size, rel=EE_IMAGE_DIMENSION_TOLERANCE) == actual_y_size
     )
 
-def test_albedo_metrics():
-    data = Albedo().get_data(BBOX)
+def test_albedo_metrics_default_resampling():
+    # Default resampling_method is bilinear
+    data = Albedo(spatial_resolution=10).get_data(BBOX)
+
+    # Bounding values
+    expected_min_value = _convert_fraction_to_rounded_percent(0.03)
+    expected_max_value = _convert_fraction_to_rounded_percent(0.34)
+    actual_min_value = _convert_fraction_to_rounded_percent(data.values.min())
+    actual_max_value = _convert_fraction_to_rounded_percent(data.values.max())
+
+    # Value range
+    assert expected_min_value == actual_min_value
+    assert expected_max_value == actual_max_value
+
+
+def test_albedo_metrics_no_resampling():
+    data = Albedo(spatial_resolution=10, resampling_method= None).get_data(BBOX)
 
     # Bounding values
     expected_min_value = _convert_fraction_to_rounded_percent(0.03)
@@ -62,7 +77,7 @@ def test_albedo_metrics():
 
 
 def test_alos_dsm_metrics():
-    data = AlosDSM().get_data(BBOX)
+    data = AlosDSM(resampling_method=None).get_data(BBOX)
 
     # Bounding values
     expected_min_value = 16
