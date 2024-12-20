@@ -3,6 +3,12 @@ from .conftest import ZONES
 import pytest
 
 
+def test_annual_dailyconcentration_statistic():
+    indicator_mean = test_annual_dailyconcentration_statistic(ZONES, 'mean')
+    indicator_max = test_annual_dailyconcentration_statistic(ZONES, 'max')
+    assert indicator_mean
+    assert indicator_max
+
 def test_built_land_with_high_lst():
     indicator = built_land_with_high_land_surface_temperature(ZONES)
     expected_zone_size = ZONES.geometry.size
@@ -43,9 +49,12 @@ def test_natural_areas():
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
-
 def test_urban_open_space():
     indicator = urban_open_space(ZONES)
     expected_zone_size = ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
+
+def test_who_air_pollutant_exceedance_days()
+    indicator = who_air_pollutant_exceedance_days(ZONES, ['so2'])
+    assert indicator <= 365
