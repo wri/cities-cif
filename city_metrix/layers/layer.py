@@ -20,7 +20,7 @@ import utm
 import shapely.geometry as geometry
 import pandas as pd
 
-MAX_TILE_SIZE_DEGREES = 0.2 # TODO Why was this value selected?
+MAX_TILE_SIZE_DEGREES = 0.5 # TODO Why was this value selected?
 
 class Layer:
     def __init__(self, aggregate=None, masks=[]):

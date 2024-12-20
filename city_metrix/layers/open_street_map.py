@@ -40,11 +40,11 @@ class OpenStreetMap(Layer):
         self.osm_class = osm_class
 
     def get_data(self, bbox):
-        north, south, east, west = bbox[3], bbox[1], bbox[0], bbox[2]
+        left, top, right, bottom = bbox
         # Set the OSMnx configuration to disable caching
         ox.settings.use_cache = False
         try:
-            osm_feature = ox.features_from_bbox(bbox=(north, south, east, west), tags=self.osm_class.value)
+            osm_feature = ox.features_from_bbox(bbox=(left, bottom, right, top), tags=self.osm_class.value)
         # When no feature in bbox, return an empty gdf
         except ox._errors.InsufficientResponseError as e:
             osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['osmid', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')

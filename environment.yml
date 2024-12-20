@@ -5,7 +5,7 @@ dependencies:
   - python=3.10
   - earthengine-api=0.1.411
   - geocube=0.4.2
-  - geopandas=0.14.4
+  - geopandas=1.0.1
   - xarray=2024.7.0
   - rioxarray=0.15.0
   - odc-stac=0.3.8
@@ -14,7 +14,7 @@ dependencies:
   - xarray-spatial=0.3.7
   - xee=0.0.15
   - utm=0.7.0
-  - osmnx=1.9.0
+  - osmnx=2.0.0
   - dask[complete]=2023.11.0
   - matplotlib=3.8.2
   - jupyterlab=4.0.10
