@@ -19,7 +19,7 @@ setup(
         "utm",
         "osmnx>=2.0.0",
         "geopandas",
-        "gdal",
+        "xarray",
         "s3fs",
         "dask>=2023.11.0",
         "boto3",
