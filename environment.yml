@@ -6,6 +6,7 @@ dependencies:
   - earthengine-api=0.1.411
   - geocube=0.4.2
   - geopandas=1.0.1
+  - gdal=3.10.0
   - xarray=2024.7.0
   - rioxarray=0.15.0
   - odc-stac=0.3.8
