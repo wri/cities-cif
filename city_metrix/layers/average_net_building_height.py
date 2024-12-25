@@ -5,6 +5,7 @@ import ee
 
 from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
+
 class AverageNetBuildingHeight(Layer):
     """
     Attributes:
@@ -23,8 +24,13 @@ class AverageNetBuildingHeight(Layer):
         # GLOBE - ee.Image("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_GLOBE_R2023A")
 
         anbh = ee.Image("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_GLOBE_R2023A")
-        data = (get_image_collection(
-            ee.ImageCollection(anbh), bbox, self.spatial_resolution, "average net building height")
-                .b1)
-        
+
+        anbh_ic = ee.ImageCollection(anbh)
+        data = get_image_collection(
+            anbh_ic,
+            bbox,
+            self.spatial_resolution,
+            "average net building height"
+        ).b1
+
         return data
