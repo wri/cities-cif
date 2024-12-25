@@ -1,7 +1,9 @@
 import xarray as xr
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 from shapely.geometry import CAP_STYLE, JOIN_STYLE
+from shapely.geometry import box
 from exactextract import exact_extract
 from geocube.api.core import make_geocube
 import warnings

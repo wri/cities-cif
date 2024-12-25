@@ -1,6 +1,9 @@
 import ee
+import xarray
+from dask.diagnostics import ProgressBar
 
-from .layer import Layer, get_image_collection
+from .layer import Layer, get_utm_zone_epsg, get_image_collection, set_resampling_for_continuous_raster
+
 
 class Albedo(Layer):
     """
@@ -8,16 +11,19 @@ class Albedo(Layer):
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+        resampling_method: interpolation method used by Google Earth Engine. Default is 'bilinear'. All options are: ('bilinear', 'bicubic', None).
         threshold: threshold value for filtering the retrieval
     """
     MAX_CLOUD_PROB = 30
     S2_ALBEDO_EQN = '((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))'
 
-    def __init__(self, start_date="2021-01-01", end_date="2022-01-01", spatial_resolution=10, threshold=None, **kwargs):
+    def __init__(self, start_date="2021-01-01", end_date="2022-01-01", spatial_resolution:int=10,
+                 resampling_method:str='bilinear', threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.spatial_resolution = spatial_resolution
+        self.resampling_method = resampling_method
         self.threshold = threshold
     
     ## METHODS
@@ -109,7 +115,17 @@ class Albedo(Layer):
         # S2 MOSAIC AND ALBEDO
         dataset = self.get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
-        albedo_mean = s2_albedo.reduce(ee.Reducer.mean())
+
+        albedo_mean = (s2_albedo
+                       .map(lambda x:
+                                    set_resampling_for_continuous_raster(x,
+                                                                         self.resampling_method,
+                                                                         self.spatial_resolution,
+                                                                         bbox
+                                                                         )
+                            )
+                       .reduce(ee.Reducer.mean())
+                       )
 
         albedo_mean_ic = ee.ImageCollection(albedo_mean)
         data = get_image_collection(

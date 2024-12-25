@@ -1,7 +1,9 @@
+from dask.diagnostics import ProgressBar
+from enum import Enum
+import xarray as xr
 import ee
 
-from enum import Enum
-from .layer import Layer, get_image_collection
+from .layer import Layer, get_utm_zone_epsg, get_image_collection
 
 
 class EsaWorldCoverClass(Enum):
