@@ -27,6 +27,6 @@ setup(
         "timezonefinder",
         "scikit-image>=0.24.0",
         "exactextract>=0.2.0",
-        "dotenv = 1.0.1",
+        "dotenv==1.0.1",
     ],
 )
