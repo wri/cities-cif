@@ -24,8 +24,7 @@ osm_layer = OpenStreetMapClass.OPEN_SPACE  # Required for open_space layer
 
 city_id_list = list(set(["ARG-Buenos_Aires"]))
 
-            print(curr_year)
-layer_overwrite_list = {"esa_world_cover_2020": [2020, 2021],"open_space": []}
+layer_overwrite_list = {"esa_world_cover_2020": [2020, 2021], "open_space": []}
 
 ############ for widnows user change / to \
 # local_storage_path = f"{os.getcwd()}\cities-cif\scripts\output"
