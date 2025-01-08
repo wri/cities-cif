@@ -68,7 +68,7 @@ def test_impervious_surface():
     assert np.size(data) > 0
 
 def test_isoline():
-    layer = Isoline('KEN-Nairobi', 'schools', 'walk', 'time', '15')
+    layer = Isoline({'cityname': 'KEN-Nairobi', 'amenityname': 'schools', 'travelmode': 'walk', 'threshold_type': 'time', 'threshold_value': '15', 'year': 2023})
     nairobi_bbox = (36.66446402, -1.44560888, 37.10497899, -1.16058296)
     data = layer.get_data(nairobi_bbox)
     assert np.size(data) > 0
