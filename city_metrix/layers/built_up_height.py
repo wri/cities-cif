@@ -22,8 +22,15 @@ class BuiltUpHeight(Layer):
         # ANBH is the average height of the built surfaces, USE THIS
         # AGBH is the amount of built cubic meters per surface unit in the cell
         # ee.ImageCollection("projects/wri-datalab/GHSL/GHS-BUILT-H-ANBH_R2023A")
-        
-        built_height = ee.Image("JRC/GHSL/P2023A/GHS_BUILT_H/2018")
-        data = get_image_collection(ee.ImageCollection(built_height), bbox, self.spatial_resolution, "built up height")
-        return data.built_height
 
+        built_height = ee.Image("JRC/GHSL/P2023A/GHS_BUILT_H/2018")
+
+        built_height_ic = ee.ImageCollection(built_height)
+        data = get_image_collection(
+            built_height_ic,
+            bbox,
+            self.spatial_resolution,
+            "built up height"
+        ).built_height
+
+        return data

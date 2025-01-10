@@ -19,21 +19,28 @@ class UrbanLandUse(Layer):
         self.spatial_resolution = spatial_resolution
 
     def get_data(self, bbox):
-        dataset = ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1")
+        ulu = ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1")
+
         # ImageCollection didn't cover the globe
-        if dataset.filterBounds(ee.Geometry.BBox(*bbox)).size().getInfo() == 0:
-            ulu = ee.ImageCollection(ee.Image.constant(0)
+        if ulu.filterBounds(ee.Geometry.BBox(*bbox)).size().getInfo() == 0:
+            ulu_ic = ee.ImageCollection(ee.Image
+                                     .constant(0)
                                      .clip(ee.Geometry.BBox(*bbox))
                                      .rename('lulc')
                                      )
         else:
-            ulu = ee.ImageCollection(dataset
+            ulu_ic = ee.ImageCollection(ulu
                                      .filterBounds(ee.Geometry.BBox(*bbox))
                                      .select(self.band)
                                      .reduce(ee.Reducer.firstNonNull())
                                      .rename('lulc')
                                      )
 
-        data = get_image_collection(ulu, bbox, self.spatial_resolution, "urban land use").lulc
+        data = get_image_collection(
+            ulu_ic,
+            bbox,
+            self.spatial_resolution,
+            "urban land use"
+        ).lulc
 
         return data

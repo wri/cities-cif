@@ -18,12 +18,20 @@ class ImperviousSurface(Layer):
 
     def get_data(self, bbox):
         # load impervious_surface
-        dataset = ee.ImageCollection(ee.Image("Tsinghua/FROM-GLC/GAIA/v10").gt(0))  # change_year_index is zero if permeable as of 2018
-        imperv_surf = ee.ImageCollection(dataset
-                                         .filterBounds(ee.Geometry.BBox(*bbox))
-                                         .select('change_year_index')
-                                         .sum()
-                                         )
+        # change_year_index is zero if permeable as of 2018
+        impervious_surface = ee.ImageCollection(ee.Image("Tsinghua/FROM-GLC/GAIA/v10").gt(0))
 
-        data = get_image_collection(imperv_surf, bbox, self.spatial_resolution, "imperv surf")
-        return data.change_year_index
+        imperv_surf_ic = ee.ImageCollection(impervious_surface
+                                            .filterBounds(ee.Geometry.BBox(*bbox))
+                                            .select('change_year_index')
+                                            .sum()
+                                            )
+
+        data = get_image_collection(
+            imperv_surf_ic,
+            bbox,
+            self.spatial_resolution,
+            "imperv surf"
+        ).change_year_index
+
+        return data
