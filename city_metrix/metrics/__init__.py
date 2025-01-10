@@ -7,3 +7,4 @@ from .natural_areas import natural_areas
 from .era_5_met_preprocessing import era_5_met_preprocessing
 from .percent_population_access import percent_population_access
 from .count_accessible_amenities import count_accessible_amenities
+from .recreational_space_per_capita import recreational_space_per_capita

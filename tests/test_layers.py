@@ -5,12 +5,17 @@ from city_metrix.layers import (
     AlosDSM,
     AverageNetBuildingHeight,
     BuiltUpHeight,
+    Cams,
     Era5HottestDay,
     EsaWorldCover,
     EsaWorldCoverClass,
     HighLandSurfaceTemperature,
     ImperviousSurface,
     Isoline,
+    LandCoverGlad,
+    LandCoverHabitatGlad,
+    LandCoverHabitatChangeGlad,
+    LandCoverSimplifiedGlad,
     LandsatCollection2,
     LandSurfaceTemperature,
     NasaDEM,
@@ -27,6 +32,7 @@ from city_metrix.layers import (
     UrbanLandUse,
     WorldPop
 )
+from tests.conftest import EXECUTE_IGNORED_TESTS
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 
 # Tests are implemented for the same bounding box in Brazil.
@@ -49,7 +55,12 @@ def test_built_up_height():
     data = BuiltUpHeight().get_data(BBOX)
     assert np.size(data) > 0
 
-@pytest.mark.skip(reason="CDS API needs personal access token file to run")
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_cams():
+    data = Cams().get_data(BBOX)
+    assert np.size(data) > 0
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
     data = Era5HottestDay().get_data(BBOX)
     assert np.size(data) > 0
@@ -71,6 +82,21 @@ def test_isoline():
     layer = Isoline({'cityname': 'KEN-Nairobi', 'amenityname': 'schools', 'travelmode': 'walk', 'threshold_type': 'time', 'threshold_value': '15', 'year': 2023})
     nairobi_bbox = (36.66446402, -1.44560888, 37.10497899, -1.16058296)
     data = layer.get_data(nairobi_bbox)
+
+def test_land_cover_glad():
+    data = LandCoverGlad().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_land_cover_habitat_glad():
+    data = LandCoverHabitatGlad().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_land_cover_habitat_change():
+    data = LandCoverHabitatChangeGlad().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_land_cover_simplified_glad():
+    data = LandCoverSimplifiedGlad().get_data(BBOX)
     assert np.size(data) > 0
 
 def test_land_surface_temperature():

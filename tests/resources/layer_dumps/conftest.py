@@ -4,7 +4,8 @@ import os
 import shutil
 from collections import namedtuple
 
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_NLD_AMSTERDAM_TEST, \
+    BBOX_NLD_AMSTERDAM_LARGE_TEST
 from tests.tools.general_tools import create_target_folder, is_valid_path
 
 # RUN_DUMPS is the master control for whether the writes and tests are executed
@@ -19,23 +20,20 @@ SPATIAL_RESOLUTION_MULTIPLIER = 1
 # Both the tests and QGIS file are implemented for the same bounding box in Brazil.
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
+# BBOX = BBOX_NLD_AMSTERDAM_TEST
+# BBOX = BBOX_NLD_AMSTERDAM_LARGE_TEST
 
 # Specify None to write to a temporary default folder otherwise specify a valid custom target path.
 CUSTOM_DUMP_DIRECTORY = None
 
 def pytest_configure(config):
-    qgis_project_file = 'layers_for_br_lauro_de_freitas.qgz'
 
     if RUN_DUMPS is True:
         source_folder = os.path.dirname(__file__)
         target_folder = get_target_folder_path()
-        create_target_folder(target_folder, True)
+        create_target_folder(target_folder, False)
 
-        source_qgis_file = os.path.join(source_folder, qgis_project_file)
-        target_qgis_file = os.path.join(target_folder, qgis_project_file)
-        shutil.copyfile(source_qgis_file, target_qgis_file)
-
-        print("\n\033[93m QGIS project file and layer files written to folder %s.\033[0m\n" % target_folder)
+        print("\n\033[93m Layer files written to folder %s.\033[0m\n" % target_folder)
 
 @pytest.fixture
 def target_folder():

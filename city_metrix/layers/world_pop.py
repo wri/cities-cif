@@ -27,23 +27,44 @@ class WorldPop(Layer):
         if not self.agesex_classes:
             # total population
             dataset = ee.ImageCollection('WorldPop/GP/100m/pop')
-            world_pop = ee.ImageCollection(dataset
-                                           .filterBounds(ee.Geometry.BBox(*bbox))
-                                           .filter(ee.Filter.inList('year', [self.year]))
-                                           .select('population')
-                                           .mean()
-                                           )
 
-            data = get_image_collection(world_pop, bbox, self.spatial_resolution, "world pop").population
+            world_pop_ic = ee.ImageCollection(
+                dataset
+                .filterBounds(ee.Geometry.BBox(*bbox))
+                .filter(ee.Filter.inList('year', [self.year]))
+                .select('population')
+                .mean()
+            )
+
+            data = get_image_collection(
+                world_pop_ic,
+                bbox,
+                self.spatial_resolution,
+                "world pop"
+            ).population
 
         else:
             # sum population for selected age-sex groups
-            dataset = ee.ImageCollection('WorldPop/GP/100m/pop_age_sex')
-            world_pop = dataset.filterBounds(ee.Geometry.BBox(*bbox))\
-                .filter(ee.Filter.inList('year', [self.year]))\
-                .select(self.agesex_classes)\
-                .mean()
-            world_pop = ee.ImageCollection(world_pop.reduce(ee.Reducer.sum()).rename('sum_age_sex_group'))
-            data = get_image_collection(world_pop, bbox, self.spatial_resolution, "world pop age sex").sum_age_sex_group
+            world_pop_age_sex = ee.ImageCollection('WorldPop/GP/100m/pop_age_sex')
+
+            world_pop_age_sex_year = (world_pop_age_sex
+                         .filterBounds(ee.Geometry.BBox(*bbox))
+                         .filter(ee.Filter.inList('year', [self.year]))
+                         .select(self.agesex_classes)
+                         .mean()
+                         )
+
+            world_pop_group_ic = ee.ImageCollection(
+                world_pop_age_sex_year
+                .reduce(ee.Reducer.sum())
+                .rename('sum_age_sex_group')
+            )
+
+            data = get_image_collection(
+                world_pop_group_ic,
+                bbox,
+                self.spatial_resolution,
+                "world pop age sex"
+            ).sum_age_sex_group
 
         return data
