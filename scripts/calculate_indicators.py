@@ -34,9 +34,9 @@ indicator_list = list(set([i[0] for i in indicator_overwrite_tuple_list]))
 
 
 set_default_credentials(
-    username="wri-cities",
+    username="", # use your carto username for uploading
     base_url="https://wri-cities.carto.com/",
-    api_key="XtoLSRoo6QSyhBOhbbTjOA",
+    api_key="", # use your carto aki key for uploading
 )
 from cartoframes.io.managers.context_manager import ContextManager
 
