@@ -9,7 +9,7 @@ class CanopyCoverageByPercentage(Layer):
     """
 
 
-    def __init__(self, percentage=33, height=5, **kwargs):
+    def __init__(self, percentage=33, height=5, reduce_resolution=True, **kwargs):
         super().__init__(**kwargs)
         if not (type(percentage)==int) and (percentage >= 0) and (percentage <=100):
             raise ValueError('percentage must be integer 0 through 100')
@@ -17,10 +17,13 @@ class CanopyCoverageByPercentage(Layer):
             raise ValueError('height must be integer 1 through 10')
         self.percentage = percentage
         self.height = height
+        self.reduce_resolution = reduce_resolution
 
     def get_data(self, bbox):
         region = ee.Geometry.BBox(*bbox)
         coverage_ic = ee.ImageCollection(f"projects/wri-datalab/canopycoverpct/canopycover_{self.percentage}pct_{self.height}m").filterBounds(region)
+        if self.reduce_resolution:
+            coverage_ic = coverage_ic.map(lambda x: x.reduceResolution(ee.Reducer.mode(), bestEffort=True, maxPixels=128))
         data = get_image_collection(
             coverage_ic,
             bbox,
