@@ -53,7 +53,7 @@ def test_natural_areas():
 
 def test_percent_population_access():
     from .conftest import create_fishnet_grid
-    NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296).reset_index()
+    NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
     indicator = percent_population_access(NAIROBI_BBOX, 'KEN-Nairobi', 'schools', 'walk', 'time', '15', 2024, aws_profilename=None)
     expected_zone_size = NAIROBI_BBOX.geometry.size
     actual_indicator_size = indicator.size
