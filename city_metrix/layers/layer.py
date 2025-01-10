@@ -127,7 +127,7 @@ class LayerGroupBy:
     def __init__(self, aggregate, zones, layer=None, masks=[]):
         self.aggregate = aggregate
         self.masks = masks
-        self.zones = zones.reset_index()
+        self.zones = zones.reset_index(drop=True)
         self.layer = layer
 
     def mean(self):
@@ -136,6 +136,9 @@ class LayerGroupBy:
     def count(self):
         return self._zonal_stats("count")
     
+    def sum(self):
+        return self._zonal_stats("sum")
+
     def sum(self):
         return self._zonal_stats("sum")
 
