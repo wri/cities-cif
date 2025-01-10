@@ -6,6 +6,7 @@ import pytz
 import cdsapi
 import os
 import xarray as xr
+import glob
 
 from .layer import Layer
 
@@ -71,8 +72,10 @@ class Era5HottestDay(Layer):
             utc_times.append(utc_time_hourly)
 
         utc_dates = list(set([dt.date() for dt in utc_times]))
-
-        dataarray_list = []
+        
+        # {"dataType": "an"(analysis)/"fc"(forecast)/"pf"(perturbed forecast)}
+        an_list = []
+        fc_list = []
         c = cdsapi.Client()
         for i in range(len(utc_dates)):
             c.retrieve(
@@ -91,23 +94,44 @@ class Era5HottestDay(Layer):
                              '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00',
                              '20:00', '21:00', '22:00', '23:00'],
                     'area': [max_lat, min_lon, min_lat, max_lon],
-                    'data_format': 'netcdf',
+                    'data_format': 'grib',
                     'download_format': 'unarchived'
                 },
-                f'download_{i}.nc')
-            
-            with xr.open_dataset(f'download_{i}.nc') as dataarray:
+                f'download_{i}.grib')
+
+            # {"dataType": "an"(analysis)/"fc"(forecast)/"pf"(perturbed forecast)}
+            with xr.open_dataset(f'download_{i}.grib',backend_kwargs={"filter_by_keys": {"dataType": "an"}}) as ds:
                 # Subset times for the day
-                times = [valid_time.astype('datetime64[s]').astype(datetime).replace(tzinfo=pytz.UTC) for valid_time in dataarray['valid_time'].values]
+                times = [time.astype('datetime64[s]').astype(datetime).replace(tzinfo=pytz.UTC) for time in ds['time'].values]
                 indices = [i for i, value in enumerate(times) if value in utc_times]
-                subset_dataarray = dataarray.isel(valid_time=indices).load()
+                subset_ds = ds.isel(time=indices).load()
+            
+            an_list.append(subset_ds)
+  
+            with xr.open_dataset(f'download_{i}.grib',backend_kwargs={"filter_by_keys": {"dataType": "fc"}}) as ds:
+                # reduce dimension
+                ds = ds.assign_coords(datetime=ds.time + ds.step)
+                ds = ds.stack(new_time=("time", "step"))
+                ds = ds.swap_dims({"new_time": "datetime"}).drop_vars(["time", "step", "new_time"])
+                ds = ds.rename(datetime="time")
+                # Subset times for the day
+                times = [time.astype('datetime64[s]').astype(datetime).replace(tzinfo=pytz.UTC) for time in ds['time'].values]
+                indices = [i for i, value in enumerate(times) if value in utc_times]
+                subset_ds = ds.isel(time=indices).load()
 
-            dataarray_list.append(subset_dataarray)
+            fc_list.append(subset_ds)
 
-            # Remove local file
-            os.remove(f'download_{i}.nc')
+            # Remove local files
+            for file in glob.glob(f'download_{i}.grib*'):
+                os.remove(file)
 
-        data = xr.concat(dataarray_list, dim='valid_time')
+        an_data = xr.concat(an_list, dim='time')
+        fc_data = xr.concat(fc_list, dim='time')
+        fc_data = fc_data.sel(time=~fc_data.indexes['time'].duplicated())
+        fc_data = fc_data.transpose(*an_data.dims)
+
+        data =  xr.merge([an_data, fc_data], join="outer")
+
         # xarray.Dataset to xarray.DataArray
         data = data.to_array()
 
