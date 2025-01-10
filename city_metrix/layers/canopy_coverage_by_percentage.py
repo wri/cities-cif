@@ -1,6 +1,6 @@
 import ee
 
-from .layer import Layer
+from .layer import Layer, get_image_collection
 
 class CanopyCoverageByPercentage(Layer):
     """
@@ -19,7 +19,7 @@ class CanopyCoverageByPercentage(Layer):
         self.height = height
 
     def get_data(self, bbox):
-        region = ee.Geometry.BBox(bbox)
+        region = ee.Geometry.BBox(*bbox)
         coverage_ic = ee.ImageCollection(f"projects/wri-datalab/canopycoverpct/canopycover_{self.percentage}pct_{self.height}m").filterBounds(region)
         data = get_image_collection(
             coverage_ic,
