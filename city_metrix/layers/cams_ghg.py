@@ -36,7 +36,6 @@ class CamsGhg(Layer):
 
     def get_data(self, bbox):
         bbox = list(bbox)
-
         if self.species is not None:
             data_ic = ee.ImageCollection(f'projects/wri-datalab/cams-glob-ant/{self.species}')
             data_im = data_ic.filter(ee.Filter.eq('year', self.year)).filter(ee.Filter.eq('sector', self.sector)).first()
