@@ -116,7 +116,7 @@ def process(city_id: str, indicator_id: str):
         for a in admin_level:
             try:
                 city_boundary = get_city_boundary(city_id, a)
-                df = get_geojson_df(city_boundary)
+                df = get_geojson_df(city_boundary).reset_index()
                 output_df = eval(f"{metric}(df)")
                 new_df = df.join(output_df)
                 for _, row in new_df.iterrows():
