@@ -2,6 +2,13 @@ from city_metrix.layers import Layer
 from city_metrix.layers.layer import create_fishnet_grid
 from geocube.api.core import make_geocube
 
+# EXECUTE_IGNORED_TESTS is the master control for whether to execute tests decorated with
+# pytest.mark.skipif. These tests are temporarily ignored due to some unresolved issue.
+# Setting EXECUTE_IGNORED_TESTS to True turns on code execution. This should be done for local testing.
+# The value must be set to False when pushing to GitHub since the ignored tests would otherwise fail
+# in GitHub Actions.
+EXECUTE_IGNORED_TESTS = False
+
 def test_create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size):
     # Slightly reduce aoi to avoid partial cells
     reduction = 0.000001

@@ -5,6 +5,7 @@ from .mean_tree_cover import mean_tree_cover
 from .urban_open_space import urban_open_space
 from .natural_areas import natural_areas
 from .era_5_met_preprocessing import era_5_met_preprocessing
+from .recreational_space_per_capita import recreational_space_per_capita
 from .vegetation_water_change import vegetation_water_change_gain_area
 from .vegetation_water_change import vegetation_water_change_loss_area
 from .vegetation_water_change import vegetation_water_change_gain_loss_ratio
