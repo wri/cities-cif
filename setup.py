@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="city_metrix",
@@ -17,8 +17,9 @@ setup(
         "xee",
         "rioxarray",
         "utm",
-        "osmnx",
+        "osmnx>=2.0.0",
         "geopandas",
+        "xarray",
         "s3fs",
         "dask>=2023.11.0",
         "boto3",
@@ -26,6 +27,6 @@ setup(
         "cdsapi",
         "timezonefinder",
         "scikit-image>=0.24.0",
-        "exactextract>=0.2.0"
+        "exactextract>=0.2.0",
     ],
 )
