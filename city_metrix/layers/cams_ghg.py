@@ -75,5 +75,5 @@ class CamsGhg(Layer):
         ds = ds.transpose('time', 'lat', 'lon')
         ds = ds.squeeze(['time'])
         ds = ds.rio.set_spatial_dims('lon', 'lat')
-        return ds
+        return ds.to_array()
         
