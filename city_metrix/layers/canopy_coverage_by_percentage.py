@@ -29,5 +29,5 @@ class CanopyCoverageByPercentage(Layer):
             bbox,
             1,
             "Canopy coverage"
-        ).Map
+        ).cover_code_sum
         return data
