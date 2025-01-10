@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="city_metrix",
@@ -27,6 +27,6 @@ setup(
         "cdsapi",
         "timezonefinder",
         "scikit-image>=0.24.0",
-        "exactextract>=0.2.0"
+        "exactextract>=0.2.0",
     ],
 )
