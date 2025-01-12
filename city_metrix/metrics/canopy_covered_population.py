@@ -16,7 +16,7 @@ def canopy_covered_population(zones: GeoDataFrame, agesex_classes=[], percentage
     coverage_layer = CoveredTemp(percentage=percentage, height=height, reduce_resolution=True)
     access_pop = pop_layer.mask(coverage_layer).groupby(zones).sum()
     total_pop = pop_layer.groupby(zones).sum()
-    return GeoDataFrame({'access_popfraction': 100 * access_pop / total_pop, 'geometry': zones['geometry']}).fillna(-9999)
+    return GeoDataFrame({'access_popfraction': 100 * access_pop / total_pop, 'geometry': zones['geometry']}).fillna(0)
 
 def canopy_covered_population_elderly(zones: GeoDataFrame, percentage=33, height=5) -> GeoSeries:
     return canopy_covered_population(zones, agesex_classes=['F_60', 'F_65', 'F_70', 'F_75', 'F_80', 'M_60', 'M_65', 'M_70', 'M_75', 'M_80'], percentage=33, height=5)
