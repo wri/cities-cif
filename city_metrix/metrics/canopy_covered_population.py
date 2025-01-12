@@ -12,7 +12,7 @@ def canopy_covered_population(zones: GeoDataFrame, agesex_classes=[], percentage
             result = xr.where(data==1, data, np.nan).rio.write_crs(data.crs)
             result = result.assign_attrs(**data.attrs)
             return result
-    pop_layer = WorldPop()
+    pop_layer = WorldPop(agesex_classes=agesex_classes)
     coverage_layer = CoveredTemp(percentage=percentage, height=height, reduce_resolution=True)
     access_pop = pop_layer.mask(coverage_layer).groupby(zones).sum()
     total_pop = pop_layer.groupby(zones).sum()
