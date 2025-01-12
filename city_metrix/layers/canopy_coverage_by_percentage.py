@@ -30,7 +30,6 @@ class CanopyCoverageByPercentage(Layer):
             image_collection=coverage_ic,
             bbox=bbox,
             scale=100,
-            name="Canopy coverage"
+            name="{self.percentage}% canopy coverage"
         ).cover_code_sum
-        data = data.where(data==1, 1, np.nan)  # so works correctly as mask
         return data
