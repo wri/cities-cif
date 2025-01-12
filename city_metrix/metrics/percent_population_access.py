@@ -2,7 +2,8 @@ from geopandas import GeoDataFrame, GeoSeries
 import numpy as np
 
 from city_metrix.layers.isoline import Isoline
-from city_metrix.layers.world_pop import WorldPop, UrbanLandUse
+from city_metrix.layers.world_pop import WorldPop
+from city_metrix.layers.urban_land_use import UrbanLandUse
 
 
 def percent_population_access(zones: GeoDataFrame, cityname, amenityname, travelmode, threshold_type, threshold_value, isoline_year=2024, agesex_classes=[], informal_only=False, worldpop_year=2020, aws_profilename=None) -> GeoSeries:
