@@ -10,7 +10,7 @@ def percent_population_access(zones: GeoDataFrame, cityname, amenityname, travel
     class InformalTemp(UrbanLandUse):
         def get_data(self, bbox):
             data = super().get_data(bbox)
-            result = xr.where(data==3, 1, np.nan).rio.write_crs(data.crs))
+            result = xr.where(data==3, 1, np.nan).rio.write_crs(data.crs)
             result = result.assign_attrs(**data.attrs)
             return result
 
