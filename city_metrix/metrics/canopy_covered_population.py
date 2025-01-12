@@ -27,7 +27,6 @@ def canopy_covered_population_children(zones: GeoDataFrame, percentage=33, heigh
 def canopy_covered_population_female(zones: GeoDataFrame, percentage=33, height=5) -> GeoSeries:
     return canopy_covered_population(zones, agesex_classes=['F_0', 'F_1', 'F_5', 'F_10', 'F_15', 'F_20', 'F_25', 'F_30', 'F_35', 'F_40', 'F_45', 'F_50', 'F_55', 'F_60', 'F_65', 'F_70', 'F_75', 'F_80'], percentage=33, height=5)
 
-'''
 def canopy_covered_population_informal(zones: GeoDataFrame, percentage=33, height=5) -> GeoSeries:
     class CoveredTemp(CanopyCoverageByPercentage):
         def get_data(self, bbox) -> xr.DataArray:
@@ -42,9 +41,8 @@ def canopy_covered_population_informal(zones: GeoDataFrame, percentage=33, heigh
             result = result.assign_attrs(**data.attrs)
             return result
     informal_layer = InformalTemp()
-    pop_layer = WorldPop()
     coverage_layer = CoveredTemp(percentage=percentage, height=height, reduce_resolution=True)
-    access_pop = pop_layer.mask(informal_layer).mask(coverage_layer).groupby(zones).sum()
-    total_pop = pop_layer.groupby(zones).sum()
-    return GeoDataFrame({'access_popfraction': 100 * access_pop / total_pop, 'geometry': zones['geometry']}).fillna(-9999)
-'''
+    result_layer = WorldPop(masks=[coverage_layer, informal_layer])
+    access_pop = result_layer.groupby(zones).sum()
+    total_pop = WorldPop().groupby(zones).sum()
+    return GeoDataFrame({'access_popfraction': 100 * access_pop / total_pop, 'geometry': zones['geometry']}).fillna(0)
