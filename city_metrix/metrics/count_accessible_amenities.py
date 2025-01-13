@@ -12,12 +12,13 @@ class AccessCountTmp(Layer):
     def get_data(self, bbox):
         return self.gdf.clip(shapely.box(*bbox))
             
-def count_accessible_amenities(zones: GeoDataFrame, cityname, amenityname, travelmode, threshold_type, threshold_value, isoline_year=2024, aws_profilename=None) -> GeoSeries:
+def _count_accessible_amenities(zones: GeoDataFrame, cityname, amenityname, travelmode, threshold_type, threshold_value, isoline_year=2024, weighting='population', aws_profilename=None) -> GeoSeries:
     # cityname example: ARG-Buenos-Aires
     # amenityname is OSMclass names, in lowercase
     # travelmode is walk, bike, automobile, publictransit (only walk implemented for now)
     # threshold_type is distance or time
     # threshold_value is integer, in minutes or meters
+
     population_layer = WorldPop(agesex_classes=[], year=2020)
     params = {
         'cityname': cityname,
@@ -58,9 +59,20 @@ def count_accessible_amenities(zones: GeoDataFrame, cityname, amenityname, trave
     
     # For each zone, find average number of accessible amenities, and store in result_gdf
     max_count = accesscount_gdf['count_amenities'].max()
-    result = population_layer.mask(count_layers[1]).groupby(zones).count() * 1
-    for count in range(2, max_count+1):
-        result += population_layer.mask(count_layers[count]).groupby(zones).count() * count
+    if weighting == 'area':
+        result = population_layer.mask(count_layers[1]).groupby(zones).count()
+        for count in range(2, max_count+1):
+            result += population_layer.mask(count_layers[count]).groupby(zones).count() * count
+    else: # weighting == 'population'
+        result = population_layer.mask(count_layers[1]).groupby(zones).sum()
+        for count in range(2, max_count+1):
+            result += population_layer.mask(count_layers[count]).groupby(zones).sum()
     result = result / population_layer.groupby(zones).count()
     result_gdf = GeoDataFrame({'count_accessible_amenities': result, 'geometry': zones['geometry']}).set_crs('EPSG:4326')
-    return result_gdf
+    return result_gdf.count_accessible_amenities
+
+def count_accessible_amenities_areamean(zones: GeoDataFrame, cityname, amenityname, travelmode, threshold_type, threshold_value, isoline_year=2024, aws_profilename=None) -> GeoSeries:
+    return _count_accessible_amenities(zones=zones, cityname=cityname, amenityname=amenityname, travelmode=travelmode, threshold_type=threshold_type, threshold_value=threshold_value, isoline_year=isoline_year, weighting='area', aws_profilename=aws_profilename)
+
+def count_accessible_amenities_populationmean(zones: GeoDataFrame, cityname, amenityname, travelmode, threshold_type, threshold_value, isoline_year=2024, aws_profilename=None) -> GeoSeries:
+    return _count_accessible_amenities(zones=zones, cityname=cityname, amenityname=amenityname, travelmode=travelmode, threshold_type=threshold_type, threshold_value=threshold_value, isoline_year=isoline_year, weighting='population', aws_profilename=aws_profilename)
