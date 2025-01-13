@@ -32,7 +32,7 @@ def canopy_area_per_resident(zones: GeoDataFrame, agesex_classes=[], height=5, i
         total_pop = pop_layer.groupby(onezone).sum()[0]
 
         results.append(canopy_area / total_pop)
-    return GeoDataFrame({'canopyarea_per_resident_squaremeter': results, 'geometry': zones['geometry']})
+    return GeoDataFrame({'canopyarea_per_resident_squaremeter': results, 'geometry': zones['geometry']}).canopyarea_per_resident_squaremeter
 
 def canopy_area_per_resident_elderly(zones: GeoDataFrame, height=5) -> GeoSeries:
     return canopy_area_per_resident(zones, agesex_classes=['F_60', 'F_65', 'F_70', 'F_75', 'F_80', 'M_60', 'M_65', 'M_70', 'M_75', 'M_80'], height=5, informal_only=False)
