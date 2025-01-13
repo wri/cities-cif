@@ -3,7 +3,10 @@ from .built_land_with_low_surface_reflectivity import built_land_with_low_surfac
 from .built_land_with_high_land_surface_temperature import built_land_with_high_land_surface_temperature
 from .era_5_met_preprocessing import era_5_met_preprocessing
 from .mean_tree_cover import mean_tree_cover
-from .urban_open_space import urban_open_space
 from .natural_areas import natural_areas
-from .recreational_space_per_capita import recreational_space_per_capita
 from .pop_open_space import pop_open_space
+from .recreational_space_per_capita import recreational_space_per_capita
+from .urban_open_space import urban_open_space
+from .vegetation_water_change import vegetation_water_change_gain_area
+from .vegetation_water_change import vegetation_water_change_loss_area
+from .vegetation_water_change import vegetation_water_change_gain_loss_ratio
