@@ -30,8 +30,10 @@ from city_metrix.layers import (
     TreeCanopyHeight,
     TreeCover,
     UrbanLandUse,
+    VegetationWaterMap,
     WorldPop
 )
+from tests.conftest import EXECUTE_IGNORED_TESTS
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 
 # Tests are implemented for the same bounding box in Brazil.
@@ -54,12 +56,12 @@ def test_built_up_height():
     data = BuiltUpHeight().get_data(BBOX)
     assert np.size(data) > 0
 
-@pytest.mark.skip(reason="CDS API needs personal access token file to run")
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_cams():
     data = Cams().get_data(BBOX)
     assert np.size(data) > 0
 
-@pytest.mark.skip(reason="CDS API needs personal access token file to run")
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
     data = Era5HottestDay().get_data(BBOX)
     assert np.size(data) > 0
@@ -151,6 +153,10 @@ def test_tree_cover():
 
 def test_urban_land_use():
     data = UrbanLandUse().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_vegetation_water_map():
+    data = VegetationWaterMap().get_data(BBOX)
     assert np.size(data) > 0
 
 def test_world_pop():
