@@ -6,3 +6,4 @@ from .urban_open_space import urban_open_space
 from .natural_areas import natural_areas
 from .era_5_met_preprocessing import era_5_met_preprocessing
 from .recreational_space_per_capita import recreational_space_per_capita
+from .canopy_area_per_resident import canopy_area_per_resident, canopy_area_per_resident_elderly, canopy_area_per_resident_children, canopy_area_per_resident_female, canopy_area_per_resident_informal
