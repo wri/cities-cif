@@ -62,12 +62,13 @@ def _count_accessible_amenities(zones: GeoDataFrame, cityname, amenityname, trav
     if weighting == 'area':
         result = population_layer.mask(count_layers[1]).groupby(zones).count()
         for count in range(2, max_count+1):
-            result += population_layer.mask(count_layers[count]).groupby(zones).count() * count
+            result += population_layer.mask(count_layers[count]).groupby(zones).count()
+        result = result / population_layer.groupby(zones).count()
     else: # weighting == 'population'
         result = population_layer.mask(count_layers[1]).groupby(zones).sum()
         for count in range(2, max_count+1):
             result += population_layer.mask(count_layers[count]).groupby(zones).sum()
-    result = result / population_layer.groupby(zones).count()
+        result = result / population_layer.groupby(zones).sum()
     result_gdf = GeoDataFrame({'count_accessible_amenities': result, 'geometry': zones['geometry']}).set_crs('EPSG:4326')
     return result_gdf.count_accessible_amenities
 
