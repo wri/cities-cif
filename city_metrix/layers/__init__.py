@@ -26,4 +26,3 @@ from .glad_lulc import LandCoverSimplifiedGlad
 from .glad_lulc import LandCoverHabitatGlad
 from .glad_lulc import LandCoverHabitatChangeGlad
 from .cams import Cams
-from .canopy_coverage_by_percentage import CanopyCoverageByPercentage
