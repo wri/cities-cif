@@ -10,6 +10,7 @@ from city_metrix.layers import (
     EsaWorldCover,
     EsaWorldCoverClass,
     HighLandSurfaceTemperature,
+    HighSlope,
     ImperviousSurface,
     LandCoverGlad,
     LandCoverHabitatGlad,
@@ -72,6 +73,10 @@ def test_esa_world_cover():
 
 def test_high_land_surface_temperature():
     data = HighLandSurfaceTemperature().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_high_slope():
+    data = HighSlope().get_data(BBOX)
     assert np.size(data) > 0
 
 def test_impervious_surface():
