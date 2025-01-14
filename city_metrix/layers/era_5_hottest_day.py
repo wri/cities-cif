@@ -10,6 +10,7 @@ import glob
 
 from .layer import Layer
 
+
 class Era5HottestDay(Layer):
     def __init__(self, start_date="2023-01-01", end_date="2024-01-01", **kwargs):
         super().__init__(**kwargs)
@@ -72,7 +73,7 @@ class Era5HottestDay(Layer):
             utc_times.append(utc_time_hourly)
 
         utc_dates = list(set([dt.date() for dt in utc_times]))
-        
+
         # {"dataType": "an"(analysis)/"fc"(forecast)/"pf"(perturbed forecast)}
         an_list = []
         fc_list = []
@@ -83,16 +84,25 @@ class Era5HottestDay(Layer):
                 {
                     'product_type': 'reanalysis',
                     'variable': [
-                        '10m_u_component_of_wind', '10m_v_component_of_wind', '2m_dewpoint_temperature',
-                        '2m_temperature', 'clear_sky_direct_solar_radiation_at_surface', 'mean_surface_direct_short_wave_radiation_flux_clear_sky',
-                        'mean_surface_downward_long_wave_radiation_flux_clear_sky', 'sea_surface_temperature', 'total_precipitation',
+                        '10m_u_component_of_wind', 
+                        '10m_v_component_of_wind', 
+                        '2m_dewpoint_temperature',
+                        '2m_temperature', 
+                        'clear_sky_direct_solar_radiation_at_surface', 
+                        'mean_surface_direct_short_wave_radiation_flux_clear_sky',
+                        'mean_surface_downward_long_wave_radiation_flux_clear_sky', 
+                        'sea_surface_temperature', 
+                        'total_precipitation',
                     ],
                     'year': utc_dates[i].year,
                     'month': utc_dates[i].month,
                     'day': utc_dates[i].day,
-                    'time': ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00',
-                             '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00',
-                             '20:00', '21:00', '22:00', '23:00'],
+                    'time': [
+                        '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', 
+                        '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', 
+                        '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', 
+                        '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
+                    ],
                     'area': [max_lat, min_lon, min_lat, max_lon],
                     'data_format': 'grib',
                     'download_format': 'unarchived'
@@ -100,15 +110,15 @@ class Era5HottestDay(Layer):
                 f'download_{i}.grib')
 
             # {"dataType": "an"(analysis)/"fc"(forecast)/"pf"(perturbed forecast)}
-            with xr.open_dataset(f'download_{i}.grib',backend_kwargs={"filter_by_keys": {"dataType": "an"}}) as ds:
+            with xr.open_dataset(f'download_{i}.grib', backend_kwargs={"filter_by_keys": {"dataType": "an"}}) as ds:
                 # Subset times for the day
                 times = [time.astype('datetime64[s]').astype(datetime).replace(tzinfo=pytz.UTC) for time in ds['time'].values]
                 indices = [i for i, value in enumerate(times) if value in utc_times]
                 subset_ds = ds.isel(time=indices).load()
-            
+
             an_list.append(subset_ds)
-  
-            with xr.open_dataset(f'download_{i}.grib',backend_kwargs={"filter_by_keys": {"dataType": "fc"}}) as ds:
+
+            with xr.open_dataset(f'download_{i}.grib', backend_kwargs={"filter_by_keys": {"dataType": "fc"}}) as ds:
                 # reduce dimension
                 ds = ds.assign_coords(datetime=ds.time + ds.step)
                 ds = ds.stack(new_time=("time", "step"))
@@ -130,7 +140,7 @@ class Era5HottestDay(Layer):
         fc_data = fc_data.sel(time=~fc_data.indexes['time'].duplicated())
         fc_data = fc_data.transpose(*an_data.dims)
 
-        data =  xr.merge([an_data, fc_data], join="outer")
+        data = xr.merge([an_data, fc_data], join="outer")
 
         # xarray.Dataset to xarray.DataArray
         data = data.to_array()
