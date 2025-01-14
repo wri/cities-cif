@@ -1,6 +1,5 @@
 from dask.diagnostics import ProgressBar
 import xarray as xr
-import xee
 import ee
 
 from .layer import Layer, get_utm_zone_epsg, get_image_collection
@@ -10,7 +9,9 @@ class HeightAboveNearestDrainage(Layer):
     """
     Attributes:
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+                            default is 30, other options - 90
         river_head: number of river head threshold cells
+                    default is 1000, other options - 100, 5000
     """
 
     def __init__(self, spatial_resolution=30, river_head=1000, **kwargs):
@@ -40,6 +41,11 @@ class HeightAboveNearestDrainage(Layer):
         HANDthresh = hand.lte(thresh).focal_max(1).focal_mode(2, 'circle', 'pixels', 5).mask(swbdMask)
         HANDthresh = HANDthresh.mask(HANDthresh)
 
-        data = get_image_collection(ee.ImageCollection(HANDthresh), bbox, self.spatial_resolution, "height above nearest drainage")
+        data = get_image_collection(
+            ee.ImageCollection(HANDthresh),
+            bbox,
+            self.spatial_resolution,
+            "height above nearest drainage"
+        ).b1
 
-        return data.b1
+        return data
