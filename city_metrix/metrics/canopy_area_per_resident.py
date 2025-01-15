@@ -1,7 +1,7 @@
 from geopandas import GeoDataFrame, GeoSeries
 import xarray as xr
 import numpy as np
-from city_metrix.layers import TreeCanopyHeight, WorldPop, UrbanLandUse
+from city_metrix.layers import TreeCanopyHeight, WorldPop, WorldPopClass, UrbanLandUse
 
 
 def canopy_area_per_resident(

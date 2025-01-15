@@ -11,7 +11,7 @@ from .natural_areas import NaturalAreas
 from .layer import Layer, LayerGroupBy
 from .landsat_collection_2 import LandsatCollection2
 from .sentinel_2_level_2 import Sentinel2Level2
-from .world_pop import WorldPop
+from .world_pop import WorldPop, WorldPopClass
 from .built_up_height import BuiltUpHeight
 from .average_net_building_height import AverageNetBuildingHeight
 from .open_buildings import OpenBuildings

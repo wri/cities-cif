@@ -31,7 +31,7 @@ from city_metrix.layers import (
     UrbanLandUse,
     VegetationWaterMap,
     WorldPop,
-    WorldPopClas
+    WorldPopClass
 )
 from tests.conftest import EXECUTE_IGNORED_TESTS
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
