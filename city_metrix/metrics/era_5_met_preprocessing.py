@@ -19,8 +19,8 @@ def era_5_met_preprocessing(zones: GeoDataFrame) -> GeoSeries:
     v10_var = era_5_data.sel(variable='v10').values
     sst_var = era_5_data.sel(variable='sst').values
     cdir_var = era_5_data.sel(variable='cdir').values
-    sw_var = era_5_data.sel(variable='msdrswrfcs').values
-    lw_var = era_5_data.sel(variable='msdwlwrfcs').values
+    sw_var = era_5_data.sel(variable='avg_sdirswrfcs').values
+    lw_var = era_5_data.sel(variable='avg_sdlwrfcs').values
     d2m_var = era_5_data.sel(variable='d2m').values
     time_var = era_5_data['valid_time'].values
     lat_var = era_5_data['latitude'].values
