@@ -43,7 +43,8 @@ class UrbanLandUse(Layer):
             self.spatial_resolution,
             "urban land use"
         ).lulc
+
         if self.return_value is not None:
-            data = data.where(data==return_value)
+            data = data.where(data==self.return_value)
 
         return data
