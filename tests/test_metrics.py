@@ -23,11 +23,13 @@ def test_built_land_without_tree_cover():
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
+
 def test_canopy_area_per_resident():
     indicator = canopy_area_per_resident(ZONES)
     expected_zone_size = ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
+
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess():

@@ -9,14 +9,16 @@ class TreeCanopyHeight(Layer):
     """
     Attributes:
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+        height: minimum tree height used for filtering results
     """
 
     name = "tree_canopy_height"
     NO_DATA_VALUE = 0
 
-    def __init__(self, spatial_resolution=1, **kwargs):
+    def __init__(self, spatial_resolution=1, height=None, **kwargs):
         super().__init__(**kwargs)
         self.spatial_resolution = spatial_resolution
+        self.height = height
 
     def get_data(self, bbox):
         canopy_ht = ee.ImageCollection("projects/meta-forest-monitoring-okw37/assets/CanopyHeight")
@@ -34,5 +36,8 @@ class TreeCanopyHeight(Layer):
             self.spatial_resolution,
             "tree canopy height"
         ).cover_code
+
+        if self.height:
+            data = data.where(data >= self.height, 1, 0)
 
         return data
