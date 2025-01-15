@@ -30,6 +30,7 @@ from city_metrix.layers import (
     TreeCanopyHeight,
     TreeCover,
     UrbanLandUse,
+    VegetationWaterMap,
     WorldPop
 )
 from tests.conftest import EXECUTE_IGNORED_TESTS
@@ -154,6 +155,10 @@ def test_tree_cover():
 
 def test_urban_land_use():
     data = UrbanLandUse().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_vegetation_water_map():
+    data = VegetationWaterMap().get_data(BBOX)
     assert np.size(data) > 0
 
 def test_world_pop():
