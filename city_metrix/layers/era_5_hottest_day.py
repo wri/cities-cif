@@ -18,13 +18,18 @@ class Era5HottestDay(Layer):
         self.end_date = end_date
 
     def get_data(self, bbox):
+        min_lon, min_lat, max_lon, max_lat = bbox
+        center_lon = (min_lon + max_lon) / 2
+        center_lat = (min_lat + max_lat) / 2
+
         dataset = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY")
 
         # Function to find the city mean temperature of each hour
         def hourly_mean_temperature(image):
+            point_crs = 'EPSG:4326'
             hourly_mean = image.select('temperature_2m').reduceRegion(
                 reducer=ee.Reducer.mean(),
-                geometry=ee.Geometry.BBox(*bbox),
+                geometry=ee.Geometry.Point([center_lon, center_lat], point_crs),
                 scale=11132,
                 bestEffort=True
             ).values().get(0)
@@ -48,10 +53,6 @@ class Era5HottestDay(Layer):
         month = highest_temperature_day[4:6]
         day = highest_temperature_day[6:8]
         time = highest_temperature_day[-2:]
-
-        min_lon, min_lat, max_lon, max_lat = bbox
-        center_lon = (min_lon + max_lon) / 2
-        center_lat = (min_lat + max_lat) / 2
 
         # Initialize TimezoneFinder
         tf = TimezoneFinder()

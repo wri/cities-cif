@@ -1,5 +1,5 @@
 from city_metrix import *
-from .conftest import ZONES, EXECUTE_IGNORED_TESTS
+from .conftest import ZONES, EXECUTE_IGNORED_TESTS, OR_PORTLAND_NO_TILE_ZONE
 import pytest
 
 
@@ -22,6 +22,12 @@ def test_built_land_without_tree_cover():
     expected_zone_size = ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
+
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_era_5_met_preprocess_portland():
+    indicator = era_5_met_preprocessing(OR_PORTLAND_NO_TILE_ZONE)
+    assert len(indicator) == 24
 
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
