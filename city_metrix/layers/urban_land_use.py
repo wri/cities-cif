@@ -13,10 +13,11 @@ class UrbanLandUse(Layer):
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
 
-    def __init__(self, band='lulc', spatial_resolution=5, **kwargs):
+    def __init__(self, band='lulc', return_value=None, spatial_resolution=5, **kwargs):
         super().__init__(**kwargs)
         self.band = band
         self.spatial_resolution = spatial_resolution
+        self.return_value = return_value
 
     def get_data(self, bbox):
         ulu = ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1")
@@ -42,5 +43,7 @@ class UrbanLandUse(Layer):
             self.spatial_resolution,
             "urban land use"
         ).lulc
+        if self.return_value is not None:
+            data = data.where(data==return_value)
 
         return data
