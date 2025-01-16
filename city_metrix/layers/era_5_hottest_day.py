@@ -136,8 +136,8 @@ class Era5HottestDay(Layer):
             for file in glob.glob(f'download_{i}.grib*'):
                 os.remove(file)
 
-        an_data = xr.concat(an_list, dim='time')
-        fc_data = xr.concat(fc_list, dim='time')
+        an_data = xr.concat(an_list, dim='time').dropna(dim='time')
+        fc_data = xr.concat(fc_list, dim='time').dropna(dim='time')
         fc_data = fc_data.sel(time=~fc_data.indexes['time'].duplicated())
         fc_data = fc_data.transpose(*an_data.dims)
 

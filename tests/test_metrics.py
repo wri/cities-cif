@@ -27,6 +27,8 @@ def test_built_land_without_tree_cover():
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_portland():
     indicator = era_5_met_preprocessing(OR_PORTLAND_NO_TILE_ZONE)
+    has_nan_values = indicator.direct_rad.isna().any()
+    assert has_nan_values == False
     assert len(indicator) == 24
 
 
