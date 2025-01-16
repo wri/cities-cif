@@ -30,9 +30,10 @@ def _create_gdf_from_coords(xmin, ymin, xmax, ymax):
 
 
 # Test zones of a regular 0.01x0.01 grid over a 0.1x0.1 extent by degrees
-ZONES = test_create_fishnet_grid(106.7, -6.3, 106.8, -6.2, 0.01).reset_index()
-LARGE_ZONES = test_create_fishnet_grid(106, -7, 107, -6, 0.1).reset_index()
+IDN_JAKARTA_TILED_ZONES = test_create_fishnet_grid(106.7, -6.3, 106.8, -6.2, 0.01).reset_index()
+LARGE_IDN_JAKARTA_TILED_ZONES = test_create_fishnet_grid(106, -7, 107, -6, 0.1).reset_index()
 OR_PORTLAND_NO_TILE_ZONE = _create_gdf_from_coords(-122.7037,45.51995,-122.6923117,45.5232773)
+NLD_AMSTERDAM_NO_TILE_ZONE = _create_gdf_from_coords(4.9012, 52.372, 4.9062057, 52.3735242)
 
 
 class MockLayer(Layer):
@@ -41,7 +42,7 @@ class MockLayer(Layer):
     """
     def get_data(self, bbox):
         arr = make_geocube(
-            vector_data=ZONES,
+            vector_data=IDN_JAKARTA_TILED_ZONES,
             measurements=['index'],
             resolution=(0.001, 0.001),
             output_crs=4326,
@@ -92,7 +93,7 @@ class MockLargeLayer(Layer):
     """
     def get_data(self, bbox):
         arr = make_geocube(
-            vector_data=LARGE_ZONES,
+            vector_data=LARGE_IDN_JAKARTA_TILED_ZONES,
             measurements=['index'],
             resolution=(0.01, 0.01),
             output_crs=4326,
