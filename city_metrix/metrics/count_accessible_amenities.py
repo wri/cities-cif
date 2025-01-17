@@ -52,6 +52,7 @@ def count_accessible_amenities(zones: GeoDataFrame, city_name, amenity_name, tra
     for rownum in range(len(zones)):
         print("\n{0} (geo {1} of {2})".format(zones['geo_name'][rownum], rownum+1, len(zones)))
         zone = zones.iloc[[rownum]]
+
         iso_gdf = iso_layer.get_data(zone.total_bounds)
         # Collect individual boundary linestrings of each isoline polygon
         iso_eachboundary = [iso_gdf.iloc[rownum]['geometry'].boundary for rownum in range(len(iso_gdf))]
@@ -89,43 +90,41 @@ def count_accessible_amenities(zones: GeoDataFrame, city_name, amenity_name, tra
         count_layers = {count: AccessCountTmp(access_gdf=dissected_gdf, return_value=count) for count in range(1, max_count + 1)}
 
         # For each zone, find average number of accessible amenities, and store in result_gdf
-        rowresults = []
-        for rownum in range(len(zone)):
-            running_sum = Series([0] * len(zone))
-            for count in range(1, max_count+1):
-                try: # Because adding masks to pop_layer adds them to WorldPop(), and they cannot be removed from WorldPop()
-                    pop_layer
-                except NameError:
-                    pop_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year)
-                else:
-                    pop_layer.masks = []
-                try:
-                    totalpop_layer
-                except NameError:
-                    totalpop_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year)
-                else:
-                    totalpop_layer.masks = []
-                if informal_only:
-                    pop_layer.masks.append(informal_layer)
-                    totalpop_layer.masks.append(informal_layer)
-                pop_layer.masks.append(count_layers[count])
-                groupby = pop_layer.groupby(zone.iloc[[rownum]])
-                if weighting == 'area':
-                    try:
-                        running_sum += count * groupby.count().fillna(0)
-                    except:
-                        running_sum += 0
-                else: # weighting == 'population'
-                    try:
-                        running_sum += count * groupby.sum().fillna(0)
-                    except:
-                        running_sum += 0
-            if weighting == 'area':
-                rowresults.append(running_sum / totalpop_layer.groupby(zone).count())
-            else: # weighting == 'population'
-                rowresults.append(running_sum / totalpop_layer.groupby(zone).sum())
 
-        rowresult_gdf = GeoDataFrame({f'{weighting}_averaged_num_accessible_amenities': rowresults, 'geometry': zone['geometry']}).set_crs('EPSG:4326')
-        results.append(rowresult_gdf[f'{weighting}_averaged_num_accessible_amenities'][rownum])
+        running_sum = Series([0])
+        for count in range(1, max_count+1):
+            try: # Because adding masks to pop_layer adds them to WorldPop(), and they cannot be removed from WorldPop()
+                pop_layer
+            except NameError:
+                pop_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year)
+            else:
+                pop_layer.masks = []
+            try:
+                totalpop_layer
+            except NameError:
+                totalpop_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year)
+            else:
+                totalpop_layer.masks = []
+            if informal_only:
+                pop_layer.masks.append(informal_layer)
+                totalpop_layer.masks.append(informal_layer)
+            pop_layer.masks.append(count_layers[count])
+            groupby = pop_layer.groupby(zone)
+            if weighting == 'area':
+                try:
+                    running_sum += count * groupby.count().fillna(0)
+                except:
+                    running_sum += Series([0])
+            else: # weighting == 'population'
+                try:
+                    running_sum += count * groupby.sum().fillna(0)
+                except:
+                    running_sum += Series([0])
+        if weighting == 'area':
+            rowresult = running_sum / totalpop_layer.groupby(zone).count()
+        else: # weighting == 'population'
+            rowresult = running_sum / totalpop_layer.groupby(zone).sum()
+
+        results.append(rowresult[0])
     result_gdf = GeoDataFrame({f'{weighting}_averaged_num_accessible_amenities': results, 'geometry': zones['geometry']}).set_crs('EPSG:4326')
     return result_gdf
