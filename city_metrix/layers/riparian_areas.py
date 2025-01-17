@@ -25,8 +25,7 @@ class RiparianAreas(Layer):
 
     def get_data(self, bbox):
         # read HAND data to generate drainage paths
-        hand = HeightAboveNearestDrainage(
-            spatial_resolution=self.spatial_resolution, river_head=self.river_head, thresh=self.thresh).get_data(bbox)
+        hand = HeightAboveNearestDrainage(spatial_resolution=self.spatial_resolution, river_head=self.river_head, thresh=self.thresh).get_data(bbox)
 
         # Read surface water occurance
         water = ee.Image('JRC/GSW1_3/GlobalSurfaceWater').select(['occurrence']).gte(50)
@@ -37,7 +36,7 @@ class RiparianAreas(Layer):
             "water"
         ).occurrence
 
-        combWater = xr.ufuncs.maximum(hand.fillna(0), water_da.fillna(0)) > 0
+        combWater = np.maximum(hand.fillna(0), water_da.fillna(0)) > 0
         combWater = combWater.fillna(False)
 
         # Buffer waterways by riparian zone definitions

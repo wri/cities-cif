@@ -29,5 +29,6 @@ dependencies:
   - exactextract=0.2.0
   - cfgrib=0.9.15.0
   - scipy=1.13.1
+  - numpy=1.23.0
   - pip:
       - overturemaps==0.6.0
