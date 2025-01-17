@@ -1,5 +1,6 @@
 import xarray as xr
 import numpy as np
+import ee
 from scipy.ndimage import distance_transform_edt
 
 from .layer import Layer
