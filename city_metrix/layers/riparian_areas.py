@@ -3,7 +3,7 @@ import numpy as np
 from scipy.ndimage import distance_transform_edt
 
 from .layer import Layer
-from .test_height_above_nearest_drainage import HeightAboveNearestDrainage
+from .height_above_nearest_drainage import HeightAboveNearestDrainage
 
 
 class RiparianAreas(Layer):
