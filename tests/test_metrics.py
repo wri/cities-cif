@@ -24,11 +24,10 @@ def test_built_land_without_tree_cover():
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="AWS credentials needed")
-def test_count_accessible_amenities_areamean():
-    from .conftest import create_fishnet_grid
-    NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
-    indicator = count_accessible_amenities(NAIROBI_BBOX, 'KEN-Nairobi', 'schools', 'walk', 'time', '15', 2024, aws_profilename=None)
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Needs specific zone file to run")
+def test_count_accessible_amenities():
+    nairobi_gdf = None # Need link to a GDF for which the isoline file has been calculated
+    indicator = count_accessible_amenities(nairobi_gdf, 'KEN-Nairobi', 'schools', 'walk', 'time', 15, '20241105', weighting='population')
     expected_zone_size = NAIROBI_BBOX.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
