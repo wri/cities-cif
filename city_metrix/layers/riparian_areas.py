@@ -3,7 +3,7 @@ import numpy as np
 import ee
 from scipy.ndimage import distance_transform_edt
 
-from .layer import Layer
+from .layer import Layer, get_image_collection
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
 
 
