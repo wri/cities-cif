@@ -54,77 +54,80 @@ def count_accessible_amenities(zones: GeoDataFrame, city_name, amenity_name, tra
         zone = zones.iloc[[rownum]]
 
         iso_gdf = iso_layer.get_data(zone.total_bounds)
-        # Collect individual boundary linestrings of each isoline polygon
-        iso_eachboundary = [iso_gdf.iloc[rownum]['geometry'].boundary for rownum in range(len(iso_gdf))]
-        iso_boundarylinesmulti = [i for i in iso_eachboundary if i is not None]
-        iso_boundarylines = []
-        for i in iso_boundarylinesmulti:
-            if type(i) == shapely.geometry.linestring.LineString:
-                iso_boundarylines.append(i)
-            else:
-                for j in list(i.geoms):
-                    iso_boundarylines.append(j)
-        iso_bl_gdf = GeoDataFrame({'idx': range(len(iso_boundarylines)), 'geometry': iso_boundarylines})
-        print("Converted isoline polygons into boundary multilines")
-        # Dissolve all linestrings into large multilinestring, and polygonize into "dissected polygons"
-        iso_dissected_polys = shapely.polygonize(list(iso_bl_gdf.dissolve().geometry[0].geoms))
-        print("Creating gdf of dissected polygons")
-        dissected_gdf = GeoDataFrame({'poly_id': range(len(list(iso_dissected_polys.geoms))), 'geometry': list(iso_dissected_polys.geoms)}).set_crs('EPSG:4326')
-        # For each dissected polygon, find how many of the original isoline polys contain the centroid
-        # This is the number of amenity points are accessible within the dissected polygon
-        print("Counting how many original isoline polygons intersect with each dissected polygon")
-        count_amenities = dissected_gdf.centroid.within(iso_gdf.iloc[[0]].geometry[iso_gdf.index[0]]) * 1  # This is a Series storing running sum, with num rows == num of dissected polys
-        print("|==" + "PROGRESS=OF=INCLUSION=TESTS" + ("=" * 71) + "|")
-        print(" ", end="")
-        progress = 0
-        for iso_idx in range(1, len(iso_gdf)):  # Iterate through all original isoline polys: test dissected polys to see whether centroids are included in isoline poly, add to running sum Series
-            if floor(100 * iso_idx / len(iso_gdf)) > progress:
-                progress = floor(100 * iso_idx / len(iso_gdf))
-                print("X", end="")
-            count_amenities = count_amenities + (dissected_gdf.centroid.within(iso_gdf.iloc[[iso_idx]].geometry[iso_gdf.index[iso_idx]]) * 1)
-        print("X")
-        dissected_gdf['count_amenities'] = count_amenities
+        if len(iso_gdf) == 0:
+            results.append(0)
+        else:
+            # Collect individual boundary linestrings of each isoline polygon
+            iso_eachboundary = [iso_gdf.iloc[rownum]['geometry'].boundary for rownum in range(len(iso_gdf))]
+            iso_boundarylinesmulti = [i for i in iso_eachboundary if i is not None]
+            iso_boundarylines = []
+            for i in iso_boundarylinesmulti:
+                if type(i) == shapely.geometry.linestring.LineString:
+                    iso_boundarylines.append(i)
+                else:
+                    for j in list(i.geoms):
+                        iso_boundarylines.append(j)
+            iso_bl_gdf = GeoDataFrame({'idx': range(len(iso_boundarylines)), 'geometry': iso_boundarylines})
+            print("Converted isoline polygons into boundary multilines")
+            # Dissolve all linestrings into large multilinestring, and polygonize into "dissected polygons"
+            iso_dissected_polys = shapely.polygonize(list(iso_bl_gdf.dissolve().geometry[0].geoms))
+            print("Creating gdf of dissected polygons")
+            dissected_gdf = GeoDataFrame({'poly_id': range(len(list(iso_dissected_polys.geoms))), 'geometry': list(iso_dissected_polys.geoms)}).set_crs('EPSG:4326')
+            # For each dissected polygon, find how many of the original isoline polys contain the centroid
+            # This is the number of amenity points are accessible within the dissected polygon
+            print("Counting how many original isoline polygons intersect with each dissected polygon")
+            count_amenities = dissected_gdf.centroid.within(iso_gdf.iloc[[0]].geometry[iso_gdf.index[0]]) * 1  # This is a Series storing running sum, with num rows == num of dissected polys
+            print("|==" + "PROGRESS=OF=INCLUSION=TESTS" + ("=" * 71) + "|")
+            print(" ", end="")
+            progress = 0
+            for iso_idx in range(1, len(iso_gdf)):  # Iterate through all original isoline polys: test dissected polys to see whether centroids are included in isoline poly, add to running sum Series
+                if floor(100 * iso_idx / len(iso_gdf)) > progress:
+                    progress = floor(100 * iso_idx / len(iso_gdf))
+                    print("X", end="")
+                count_amenities = count_amenities + (dissected_gdf.centroid.within(iso_gdf.iloc[[iso_idx]].geometry[iso_gdf.index[iso_idx]]) * 1)
+            print("X")
+            dissected_gdf['count_amenities'] = count_amenities
 
-        # Create dict of polygons each with a single asset-count
-        max_count = dissected_gdf['count_amenities'].max()
-        count_layers = {count: AccessCountTmp(access_gdf=dissected_gdf, return_value=count) for count in range(1, max_count + 1)}
+            # Create dict of polygons each with a single asset-count
+            max_count = dissected_gdf['count_amenities'].max()
+            count_layers = {count: AccessCountTmp(access_gdf=dissected_gdf, return_value=count) for count in range(1, max_count + 1)}
 
-        # For each zone, find average number of accessible amenities, and store in result_gdf
+            # For each zone, find average number of accessible amenities, and store in result_gdf
 
-        running_sum = Series([0])
-        for count in range(1, max_count+1):
-            try: # Because adding masks to pop_layer adds them to WorldPop(), and they cannot be removed from WorldPop()
-                pop_layer
-            except NameError:
-                pop_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year)
-            else:
-                pop_layer.masks = []
-            try:
-                totalpop_layer
-            except NameError:
-                totalpop_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year)
-            else:
-                totalpop_layer.masks = []
-            if informal_only:
-                pop_layer.masks.append(informal_layer)
-                totalpop_layer.masks.append(informal_layer)
-            pop_layer.masks.append(count_layers[count])
-            groupby = pop_layer.groupby(zone)
+            running_sum = Series([0])
+            for count in range(1, max_count+1):
+                try: # Because adding masks to pop_layer adds them to WorldPop(), and they cannot be removed from WorldPop()
+                    pop_layer
+                except NameError:
+                    pop_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year)
+                else:
+                    pop_layer.masks = []
+                try:
+                    totalpop_layer
+                except NameError:
+                    totalpop_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year)
+                else:
+                    totalpop_layer.masks = []
+                if informal_only:
+                    pop_layer.masks.append(informal_layer)
+                    totalpop_layer.masks.append(informal_layer)
+                pop_layer.masks.append(count_layers[count])
+                groupby = pop_layer.groupby(zone)
+                if weighting == 'area':
+                    try:
+                        running_sum += count * groupby.count().fillna(0)
+                    except:
+                        running_sum += Series([0])
+                else: # weighting == 'population'
+                    try:
+                        running_sum += count * groupby.sum().fillna(0)
+                    except:
+                        running_sum += Series([0])
             if weighting == 'area':
-                try:
-                    running_sum += count * groupby.count().fillna(0)
-                except:
-                    running_sum += Series([0])
+                rowresult = running_sum / totalpop_layer.groupby(zone).count()
             else: # weighting == 'population'
-                try:
-                    running_sum += count * groupby.sum().fillna(0)
-                except:
-                    running_sum += Series([0])
-        if weighting == 'area':
-            rowresult = running_sum / totalpop_layer.groupby(zone).count()
-        else: # weighting == 'population'
-            rowresult = running_sum / totalpop_layer.groupby(zone).sum()
+                rowresult = running_sum / totalpop_layer.groupby(zone).sum()
 
-        results.append(rowresult[0])
+            results.append(rowresult[0])
     result_gdf = GeoDataFrame({f'{weighting}_averaged_num_accessible_amenities': results, 'geometry': zones['geometry']}).set_crs('EPSG:4326')
     return result_gdf
