@@ -77,8 +77,8 @@ def count_accessible_amenities(zones: GeoDataFrame, city_name, amenity_name, tra
                 dissected_gdf = GeoDataFrame({'poly_id': range(len(list(iso_dissected_polys.geoms))), 'geometry': list(iso_dissected_polys.geoms)}).set_crs('EPSG:4326')
             # For each dissected polygon, find how many of the original isoline polys contain the centroid
             # This is the number of amenity points are accessible within the dissected polygon
-            print("Counting how many original isoline polygons intersect with each dissected polygon")
-            count_amenities = dissected_gdf.centroid.within(iso_gdf.iloc[[0]].geometry[iso_gdf.index[0]]) * 1  # This is a Series storing running sum, with num rows == num of dissected polys
+            print("Counting original isoline polygons that intersect with each dissected polygon")
+            count_amenities = dissected_gdf.centroid.within(iso_gdf.iloc[[0]].geometry[iso_gdf.index[0]]) * 1  # This is a Series storing running sum, a vector with num rows == num of dissected polys
             print("|==" + "PROGRESS=OF=INCLUSION=TESTS" + ("=" * 71) + "|")
             print(" ", end="")
             progress = 0
