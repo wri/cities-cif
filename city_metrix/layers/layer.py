@@ -2,6 +2,8 @@ import os
 from abc import abstractmethod
 from typing import Union, Tuple
 from uuid import uuid4
+
+import xee
 # This osgeo import is essential for proper functioning. Do not remove.
 from osgeo import gdal
 
@@ -9,7 +11,7 @@ import ee
 import boto3
 import math
 from dask.diagnostics import ProgressBar
-from ee import ImageCollection
+from ee import ImageCollection, Geometry
 from geocube.api.core import make_geocube
 from shapely.geometry import box, polygon
 from xrspatial import zonal_stats
@@ -119,7 +121,9 @@ def _get_tile_boundaries(bbox, tile_degrees, buffer_size):
     return tile_grid, unbuffered_tile_grid
 
 def _write_tile_grid(tile_grid, output_path, target_file_name):
-    tile_grid = gpd.GeoDataFrame(tile_grid, crs='EPSG:4326')
+    # tile_grid = gpd.GeoDataFrame(tile_grid, crs='EPSG:4326')
+
+    tile_grid = gpd.GeoDataFrame(tile_grid, crs='EPSG:32724')
     tile_grid_file_path = str(os.path.join(output_path, target_file_name))
     tile_grid.to_file(tile_grid_file_path)
 
@@ -257,56 +261,135 @@ def get_utm_zone_epsg(bbox) -> str:
 
     return f"EPSG:{epsg}"
 
-
 def create_fishnet_grid(min_lon, min_lat, max_lon, max_lat, cell_size, buffer_size=0, tile_units_in_degrees=True):
-    lon_coord, lat_coord = (min_lon, min_lat)
+
+# def create_fishnet_grid(min_x, min_y, max_x, max_y, epsg_code, tile_side_length_meters=None, buffer_distance_meters=None):
+    # TODO confirm that epsg_code is 4326 or a utm
+    # Assume that epsg_code units, tile_side, buffer_distance are all in same units
+    # epsg_code = 'epsg:4326'
+    # epsg_code = 'epsg:32724'
+
+
+    from pyproj import Transformer
+
+    retrieval_crs = 'EPSG:32724'
+    transformer = Transformer.from_crs("EPSG:4326", retrieval_crs)
+    sw_coord = transformer.transform(min_lat, min_lon)
+    ne_coord = transformer.transform(max_lat, max_lon)
+
+    min_x = float((sw_coord[0]))
+    min_y = float((sw_coord[1]))
+    max_x = float((ne_coord[0]))
+    max_y = float((ne_coord[1]))
+
+    min_x = float(math.floor(min_x))
+    min_y = float(math.floor(min_y))
+    max_x = float(math.ceil(max_x))
+    max_y = float(math.ceil(max_y))
+
+    start_x_coord, start_y_coord = (min_x, min_y)
+    end_x_coord, end_y_coord = (max_x, max_y)
+
+    # if tile_side_length_meters == None:
+    #     tile_side_length_meters = 0
+    # if buffer_distance_meters is None:
+    #     buffer_distance_meters = 0
+
+    tile_side_length_meters = 990
+    buffer_distance_meters = 0
     geom_array = []
 
-    if tile_units_in_degrees:
-        if cell_size > 0.5:
-            raise Exception('Value for cell_size must be < 0.5 degrees.')
-
-        lon_side_offset = cell_size
-        lat_side_offset = cell_size
-        lon_buffer_offset = buffer_size
-        lat_buffer_offset = buffer_size
-    else:
-        if cell_size < 10:
-            raise Exception('Value for cell_size must be >= 10 meters.')
-
-        center_lat = (min_lat + max_lat) / 2
-        lon_side_offset, lat_side_offset = offset_meters_to_geographic_degrees(center_lat, cell_size)
-        if buffer_size == 0:
-            lon_buffer_offset = 0
-            lat_buffer_offset = 0
-        else:
-            lon_buffer_offset, lat_buffer_offset = offset_meters_to_geographic_degrees(center_lat, buffer_size)
+    # # TODO needs work
+    # if epsg_code == 'epsg:4326':
+    #     if tile_side_length_meters > 0.5:
+    #         raise Exception('Value for cell_size must be < 0.5 degrees.')
+    # else:
+    #     if tile_side_length_meters < 10:
+    #         raise Exception('Value for cell_size must be >= 10 meters.')
 
     # Polygon Size
-    while lat_coord < max_lat:
-        while lon_coord < max_lon:
-            cell_min_lon = lon_coord - lon_buffer_offset
-            cell_min_lat = lat_coord - lat_buffer_offset
-            cell_max_lon = lon_coord + lon_side_offset + lon_buffer_offset
-            cell_max_lat = lat_coord + lat_side_offset + lat_buffer_offset
+    x_coord = start_x_coord
+    y_coord = start_y_coord
+    while y_coord < end_y_coord:
+        while x_coord < end_x_coord:
+            cell_min_x = x_coord - buffer_distance_meters
+            cell_min_y = y_coord - buffer_distance_meters
+            cell_max_x = x_coord + tile_side_length_meters + buffer_distance_meters
+            cell_max_y = y_coord + tile_side_length_meters + buffer_distance_meters
+
+            cell_min_x = float(math.floor(cell_min_x))
+            cell_min_y = float(math.floor(cell_min_y))
+            cell_max_x = float(math.ceil(cell_max_x))
+            cell_max_y = float(math.ceil(cell_max_y))
+
             geom = geometry.Polygon(
                 [
-                    (cell_min_lon, cell_min_lat),
-                    (cell_min_lon, cell_max_lat),
-                    (cell_max_lon, cell_max_lat),
-                    (cell_max_lon, cell_min_lat),
-                    (cell_min_lon, cell_min_lat),
+                    (cell_min_x, cell_min_y),
+                    (cell_min_x, cell_max_y),
+                    (cell_max_x, cell_max_y),
+                    (cell_max_x, cell_min_y),
+                    (cell_min_x, cell_min_y),
                 ]
             )
             geom_array.append(geom)
-            lon_coord += lon_side_offset
-        lon_coord = min_lon
+            x_coord += tile_side_length_meters
+        x_coord = min_x
 
-        lat_coord += lat_side_offset
+        y_coord += tile_side_length_meters
 
-    fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs("EPSG:4326")
+    fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs(retrieval_crs)
     fishnet["fishnet_geometry"] = fishnet["geometry"]
     return fishnet
+
+# def create_fishnet_grid(min_lon, min_lat, max_lon, max_lat, cell_size, buffer_size=0, tile_units_in_degrees=True):
+#     lon_coord, lat_coord = (min_lon, min_lat)
+#     geom_array = []
+#
+#     if tile_units_in_degrees:
+#         if cell_size > 0.5:
+#             raise Exception('Value for cell_size must be < 0.5 degrees.')
+#
+#         lon_side_offset = cell_size
+#         lat_side_offset = cell_size
+#         lon_buffer_offset = buffer_size
+#         lat_buffer_offset = buffer_size
+#     else:
+#         if cell_size < 10:
+#             raise Exception('Value for cell_size must be >= 10 meters.')
+#
+#         center_lat = (min_lat + max_lat) / 2
+#         lon_side_offset, lat_side_offset = offset_meters_to_geographic_degrees(center_lat, cell_size)
+#         if buffer_size == 0:
+#             lon_buffer_offset = 0
+#             lat_buffer_offset = 0
+#         else:
+#             lon_buffer_offset, lat_buffer_offset = offset_meters_to_geographic_degrees(center_lat, buffer_size)
+#
+#     # Polygon Size
+#     while lat_coord < max_lat:
+#         while lon_coord < max_lon:
+#             cell_min_lon = lon_coord - lon_buffer_offset
+#             cell_min_lat = lat_coord - lat_buffer_offset
+#             cell_max_lon = lon_coord + lon_side_offset + lon_buffer_offset
+#             cell_max_lat = lat_coord + lat_side_offset + lat_buffer_offset
+#             geom = geometry.Polygon(
+#                 [
+#                     (cell_min_lon, cell_min_lat),
+#                     (cell_min_lon, cell_max_lat),
+#                     (cell_max_lon, cell_max_lat),
+#                     (cell_max_lon, cell_min_lat),
+#                     (cell_min_lon, cell_min_lat),
+#                 ]
+#             )
+#             geom_array.append(geom)
+#             lon_coord += lon_side_offset
+#         lon_coord = min_lon
+#
+#         lat_coord += lat_side_offset
+#
+#     fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs("EPSG:4326")
+#     fishnet["fishnet_geometry"] = fishnet["geometry"]
+#     return fishnet
 
 
 def _aggregate_stats(df, stats_func):
@@ -326,7 +409,7 @@ def get_stats_funcs(stats_func):
 
 
 def set_resampling_for_continuous_raster(image: ee.Image, resampling_method: str, resolution: int,
-                                         bbox: tuple[float, float, float, float]):
+                                         crs: str):
     """
     Function sets the resampling method on the GEE query dictionary for use on continuous raster layers.
     GEE only supports bilinear and bicubic interpolation methods.
@@ -340,7 +423,6 @@ def set_resampling_for_continuous_raster(image: ee.Image, resampling_method: str
     if resampling_method is None:
         data = image
     else:
-        crs = get_utm_zone_epsg(bbox)
         data = (image
                 .resample(resampling_method)
                 .reproject(crs=crs, scale=resolution))
@@ -350,7 +432,7 @@ def set_resampling_for_continuous_raster(image: ee.Image, resampling_method: str
 
 def get_image_collection(
         image_collection: ImageCollection,
-        bbox: Tuple[float],
+        utm_ee_rectangle: ee.Geometry,
         scale: int,
         name: str=None
 ) -> xr.DataArray:
@@ -364,20 +446,20 @@ def get_image_collection(
     if scale is None:
         raise Exception("Spatial_resolution cannot be None.")
 
-    crs = get_utm_zone_epsg(bbox)
+    utm_crs = utm_ee_rectangle.getInfo()['crs']['properties']['name']
 
     # See link regarding bug in crs specification https://github.com/google/Xee/issues/118
     ds = xr.open_dataset(
         image_collection,
         engine='ee',
         scale=scale,
-        crs=crs,
-        geometry=ee.Geometry.Rectangle(*bbox),
+        crs=utm_crs,
+        geometry=utm_ee_rectangle,
         chunks={'X': 512, 'Y': 512},
     )
 
     with ProgressBar():
-        print(f"Extracting layer {name} from Google Earth Engine for bbox {bbox}:")
+        print(f"Extracting layer {name} from Google Earth Engine for bbox :")
         data = ds.compute()
 
     # get in rioxarray format
@@ -387,7 +469,47 @@ def get_image_collection(
     for data_var in list(data.data_vars.values()):
         del data_var.encoding["scale_factor"]
 
+
     return data
+
+
+def get_ee_utm_rectangle(bbox: tuple[float, float, float, float], epsg_code: int) -> (ee.Geometry, int):
+    min_x, min_y, max_x, max_y = bbox
+
+    # confirm code
+    if epsg_code == 4326:  # geographic units
+        if (-180 <= min_x < max_x <= 180) and (-90 <= min_y < max_y <= 90):
+            from pyproj import Transformer
+            utm_crs = get_utm_zone_epsg(bbox)
+            transformer = Transformer.from_crs("EPSG:4326", utm_crs)
+
+            sw_coord = transformer.transform(min_y, min_x)
+            ne_coord = transformer.transform(max_y, max_x)
+
+            reproj_min_x = float(sw_coord[0])
+            reproj_min_y = float(sw_coord[1])
+            reproj_max_x = float(ne_coord[0])
+            reproj_max_y = float(ne_coord[1])
+
+            utm_ee_rectangle = ee.Geometry.Rectangle(
+                [reproj_min_x, reproj_min_y, reproj_max_x, reproj_max_y],
+                utm_crs,
+                geodesic=False
+            )
+        else:
+            raise Exception(f'Coordinates are not in correct range for EPSG4326 in bbox {bbox}')
+    elif 32601 <= epsg_code <= 32660 or 32701 <= epsg_code <= 32760:  # range of UTM zones for north/south hemispheres
+        utm_crs = f'EPSG:{epsg_code}'
+        utm_ee_rectangle = ee.Geometry.Rectangle(
+            [min_x, min_y, max_x, max_y],
+            utm_crs,
+            geodesic=False
+        )
+    else:
+        raise Exception(f'Not a recognize valid epsg_code ({epsg_code}). Must be in: [4327, 32601 - 32660, 32701 - 32760]')
+
+    return utm_ee_rectangle
+
 
 def write_layer(path, data):
     if isinstance(data, xr.DataArray):

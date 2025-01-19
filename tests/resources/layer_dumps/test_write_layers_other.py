@@ -29,3 +29,17 @@ def test_write_albedo_tiled_buffered(target_folder, bbox_info, target_spatial_re
 
     expected_file_count = 6 # includes 4 tiles and two geojson files
     assert file_count == expected_file_count
+
+# @pytest.mark.skipif(RUN_DUMPS == False, reason='Skipping since RUN_DUMPS set to False')
+def test_write_nasa_dem_tiled_unbuffered(target_folder, bbox_info, target_spatial_resolution_multiplier):
+    file_path = prep_output_path(target_folder, 'nasa_dem_tiled_unbuffered.tif')
+    target_resolution = 1
+    (NasaDEM(spatial_resolution=target_resolution) #.get_data(bbox_info.bounds)
+     .write(bbox_info.bounds, file_path, tile_degrees=0.005))
+
+    # (NasaDEM(bbox_epsg_code=4326,spatial_resolution=target_resolution)
+    #  .write(bbox_info.bounds, file_path, tile_side_length_meters=0, buffer_distance_meters=0))
+
+    # file_count = get_file_count_in_folder(file_path)
+    # expected_file_count = 5 # includes 4 tiles and one geojson files
+    # assert file_count == expected_file_count
