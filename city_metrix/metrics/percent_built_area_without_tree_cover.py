@@ -3,7 +3,7 @@ from geopandas import GeoDataFrame, GeoSeries
 from city_metrix.layers import TreeCanopyHeight, EsaWorldCover, EsaWorldCoverClass
 
 
-def percent_area_without_tree_cover(zones: GeoDataFrame) -> GeoSeries:
+def percent_built_area_without_tree_cover(zones: GeoDataFrame) -> GeoSeries:
     """
     Get percentage of land (assuming zones are based on urban extents)
     with no tree cover (>5 Global Canopy Height dataset).
