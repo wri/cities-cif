@@ -24,6 +24,7 @@ from city_metrix.layers import (
     OpenStreetMap,
     OpenStreetMapClass,
     OvertureBuildings,
+    ProtectedAreas,
     Sentinel2Level2,
     SmartSurfaceLULC,
     TreeCanopyHeight,
@@ -126,6 +127,10 @@ def test_open_street_map():
 
 def test_overture_buildings():
     data = OvertureBuildings().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_protected_areas():
+    data = ProtectedAreas().get_data(BBOX)
     assert np.size(data) > 0
 
 @pytest.mark.skip(reason="layer is deprecated")
