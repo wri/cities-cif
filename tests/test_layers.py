@@ -41,7 +41,7 @@ COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 
 def test_acagpm2p5():
-    data = AcagPM2p5.get_data(BBOX)
+    data = AcagPM2p5().get_data(BBOX)
     assert np.size(data) > 0
 
 def test_albedo():
