@@ -20,6 +20,8 @@ def percent_protected_area(zones: GeoDataFrame, status=['Inscribed', 'Adopted', 
 
     pa_layer = ProtectedAreas(status=status, status_year=status_year, iucn_cat=iucn_cat)
     all_pa = pa_layer.get_data(zones.total_bounds)
+    if len(all_pa) == 0:  # If no protected areas intersect with AOI
+        return Series([0] * len(zones))
     area_layer = PixelAreaLayer()
     total_area = area_layer.groupby(zones).sum()
 

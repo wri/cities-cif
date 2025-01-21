@@ -22,6 +22,8 @@ class ProtectedAreas(Layer):
         dataset = ee.FeatureCollection('WCMC/WDPA/current/polygons')
         dataset = dataset.filter(ee.Filter.inList('STATUS', self.status)).filter(ee.Filter.lessThanOrEquals('STATUS_YR', self.status_year)).filter(ee.Filter.inList('IUCN_CAT', self.iucn_cat))
         dataset = dataset.filterBounds(ee.Geometry.BBox(*bbox))
+        if dataset.size().getInfo() == 0:
+            return gpd.GeoDataFrame({'protected': [], 'geometry': []}).set_crs('EPSG:4326')
         data_gdf = geemap.ee_to_gdf(dataset)
         data_gdf  = data_gdf.clip(bbox).reset_index()
         return gpd.GeoDataFrame({'protected': 1, 'geometry': data_gdf.geometry}).set_crs('EPSG:4326')
