@@ -17,8 +17,8 @@ def test_built_land_with_low_surface_reflectivity():
     assert expected_zone_size == actual_indicator_size
 
 
-def test_built_land_without_tree_cover():
-    indicator = built_land_without_tree_cover(IDN_JAKARTA_TILED_ZONES)
+def test_percent_area_without_tree_cover():
+    indicator = percent_area_without_tree_cover(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
