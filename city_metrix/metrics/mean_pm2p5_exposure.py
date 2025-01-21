@@ -5,6 +5,7 @@ from city_metrix.layers.layer import get_image_collection
 
 
 def mean_pm2p5_exposure(zones: GeoDataFrame, acag_year=2022, pop_weighted=True, worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False) -> GeoSeries:
+
     class WorldPopReprojected(Layer):
         def __init__(self, agesex_classes=[], worldpop_year=2020, acag_year=2022, multiply_by_pm2p5=False, **kwargs):
             super().__init__(**kwargs)
@@ -74,4 +75,4 @@ def mean_pm2p5_exposure(zones: GeoDataFrame, acag_year=2022, pop_weighted=True, 
             sumofweights = WorldPopReprojected(agesex_classes=worldpop_agesex_classes, worldpop_year=worldpop_year, multiply_by_pm2p5=False).mask(informal_mask).groupby(zones).sum()
         return weightedsum / sumofweights
     else:  # not pop_weighted
-        return pm2p5_layer.groupby(zones).sum() / pm2p5_layer.groupby(zones).count()
+        return 100 * (pm2p5_layer.groupby(zones).sum() / pm2p5_layer.groupby(zones).count()) / 35  # Express as percent of WHO guideline 35 ug/m3
