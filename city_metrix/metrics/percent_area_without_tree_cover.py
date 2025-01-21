@@ -1,6 +1,6 @@
 from geopandas import GeoDataFrame, GeoSeries
 
-from city_metrix.layers import TreeCanopyHeight
+from city_metrix.layers import TreeCanopyHeight, EsaWorldCover, EsaWorldCoverClass
 
 
 def percent_area_without_tree_cover(zones: GeoDataFrame) -> GeoSeries:
@@ -15,7 +15,10 @@ def percent_area_without_tree_cover(zones: GeoDataFrame) -> GeoSeries:
             data = super().get_data(bbox)
             return data.where(data >= 5)
 
-    total_area_layer = TreeCanopyHeight(spatial_resolution=10)
+    built_up_layer = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
     tree_cover_layer = CanopyAbove5Meters(spatial_resolution=10)
+
+    built_land = built_up_layer.groupby(zones).count()
+    built_land_with_tree_cover = built_up_layer.mask(tree_cover_layer).groupby(zones).count()
     
-    return 100 * (1 - (tree_cover_layer.groupby(zones).count() / total_area_layer.groupby(zones).count()))
+    return 100 * (1 - (built_land_with_tree_cover / built_land))
