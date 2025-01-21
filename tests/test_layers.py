@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 from city_metrix.layers import (
+    AcagPM2p5,
     Albedo,
     AlosDSM,
     AverageNetBuildingHeight,
@@ -38,6 +39,10 @@ from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 # Tests are implemented for the same bounding box in Brazil.
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
+
+def test_acagpm2p5()
+    data = AcagPM2p5.get_data(BBOX)
+    assert np.size(data) > 0
 
 def test_albedo():
     data = Albedo().get_data(BBOX)
