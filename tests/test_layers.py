@@ -40,7 +40,7 @@ from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 
-def test_acagpm2p5()
+def test_acagpm2p5():
     data = AcagPM2p5.get_data(BBOX)
     assert np.size(data) > 0
 
