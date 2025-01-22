@@ -9,6 +9,7 @@ from city_metrix.layers import (
     Era5HottestDay,
     EsaWorldCover,
     EsaWorldCoverClass,
+    HeightAboveNearestDrainage,
     HighLandSurfaceTemperature,
     ImperviousSurface,
     LandCoverGlad,
@@ -29,6 +30,7 @@ from city_metrix.layers import (
     TreeCanopyHeight,
     TreeCover,
     UrbanLandUse,
+    VegetationWaterMap,
     WorldPop
 )
 from tests.conftest import EXECUTE_IGNORED_TESTS
@@ -67,6 +69,10 @@ def test_era_5_hottest_day():
 def test_esa_world_cover():
     land_cover_class = EsaWorldCoverClass.BUILT_UP
     data = EsaWorldCover(land_cover_class=land_cover_class).get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_height_above_nearest_drainage():
+    data = HeightAboveNearestDrainage().get_data(BBOX)
     assert np.size(data) > 0
 
 def test_high_land_surface_temperature():
@@ -147,6 +153,10 @@ def test_tree_cover():
 
 def test_urban_land_use():
     data = UrbanLandUse().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_vegetation_water_map():
+    data = VegetationWaterMap().get_data(BBOX)
     assert np.size(data) > 0
 
 def test_world_pop():
