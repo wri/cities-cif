@@ -35,6 +35,10 @@ def test_alos_dsm():
     utm_bbox_data = AlosDSM().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
+def test_aqueduct_flood():
+    data = AqueductFlood().get_data(BBOX)
+    assert np.size(data) > 0
+
 def test_average_net_building_height():
     data = AverageNetBuildingHeight().get_data(BBOX)
     assert np.size(data) > 0
