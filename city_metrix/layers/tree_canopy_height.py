@@ -14,10 +14,9 @@ class TreeCanopyHeight(Layer):
     name = "tree_canopy_height"
     NO_DATA_VALUE = 0
 
-    def __init__(self, spatial_resolution=1, height=5, **kwargs):
+    def __init__(self, spatial_resolution=1, **kwargs):
         super().__init__(**kwargs)
         self.spatial_resolution = spatial_resolution
-        self.height = height
 
     def get_data(self, bbox):
         canopy_ht = ee.ImageCollection("projects/meta-forest-monitoring-okw37/assets/CanopyHeight")
@@ -26,7 +25,7 @@ class TreeCanopyHeight(Layer):
         canopy_ht_img = (canopy_ht
                          .reduce(ee.Reducer.mean())
                          .rename("cover_code")
-                         ).gte(self.height)
+                         )
 
         canopy_ht_ic = ee.ImageCollection(canopy_ht_img)
         data = get_image_collection(
