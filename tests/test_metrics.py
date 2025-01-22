@@ -3,6 +3,7 @@ from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, OR_PORTLAN
 import pytest
 
 
+
 def test_built_land_with_high_lst():
     indicator = built_land_with_high_land_surface_temperature(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
@@ -23,6 +24,13 @@ def test_built_land_without_tree_cover():
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Needs specific zone file to run")
+def test_count_accessible_amenities():
+    nairobi_gdf = None # Need link to a GDF for which the isoline file has been calculated
+    indicator = count_accessible_amenities(nairobi_gdf, 'KEN-Nairobi', 'schools', 'walk', 'time', 15, '20241105', weighting='population')
+    expected_zone_size = NAIROBI_BBOX.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_portland():
@@ -62,6 +70,14 @@ def test_natural_areas():
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="AWS credentials needed")
+def test_percent_population_access():
+    from .conftest import create_fishnet_grid
+    NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
+    indicator = percent_population_access(NAIROBI_BBOX, 'KEN-Nairobi', 'schools', 'walk', 'time', '15', 2024, aws_profilename=None)
+    expected_zone_size = NAIROBI_BBOX.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
 
 def test_recreational_space_per_capita():
     indicator = recreational_space_per_capita(IDN_JAKARTA_TILED_ZONES)
