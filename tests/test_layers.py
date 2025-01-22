@@ -3,6 +3,7 @@ import numpy as np
 from city_metrix.layers import (
     Albedo,
     AlosDSM,
+    AqueductFlood,
     AverageNetBuildingHeight,
     BuiltUpHeight,
     Cams,
@@ -46,6 +47,10 @@ def test_albedo():
 
 def test_alos_dsm():
     data = AlosDSM().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_aqueduct_flood():
+    data = AqueductFlood().get_data(BBOX)
     assert np.size(data) > 0
 
 def test_average_net_building_height():
