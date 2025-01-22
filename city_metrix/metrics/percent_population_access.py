@@ -8,14 +8,13 @@ from city_metrix.layers.urban_land_use import UrbanLandUse
 from city_metrix.layers.layer import Layer, get_utm_zone_epsg
 
 
-def percent_population_access(zones, city_name, amenity_name, travel_mode, threshold_type, threshold_value, retrieval_date, worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False):
-    # Example: city_name='MEX-Mexico-City', amenity_name='schools', travel_mode='walk', threshold_type='time', threshold_value=30, retrieval_date='20241105'
+def percent_population_access(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False):
+    # Example: city_name='MEX-Mexico_City', amenity_name='schools', travel_mode='walk', threshold_value=30, threshold_unit='minutes', retrieval_date='20241105'
 
     class IsolineSimplified(Isoline):
     # Stores and returns isochrone or isodistance polygons with simplified geometry, and dissolved into fewer non-overlapping polygons
         def __init__(self, filename, **kwargs):
             super().__init__(filename=filename)
-            # params is dict with keys cityname, amenityname, travelmode, threshold_type, threshold_value, year
             iso_gdf = self.gdf
             if iso_gdf.crs in ('EPSG:4326', 'epsg:4326'):
                 utm_epsg = get_utm_zone_epsg(iso_gdf.total_bounds)
@@ -27,7 +26,7 @@ def percent_population_access(zones, city_name, amenity_name, travel_mode, thres
             
         def get_data(self, bbox):
             return self.gdf.clip(shapely.box(*bbox))
-    filename = f"{city_name}_{amenity_name}_{travel_mode}_{threshold_type}_{threshold_value}_{retrieval_date}.geojson"
+    filename = f"{city_name}_{amenity_name}_{travel_mode}_{threshold_value}_{threshold_unit}_{retrieval_date}.geojson"
     iso_layer = IsolineSimplified(filename)
     accesspop_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year, masks=[iso_layer,])
     totalpop_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year)

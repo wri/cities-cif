@@ -8,12 +8,12 @@ from city_metrix.layers import Isoline, UrbanLandUse, WorldPop
 from city_metrix.layers.layer import get_utm_zone_epsg
 
 
-def count_accessible_amenities(zones: GeoDataFrame, city_name, amenity_name, travel_mode, threshold_type, threshold_value, retrieval_date, weighting='population', worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False) -> GeoSeries:
+def count_accessible_amenities(zones: GeoDataFrame, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, weighting='population', worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False) -> GeoSeries:
     # cityname example: ARG-Buenos-Aires
     # amenityname is OSMclass names, in lowercase
     # travelmode is walk, bike, automobile, publictransit (only walk implemented for now)
-    # threshold_type is distance or time
     # threshold_value is integer, in minutes or meters
+    # threshold_unit is usually minutes or meters
 
     class AccessCountTmp(Layer):
         def __init__(self, access_gdf, return_value, **kwargs):
@@ -26,7 +26,6 @@ def count_accessible_amenities(zones: GeoDataFrame, city_name, amenity_name, tra
     # Stores and returns isochrone or isodistance polygons with polygons slightly buffered and simplified to avoid invalid-geometry errors
         def __init__(self, filename, **kwargs):
             super().__init__(filename=filename)
-            # params is dict with keys cityname, amenityname, travelmode, threshold_type, threshold_value, year
             iso_gdf = self.gdf
             if iso_gdf.crs in ('EPSG:4326', 'epsg:4326'):
                 utm_epsg = get_utm_zone_epsg(iso_gdf.total_bounds)
@@ -38,14 +37,13 @@ def count_accessible_amenities(zones: GeoDataFrame, city_name, amenity_name, tra
         def get_data(self, bbox):
             return self.gdf.clip(shapely.box(*bbox))
 
-        filename = f"{city_name}_{amenity_name}_{travel_mode}_{threshold_type}_{threshold_value}_{retrieval_date}.geojson"
+    filename = f"{city_name}_{amenity_name}_{travel_mode}_{threshold_value}_{threshold_unit}_{retrieval_date}.geojson"
 
     population_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year)
     if informal_only:
         informal_layer = UrbanLandUse(return_value=3)
         population_layer.masks.append(informal_layer)
 
-    filename = f"{city_name}_{amenity_name}_{travel_mode}_{threshold_type}_{threshold_value}_{retrieval_date}.geojson"
     iso_layer = IsolinesBuffered(filename=filename)
     results = []
     for rownum in range(len(zones)):
