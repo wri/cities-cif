@@ -28,6 +28,7 @@ from city_metrix.layers import (
     SmartSurfaceLULC,
     TreeCanopyHeight,
     TreeCover,
+    UrbanExtents,
     UrbanLandUse,
     VegetationWaterMap,
     WorldPop
@@ -144,6 +145,10 @@ def test_tree_canopy_height():
 
 def test_tree_cover():
     data = TreeCover().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_urban_extents():
+    data = UrbanExtents().get_data(BBOX)
     assert np.size(data) > 0
 
 def test_urban_land_use():

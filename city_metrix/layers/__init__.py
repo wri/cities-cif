@@ -27,3 +27,4 @@ from .glad_lulc import LandCoverHabitatGlad
 from .glad_lulc import LandCoverHabitatChangeGlad
 from .cams import Cams
 from .vegetation_water_map import VegetationWaterMap
+from .urban_extents import UrbanExtents
