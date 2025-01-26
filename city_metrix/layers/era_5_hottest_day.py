@@ -78,7 +78,7 @@ class Era5HottestDay(Layer):
         # {"dataType": "an"(analysis)/"fc"(forecast)/"pf"(perturbed forecast)}
         an_list = []
         fc_list = []
-        c = cdsapi.Client()
+        c = cdsapi.Client(url='https://cds.climate.copernicus.eu/api')
         for i in range(len(utc_dates)):
             target_file = f'download_{i}.grib'
             c.retrieve(

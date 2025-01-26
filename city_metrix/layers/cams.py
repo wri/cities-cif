@@ -15,7 +15,7 @@ class Cams(Layer):
     def get_data(self, bbox):
         min_lon, min_lat, max_lon, max_lat = bbox
 
-        c = cdsapi.Client()
+        c = cdsapi.Client(url='https://ads.atmosphere.copernicus.eu/api')
         target_file = 'cams_download.grib'
         c.retrieve(
             'cams-global-reanalysis-eac4',
