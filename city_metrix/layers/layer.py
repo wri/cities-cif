@@ -9,22 +9,22 @@ from osgeo import gdal
 
 import ee
 import boto3
-import math
 from dask.diagnostics import ProgressBar
-from ee import ImageCollection, Geometry
+from ee import ImageCollection
 from geocube.api.core import make_geocube
-from shapely.geometry import box, polygon
+from shapely.geometry import box
 from xrspatial import zonal_stats
 import geopandas as gpd
 import xarray as xr
 import numpy as np
-import utm
-import shapely.geometry as geometry
 import pandas as pd
+
+WGS_CRS = 'EPSG:4326'
+from city_metrix.layers.layer_geometry import LayerBbox, create_fishnet_grid, project_units
 
 MAX_TILE_SIZE_DEGREES = 0.5 # TODO Why was this value selected?
 
-class Layer:
+class Layer():
     def __init__(self, aggregate=None, masks=[]):
         self.aggregate = aggregate
         if aggregate is None:
@@ -32,11 +32,14 @@ class Layer:
 
         self.masks = masks
 
+
     @abstractmethod
-    def get_data(self, bbox: Tuple[float]) -> Union[xr.DataArray, gpd.GeoDataFrame]:
+    def get_data(self, bbox: LayerBbox, spatial_resolution:int, resampling_method:str) -> Union[xr.DataArray, gpd.GeoDataFrame]:
         """
         Extract the data from the source and return it in a way we can compare to other layers.
         :param bbox: a tuple of floats representing the bounding box, (min x, min y, max x, max y)
+        :param spatial_resolution: resolution of continuous raster data in meters
+        :param resampling_method: interpolation method for continuous raster layers (bilinear, bicubic, nearest)
         :return: A rioxarray-format DataArray or a GeoPandas DataFrame
         """
         ...
@@ -49,89 +52,84 @@ class Layer:
         """
         return Layer(aggregate=self, masks=self.masks + list(layers))
 
-    def groupby(self, zones, layer=None):
+    def groupby(self, zones, spatial_resolution=None, layer=None):
         """
         Group layers by zones.
         :param zones: GeoDataFrame containing geometries to group by.
+        :param spatial_resolution: resolution of continuous raster layers in meters
         :param layer: Additional categorical layer to group by
         :return: LayerGroupBy object that can be aggregated.
         """
-        return LayerGroupBy(self.aggregate, zones, layer, self.masks)
+        return LayerGroupBy(self.aggregate, zones, spatial_resolution, layer, self.masks)
 
-    def write(self, bbox, output_path, tile_degrees=None, buffer_size=None, **kwargs):
+
+    def write(self, bbox: LayerBbox, output_path:str,
+              tile_side_length:int=None, buffer_size:int=None, length_units:str=None,
+              spatial_resolution:int=None, resampling_method:int=None, **kwargs):
         """
         Write the layer to a path. Does not apply masks.
-
         :param bbox: (min x, min y, max x, max y)
         :param output_path: local or s3 path to output to
-        :param tile_degrees: optional param to tile the results into multiple files specified as tile length on a side
+        :param tile_side_length: optional param to tile the results into multiple files specified as tile length on a side
         :param buffer_size: tile buffer distance
+        :param length_units: units for tile_side_length and buffer_size (degrees, meters)
+        :param spatial_resolution: resolution of continuous raster data in meters
+        :param resampling_method: interpolation method for continuous raster layers (bilinear, bicubic, nearest)
         :return:
         """
 
-        if tile_degrees is None:
-            clipped_data = self.aggregate.get_data(bbox)
-            write_layer(output_path, clipped_data)
+        if tile_side_length is None:
+            utm_bbox = bbox.as_utm_bbox() # currently only support output as utm
+            clipped_data = self.aggregate.get_data(utm_bbox, spatial_resolution=spatial_resolution,
+                                                   resampling_method=resampling_method)
+            _write_layer(output_path, clipped_data)
         else:
-            tile_grid, unbuffered_tile_grid = _get_tile_boundaries(bbox, tile_degrees, buffer_size)
+            tile_grid_gdf = create_fishnet_grid(bbox, tile_side_length=tile_side_length, tile_buffer_size=0,
+                                            length_units=length_units, spatial_resolution=spatial_resolution)
+            tile_grid_gdf = _add_tile_name_column(tile_grid_gdf)
+
+            buffered_tile_grid_gdf = None
+            if buffer_size and buffer_size > 0:
+                buffered_tile_grid_gdf = (
+                    create_fishnet_grid(bbox, tile_side_length=tile_side_length, tile_buffer_size=buffer_size,
+                                        length_units=length_units, spatial_resolution=spatial_resolution))
+                buffered_tile_grid_gdf = _add_tile_name_column(buffered_tile_grid_gdf)
 
             # write raster data to files
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
 
-            for tile in tile_grid:
-                tile_name = tile['tile_name']
-                tile_geom = tile['geometry']
-
-                file_path = os.path.join(output_path, tile_name)
-                clipped_data = self.aggregate.get_data(tile_geom.bounds)
-                write_layer(file_path, clipped_data)
-
             # write tile grid to geojson file
-            _write_tile_grid(tile_grid, output_path, 'tile_grid.geojson')
+            _write_tile_grid(tile_grid_gdf, output_path, 'tile_grid.geojson')
 
             # if tiles were buffered, also write unbuffered tile grid to geojson file
-            if unbuffered_tile_grid:
-                _write_tile_grid(unbuffered_tile_grid, output_path, 'tile_grid_unbuffered.geojson')
+            if buffered_tile_grid_gdf is not None and len(buffered_tile_grid_gdf) > 0:
+                _write_tile_grid(buffered_tile_grid_gdf, output_path, 'tile_grid_unbuffered.geojson')
+
+            utm_crs = tile_grid_gdf.crs.srs
+            for tile in tile_grid_gdf.itertuples():
+                tile_name = tile.tile_name
+                tile_bbox = LayerBbox(bbox=tile.geometry.bounds, crs=utm_crs)
+
+                file_path = os.path.join(output_path, tile_name)
+                layer_data = self.aggregate.get_data(bbox=tile_bbox, spatial_resolution=spatial_resolution,
+                                                     resampling_method=resampling_method)
+                _write_layer(file_path, layer_data)
 
 
-def _get_tile_boundaries(bbox, tile_degrees, buffer_size):
-    has_buffer = True if buffer_size is not None and buffer_size != 0 else False
-    if has_buffer:
-        tiles = create_fishnet_grid(*bbox, tile_degrees, buffer_size)
-        unbuffered_tiles = create_fishnet_grid(*bbox, tile_degrees)
-    else:
-        tiles = create_fishnet_grid(*bbox, tile_degrees)
-        unbuffered_tiles = None
+def _add_tile_name_column(tile_grid):
+    tile_grid['tile_name'] = (tile_grid.index
+                              .to_series()
+                              .apply(lambda x: f'tile_{str(x + 1).zfill(3)}.tif'))
+    return tile_grid
 
-    tile_grid = []
-    unbuffered_tile_grid = []
-    for index in range(0, len(tiles)):
-        tile_serial_id = index + 1
-        tile_suffix = str(tile_serial_id).zfill(3)
-        tile_name = f'tile_{tile_suffix}.tif'
-
-        tile_geom = tiles.iloc[index]['geometry']
-        tile_grid.append({"tile_name": tile_name, "geometry": tile_geom})
-
-        if has_buffer:
-            unbuffered_tile_geom = unbuffered_tiles.iloc[index]['geometry']
-            unbuffered_tile_grid.append({"tile_name": tile_name, "geometry": unbuffered_tile_geom})
-
-    return tile_grid, unbuffered_tile_grid
-
-def _write_tile_grid(tile_grid, output_path, target_file_name):
-    # tile_grid = gpd.GeoDataFrame(tile_grid, crs='EPSG:4326')
-
-    tile_grid = gpd.GeoDataFrame(tile_grid, crs='EPSG:32724')
-    tile_grid_file_path = str(os.path.join(output_path, target_file_name))
-    tile_grid.to_file(tile_grid_file_path)
 
 class LayerGroupBy:
-    def __init__(self, aggregate, zones, layer=None, masks=[]):
+    def __init__(self, aggregate, zones, spatial_resolution=None, layer=None, masks=[]):
         self.aggregate = aggregate
         self.masks = masks
         self.zones = zones.reset_index(drop=True)
+        self.spatial_resolution = spatial_resolution
         self.layer = layer
 
     def mean(self):
@@ -144,7 +142,14 @@ class LayerGroupBy:
         return self._zonal_stats("sum")
 
     def _zonal_stats(self, stats_func):
-        if box(*self.zones.total_bounds).area <= MAX_TILE_SIZE_DEGREES**2:
+        if self.zones.crs == WGS_CRS:
+            box_area = box(*self.zones.total_bounds).area
+        else:
+            bounds = self.zones.total_bounds
+            minx, miny, maxx, maxy = project_units(bounds[0], bounds[1], bounds[2], bounds[3], self.zones.crs, WGS_CRS)
+            box_area = box(minx, miny, maxx, maxy).area
+
+        if box_area <= MAX_TILE_SIZE_DEGREES**2:
             stats = self._zonal_stats_tile(self.zones, [stats_func])
         else:
             stats = self._zonal_stats_fishnet(stats_func)
@@ -168,7 +173,16 @@ class LayerGroupBy:
 
     def _zonal_stats_fishnet(self, stats_func):
         # fishnet GeoDataFrame into smaller tiles
-        fishnet = create_fishnet_grid(*self.zones.total_bounds, MAX_TILE_SIZE_DEGREES)
+        crs = self.zones.crs.srs
+        bounds = self.zones.total_bounds
+        if crs == WGS_CRS:
+            bbox = LayerBbox(bbox=tuple(bounds), crs=WGS_CRS)
+            output_as = "latlon"
+        else:
+            bbox = LayerBbox(bbox=tuple(bounds), crs=crs)
+            output_as = "utm"
+        fishnet = create_fishnet_grid(bbox, tile_side_length=MAX_TILE_SIZE_DEGREES, length_units="degrees",
+                                      spatial_resolution=self.spatial_resolution, output_as=output_as)
 
         # spatial join with fishnet grid and then intersect geometries with fishnet tiles
         joined = self.zones.sjoin(fishnet)
@@ -197,10 +211,15 @@ class LayerGroupBy:
         return aggregated.reset_index()
 
     def _zonal_stats_tile(self, tile_gdf, stats_func):
-        bbox = tile_gdf.total_bounds
-        aggregate_data = self.aggregate.get_data(bbox)
-        mask_datum = [mask.get_data(bbox) for mask in self.masks]
-        layer_data = self.layer.get_data(bbox) if self.layer is not None else None
+        crs = tile_gdf.crs.srs
+        raw_bbox = tile_gdf.total_bounds
+        if crs == WGS_CRS:
+            bbox = LayerBbox(bbox=tuple(raw_bbox), crs=WGS_CRS)
+        else:
+            bbox = LayerBbox(bbox=tuple(raw_bbox), crs=crs)
+        aggregate_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution)
+        mask_datum = [mask.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution) for mask in self.masks]
+        layer_data = self.layer.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution) if self.layer is not None else None
 
         # align to highest resolution raster, which should be the largest raster
         # since all are clipped to the extent
@@ -247,154 +266,6 @@ class LayerGroupBy:
         return raster.rio.reproject_match(snap_to)
 
 
-def get_utm_zone_epsg(bbox) -> str:
-    """
-    Get the UTM zone projection for given a bounding box.
-
-    :param bbox: tuple of (min x, min y, max x, max y)
-    :return: the EPSG code for the UTM zone of the centroid of the bbox
-    """
-    centroid = box(*bbox).centroid
-    utm_x, utm_y, band, zone = utm.from_latlon(centroid.y, centroid.x)
-
-    if centroid.y > 0:  # Northern zone
-        epsg = 32600 + band
-    else:
-        epsg = 32700 + band
-
-    return f"EPSG:{epsg}"
-
-def create_fishnet_grid(min_lon, min_lat, max_lon, max_lat, cell_size, buffer_size=0, tile_units_in_degrees=True):
-
-# def create_fishnet_grid(min_x, min_y, max_x, max_y, epsg_code, tile_side_length_meters=None, buffer_distance_meters=None):
-    # TODO confirm that epsg_code is 4326 or a utm
-    # Assume that epsg_code units, tile_side, buffer_distance are all in same units
-    # epsg_code = 'epsg:4326'
-    # epsg_code = 'epsg:32724'
-
-
-    from pyproj import Transformer
-
-    retrieval_crs = 'EPSG:32724'
-    transformer = Transformer.from_crs("EPSG:4326", retrieval_crs)
-    sw_coord = transformer.transform(min_lat, min_lon)
-    ne_coord = transformer.transform(max_lat, max_lon)
-
-    min_x = float((sw_coord[0]))
-    min_y = float((sw_coord[1]))
-    max_x = float((ne_coord[0]))
-    max_y = float((ne_coord[1]))
-
-    min_x = float(math.floor(min_x))
-    min_y = float(math.floor(min_y))
-    max_x = float(math.ceil(max_x))
-    max_y = float(math.ceil(max_y))
-
-    start_x_coord, start_y_coord = (min_x, min_y)
-    end_x_coord, end_y_coord = (max_x, max_y)
-
-    # if tile_side_length_meters == None:
-    #     tile_side_length_meters = 0
-    # if buffer_distance_meters is None:
-    #     buffer_distance_meters = 0
-
-    tile_side_length_meters = 990
-    buffer_distance_meters = 0
-    geom_array = []
-
-    # # TODO needs work
-    # if epsg_code == 'epsg:4326':
-    #     if tile_side_length_meters > 0.5:
-    #         raise Exception('Value for cell_size must be < 0.5 degrees.')
-    # else:
-    #     if tile_side_length_meters < 10:
-    #         raise Exception('Value for cell_size must be >= 10 meters.')
-
-    # Polygon Size
-    x_coord = start_x_coord
-    y_coord = start_y_coord
-    while y_coord < end_y_coord:
-        while x_coord < end_x_coord:
-            cell_min_x = x_coord - buffer_distance_meters
-            cell_min_y = y_coord - buffer_distance_meters
-            cell_max_x = x_coord + tile_side_length_meters + buffer_distance_meters
-            cell_max_y = y_coord + tile_side_length_meters + buffer_distance_meters
-
-            cell_min_x = float(math.floor(cell_min_x))
-            cell_min_y = float(math.floor(cell_min_y))
-            cell_max_x = float(math.ceil(cell_max_x))
-            cell_max_y = float(math.ceil(cell_max_y))
-
-            geom = geometry.Polygon(
-                [
-                    (cell_min_x, cell_min_y),
-                    (cell_min_x, cell_max_y),
-                    (cell_max_x, cell_max_y),
-                    (cell_max_x, cell_min_y),
-                    (cell_min_x, cell_min_y),
-                ]
-            )
-            geom_array.append(geom)
-            x_coord += tile_side_length_meters
-        x_coord = min_x
-
-        y_coord += tile_side_length_meters
-
-    fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs(retrieval_crs)
-    fishnet["fishnet_geometry"] = fishnet["geometry"]
-    return fishnet
-
-# def create_fishnet_grid(min_lon, min_lat, max_lon, max_lat, cell_size, buffer_size=0, tile_units_in_degrees=True):
-#     lon_coord, lat_coord = (min_lon, min_lat)
-#     geom_array = []
-#
-#     if tile_units_in_degrees:
-#         if cell_size > 0.5:
-#             raise Exception('Value for cell_size must be < 0.5 degrees.')
-#
-#         lon_side_offset = cell_size
-#         lat_side_offset = cell_size
-#         lon_buffer_offset = buffer_size
-#         lat_buffer_offset = buffer_size
-#     else:
-#         if cell_size < 10:
-#             raise Exception('Value for cell_size must be >= 10 meters.')
-#
-#         center_lat = (min_lat + max_lat) / 2
-#         lon_side_offset, lat_side_offset = offset_meters_to_geographic_degrees(center_lat, cell_size)
-#         if buffer_size == 0:
-#             lon_buffer_offset = 0
-#             lat_buffer_offset = 0
-#         else:
-#             lon_buffer_offset, lat_buffer_offset = offset_meters_to_geographic_degrees(center_lat, buffer_size)
-#
-#     # Polygon Size
-#     while lat_coord < max_lat:
-#         while lon_coord < max_lon:
-#             cell_min_lon = lon_coord - lon_buffer_offset
-#             cell_min_lat = lat_coord - lat_buffer_offset
-#             cell_max_lon = lon_coord + lon_side_offset + lon_buffer_offset
-#             cell_max_lat = lat_coord + lat_side_offset + lat_buffer_offset
-#             geom = geometry.Polygon(
-#                 [
-#                     (cell_min_lon, cell_min_lat),
-#                     (cell_min_lon, cell_max_lat),
-#                     (cell_max_lon, cell_max_lat),
-#                     (cell_max_lon, cell_min_lat),
-#                     (cell_min_lon, cell_min_lat),
-#                 ]
-#             )
-#             geom_array.append(geom)
-#             lon_coord += lon_side_offset
-#         lon_coord = min_lon
-#
-#         lat_coord += lat_side_offset
-#
-#     fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs("EPSG:4326")
-#     fishnet["fishnet_geometry"] = fishnet["geometry"]
-#     return fishnet
-
-
 def _aggregate_stats(df, stats_func):
     if stats_func == "count":
         return df["count"].sum()
@@ -412,6 +283,13 @@ def get_stats_funcs(stats_func):
     else:
         return [stats_func]
 
+VALID_RASTER_RESAMPLING_METHODS = ['bilinear', 'bicubic', 'nearest']
+
+def validate_raster_resampling_method(resampling_method):
+    if resampling_method not in VALID_RASTER_RESAMPLING_METHODS:
+        raise ValueError(f"Invalid resampling method ('{resampling_method}'). "
+                         f"Valid methods: {VALID_RASTER_RESAMPLING_METHODS}")
+
 
 def set_resampling_for_continuous_raster(image: ee.Image, resampling_method: str, resolution: int,
                                          crs: str):
@@ -419,14 +297,11 @@ def set_resampling_for_continuous_raster(image: ee.Image, resampling_method: str
     Function sets the resampling method on the GEE query dictionary for use on continuous raster layers.
     GEE only supports bilinear and bicubic interpolation methods.
     """
-    valid_raster_resampling_methods = ['bilinear', 'bicubic', None]
+    validate_raster_resampling_method(resampling_method)
 
-    if resampling_method not in valid_raster_resampling_methods:
-        raise ValueError(f"Invalid resampling method ('{resampling_method}'). "
-                         f"Valid methods: {valid_raster_resampling_methods}")
-
-    if resampling_method is None:
-        data = image
+    if resampling_method == 'nearest':
+        data = (image
+                .reproject(crs=crs, scale=resolution))
     else:
         data = (image
                 .resample(resampling_method)
@@ -437,7 +312,7 @@ def set_resampling_for_continuous_raster(image: ee.Image, resampling_method: str
 
 def get_image_collection(
         image_collection: ImageCollection,
-        utm_ee_rectangle: ee.Geometry,
+        ee_rectangle,
         scale: int,
         name: str=None
 ) -> xr.DataArray:
@@ -451,15 +326,17 @@ def get_image_collection(
     if scale is None:
         raise Exception("Spatial_resolution cannot be None.")
 
-    utm_crs = utm_ee_rectangle.getInfo()['crs']['properties']['name']
-
     # See link regarding bug in crs specification https://github.com/google/Xee/issues/118
+    crs = ee_rectangle['crs']
+    if crs == WGS_CRS:
+        raise Exception("Output as latlon units is currently not supported")
+
     ds = xr.open_dataset(
         image_collection,
         engine='ee',
         scale=scale,
-        crs=utm_crs,
-        geometry=utm_ee_rectangle,
+        crs=crs,
+        geometry=ee_rectangle['ee_geometry'],
         chunks={'X': 512, 'Y': 512},
     )
 
@@ -468,63 +345,37 @@ def get_image_collection(
         data = ds.compute()
 
     # get in rioxarray format
-    data = data.squeeze("time").transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
+    data = data.squeeze("time")
+
+    data = data.transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
 
     # remove scale_factor used for NetCDF, this confuses rioxarray GeoTiffs
     for data_var in list(data.data_vars.values()):
         del data_var.encoding["scale_factor"]
 
-
     return data
 
+def reverse_y_dimension_as_needed(data_array):
+    was_reversed= False
+    y_dimensions = data_array.shape[0]
+    if data_array.y.data[0] < data_array.y.data[y_dimensions - 1]:
+        data_array = data_array.isel({data_array.rio.y_dim: slice(None, None, -1)})
+        was_reversed = True
+    return was_reversed, data_array
 
-def get_ee_utm_rectangle(bbox: tuple[float, float, float, float], epsg_code: int) -> (ee.Geometry, int):
-    min_x, min_y, max_x, max_y = bbox
-
-    # confirm code
-    if epsg_code == 4326:  # geographic units
-        if (-180 <= min_x < max_x <= 180) and (-90 <= min_y < max_y <= 90):
-            from pyproj import Transformer
-            utm_crs = get_utm_zone_epsg(bbox)
-            transformer = Transformer.from_crs("EPSG:4326", utm_crs)
-
-            sw_coord = transformer.transform(min_y, min_x)
-            ne_coord = transformer.transform(max_y, max_x)
-
-            reproj_min_x = float(sw_coord[0])
-            reproj_min_y = float(sw_coord[1])
-            reproj_max_x = float(ne_coord[0])
-            reproj_max_y = float(ne_coord[1])
-
-            utm_ee_rectangle = ee.Geometry.Rectangle(
-                [reproj_min_x, reproj_min_y, reproj_max_x, reproj_max_y],
-                utm_crs,
-                geodesic=False
-            )
-        else:
-            raise Exception(f'Coordinates are not in correct range for EPSG4326 in bbox {bbox}')
-    elif 32601 <= epsg_code <= 32660 or 32701 <= epsg_code <= 32760:  # range of UTM zones for north/south hemispheres
-        utm_crs = f'EPSG:{epsg_code}'
-        utm_ee_rectangle = ee.Geometry.Rectangle(
-            [min_x, min_y, max_x, max_y],
-            utm_crs,
-            geodesic=False
-        )
-    else:
-        raise Exception(f'Not a recognize valid epsg_code ({epsg_code}). Must be in: [4327, 32601 - 32660, 32701 - 32760]')
-
-    return utm_ee_rectangle
-
-
-def write_layer(path, data):
+def _write_layer(path, data):
     if isinstance(data, xr.DataArray):
-        write_dataarray(path, data)
+        was_reversed, data_array = reverse_y_dimension_as_needed(data)
+        _write_dataarray(path, data_array)
+    elif isinstance(data, xr.Dataset):
+        raise NotImplementedError("Data as Dataset not currently supported")
     elif isinstance(data, gpd.GeoDataFrame):
         data.to_file(path, driver="GeoJSON")
     else:
-        raise NotImplementedError("Can only write DataArray, Dataset, or GeoDataFrame")
+        raise NotImplementedError("Can only write DataArray or GeoDataFrame")
 
-def write_dataarray(path, data):
+
+def _write_dataarray(path, data):
     # for rasters, need to write to locally first then copy to cloud storage
     if path.startswith("s3://"):
         tmp_path = f"{uuid4()}.tif"
@@ -537,12 +388,8 @@ def write_dataarray(path, data):
     else:
         data.rio.to_raster(raster_path=path, driver="COG")
 
-def offset_meters_to_geographic_degrees(decimal_latitude, length_m):
-    # TODO consider replacing this spherical calculation with ellipsoidal
-    earth_radius_m = 6378137
-    rad = 180/math.pi
 
-    lon_degree_offset = abs((length_m / (earth_radius_m * math.cos(math.pi*decimal_latitude/180))) * rad)
-    lat_degree_offset = abs((length_m / earth_radius_m) * rad)
-
-    return lon_degree_offset, lat_degree_offset
+def _write_tile_grid(tile_grid, output_path, target_file_name):
+    tile_grid_file_path = str(os.path.join(output_path, target_file_name))
+    tg = tile_grid.drop(columns='fishnet_geometry', axis=1)
+    tg.to_file(tile_grid_file_path)

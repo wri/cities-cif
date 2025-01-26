@@ -1,6 +1,8 @@
 from city_metrix.layers import Layer
-from city_metrix.layers.layer import create_fishnet_grid
+from city_metrix.layers.layer import create_fishnet_grid, WGS_CRS
 from geocube.api.core import make_geocube
+
+from city_metrix.layers.layer_geometry import LayerBbox
 
 # EXECUTE_IGNORED_TESTS is the master control for whether to execute tests decorated with
 # pytest.mark.skipif. These tests are temporarily ignored due to some unresolved issue.
@@ -9,38 +11,40 @@ from geocube.api.core import make_geocube
 # in GitHub Actions.
 EXECUTE_IGNORED_TESTS = False
 
-def test_create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size):
+def create_fishnet_grid_for_testing(min_x, min_y, max_x, max_y, tile_side_length):
     # Slightly reduce aoi to avoid partial cells
     reduction = 0.000001
     max_y = (max_y - reduction)
     max_x = (max_x - reduction)
-    fishnet = create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size)
+    bbox = (min_x, min_y, max_x, max_y)
+    wgs_bbox = LayerBbox(bbox=bbox, crs=WGS_CRS)
+    fishnet = create_fishnet_grid(wgs_bbox, tile_side_length=tile_side_length, length_units='degrees', output_as='latlon')
     fishnet.drop('fishnet_geometry', axis=1, inplace=True)
     return fishnet
 
-
-def _create_gdf_from_coords(xmin, ymin, xmax, ymax):
+def create_single_bbox_for_testing(min_x, min_y, max_x, max_y):
     from shapely import geometry
     import geopandas as gp
     geom_array = []
-    poly = geometry.Polygon(((xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin)))
+    poly = geometry.Polygon(((min_x, min_y), (min_x, max_y), (max_x, max_y), (max_x, min_y)))
     geom_array.append(poly)
     gdf = gp.GeoDataFrame(geom_array, columns=["geometry"]).set_crs("EPSG:4326")
     return gdf
 
 
 # Test zones of a regular 0.01x0.01 grid over a 0.1x0.1 extent by degrees
-IDN_JAKARTA_TILED_ZONES = test_create_fishnet_grid(106.7, -6.3, 106.8, -6.2, 0.01).reset_index()
-LARGE_IDN_JAKARTA_TILED_ZONES = test_create_fishnet_grid(106, -7, 107, -6, 0.1).reset_index()
-OR_PORTLAND_NO_TILE_ZONE = _create_gdf_from_coords(-122.7037,45.51995,-122.6923117,45.5232773)
-NLD_AMSTERDAM_NO_TILE_ZONE = _create_gdf_from_coords(4.9012, 52.372, 4.9062057, 52.3735242)
+IDN_JAKARTA_TILED_ZONES = create_fishnet_grid_for_testing(106.7, -6.3, 106.8, -6.2, 0.01).reset_index()
+LARGE_IDN_JAKARTA_TILED_ZONES = create_fishnet_grid_for_testing(106, -7, 107, -6, 0.1).reset_index()
+# Test single tiles
+OR_PORTLAND_TILE = create_single_bbox_for_testing(-122.7037, 45.51995, -122.6923117, 45.5232773)
+NLD_AMSTERDAM_TILE = create_single_bbox_for_testing(4.9012, 52.372, 4.9062057, 52.3735242)
 
 
 class MockLayer(Layer):
     """
     Simple mock layer that just rasterizes the zones
     """
-    def get_data(self, bbox):
+    def get_data(self, bbox, spatial_resolution=None, resampling_method=None):
         arr = make_geocube(
             vector_data=IDN_JAKARTA_TILED_ZONES,
             measurements=['index'],
@@ -54,9 +58,9 @@ class MockMaskLayer(Layer):
     """
     Simple layer where even indices are masked
     """
-    def get_data(self, bbox):
-        cell_size_degrees = 0.01
-        mask_gdf = test_create_fishnet_grid(*bbox, cell_size_degrees).reset_index()
+    def get_data(self, bbox, spatial_resolution=None, resampling_method=None):
+        tile_side_length = 0.01
+        mask_gdf = create_fishnet_grid_for_testing(*bbox.bbox, tile_side_length).reset_index()
         mask_gdf['index'] = mask_gdf['index'] % 2
         mask = make_geocube(
             vector_data=mask_gdf,
@@ -73,9 +77,9 @@ class MockGroupByLayer(Layer):
     """
     Simple categorical layer with alternating 1s and 2s
     """
-    def get_data(self, bbox):
-        cell_size_degrees = 0.001
-        group_by_gdf = test_create_fishnet_grid(*bbox, cell_size_degrees).reset_index()
+    def get_data(self, bbox, spatial_resolution=None, resampling_method=None):
+        tile_side_length = 0.001
+        group_by_gdf = create_fishnet_grid_for_testing(*bbox.bbox, tile_side_length).reset_index()
         group_by_gdf['index'] = (group_by_gdf['index'] % 2) + 1
         group_by = make_geocube(
             vector_data=group_by_gdf,
@@ -91,7 +95,7 @@ class MockLargeLayer(Layer):
     """
     Simple mock layer that just rasterizes the zones
     """
-    def get_data(self, bbox):
+    def get_data(self, bbox, spatial_resolution=None, resampling_method=None):
         arr = make_geocube(
             vector_data=LARGE_IDN_JAKARTA_TILED_ZONES,
             measurements=['index'],
@@ -106,9 +110,9 @@ class MockLargeGroupByLayer(Layer):
     Large categorical layer with alternating 1s and 2s
     """
 
-    def get_data(self, bbox):
-        cell_size_degrees =  0.01
-        group_by_gdf = test_create_fishnet_grid(*bbox, cell_size_degrees).reset_index()
+    def get_data(self, bbox, spatial_resolution=None, resampling_method=None):
+        tile_side_length =  0.01
+        group_by_gdf = create_fishnet_grid_for_testing(*bbox.bbox, tile_side_length).reset_index()
         group_by_gdf['index'] = (group_by_gdf['index'] % 2) + 1
         group_by = make_geocube(
             vector_data=group_by_gdf,

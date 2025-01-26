@@ -3,6 +3,9 @@ from xrspatial.classify import reclassify
 
 from .layer import Layer
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
+from .layer_geometry import LayerBbox
+
+DEFAULT_SPATIAL_RESOLUTION = 10
 
 class NaturalAreas(Layer):
     """
@@ -10,12 +13,16 @@ class NaturalAreas(Layer):
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
 
-    def __init__(self, spatial_resolution=10, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.spatial_resolution = spatial_resolution
 
-    def get_data(self, bbox):
-        esa_world_cover = EsaWorldCover(spatial_resolution=self.spatial_resolution).get_data(bbox)
+    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        esa_world_cover = EsaWorldCover().get_data(bbox, spatial_resolution=spatial_resolution)
         reclass_map = {
             EsaWorldCoverClass.TREE_COVER.value: 1,
             EsaWorldCoverClass.SHRUBLAND.value: 1,

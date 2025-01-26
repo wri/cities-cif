@@ -9,27 +9,43 @@ from geocube.api.core import make_geocube
 import warnings
 from rasterio.enums import Resampling
 from xrspatial.classify import reclassify
+
+from .layer_geometry import LayerBbox
+
 warnings.filterwarnings('ignore', category=UserWarning)
 
-from .layer import Layer, get_utm_zone_epsg
+from .layer import Layer
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .average_net_building_height import AverageNetBuildingHeight
 from .urban_land_use import UrbanLandUse
 from .overture_buildings import OvertureBuildings
 
+DEFAULT_SPATIAL_RESOLUTION = 10
 
 class SmartSurfaceLULC(Layer):
-    def __init__(self, land_cover_class=None, spatial_resolution=10, **kwargs):
+    def __init__(self, land_cover_class=None, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
-        self.spatial_resolution = spatial_resolution
 
-    def get_data(self, bbox):
-        crs = get_utm_zone_epsg(bbox)
+    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        if bbox.units == "degrees":
+            lat_lon_bbox = bbox
+        else:
+            lat_lon_bbox = bbox.as_lat_lon_bbox()
+
+        crs = lat_lon_bbox.crs
 
         # ESA world cover
-        esa_world_cover = EsaWorldCover(year=2021, spatial_resolution = self.spatial_resolution).get_data(bbox)
+        esa_world_cover = (EsaWorldCover(year=2021)
+                           .get_data(lat_lon_bbox, spatial_resolution = spatial_resolution)
+                           )
+
         # ESA reclass and upsample
         def get_data_esa_reclass(esa_world_cover):
             reclass_map = {
@@ -65,17 +81,17 @@ class SmartSurfaceLULC(Layer):
 
 
         # Open space
-        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).reset_index()
+        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(lat_lon_bbox).reset_index()
         open_space_osm['Value'] = 10
 
 
         # Water
-        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox).reset_index()
+        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(lat_lon_bbox).reset_index()
         water_osm['Value'] = 20
 
 
         # Roads
-        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox).reset_index()
+        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(lat_lon_bbox).reset_index()
         if len(roads_osm) > 0:
             roads_osm['lanes'] = pd.to_numeric(roads_osm['lanes'], errors='coerce')
             # Get the average number of lanes per highway class
@@ -117,7 +133,7 @@ class SmartSurfaceLULC(Layer):
 
         # Building
         # Read ULU land cover
-        ulu_lulc = UrbanLandUse().get_data(bbox)
+        ulu_lulc = UrbanLandUse().get_data(lat_lon_bbox, spatial_resolution=spatial_resolution)
         # Reclassify ULU
         # 0-Unclassified: 0 (open space)
         # 1-Non-residential: 1 (non-res)
@@ -133,7 +149,7 @@ class SmartSurfaceLULC(Layer):
         )
 
         # Load ANBH layer
-        anbh_data = AverageNetBuildingHeight().get_data(bbox)
+        anbh_data = AverageNetBuildingHeight().get_data(lat_lon_bbox, spatial_resolution=spatial_resolution)
         anbh_1m = anbh_data.rio.reproject_match(
             match_data_array=esa_1m, 
             resampling=Resampling.nearest, 
@@ -141,7 +157,7 @@ class SmartSurfaceLULC(Layer):
         )
 
         # get building features
-        buildings = OvertureBuildings().get_data(bbox)
+        buildings = OvertureBuildings().get_data(lat_lon_bbox)
         # extract ULU, ANBH, and Area_m
         buildings['ULU'] = exact_extract(ulu_lulc_1m, buildings, ["majority"], output='pandas')['majority']
         buildings['ANBH'] = exact_extract(anbh_1m, buildings, ["mean"], output='pandas')['mean']
@@ -191,7 +207,7 @@ class SmartSurfaceLULC(Layer):
             buildings['Value'] = buildings.apply(classify_building, axis=1)
 
         # Parking
-        parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(bbox).reset_index()
+        parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(lat_lon_bbox).reset_index()
         parking_osm['Value'] = 50
 
         # combine features: open space, water, road, building, parking

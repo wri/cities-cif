@@ -56,6 +56,7 @@ def test_built_up_height():
     data = BuiltUpHeight().get_data(BBOX)
     assert np.size(data) > 0
 
+# TODO CAMS is current broken per https://gfw.atlassian.net/browse/CIF-352
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_cams():
     data = Cams().get_data(BBOX)

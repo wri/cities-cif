@@ -4,6 +4,7 @@ import numpy as np
 from geopandas import GeoDataFrame, GeoSeries
 
 from city_metrix.layers import Era5HottestDay
+from city_metrix.layers.layer_geometry import LayerBbox
 
 
 def era_5_met_preprocessing(zones: GeoDataFrame) -> GeoSeries:
@@ -12,7 +13,8 @@ def era_5_met_preprocessing(zones: GeoDataFrame) -> GeoSeries:
     :param zones: GeoDataFrame with geometries to collect zonal stats on
     :return: Pandas Dataframe of data
     """
-    era_5_data = Era5HottestDay().get_data(zones.total_bounds)
+    bbox = LayerBbox(zones.total_bounds, zones.crs.srs)
+    era_5_data = Era5HottestDay().get_data(bbox)
 
     t2m_var = era_5_data.sel(variable='t2m').values
     u10_var = era_5_data.sel(variable='u10').values
