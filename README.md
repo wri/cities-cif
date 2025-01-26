@@ -43,8 +43,10 @@ To run the module,
 
   1. You need access to Google Earth Engine
   2. Install <https://cloud.google.com/sdk/docs/install>
-  3. If you want to use the ERA5 layer, you need to install the [Climate Data Store (CDS) Application Program Interface (API)](https://cds.climate.copernicus.eu/how-to-api)
-
+  3. If you want to use the ERA5 and CAMS layers:
+     1. you need to install the [Climate Data Store (CDS) Application Program Interface (API)](https://cds.climate.copernicus.eu/how-to-api)
+     2. create a .cdsapirc file in your home directory, specifying both urls (https://cds.climate.copernicus.eu/api and https://ads.atmosphere.copernicus.eu/api) and the key that you've obtained from the ECMWF site.
+     
 ### Interactive development
 
 For most people working in a notebook or IDE the script should walk you thourgh an interactive authentication process. You will just need to be logged in to your Google account that has access to GEE in your browser.
