@@ -4,6 +4,7 @@ import xarray as xr
 import glob
 
 from .layer import Layer
+from .layer_geometry import LayerBbox
 
 
 class Cams(Layer):
@@ -12,8 +13,20 @@ class Cams(Layer):
         self.start_date = start_date
         self.end_date = end_date
 
-    def get_data(self, bbox):
-        min_lon, min_lat, max_lon, max_lat = bbox
+    def get_data(self, bbox: LayerBbox, spatial_resolution=None, resampling_method=None):
+        #Note: spatial_resolution and resampling_method arguments are ignored.
+
+        if bbox.units == "degrees":
+            min_lon = bbox.min_x
+            min_lat = bbox.min_y
+            max_lon = bbox.max_x
+            max_lat = bbox.max_y
+        else:
+            wgs_bbox = bbox.as_lat_lon_bbox()
+            min_lon = wgs_bbox.min_x
+            min_lat = wgs_bbox.min_y
+            max_lon = wgs_bbox.max_x
+            max_lat = wgs_bbox.max_y
 
         c = cdsapi.Client()
         target_file = 'cams_download.grib'
