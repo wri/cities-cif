@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 WGS_CRS = 'EPSG:4326'
-from city_metrix.layers.layer_geometry import LayerBbox, create_fishnet_grid, project_units
+from city_metrix.layers.layer_geometry import LayerBbox, create_fishnet_grid, reproject_units
 
 MAX_TILE_SIZE_DEGREES = 0.5 # TODO Why was this value selected?
 
@@ -146,7 +146,7 @@ class LayerGroupBy:
             box_area = box(*self.zones.total_bounds).area
         else:
             bounds = self.zones.total_bounds
-            minx, miny, maxx, maxy = project_units(bounds[0], bounds[1], bounds[2], bounds[3], self.zones.crs, WGS_CRS)
+            minx, miny, maxx, maxy = reproject_units(bounds[0], bounds[1], bounds[2], bounds[3], self.zones.crs, WGS_CRS)
             box_area = box(minx, miny, maxx, maxy).area
 
         if box_area <= MAX_TILE_SIZE_DEGREES**2:

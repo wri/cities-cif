@@ -47,30 +47,50 @@ class LayerBbox():
         :param output_as: specify projection for geometry values as (utm or latlon).
         :return:
         """
-        if self.units == "degrees" and output_as=="latlon":
-            rectangle = _build_ee_rectangle(self.min_x, self.min_y, self.max_x, self.max_y, WGS_CRS)
-            return rectangle
-        elif self.units == "degrees" and output_as=="utm":
+        valid_output_as = ('latlon', 'utm')
+        if output_as not in valid_output_as:
+            raise ValueError(f'output_as value must be in ({valid_output_as})')
+
+        if self.crs == WGS_CRS and output_as=="latlon":
+            ee_rectangle = _build_ee_rectangle(round(self.min_x,7), round(self.min_y,7),
+                                            round(self.max_x,7), round(self.max_y,7),
+                                            WGS_CRS)
+            return ee_rectangle
+        elif self.crs == WGS_CRS and output_as=="utm":
             utm_crs = get_utm_zone_from_latlon_point(self.centroid)
-            reproj_bbox = project_units(self.min_y, self.min_x, self.max_y, self.max_x, WGS_CRS, utm_crs)
-            rectangle = _build_ee_rectangle(reproj_bbox[1], reproj_bbox[0], reproj_bbox[3], reproj_bbox[2], utm_crs)
-            return rectangle
-        elif self.units == "meters" and output_as=="utm":
-            rectangle = _build_ee_rectangle(self.min_x, self.min_y, self.max_x, self.max_y, self.crs)
-            return rectangle
+            utm_bbox = reproject_units(self.min_y, self.min_x, self.max_y, self.max_x, WGS_CRS, utm_crs)
+            ee_rectangle = _build_ee_rectangle(round(utm_bbox[1],2), round(utm_bbox[0],2),
+                                               round(utm_bbox[3],2), round(utm_bbox[2],2),
+                                               utm_crs)
+            return ee_rectangle
+        elif self.crs != WGS_CRS and output_as=="latlon":
+            utm_crs = self.crs
+            latlon_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, utm_crs, WGS_CRS)
+            ee_rectangle = _build_ee_rectangle(round(latlon_bbox[0],7), round(latlon_bbox[1],7),
+                                               round(latlon_bbox[2],7), round(latlon_bbox[3],7),
+                                               WGS_CRS)
+            return ee_rectangle
+        elif self.crs != WGS_CRS and output_as == "utm":
+            ee_rectangle = _build_ee_rectangle(round(self.min_x,2), round(self.min_y,2),
+                                            round(self.max_x,2), round(self.max_y,2),
+                                            self.crs)
+            return ee_rectangle
         else:
-            raise Exception("Conversion of utm bbox to lat_long is not implemented")
+            raise Exception("invalid request to to_ee_rectangle")
+
 
     def as_utm_bbox(self):
         """
         Converts bbox to UTM projection
         :return:
         """
-        if self.units == "degrees":
+        if self.crs == WGS_CRS:
             utm_crs = get_utm_zone_from_latlon_point(self.centroid)
-            reproj_bbox = project_units(self.min_y, self.min_x, self.max_y, self.max_x, WGS_CRS, utm_crs)
-            bbox = (reproj_bbox[1], reproj_bbox[0], reproj_bbox[3], reproj_bbox[2])
-            return LayerBbox(bbox=bbox, crs=utm_crs)
+            reproj_bbox = reproject_units(self.min_y, self.min_x, self.max_y, self.max_x, WGS_CRS, utm_crs)
+            # round to minimize drift
+            utm_box = (round(reproj_bbox[1],2), round(reproj_bbox[0],2), round(reproj_bbox[3],2), round(reproj_bbox[2],2))
+            bbox = LayerBbox(bbox=utm_box, crs=utm_crs)
+            return bbox
         else:
             return self
 
@@ -79,12 +99,14 @@ class LayerBbox():
         Converts bbox to lat-lon bbox
         :return:
         """
-        if self.units == "degrees":
+        if self.crs == WGS_CRS:
             return self
         else:
-            reproj_bbox = project_units(self.min_x, self.min_y, self.max_x, self.max_y, self.crs, WGS_CRS)
-            return LayerBbox(bbox=tuple(reproj_bbox), crs=WGS_CRS)
-
+            reproj_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, self.crs, WGS_CRS)
+            # round to minimize drift
+            box = (round(reproj_bbox[0],7), round(reproj_bbox[1],7), round(reproj_bbox[2],7), round(reproj_bbox[3],7))
+            bbox = LayerBbox(bbox=box, crs=WGS_CRS)
+            return bbox
 
 def _build_ee_rectangle(min_x, min_y, max_x, max_y, crs):
     ee_rectangle = ee.Geometry.Rectangle(
@@ -96,7 +118,7 @@ def _build_ee_rectangle(min_x, min_y, max_x, max_y, crs):
     return rectangle
 
 
-def project_units(min_x, min_y, max_x, max_y, from_crs, to_crs):
+def reproject_units(min_x, min_y, max_x, max_y, from_crs, to_crs):
     """
     Project coordinates from one map EPSG projection to another
     """
@@ -176,19 +198,18 @@ def create_fishnet_grid(bbox:LayerBbox,
     x_tile_side_units, y_tile_side_units, tile_buffer_units =\
         _get_offsets(bbox, tile_side_length, tile_buffer_size, length_units, spatial_resolution, output_as)
 
-
-    if bbox.crs == WGS_CRS and output_as== "latlon":
-        grid_crs = WGS_CRS
-    elif bbox.crs == WGS_CRS and output_as== "utm":
-        grid_crs = get_utm_zone_from_latlon_point(bbox.centroid)
-    else:
-        grid_crs = bbox.crs
-
     start_x_coord, start_y_coord, end_x_coord, end_y_coord = _get_bounding_coords(bbox, output_as)
 
-    geom_array = []
+    x_cell_count = round((end_x_coord - start_x_coord) / x_tile_side_units, 0)
+    y_cell_count = round((end_y_coord - start_y_coord) / y_tile_side_units, 0)
+    if x_cell_count > 100:
+        raise ValueError('Failure. Grid would have too many cells along the x axis.')
+    if y_cell_count > 100:
+        raise ValueError('Failure. Grid would have too many cells along the y axis.')
+    if x_cell_count < 2 and y_cell_count < 2:
+        raise ValueError('Failure. Grid would have too few cells along one or both axes.')
 
-    # Polygon Size
+    geom_array = []
     x_coord = start_x_coord
     y_coord = start_y_coord
     while y_coord < end_y_coord:
@@ -199,6 +220,14 @@ def create_fishnet_grid(bbox:LayerBbox,
         x_coord = start_x_coord
 
         y_coord += y_tile_side_units
+
+
+    if bbox.crs == WGS_CRS and output_as== "latlon":
+        grid_crs = WGS_CRS
+    elif bbox.crs == WGS_CRS and output_as== "utm":
+        grid_crs = get_utm_zone_from_latlon_point(bbox.centroid)
+    else:
+        grid_crs = bbox.crs
 
     fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs(grid_crs)
     fishnet["fishnet_geometry"] = fishnet["geometry"]
@@ -276,6 +305,9 @@ def _build_tile_geometry(x_coord, y_coord, x_tile_side_units, y_tile_side_units,
 
 
 def _get_degree_offsets_for_meter_units(bbox: LayerBbox, tile_side_degrees):
+    if bbox.crs != WGS_CRS:
+        raise ValueError("Bbox must have WGS crs")
+
     mid_x = (bbox.min_x + bbox.min_x) / 2
     x_offset = _get_haversine_distance(mid_x, bbox.min_y, mid_x + tile_side_degrees, bbox.min_y)
 
