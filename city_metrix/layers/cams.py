@@ -28,7 +28,7 @@ class Cams(Layer):
             max_lon = wgs_bbox.max_x
             max_lat = wgs_bbox.max_y
 
-        c = cdsapi.Client()
+        c = cdsapi.Client(url='https://ads.atmosphere.copernicus.eu/api')
         target_file = 'cams_download.grib'
         c.retrieve(
             'cams-global-reanalysis-eac4',
