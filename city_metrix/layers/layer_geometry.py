@@ -206,8 +206,6 @@ def create_fishnet_grid(bbox:LayerBbox,
         raise ValueError('Failure. Grid would have too many cells along the x axis.')
     if y_cell_count > 100:
         raise ValueError('Failure. Grid would have too many cells along the y axis.')
-    if x_cell_count < 2 and y_cell_count < 2:
-        raise ValueError('Failure. Grid would have too few cells along one or both axes.')
 
     geom_array = []
     x_coord = start_x_coord
@@ -309,15 +307,15 @@ def _get_degree_offsets_for_meter_units(bbox: LayerBbox, tile_side_degrees):
         raise ValueError("Bbox must have WGS crs")
 
     mid_x = (bbox.min_x + bbox.min_x) / 2
-    x_offset = _get_haversine_distance(mid_x, bbox.min_y, mid_x + tile_side_degrees, bbox.min_y)
+    x_offset = get_haversine_distance(mid_x, bbox.min_y, mid_x + tile_side_degrees, bbox.min_y)
 
     mid_y = (bbox.min_y + bbox.min_y) / 2
-    y_offset = _get_haversine_distance(bbox.min_x, mid_y, bbox.min_x, mid_y + tile_side_degrees)
+    y_offset = get_haversine_distance(bbox.min_x, mid_y, bbox.min_x, mid_y + tile_side_degrees)
 
     return x_offset, y_offset
 
 
-def _get_haversine_distance(lon1, lat1, lon2, lat2):
+def get_haversine_distance(lon1, lat1, lon2, lat2):
     # Global-average radius of the Earth in meters
     R = 6371000
 

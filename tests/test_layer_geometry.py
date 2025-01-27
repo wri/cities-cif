@@ -4,7 +4,7 @@ import pytest
 
 from city_metrix.layers.layer import WGS_CRS
 from city_metrix.layers.layer_geometry import LayerBbox, create_fishnet_grid, _get_degree_offsets_for_meter_units, \
-    _get_haversine_distance
+    get_haversine_distance
 from tests.conftest import OR_PORTLAND_TILE
 
 PORTLAND_LATLON_BBOX = LayerBbox(OR_PORTLAND_TILE.total_bounds, OR_PORTLAND_TILE.crs.srs)
@@ -61,9 +61,6 @@ def test_extreme_large_side():
     with pytest.raises(ValueError, match='Value for tile_side_length is too large.'):
         create_fishnet_grid(bbox=bbox, tile_side_length=1, length_units='degrees', output_as='latlon')
 
-    with pytest.raises(ValueError, match='Failure. Grid would have too few cells along one or both axes.'):
-        create_fishnet_grid(bbox=bbox, tile_side_length=0.5, length_units='degrees', output_as='latlon')
-
 
 def test_extreme_small_meters():
     bbox_crs = 'EPSG:4326'
@@ -82,8 +79,8 @@ def test_degree_offsets_for_meter_units():
     # values determined on https://www.omnicalculator.com/other/latitude-longitude-distance
     approx_x_offset = 78626
     approx_y_offset = 111195
-    x_haversine = _get_haversine_distance(45, 45, 46, 45)
-    y_haversine = _get_haversine_distance(45, 45, 45, 46)
+    x_haversine = get_haversine_distance(45, 45, 46, 45)
+    y_haversine = get_haversine_distance(45, 45, 45, 46)
     x_offset, y_offset = _get_degree_offsets_for_meter_units(ll_bbox, 1)
 
     tolerance = 0.2
