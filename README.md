@@ -45,7 +45,8 @@ To run the module,
   2. Install <https://cloud.google.com/sdk/docs/install>
   3. If you want to use the ERA5 and CAMS layers:
      1. you need to install the [Climate Data Store (CDS) Application Program Interface (API)](https://cds.climate.copernicus.eu/how-to-api)
-     2. create a .cdsapirc file in your home directory, specifying both urls (https://cds.climate.copernicus.eu/api and https://ads.atmosphere.copernicus.eu/api) and the key that you've obtained from the ECMWF site.
+     2. create a .cdsapirc file in your home directory and save the key you acquired from https://cds.climate.copernicus.eu/how-to-api
+        1. Note: you do not need to specify any url's in the .cdsapirc file since they are specified in code.
      
 ### Interactive development
 
