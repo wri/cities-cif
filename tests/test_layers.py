@@ -3,11 +3,11 @@ import numpy as np
 from city_metrix.layers import *
 from city_metrix.layers.layer_tools import get_projection_name
 from tests.conftest import EXECUTE_IGNORED_TESTS
-from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 
 # Tests are implemented for an area where we have LULC
-COUNTRY_CODE_FOR_BBOX = 'USA'
-BBOX = BBOX_USA_OR_PORTLAND
+COUNTRY_CODE_FOR_BBOX = 'BRA'
+BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 BBOX_AS_UTM = BBOX.as_utm_bbox()
 
 def test_albedo():
@@ -176,7 +176,7 @@ def test_sentinel_2_level2():
 def test_smart_surface_lulc():
     data = SmartSurfaceLULC().get_data(BBOX)
     assert np.size(data) > 0
-    # assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
+    assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
     utm_bbox_data = SmartSurfaceLULC().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
