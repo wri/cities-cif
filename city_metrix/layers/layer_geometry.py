@@ -1,3 +1,6 @@
+import math
+from typing import Union
+
 import ee
 import shapely
 import utm
@@ -6,7 +9,6 @@ import geopandas as gpd
 
 from shapely.geometry import box
 from city_metrix.layers.layer import WGS_CRS
-from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance
 
 
 class GeoExtent():
@@ -283,3 +285,44 @@ def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
     y_offset = get_haversine_distance(bbox.min_x, mid_y, bbox.min_x, mid_y + tile_side_degrees)
 
     return x_offset, y_offset
+
+
+def get_projection_name(crs: Union[str|int]):
+    if isinstance(crs, str):
+        if not crs.startswith('EPSG:'):
+            raise Exception("Valid crs string must be specified in form of ('EPSG:n') where n is an EPSG code.")
+        epsg_code = int(crs.split(':')[1])
+    elif isinstance(crs, int):
+        epsg_code = crs
+    else:
+        raise ValueError(f"Value of ({crs}) is an invalid crs string or epsg code. ")
+
+    if epsg_code == 4326:
+        projection_name = 'geographic'
+    elif 32601 <= epsg_code <= 32660 or 32701 <= epsg_code <= 32760:
+        projection_name = 'utm'
+    else:
+        raise ValueError(f"CRS ({crs}) not supported.")
+
+    return projection_name
+
+def get_haversine_distance(lon1, lat1, lon2, lat2):
+    # Global-average radius of the Earth in meters
+    R = 6371000
+
+    # Convert degrees to radians
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    # Haversine formula
+    a = math.sin(delta_phi / 2.0) ** 2 + \
+        math.cos(phi1) * math.cos(phi2) * \
+        math.sin(delta_lambda / 2.0) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    # Distance in meters
+    distance = R * c
+
+    return distance

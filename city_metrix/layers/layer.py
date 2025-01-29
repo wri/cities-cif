@@ -1,3 +1,4 @@
+import math
 import os
 from abc import abstractmethod
 from typing import Union, Tuple
@@ -19,7 +20,6 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
-from city_metrix.layers.layer_tools import standardize_y_dimension_direction
 
 WGS_CRS = 'EPSG:4326'
 from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, reproject_units
@@ -387,3 +387,11 @@ def _write_tile_grid(tile_grid, output_path, target_file_name):
     tile_grid_file_path = str(os.path.join(output_path, target_file_name))
     tg = tile_grid.drop(columns='fishnet_geometry', axis=1)
     tg.to_file(tile_grid_file_path)
+
+def standardize_y_dimension_direction(data_array):
+    was_reversed= False
+    y_dimensions = data_array.shape[0]
+    if data_array.y.data[0] < data_array.y.data[y_dimensions - 1]:
+        data_array = data_array.isel({data_array.rio.y_dim: slice(None, None, -1)})
+        was_reversed = True
+    return was_reversed, data_array
