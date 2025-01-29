@@ -9,7 +9,7 @@ import shapely
 
 import networkx as nx
 
-def habitat_connectivity(zones: GeoDataFrame) -> GeoSeries:
+def connectivity_indicator(zones: GeoDataFrame, indicator_name) -> GeoSeries:
 
     def within_distance(idx, gdf):
         connecteds = gdf.loc[[idx]].buffer(CONNECTIVITY_DISTANCE)[idx].intersects(gdf.geometry)
@@ -23,10 +23,10 @@ def habitat_connectivity(zones: GeoDataFrame) -> GeoSeries:
     for rownum in range(len(zones)):
         zone = zones.iloc[[rownum]]
         natarea_dataarray = worldcover_layer.get_data(zone.total_bounds)
-        g = rasterio.features.shapes(natarea_dataarray, connectivity=8, transform=natarea_dataarray.rio.transform())  # Polygonize the natural-areas raster
-        g_list = list(g)
-        na_list = [i[0] for i in g_list if i[1]==1]  # Only want the natural areas
-        na_gdf = GeoDataFrame({'id': range(len(na_list)), 'geometry': [shapely.Polygon(j['coordinates'][0]) for j in na_list]})
+        natarea_shapes = rasterio.features.shapes(natarea_dataarray, connectivity=8, transform=natarea_dataarray.rio.transform())  # Polygonize the natural-areas raster
+        natarea_shapes = list(natarea_shapes)
+        na_geoms = [i[0] for i in natarea_shapes if i[1]==1]  # Only want the natural areas
+        na_gdf = GeoDataFrame({'id': range(len(na_geoms)), 'geometry': [shapely.Polygon(j['coordinates'][0]) for j in na_geoms]})
         na_gdf = na_gdf.loc[na_gdf.area > MIN_PATCHSIZE]
         
         connected = {
@@ -48,8 +48,14 @@ def habitat_connectivity(zones: GeoDataFrame) -> GeoSeries:
         for i in clusters:
             cluster_areas.append(sum([na_gdf.loc[[j]]['geometry'].area[j] for j in i]))
         if total_area > 0:
-            result.append(sum([i**2 for i in cluster_areas]) / (total_area**2))
+            result.append(sum([i**2 for i in cluster_areas]) / (total_area**({'EMS': 1, 'coherence': 2}[indicator_name])))
         else:
             result.append(0)
             
     return Series(result)
+
+def habitat_effective_mesh_size(zones: GeoDataFrame) -> GeoSeries:
+    return connectivity_indicator(zones, 'EMS') / 10000  # return hectares
+
+def habitat_coherence(zones: GeoDataFrame) -> GeoSeries:
+    return connectivity_indicator(zones, 'coherence') * 100  # return percent
