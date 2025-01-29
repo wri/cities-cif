@@ -3,39 +3,34 @@ import math
 import pytest
 
 from city_metrix.layers.layer import WGS_CRS
-from city_metrix.layers.layer_geometry import LayerBbox, create_fishnet_grid, _get_degree_offsets_for_meter_units, \
+from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, _get_degree_offsets_for_meter_units, \
     get_haversine_distance
-from tests.conftest import OR_PORTLAND_TILE
+from tests.conftest import USA_OR_PORTLAND_TILE_GDF
 
-PORTLAND_LATLON_BBOX = LayerBbox(OR_PORTLAND_TILE.total_bounds, OR_PORTLAND_TILE.crs.srs)
+USA_OR_PORTLAND_LATLON_BBOX = GeoExtent(USA_OR_PORTLAND_TILE_GDF.total_bounds, USA_OR_PORTLAND_TILE_GDF.crs.srs)
 
 def test_centroid_property():
-    portland_centroid = OR_PORTLAND_TILE.centroid
-    bbox_centroid = PORTLAND_LATLON_BBOX.centroid
+    portland_centroid = USA_OR_PORTLAND_TILE_GDF.centroid
+    bbox_centroid = USA_OR_PORTLAND_LATLON_BBOX.centroid
     assert bbox_centroid.x == portland_centroid.x[0]
 
 def test_roundtrip_projection():
-    reproj_latlon_bbox = PORTLAND_LATLON_BBOX.as_utm_bbox().as_lat_lon_bbox()
-    assert reproj_latlon_bbox.polygon.equals(PORTLAND_LATLON_BBOX.polygon)
+    reproj_latlon_bbox = USA_OR_PORTLAND_LATLON_BBOX.as_utm_bbox().as_geographic_bbox()
+    assert reproj_latlon_bbox.polygon.wkt == USA_OR_PORTLAND_LATLON_BBOX.polygon.wkt
+    assert reproj_latlon_bbox.crs == USA_OR_PORTLAND_LATLON_BBOX.crs
 
 def test_ee_rectangle1():
-    utm_bbox = PORTLAND_LATLON_BBOX.as_utm_bbox()
-    ll_ll_rectangle = PORTLAND_LATLON_BBOX.to_ee_rectangle("latlon")
-    utm_ll_rectangle = utm_bbox.to_ee_rectangle("latlon")
+    utm_ll_rectangle = USA_OR_PORTLAND_LATLON_BBOX.as_utm_bbox().to_ee_rectangle()
+    ll_ll_rectangle = USA_OR_PORTLAND_LATLON_BBOX.to_ee_rectangle()
     assert ll_ll_rectangle == utm_ll_rectangle
 
-def test_ee_rectangle2():
-    utm_bbox = PORTLAND_LATLON_BBOX.as_utm_bbox()
-    ll_utm_rectangle = PORTLAND_LATLON_BBOX.to_ee_rectangle("utm")
-    utm_utm_rectangle = utm_bbox.to_ee_rectangle("utm")
-    assert ll_utm_rectangle == utm_utm_rectangle
 
 def test_fishnet_in_degrees():
-    bbox = LayerBbox(bbox=(10.0, 10, 11, 11), crs=WGS_CRS)
+    bbox = GeoExtent(bbox=(10.0, 10, 11, 11), crs=WGS_CRS)
     tile_side_length = 0.5
     result_fishnet = (
         create_fishnet_grid(bbox, tile_side_length=tile_side_length, length_units="degrees",
-                            output_as='latlon'))
+                            output_as='geographic'))
 
     actual_count = result_fishnet.geometry.count()
     expected_count = 4
@@ -43,7 +38,7 @@ def test_fishnet_in_degrees():
 
 
 def test_fishnet_in_meters():
-    bbox = LayerBbox(bbox=(-38.0, -70.1, -37.9, -70.0), crs=WGS_CRS)
+    bbox = GeoExtent(bbox=(-38.0, -70.1, -37.9, -70.0), crs=WGS_CRS)
     tile_side_length = 1000
     buffer_size = 100
     result_fishnet = (
@@ -56,15 +51,15 @@ def test_fishnet_in_meters():
 
 def test_extreme_large_side():
     bbox_crs = 'EPSG:4326'
-    bbox = LayerBbox((100, 45, 100.5, 45.5), bbox_crs)
+    bbox = GeoExtent((100, 45, 100.5, 45.5), bbox_crs)
 
     with pytest.raises(ValueError, match='Value for tile_side_length is too large.'):
-        create_fishnet_grid(bbox=bbox, tile_side_length=1, length_units='degrees', output_as='latlon')
+        create_fishnet_grid(bbox=bbox, tile_side_length=1, length_units='degrees', output_as='geographic')
 
 
 def test_extreme_small_meters():
     bbox_crs = 'EPSG:4326'
-    bbox = LayerBbox((100, 45, 101, 46), bbox_crs)
+    bbox = GeoExtent((100, 45, 101, 46), bbox_crs)
 
     with pytest.raises(ValueError, match='Value for tile_side_length is too small.'):
         create_fishnet_grid(bbox, tile_side_length=5, length_units='meters')
@@ -74,7 +69,7 @@ def test_extreme_small_meters():
 
 
 def test_degree_offsets_for_meter_units():
-    ll_bbox = LayerBbox((45, 45, 46, 46), WGS_CRS)
+    ll_bbox = GeoExtent((45, 45, 46, 46), WGS_CRS)
 
     # values determined on https://www.omnicalculator.com/other/latitude-longitude-distance
     approx_x_offset = 78626

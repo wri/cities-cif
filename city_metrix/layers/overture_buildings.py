@@ -3,23 +3,23 @@ import subprocess
 from io import StringIO
 
 from .layer import Layer
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 
 class OvertureBuildings(Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         #Note: spatial_resolution and resampling_method arguments are ignored.
 
-        if bbox.units == "degrees":
+        if bbox.projection_name == 'geographic':
             utm_bbox = bbox.as_utm_bbox()
             utm_crs = utm_bbox.crs
             bbox_str = ','.join(map(str, bbox.bbox))
         else:
             utm_crs = bbox.crs
-            wgs_bbox = bbox.as_lat_lon_bbox()
+            wgs_bbox = bbox.as_geographic_bbox()
             bbox_str = ','.join(map(str, wgs_bbox.bbox))
 
         command = [

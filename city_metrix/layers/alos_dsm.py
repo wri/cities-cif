@@ -3,7 +3,7 @@ import xee
 import xarray as xr
 
 from .layer import Layer, get_image_collection, set_resampling_for_continuous_raster, validate_raster_resampling_method
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
@@ -18,7 +18,7 @@ class AlosDSM(Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method:str=DEFAULT_RESAMPLING_METHOD):
 
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
@@ -27,7 +27,7 @@ class AlosDSM(Layer):
 
         alos_dsm = ee.ImageCollection("JAXA/ALOS/AW3D30/V3_2")
 
-        ee_rectangle  = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle  = bbox.to_ee_rectangle()
         alos_dsm_ic = ee.ImageCollection(
             alos_dsm
             .filterBounds(ee_rectangle['ee_geometry'])

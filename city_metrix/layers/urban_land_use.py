@@ -4,7 +4,7 @@ import xee
 import ee
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 5
 
@@ -19,7 +19,7 @@ class UrbanLandUse(Layer):
         super().__init__(**kwargs)
         self.band = band
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
@@ -28,7 +28,7 @@ class UrbanLandUse(Layer):
         ulu = ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1")
 
         # ImageCollection didn't cover the globe
-        ee_rectangle = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle = bbox.to_ee_rectangle()
         if ulu.filterBounds(ee_rectangle['ee_geometry']).size().getInfo() == 0:
             ulu_ic = ee.ImageCollection(ee.Image
                                      .constant(0)

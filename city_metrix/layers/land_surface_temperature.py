@@ -4,7 +4,7 @@ from dask.diagnostics import ProgressBar
 import ee
 import xarray
 
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
@@ -21,7 +21,7 @@ class LandSurfaceTemperature(Layer):
         self.start_date = start_date
         self.end_date = end_date
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
@@ -39,7 +39,7 @@ class LandSurfaceTemperature(Layer):
 
         l8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
 
-        ee_rectangle = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle = bbox.to_ee_rectangle()
         l8_st = (l8
                  .select('ST_B10', 'QA_PIXEL')
                  .filter(ee.Filter.date(self.start_date, self.end_date))

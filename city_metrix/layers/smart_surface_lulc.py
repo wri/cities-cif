@@ -10,7 +10,7 @@ import warnings
 from rasterio.enums import Resampling
 from xrspatial.classify import reclassify
 
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
@@ -28,16 +28,16 @@ class SmartSurfaceLULC(Layer):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        if bbox.units == "degrees":
+        if bbox.projection_name == 'geographic':
             lat_lon_bbox = bbox
         else:
-            lat_lon_bbox = bbox.as_lat_lon_bbox()
+            lat_lon_bbox = bbox.as_geographic_bbox()
 
         crs = lat_lon_bbox.crs
 

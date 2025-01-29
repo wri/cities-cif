@@ -19,8 +19,10 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
+from city_metrix.layers.layer_tools import standardize_y_dimension_direction
+
 WGS_CRS = 'EPSG:4326'
-from city_metrix.layers.layer_geometry import LayerBbox, create_fishnet_grid, reproject_units
+from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, reproject_units
 
 MAX_TILE_SIZE_DEGREES = 0.5 # TODO Why was this value selected?
 
@@ -34,7 +36,7 @@ class Layer():
 
 
     @abstractmethod
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int, resampling_method:str) -> Union[xr.DataArray, gpd.GeoDataFrame]:
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int, resampling_method:str) -> Union[xr.DataArray, gpd.GeoDataFrame]:
         """
         Extract the data from the source and return it in a way we can compare to other layers.
         :param bbox: a tuple of floats representing the bounding box, (min x, min y, max x, max y)
@@ -63,7 +65,7 @@ class Layer():
         return LayerGroupBy(self.aggregate, zones, spatial_resolution, layer, self.masks)
 
 
-    def write(self, bbox: LayerBbox, output_path:str,
+    def write(self, bbox: GeoExtent, output_path:str,
               tile_side_length:int=None, buffer_size:int=None, length_units:str=None,
               spatial_resolution:int=None, resampling_method:int=None, **kwargs):
         """
@@ -109,7 +111,7 @@ class Layer():
             utm_crs = tile_grid_gdf.crs.srs
             for tile in tile_grid_gdf.itertuples():
                 tile_name = tile.tile_name
-                tile_bbox = LayerBbox(bbox=tile.geometry.bounds, crs=utm_crs)
+                tile_bbox = GeoExtent(bbox=tile.geometry.bounds, crs=utm_crs)
 
                 file_path = os.path.join(output_path, tile_name)
                 layer_data = self.aggregate.get_data(bbox=tile_bbox, spatial_resolution=spatial_resolution,
@@ -176,10 +178,10 @@ class LayerGroupBy:
         crs = self.zones.crs.srs
         bounds = self.zones.total_bounds
         if crs == WGS_CRS:
-            bbox = LayerBbox(bbox=tuple(bounds), crs=WGS_CRS)
-            output_as = "latlon"
+            bbox = GeoExtent(bbox=tuple(bounds), crs=WGS_CRS)
+            output_as = 'geographic'
         else:
-            bbox = LayerBbox(bbox=tuple(bounds), crs=crs)
+            bbox = GeoExtent(bbox=tuple(bounds), crs=crs)
             output_as = "utm"
         fishnet = create_fishnet_grid(bbox, tile_side_length=MAX_TILE_SIZE_DEGREES, length_units="degrees",
                                       spatial_resolution=self.spatial_resolution, output_as=output_as)
@@ -214,9 +216,9 @@ class LayerGroupBy:
         crs = tile_gdf.crs.srs
         raw_bbox = tile_gdf.total_bounds
         if crs == WGS_CRS:
-            bbox = LayerBbox(bbox=tuple(raw_bbox), crs=WGS_CRS)
+            bbox = GeoExtent(bbox=tuple(raw_bbox), crs=WGS_CRS)
         else:
-            bbox = LayerBbox(bbox=tuple(raw_bbox), crs=crs)
+            bbox = GeoExtent(bbox=tuple(raw_bbox), crs=crs)
         aggregate_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution)
         mask_datum = [mask.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution) for mask in self.masks]
         layer_data = self.layer.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution) if self.layer is not None else None
@@ -329,7 +331,7 @@ def get_image_collection(
     # See link regarding bug in crs specification https://github.com/google/Xee/issues/118
     crs = ee_rectangle['crs']
     if crs == WGS_CRS:
-        raise Exception("Output as latlon units is currently not supported")
+        raise Exception("Output in geographic units is currently not supported for raster layers.")
 
     ds = xr.open_dataset(
         image_collection,
@@ -355,17 +357,9 @@ def get_image_collection(
 
     return data
 
-def reverse_y_dimension_as_needed(data_array):
-    was_reversed= False
-    y_dimensions = data_array.shape[0]
-    if data_array.y.data[0] < data_array.y.data[y_dimensions - 1]:
-        data_array = data_array.isel({data_array.rio.y_dim: slice(None, None, -1)})
-        was_reversed = True
-    return was_reversed, data_array
-
 def _write_layer(path, data):
     if isinstance(data, xr.DataArray):
-        was_reversed, data_array = reverse_y_dimension_as_needed(data)
+        was_reversed, data_array = standardize_y_dimension_direction(data)
         _write_dataarray(path, data_array)
     elif isinstance(data, xr.Dataset):
         raise NotImplementedError("Data as Dataset not currently supported")

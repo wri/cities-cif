@@ -16,7 +16,7 @@ array-dimension size.
 
 def test_read_image_collection():
     ic = ee.ImageCollection("ESA/WorldCover/v100")
-    data = get_image_collection(ic, BBOX.to_ee_rectangle(output_as='utm'), 10, "test")
+    data = get_image_collection(ic, BBOX.to_ee_rectangle(), 10, "test")
 
     expected_crs = 32724
     expected_x_size = 186
@@ -34,7 +34,7 @@ def test_read_image_collection():
 
 def test_read_image_collection_scale():
     ic = ee.ImageCollection("ESA/WorldCover/v100")
-    data = get_image_collection(ic, BBOX.to_ee_rectangle(output_as='utm'), 100, "test")
+    data = get_image_collection(ic, BBOX.to_ee_rectangle(), 100, "test")
 
     expected_x_size = 19
     expected_y_size = 20

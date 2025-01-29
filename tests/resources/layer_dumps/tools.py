@@ -1,6 +1,6 @@
 from random import sample
 
-from city_metrix.layers.layer_geometry import LayerBbox
+from city_metrix.layers.layer_geometry import GeoExtent
 from tests.resources.layer_dumps.conftest import RESOLUTION_MTHD, FIXED_RESOLUTION, RESOLUTION_MULTIPLIER, \
     USE_WGS_BBOX
 from tests.tools.general_tools import get_class_default_spatial_resolution
@@ -14,5 +14,5 @@ def get_test_resolution(cls):
     return target_res
 
 def get_test_bbox(sample_box):
-    bbox = sample_box if USE_WGS_BBOX else sample_box.as_lat_lon_bbox()
+    bbox = sample_box if USE_WGS_BBOX else sample_box.as_geographic_bbox()
     return bbox

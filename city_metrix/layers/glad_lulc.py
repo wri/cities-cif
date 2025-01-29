@@ -2,7 +2,7 @@ import xarray as xr
 import ee
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
@@ -17,10 +17,10 @@ class LandCoverGlad(Layer):
         super().__init__(**kwargs)
         self.year = year
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         lcluc_ic = ee.ImageCollection(ee.Image(f'projects/glad/GLCLU2020/LCLUC_{self.year}'))
-        ee_rectangle  = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle  = bbox.to_ee_rectangle()
         data = get_image_collection(
             lcluc_ic,
             ee_rectangle,
@@ -42,7 +42,7 @@ class LandCoverSimplifiedGlad(Layer):
         super().__init__(**kwargs)
         self.year = year
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         glad = LandCoverGlad(year=self.year).get_data(bbox, spatial_resolution=spatial_resolution)
         # Copy the original data
@@ -82,7 +82,7 @@ class LandCoverHabitatGlad(Layer):
         super().__init__(**kwargs)
         self.year = year
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         simplified_glad = (LandCoverSimplifiedGlad(year=self.year)
                            .get_data(bbox, spatial_resolution=spatial_resolution))
@@ -111,7 +111,7 @@ class LandCoverHabitatChangeGlad(Layer):
         self.start_year = start_year
         self.end_year = end_year
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         habitat_glad_start = (LandCoverHabitatGlad(year=self.start_year)
                               .get_data(bbox, spatial_resolution=spatial_resolution))

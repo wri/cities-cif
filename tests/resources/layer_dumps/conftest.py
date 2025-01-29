@@ -4,8 +4,8 @@ import os
 import shutil
 from collections import namedtuple
 
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_NLD_AMSTERDAM_TEST, \
-    BBOX_NLD_AMSTERDAM_LARGE_TEST
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_NLD_AMSTERDAM, \
+    BBOX_NLD_AMSTERDAM_LARGE, BBOX_USA_OR_PORTLAND
 from tests.tools.general_tools import create_target_folder, is_valid_path
 
 # EXECUTE_IGNORED_TESTS is the master control for whether the writes and tests are executed
@@ -24,8 +24,10 @@ RESOLUTION_MULTIPLIER = 1
 FIXED_RESOLUTION = 30 # Note: Some layers do not support less than resolution of 30m
 
 # Both the tests and QGIS file are implemented for the same bounding box in Brazil.
-COUNTRY_CODE_FOR_BBOX = 'BRA'
-BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
+# COUNTRY_CODE_FOR_BBOX = 'BRA'
+# BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
+COUNTRY_CODE_FOR_BBOX = 'USA'
+BBOX = BBOX_USA_OR_PORTLAND
 # BBOX = BBOX_NLD_AMSTERDAM_TEST
 # BBOX = BBOX_NLD_AMSTERDAM_LARGE_TEST
 

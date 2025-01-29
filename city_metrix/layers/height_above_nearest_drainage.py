@@ -3,7 +3,7 @@ import xarray as xr
 import ee
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
@@ -20,7 +20,7 @@ class HeightAboveNearestDrainage(Layer):
         super().__init__(**kwargs)
         self.river_head = river_head
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
@@ -49,7 +49,7 @@ class HeightAboveNearestDrainage(Layer):
         HANDthresh = hand.lte(thresh).focal_max(1).focal_mode(2, 'circle', 'pixels', 5).mask(swbdMask)
         HANDthresh = HANDthresh.mask(HANDthresh)
 
-        ee_rectangle = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle = bbox.to_ee_rectangle()
         data = get_image_collection(
             ee.ImageCollection(HANDthresh),
             ee_rectangle,

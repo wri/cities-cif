@@ -10,7 +10,7 @@ import glob
 
 from tests.resources.layer_dumps.conftest import sample_aoi
 from .layer import Layer
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 
 class Era5HottestDay(Layer):
@@ -19,17 +19,17 @@ class Era5HottestDay(Layer):
         self.start_date = start_date
         self.end_date = end_date
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         # Note: spatial_resolution and resampling_method arguments are ignored.
 
-        if bbox.units == "degrees":
+        if bbox.projection_name == 'geographic':
             min_lon = bbox.min_x
             min_lat = bbox.min_y
             max_lon = bbox.max_x
             max_lat = bbox.max_y
             centroid = bbox.centroid
         else:
-            wgs_bbox = bbox.as_lat_lon_bbox()
+            wgs_bbox = bbox.as_geographic_bbox()
             min_lon = wgs_bbox.min_x
             min_lat = wgs_bbox.min_y
             max_lon = wgs_bbox.max_x
@@ -52,7 +52,7 @@ class Era5HottestDay(Layer):
 
             return image.set('hourly_mean_temperature', hourly_mean)
 
-        ee_rectangle = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle = bbox.to_ee_rectangle()
         era5 = ee.ImageCollection(dataset
                                   .filterBounds(ee_rectangle['ee_geometry'])
                                   .filterDate(self.start_date, self.end_date)

@@ -5,7 +5,7 @@ from shapely.geometry import box
 import datetime
 import ee
 
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
@@ -23,7 +23,7 @@ class HighLandSurfaceTemperature(Layer):
         self.start_date = start_date
         self.end_date = end_date
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
@@ -33,7 +33,7 @@ class HighLandSurfaceTemperature(Layer):
         start_date = (hottest_date - datetime.timedelta(days=45)).strftime("%Y-%m-%d")
         end_date = (hottest_date + datetime.timedelta(days=45)).strftime("%Y-%m-%d")
 
-        ee_rectangle = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle = bbox.to_ee_rectangle()
         lst = (LandSurfaceTemperature(start_date, end_date)
                .get_data(bbox, spatial_resolution))
 
@@ -42,17 +42,17 @@ class HighLandSurfaceTemperature(Layer):
         return high_lst
 
     def get_hottest_date(self, bbox):
-        if bbox.units == "degrees":
+        if bbox.projection_name == 'geographic':
             centroid = bbox.centroid
         else:
-            wgs_bbox = bbox.as_lat_lon_bbox()
+            wgs_bbox = bbox.as_geographic_bbox()
             centroid = wgs_bbox.centroid
         center_lon = centroid.x
         center_lat = centroid.y
 
         dataset = ee.ImageCollection("ECMWF/ERA5/DAILY")
 
-        ee_rectangle = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle = bbox.to_ee_rectangle()
         AirTemperature = (
             dataset
             .filter(

@@ -4,7 +4,7 @@ from dask.diagnostics import ProgressBar
 
 from .layer import (Layer, get_image_collection, set_resampling_for_continuous_raster,
                     validate_raster_resampling_method)
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
@@ -89,7 +89,7 @@ class Albedo(Layer):
 
         return s2_with_clouds_ic
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method:str=DEFAULT_RESAMPLING_METHOD):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
@@ -119,7 +119,7 @@ class Albedo(Layer):
             return albedo
 
         # S2 MOSAIC AND ALBEDO
-        ee_rectangle = bbox.to_ee_rectangle(output_as="utm")
+        ee_rectangle = bbox.to_ee_rectangle()
         dataset = self.get_masked_s2_collection(ee_rectangle['ee_geometry'], self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
 

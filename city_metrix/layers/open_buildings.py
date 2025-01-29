@@ -5,7 +5,7 @@ import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
 from .layer import Layer
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 
 class OpenBuildings(Layer):
@@ -13,11 +13,11 @@ class OpenBuildings(Layer):
         super().__init__(**kwargs)
         self.country = country
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         #Note: spatial_resolution and resampling_method arguments are ignored.
 
         dataset = ee.FeatureCollection(f"projects/sat-io/open-datasets/VIDA_COMBINED/{self.country}")
-        ee_rectangle = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle = bbox.to_ee_rectangle()
         open_buildings = (dataset
                           .filterBounds(ee_rectangle['ee_geometry'])
                           )

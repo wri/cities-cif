@@ -1,4 +1,3 @@
-import math
 import ee
 import shapely
 import utm
@@ -7,70 +6,42 @@ import geopandas as gpd
 
 from shapely.geometry import box
 from city_metrix.layers.layer import WGS_CRS
+from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance
 
-class LayerBbox():
+
+class GeoExtent():
     def __init__(self, bbox: tuple[float, float, float, float], crs:str=WGS_CRS):
         self.bbox = bbox
 
         self.crs = crs
-        self.units = "degrees" if self.crs == WGS_CRS else "meters"
+        self.epsg_code = int(self.crs.split(':')[1])
+        self.projection_name = get_projection_name(crs)
+        self.units = "degrees" if self.projection_name == 'geographic' else "meters"
 
         self.min_x = bbox[0]
         self.min_y = bbox[1]
         self.max_x = bbox[2]
         self.max_y = bbox[3]
 
+        self.coords = (self.min_x, self.min_y, self.max_x, self.max_y)
+
         self.centroid = box(self.min_x, self.min_y, self.max_x, self.max_y).centroid
 
         self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
 
-        self.epsg_code = int(self.crs.split(':')[1])
 
-        self. _validate_coordinates()
-
-    def _validate_coordinates(self):
-        if self.crs == WGS_CRS:
-            if not (-180 <= self.min_x < self.max_y <= 180) and (-90 <= self.min_x < self.max_y <= 90):
-                raise Exception(f'Coordinates are not in correct range for EPSG:4326 in bbox {self.bbox}')
-        else:
-            if not isinstance(self.crs, str) or not self.crs.startswith('EPSG:'):
-                raise Exception("Valid crs must be specified in form of ('EPSG:n') where n is an EPSG code.")
-
-            if not (32601 <= self.epsg_code <= 32660 or 32701 <= self.epsg_code <= 32760):
-                e_msg = (f'Not a recognized valid UTM epsg_code ({self.crs}). '
-                         f'EPSG code must be in: [32601 - 32660, 32701 - 32760]')
-                raise Exception(e_msg)
-
-    def to_ee_rectangle(self, output_as):
+    def to_ee_rectangle(self):
         """
         Converts bbox to an Earth Engine geometry rectangle
-        :param output_as: specify projection for geometry values as (utm or latlon).
-        :return:
         """
-        valid_output_as = ('latlon', 'utm')
-        if output_as not in valid_output_as:
-            raise ValueError(f'output_as value must be in ({valid_output_as})')
-
-        if self.crs == WGS_CRS and output_as=="latlon":
-            ee_rectangle = _build_ee_rectangle(round(self.min_x,7), round(self.min_y,7),
-                                            round(self.max_x,7), round(self.max_y,7),
-                                            WGS_CRS)
+        if self.projection_name == 'geographic':
+            utm_bbox = self.as_utm_bbox()
+            minx, miny, maxx, maxy = utm_bbox.bbox
+            ee_rectangle = _build_ee_rectangle(round(minx,2), round(miny,2),
+                                            round(maxx,2), round(maxy,2),
+                                            utm_bbox.crs)
             return ee_rectangle
-        elif self.crs == WGS_CRS and output_as=="utm":
-            utm_crs = get_utm_zone_from_latlon_point(self.centroid)
-            utm_bbox = reproject_units(self.min_y, self.min_x, self.max_y, self.max_x, WGS_CRS, utm_crs)
-            ee_rectangle = _build_ee_rectangle(round(utm_bbox[1],2), round(utm_bbox[0],2),
-                                               round(utm_bbox[3],2), round(utm_bbox[2],2),
-                                               utm_crs)
-            return ee_rectangle
-        elif self.crs != WGS_CRS and output_as=="latlon":
-            utm_crs = self.crs
-            latlon_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, utm_crs, WGS_CRS)
-            ee_rectangle = _build_ee_rectangle(round(latlon_bbox[0],7), round(latlon_bbox[1],7),
-                                               round(latlon_bbox[2],7), round(latlon_bbox[3],7),
-                                               WGS_CRS)
-            return ee_rectangle
-        elif self.crs != WGS_CRS and output_as == "utm":
+        elif self.projection_name == 'utm':
             ee_rectangle = _build_ee_rectangle(round(self.min_x,2), round(self.min_y,2),
                                             round(self.max_x,2), round(self.max_y,2),
                                             self.crs)
@@ -84,28 +55,28 @@ class LayerBbox():
         Converts bbox to UTM projection
         :return:
         """
-        if self.crs == WGS_CRS:
+        if self.projection_name == 'geographic':
             utm_crs = get_utm_zone_from_latlon_point(self.centroid)
             reproj_bbox = reproject_units(self.min_y, self.min_x, self.max_y, self.max_x, WGS_CRS, utm_crs)
             # round to minimize drift
             utm_box = (round(reproj_bbox[1],2), round(reproj_bbox[0],2), round(reproj_bbox[3],2), round(reproj_bbox[2],2))
-            bbox = LayerBbox(bbox=utm_box, crs=utm_crs)
+            bbox = GeoExtent(bbox=utm_box, crs=utm_crs)
             return bbox
         else:
             return self
 
-    def as_lat_lon_bbox(self):
+    def as_geographic_bbox(self):
         """
         Converts bbox to lat-lon bbox
         :return:
         """
-        if self.crs == WGS_CRS:
+        if self.projection_name == 'geographic':
             return self
         else:
             reproj_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, self.crs, WGS_CRS)
             # round to minimize drift
             box = (round(reproj_bbox[0],7), round(reproj_bbox[1],7), round(reproj_bbox[2],7), round(reproj_bbox[3],7))
-            bbox = LayerBbox(bbox=box, crs=WGS_CRS)
+            bbox = GeoExtent(bbox=box, crs=WGS_CRS)
             return bbox
 
 def _build_ee_rectangle(min_x, min_y, max_x, max_y, crs):
@@ -156,7 +127,7 @@ def get_utm_zone_from_latlon_point(centroid) -> str:
     return f"EPSG:{epsg}"
 
 
-def create_fishnet_grid(bbox:LayerBbox,
+def create_fishnet_grid(bbox:GeoExtent,
                         tile_side_length:float=0, tile_buffer_size:float=0, length_units:str="meters",
                         spatial_resolution:int=1, output_as:str="utm"):
     # NOTE: the AOI can be specified in either WGS or UTM, but the generated tile grid is always in UTM
@@ -179,7 +150,7 @@ def create_fishnet_grid(bbox:LayerBbox,
         raise ValueError(f"Invalid length_units ('{length_units}'). "
                          f"Valid methods: [{valid_length_units}]")
 
-    valid_output = ['utm', 'latlon']
+    valid_output = ['utm', 'geographic']
     if output_as not in valid_output:
         raise ValueError(f"Invalid grid_units ('{output_as}'). "
                          f"Valid methods: [{valid_output}]")
@@ -219,10 +190,9 @@ def create_fishnet_grid(bbox:LayerBbox,
 
         y_coord += y_tile_side_units
 
-
-    if bbox.crs == WGS_CRS and output_as== "latlon":
+    if bbox.projection_name == 'geographic' and output_as == 'geographic':
         grid_crs = WGS_CRS
-    elif bbox.crs == WGS_CRS and output_as== "utm":
+    elif bbox.projection_name == 'geographic' and output_as== "utm":
         grid_crs = get_utm_zone_from_latlon_point(bbox.centroid)
     else:
         grid_crs = bbox.crs
@@ -241,7 +211,7 @@ def _truncate_to_nearest_interval(tile_side_meters, spatial_resolution):
     return nearest_increment
 
 def _get_offsets(bbox, tile_side_length, tile_buffer_size, length_units, spatial_resolution, output_as):
-    if output_as=="latlon":
+    if output_as=='geographic':
         if length_units == "degrees":
             x_tile_side_units = y_tile_side_units = tile_side_length
 
@@ -266,14 +236,14 @@ def _get_offsets(bbox, tile_side_length, tile_buffer_size, length_units, spatial
 
 
 def _get_bounding_coords(bbox, output_as):
-    if output_as == 'latlon':
-        if bbox.units == "degrees":
+    if output_as == 'geographic':
+        if bbox.projection_name == 'geographic':
             start_x_coord, start_y_coord = (bbox.min_x, bbox.min_y)
             end_x_coord, end_y_coord = (bbox.max_x, bbox.max_y)
         else: #meters
             raise Exception("Currently does not support length_units in meters and output_as latlon")
     else: # projected
-        if bbox.units == "degrees":
+        if bbox.projection_name == 'geographic':
             project_bbox = bbox.as_utm_bbox()
             start_x_coord, start_y_coord = (project_bbox.min_x, project_bbox.min_y)
             end_x_coord, end_y_coord = (project_bbox.max_x, project_bbox.max_y)
@@ -302,9 +272,9 @@ def _build_tile_geometry(x_coord, y_coord, x_tile_side_units, y_tile_side_units,
     return geom
 
 
-def _get_degree_offsets_for_meter_units(bbox: LayerBbox, tile_side_degrees):
-    if bbox.crs != WGS_CRS:
-        raise ValueError("Bbox must have WGS crs")
+def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
+    if bbox.projection_name != 'geographic':
+        raise ValueError(f"Bbox must have CRS set to {WGS_CRS}")
 
     mid_x = (bbox.min_x + bbox.min_x) / 2
     x_offset = get_haversine_distance(mid_x, bbox.min_y, mid_x + tile_side_degrees, bbox.min_y)
@@ -313,25 +283,3 @@ def _get_degree_offsets_for_meter_units(bbox: LayerBbox, tile_side_degrees):
     y_offset = get_haversine_distance(bbox.min_x, mid_y, bbox.min_x, mid_y + tile_side_degrees)
 
     return x_offset, y_offset
-
-
-def get_haversine_distance(lon1, lat1, lon2, lat2):
-    # Global-average radius of the Earth in meters
-    R = 6371000
-
-    # Convert degrees to radians
-    phi1 = math.radians(lat1)
-    phi2 = math.radians(lat2)
-    delta_phi = math.radians(lat2 - lat1)
-    delta_lambda = math.radians(lon2 - lon1)
-
-    # Haversine formula
-    a = math.sin(delta_phi / 2.0) ** 2 + \
-        math.cos(phi1) * math.cos(phi2) * \
-        math.sin(delta_lambda / 2.0) ** 2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-    # Distance in meters
-    distance = R * c
-
-    return distance

@@ -5,7 +5,7 @@ import xarray as xr
 import xee
 import ee
 
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
@@ -26,7 +26,7 @@ class TreeCover(Layer):
         self.max_tree_cover = max_tree_cover
 
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
@@ -42,7 +42,7 @@ class TreeCover(Layer):
                      )
 
         ttc_ic = ee.ImageCollection(ttc_image)
-        ee_rectangle = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle = bbox.to_ee_rectangle()
         data = get_image_collection(
             ttc_ic,
             ee_rectangle,

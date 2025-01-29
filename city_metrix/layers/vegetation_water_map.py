@@ -2,7 +2,7 @@ import ee
 
 from .layer import Layer, get_image_collection
 from .albedo import Albedo
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
@@ -21,7 +21,7 @@ class VegetationWaterMap(Layer):
         self.end_date = end_date
         self.greenwater_layer = greenwater_layer
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
@@ -226,7 +226,7 @@ class VegetationWaterMap(Layer):
             elif greenwater_layer == 'gaingreenwaterSlope':
                 return greenorwaterLimitGain.rename('greenwater_layer')
 
-        ee_rectangle = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle = bbox.to_ee_rectangle()
         s2cloudmasked = (Albedo()
                          .get_masked_s2_collection(ee_rectangle['ee_geometry'],
                                                    self.start_date,

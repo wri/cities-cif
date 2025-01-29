@@ -7,7 +7,7 @@ import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from pyproj import CRS
 from city_metrix.layers import *
-from city_metrix.layers.layer_geometry import LayerBbox
+from city_metrix.layers.layer_geometry import GeoExtent
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 from tests.tools.general_tools import get_class_from_instance, get_class_default_spatial_resolution
 
@@ -256,7 +256,7 @@ def test_function_validate_layer_instance():
     is_valid, except_str = _validate_layer_instance(Albedo())
     assert is_valid is True
 
-def _get_sample_data(class_instance, bbox: LayerBbox, downsize_factor):
+def _get_sample_data(class_instance, bbox: GeoExtent, downsize_factor):
     is_valid, except_str = _validate_layer_instance(class_instance)
     if is_valid is False:
         raise Exception(except_str)

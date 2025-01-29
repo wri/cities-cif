@@ -4,7 +4,7 @@ import geopandas as gpd
 import pandas as pd
 
 from .layer import Layer
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 
 class OpenStreetMapClass(Enum):
@@ -47,7 +47,7 @@ class OpenStreetMap(Layer):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         #Note: spatial_resolution and resampling_method arguments are ignored.
 
         if bbox.units == "degrees":
@@ -57,7 +57,7 @@ class OpenStreetMap(Layer):
             max_lat = bbox.max_y
             utm_crs = bbox.as_utm_bbox().crs
         else:
-            wgs_bbox = bbox.as_lat_lon_bbox()
+            wgs_bbox = bbox.as_geographic_bbox()
             min_lon = wgs_bbox.min_x
             min_lat = wgs_bbox.min_y
             max_lon = wgs_bbox.max_x

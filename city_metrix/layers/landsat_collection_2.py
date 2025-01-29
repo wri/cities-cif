@@ -2,7 +2,7 @@ import odc.stac
 import pystac_client
 
 from .layer import Layer
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 
 class LandsatCollection2(Layer):
@@ -12,16 +12,16 @@ class LandsatCollection2(Layer):
         self.end_date = end_date
         self.bands = bands
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         if spatial_resolution is not None:
             raise Exception('spatial_resolution can not be specified.')
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
 
-        if bbox.units == "degrees":
+        if bbox.projection_name == 'geographic':
             lat_lon_bbox = bbox.bbox
         else:
-            lat_lon_bbox = bbox.as_lat_lon_bbox()
+            lat_lon_bbox = bbox.as_geographic_bbox()
 
         catalog = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")
         query = catalog.search(

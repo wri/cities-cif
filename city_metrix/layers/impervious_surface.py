@@ -4,7 +4,7 @@ import xee
 import ee
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
@@ -17,7 +17,7 @@ class ImperviousSurface(Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
@@ -27,7 +27,7 @@ class ImperviousSurface(Layer):
         # change_year_index is zero if permeable as of 2018
         impervious_surface = ee.ImageCollection(ee.Image("Tsinghua/FROM-GLC/GAIA/v10").gt(0))
 
-        ee_rectangle  = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle  = bbox.to_ee_rectangle()
         imperv_surf_ic = ee.ImageCollection(impervious_surface
                                             .filterBounds(ee_rectangle['ee_geometry'])
                                             .select('change_year_index')

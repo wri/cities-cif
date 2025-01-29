@@ -4,7 +4,7 @@ import xee
 import ee
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import LayerBbox
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
@@ -17,7 +17,7 @@ class BuiltUpHeight(Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_data(self, bbox: LayerBbox, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
@@ -32,7 +32,7 @@ class BuiltUpHeight(Layer):
         built_height = ee.Image("JRC/GHSL/P2023A/GHS_BUILT_H/2018")
 
         built_height_ic = ee.ImageCollection(built_height)
-        ee_rectangle = bbox.to_ee_rectangle(output_as='utm')
+        ee_rectangle = bbox.to_ee_rectangle()
         data = get_image_collection(
             built_height_ic,
             ee_rectangle,
