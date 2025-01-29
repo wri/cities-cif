@@ -35,17 +35,12 @@ class SmartSurfaceLULC(Layer):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
         if bbox.projection_name == 'geographic':
-            lat_lon_bbox = bbox
+            utm_crs = bbox.as_utm_bbox().crs
         else:
-            lat_lon_bbox = bbox.as_geographic_bbox()
-
-        crs = lat_lon_bbox.crs
+            utm_crs = bbox.crs
 
         # ESA world cover
-        esa_world_cover = (EsaWorldCover(year=2021)
-                           .get_data(lat_lon_bbox, spatial_resolution = spatial_resolution)
-                           )
-
+        esa_world_cover = EsaWorldCover(year=2021).get_data(bbox, spatial_resolution = spatial_resolution)
         # ESA reclass and upsample
         def get_data_esa_reclass(esa_world_cover):
             reclass_map = {
@@ -70,7 +65,7 @@ class SmartSurfaceLULC(Layer):
             )
 
             esa_1m = reclassified_esa.rio.reproject(
-                dst_crs=crs,
+                dst_crs=utm_crs,
                 resolution=1,
                 resampling=Resampling.nearest
             )
@@ -81,17 +76,17 @@ class SmartSurfaceLULC(Layer):
 
 
         # Open space
-        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(lat_lon_bbox).reset_index()
+        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).reset_index()
         open_space_osm['Value'] = 10
 
 
         # Water
-        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(lat_lon_bbox).reset_index()
+        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox).reset_index()
         water_osm['Value'] = 20
 
 
         # Roads
-        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(lat_lon_bbox).reset_index()
+        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox).reset_index()
         if len(roads_osm) > 0:
             roads_osm['lanes'] = pd.to_numeric(roads_osm['lanes'], errors='coerce')
             # Get the average number of lanes per highway class
@@ -133,7 +128,7 @@ class SmartSurfaceLULC(Layer):
 
         # Building
         # Read ULU land cover
-        ulu_lulc = UrbanLandUse().get_data(lat_lon_bbox, spatial_resolution=spatial_resolution)
+        ulu_lulc = UrbanLandUse().get_data(bbox, spatial_resolution=spatial_resolution)
         # Reclassify ULU
         # 0-Unclassified: 0 (open space)
         # 1-Non-residential: 1 (non-res)
@@ -142,22 +137,22 @@ class SmartSurfaceLULC(Layer):
         for from_val, to_val in mapping.items():
             ulu_lulc = ulu_lulc.where(ulu_lulc != from_val, to_val)
         ulu_lulc_1m = ulu_lulc.rio.reproject(
-            dst_crs=crs, 
-            shape=esa_1m.shape, 
-            resampling=Resampling.nearest, 
+            dst_crs=utm_crs,
+            shape=esa_1m.shape,
+            resampling=Resampling.nearest,
             nodata=0
         )
 
         # Load ANBH layer
-        anbh_data = AverageNetBuildingHeight().get_data(lat_lon_bbox, spatial_resolution=spatial_resolution)
+        anbh_data = AverageNetBuildingHeight().get_data(bbox)
         anbh_1m = anbh_data.rio.reproject_match(
-            match_data_array=esa_1m, 
-            resampling=Resampling.nearest, 
+            match_data_array=esa_1m,
+            resampling=Resampling.nearest,
             nodata=0
         )
 
         # get building features
-        buildings = OvertureBuildings().get_data(lat_lon_bbox)
+        buildings = OvertureBuildings().get_data(bbox)
         # extract ULU, ANBH, and Area_m
         buildings['ULU'] = exact_extract(ulu_lulc_1m, buildings, ["majority"], output='pandas')['majority']
         buildings['ANBH'] = exact_extract(anbh_1m, buildings, ["mean"], output='pandas')['mean']
@@ -207,7 +202,7 @@ class SmartSurfaceLULC(Layer):
             buildings['Value'] = buildings.apply(classify_building, axis=1)
 
         # Parking
-        parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(lat_lon_bbox).reset_index()
+        parking_osm = OpenStreetMap(osm_class=OpenStreetMapClass.PARKING).get_data(bbox).reset_index()
         parking_osm['Value'] = 50
 
         # combine features: open space, water, road, building, parking
