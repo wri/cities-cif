@@ -3,8 +3,7 @@ from enum import Enum
 import xarray as xr
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from .layer import GeoExtent, Layer, get_image_collection
 
 
 class EsaWorldCoverClass(Enum):

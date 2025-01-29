@@ -2,9 +2,8 @@ import math
 
 import pytest
 
-from city_metrix.layers.layer import WGS_CRS
-from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, _get_degree_offsets_for_meter_units, \
-    get_haversine_distance
+from city_metrix.layers.layer import WGS_CRS, GeoExtent, create_fishnet_grid, get_haversine_distance, \
+    _get_degree_offsets_for_meter_units
 from tests.conftest import USA_OR_PORTLAND_TILE_GDF
 
 USA_OR_PORTLAND_LATLON_BBOX = GeoExtent(USA_OR_PORTLAND_TILE_GDF.total_bounds, USA_OR_PORTLAND_TILE_GDF.crs.srs)

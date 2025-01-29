@@ -1,6 +1,5 @@
 from random import sample
 
-from city_metrix.layers.layer_geometry import GeoExtent
 from tests.resources.layer_dumps.conftest import RESOLUTION_MTHD, FIXED_RESOLUTION, RESOLUTION_MULTIPLIER, \
     USE_WGS_BBOX
 from tests.tools.general_tools import get_class_default_spatial_resolution

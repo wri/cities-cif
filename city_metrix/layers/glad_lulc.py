@@ -1,8 +1,8 @@
 import xarray as xr
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from .layer import GeoExtent, Layer, get_image_collection
+
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 

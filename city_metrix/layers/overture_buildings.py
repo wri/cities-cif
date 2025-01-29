@@ -2,8 +2,7 @@ import geopandas as gpd
 import subprocess
 from io import StringIO
 
-from .layer import Layer
-from .layer_geometry import GeoExtent
+from .layer import GeoExtent, Layer
 
 
 class OvertureBuildings(Layer):

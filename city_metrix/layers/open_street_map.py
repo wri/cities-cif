@@ -3,9 +3,7 @@ import osmnx as ox
 import geopandas as gpd
 import pandas as pd
 
-from .layer import Layer
-from .layer_geometry import GeoExtent
-
+from .layer import GeoExtent, Layer
 
 class OpenStreetMapClass(Enum):
     # ALL includes all 29 primary features https://wiki.openstreetmap.org/wiki/Map_features

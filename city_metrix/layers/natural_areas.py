@@ -1,9 +1,8 @@
 import xarray as xr
 from xrspatial.classify import reclassify
 
-from .layer import Layer
+from .layer import GeoExtent, Layer
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 

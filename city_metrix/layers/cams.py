@@ -3,8 +3,7 @@ import os
 import xarray as xr
 import glob
 
-from .layer import Layer
-from .layer_geometry import GeoExtent
+from .layer import GeoExtent, Layer
 
 
 class Cams(Layer):

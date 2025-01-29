@@ -1,8 +1,7 @@
 import ee
 
-from .layer import Layer, get_image_collection
+from .layer import GeoExtent, Layer, get_image_collection
 from .albedo import Albedo
-from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 

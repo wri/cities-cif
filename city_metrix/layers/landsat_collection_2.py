@@ -1,9 +1,7 @@
 import odc.stac
 import pystac_client
 
-from .layer import Layer
-from .layer_geometry import GeoExtent
-
+from .layer import GeoExtent, Layer
 
 class LandsatCollection2(Layer):
     def __init__(self, bands, start_date="2013-01-01", end_date="2023-01-01", **kwargs):

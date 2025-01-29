@@ -1,11 +1,9 @@
 from .landsat_collection_2 import LandsatCollection2
 from .land_surface_temperature import LandSurfaceTemperature
-from .layer import Layer
+from .layer import GeoExtent, Layer
 from shapely.geometry import box
 import datetime
 import ee
-
-from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 

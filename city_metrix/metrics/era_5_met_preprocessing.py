@@ -4,7 +4,7 @@ import numpy as np
 from geopandas import GeoDataFrame, GeoSeries
 
 from city_metrix.layers import Era5HottestDay
-from city_metrix.layers.layer_geometry import GeoExtent
+from city_metrix.layers.layer import GeoExtent
 
 
 def era_5_met_preprocessing(zones: GeoDataFrame) -> GeoSeries:

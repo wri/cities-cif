@@ -7,7 +7,7 @@ import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from pyproj import CRS
 from city_metrix.layers import *
-from city_metrix.layers.layer_geometry import GeoExtent
+from city_metrix.layers.layer import GeoExtent
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 from tests.tools.general_tools import get_class_from_instance, get_class_default_spatial_resolution
 

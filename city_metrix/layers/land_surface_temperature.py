@@ -1,10 +1,8 @@
 from .landsat_collection_2 import LandsatCollection2
-from .layer import Layer, get_image_collection
+from .layer import GeoExtent, Layer, get_image_collection
 from dask.diagnostics import ProgressBar
 import ee
 import xarray
-
-from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 

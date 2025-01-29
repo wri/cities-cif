@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from city_metrix.layers import *
-from city_metrix.layers.layer_geometry import get_projection_name
+from city_metrix.layers.layer import get_projection_name
 from tests.conftest import EXECUTE_IGNORED_TESTS
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 

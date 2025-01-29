@@ -4,8 +4,7 @@ import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
-from .layer import Layer, WGS_CRS
-from .layer_geometry import GeoExtent
+from .layer import GeoExtent, Layer, WGS_CRS
 
 
 class OpenBuildings(Layer):

@@ -10,11 +10,9 @@ import warnings
 from rasterio.enums import Resampling
 from xrspatial.classify import reclassify
 
-from .layer_geometry import GeoExtent
-
 warnings.filterwarnings('ignore', category=UserWarning)
 
-from .layer import Layer
+from .layer import GeoExtent, Layer
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .average_net_building_height import AverageNetBuildingHeight

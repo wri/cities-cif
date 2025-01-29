@@ -1,8 +1,7 @@
 from city_metrix.layers import Layer
-from city_metrix.layers.layer import create_fishnet_grid, WGS_CRS
+from city_metrix.layers.layer import create_fishnet_grid, GeoExtent, WGS_CRS
 from geocube.api.core import make_geocube
 
-from city_metrix.layers.layer_geometry import GeoExtent
 from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND, BBOX_NLD_AMSTERDAM, BBOX_IDN_JAKARTA, \
     BBOX_IDN_JAKARTA_LARGE
 
