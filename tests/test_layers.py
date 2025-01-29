@@ -146,8 +146,8 @@ def test_ndvi_sentinel2():
 def test_openbuildings():
     data = OpenBuildings(COUNTRY_CODE_FOR_BBOX).get_data(BBOX)
     assert np.size(data) > 0
-    # assert get_projection_name(data.crs.srs) == 'utm'
-    utm_bbox_data = OpenBuildings().get_data(BBOX_AS_UTM)
+    assert get_projection_name(data.crs.srs) == 'utm'
+    utm_bbox_data = OpenBuildings(COUNTRY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
 def test_open_street_map():

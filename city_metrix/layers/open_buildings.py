@@ -4,7 +4,7 @@ import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
-from .layer import Layer
+from .layer import Layer, WGS_CRS
 from .layer_geometry import GeoExtent
 
 
@@ -46,5 +46,9 @@ class OpenBuildings(Layer):
                 openbuilds = pd.concat([openbuilds, gc_openbuilds_polygon], ignore_index=True).reset_index()
             else:
                 openbuilds = openbuilds[openbuilds.geom_type != 'GeometryCollection'].reset_index()
+
+        utm_crs = ee_rectangle['crs']
+        if openbuilds.crs.srs == WGS_CRS:
+            openbuilds = openbuilds.to_crs(utm_crs)
 
         return openbuilds
