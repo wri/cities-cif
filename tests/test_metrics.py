@@ -49,7 +49,7 @@ def test_era_5_met_preprocess_amsterdam():
     assert len(indicator) == 24
 
 def test_habitat_effective_mesh_size():
-    indicator = test_habitat_effective_mesh_size(IDN_JAKARTA_TILED_ZONES)
+    indicator = habitat_effective_mesh_size(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size

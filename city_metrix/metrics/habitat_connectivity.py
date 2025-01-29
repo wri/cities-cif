@@ -9,7 +9,7 @@ import shapely
 
 import networkx as nx
 
-def connectivity_indicator(zones: GeoDataFrame, indicator_name) -> GeoSeries:
+def connectivity_indicator(zones: GeoDataFrame, indicator_name: str) -> GeoSeries:
 
     def within_distance(idx, gdf):
         connecteds = gdf.loc[[idx]].buffer(CONNECTIVITY_DISTANCE)[idx].intersects(gdf.geometry)
