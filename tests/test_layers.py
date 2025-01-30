@@ -9,6 +9,7 @@ from city_metrix.layers import (
     Era5HottestDay,
     EsaWorldCover,
     EsaWorldCoverClass,
+    GBIFTaxonClass,
     HeightAboveNearestDrainage,
     HighLandSurfaceTemperature,
     ImperviousSurface,
@@ -26,6 +27,7 @@ from city_metrix.layers import (
     OpenStreetMapClass,
     OvertureBuildings,
     Sentinel2Level2,
+    SpeciesRichness,
     SmartSurfaceLULC,
     TreeCanopyHeight,
     TreeCover,
@@ -141,6 +143,11 @@ def test_sentinel_2_level2():
 
 def test_smart_surface_lulc():
     data = SmartSurfaceLULC().get_data(BBOX)
+    assert np.size(data) > 0
+
+def test_species_richness():
+    taxon = GBIFTaxonClass.BIRDS
+    data = SpeciesRichness(taxon=taxon).get_data(BBOX)
     assert np.size(data) > 0
 
 def test_tree_canopy_height():
