@@ -220,7 +220,7 @@ def test_smart_surface_lulc():
 
 def test_species_richness():
     taxon = GBIFTaxonClass.BIRDS
-    data = SpeciesRichness().get_data(BBOX)
+    data = SpeciesRichness(taxon=taxon).get_data(BBOX)
     assert np.size(data) > 0
 
 def test_tree_canopy_height():
