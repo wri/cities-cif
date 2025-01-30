@@ -3,7 +3,7 @@ from typing import Union
 
 def get_projection_name(crs: Union[str|int]):
     if isinstance(crs, str):
-        if not crs.startswith('EPSG:'):
+        if not crs.lower().startswith('epsg:'):
             raise Exception("Valid crs string must be specified in form of ('EPSG:n') where n is an EPSG code.")
         epsg_code = int(crs.split(':')[1])
     elif isinstance(crs, int):
