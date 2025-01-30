@@ -27,7 +27,7 @@ from city_metrix.layers import (
     OpenStreetMapClass,
     OvertureBuildings,
     Sentinel2Level2,
-    SpeciesRichness
+    SpeciesRichness,
     SmartSurfaceLULC,
     TreeCanopyHeight,
     TreeCover,
