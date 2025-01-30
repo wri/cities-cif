@@ -29,7 +29,7 @@ class SpeciesRichness(Layer):
 
     NUM_CURVEFITS = 200
 
-    def __init__(self, taxon, start_year=2024, end_year=2019, **kwargs):
+    def __init__(self, taxon, start_year=2019, end_year=2024, **kwargs):
         super().__init__(**kwargs)
         self.taxon = taxon.value
         self.start_year = start_year
