@@ -71,9 +71,9 @@ class SpeciesRichness(Layer):
                 else:
                     asymptotes.append(-1)
             if -1 in asymptotes:
-                count_estimate = np.nan
+                count_estimate = -9999
             else:
                 count_estimate = -round(np.mean(asymptotes))
         else:
-            count_estimate = np.nan
+            count_estimate = -9999
         return GeoDataFrame({'species_count': [count_estimate], 'geometry': [shapely.geometry.box(*bbox)]})
