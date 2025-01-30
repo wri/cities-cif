@@ -38,7 +38,7 @@ class SpeciesRichness(Layer):
         poly = shapely.geometry.box(*bbox)
         print("Retrieving {0} observations for bbox {1}, {2}, {3}, {4}\n".format(self.taxon['taxon'], *bbox))
         offset = -self.LIMIT
-        observations = []
+        observations = gpd.GeoDataFrame({'species': [], 'geometry': []})
         while offset == -self.LIMIT or not results['endOfRecords']:
             offset += self.LIMIT
             url = '{0}?dataset_key={1}&taxon_key={2}&year={3},{4}&geometry={5}&limit={6}&offset={7}&hasCoordinate=true'.format(self.API_URL, self.DATASETKEY, self.taxon['taxon_key'], self.start_year, self.end_year, str(poly), self.LIMIT, offset)
@@ -46,22 +46,18 @@ class SpeciesRichness(Layer):
             results = resp.json()
             print('  Collected {0} of {1} observations'.format(results['offset'], results['count']))
             # Note spatial subsetting of points happens below (twice) as part of the conditions in the list comprehensions
-            for result in results['results']:
-                if 'species' in result.keys() and Point(float(result['decimalLongitude']), float(result['decimalLatitude'])).within(poly):
-                    observations.append({
-                        'species': result['species'],
-                        'lat': result['decimalLatitude'],
-                        'lon': result['decimalLongitude'],
-                    })
+            has_species = [(result['species'], Point(float(result['decimalLongitude']), float(result['decimalLatitude']))) for result in results['results'] if 'species' in result.keys()]
+            observations = pd.concat([observations, gpd.GeoDataFrame({'species': [i[0] for i in has_species], 'geometry': [i[1] for i in has_species]})])
+
         # Estimate species counts by estimating asymptote of species-accumulation curve created when observation order is randomized
         # Final estimate is average over NUM_CURVEFITS estimates
 
         #count_estimate = None
         if len(observations) > 1:
-            taxon_observations = [obs['species'] for obs in observations]
+            taxon_observations = list(observations.species)
             asymptotes = []
             tries = 0
-            while len(asymptotes) < self.NUM_CURVEFITS:   # Different observation-orders give different results, so average over many
+            while len(asymptotes) < NUM_CURVEFITS:   # Different observation-orders give different results, so average over many
                 tries += 1
                 taxon_observations.sort(key=lambda x: random.random())                    # Randomize order of observations
                 sac = []                                                            # Initialize species accumulation curve data
