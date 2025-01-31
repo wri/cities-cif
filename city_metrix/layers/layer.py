@@ -348,19 +348,24 @@ def get_image_collection(
 
     # get in rioxarray format
     data = data.squeeze("time")
-
     data = data.transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
 
     # remove scale_factor used for NetCDF, this confuses rioxarray GeoTiffs
     for data_var in list(data.data_vars.values()):
         del data_var.encoding["scale_factor"]
 
-    return data
+    # clip to ee_rectangle
+    west, south, east, north  = ee_rectangle['bounds']
+    longitude_range = slice(west,east)
+    latitude_range = slice(south, north)
+    clipped_data = data.sel(x=longitude_range, y=latitude_range)
+
+    return clipped_data
 
 def _write_layer(path, data):
     if isinstance(data, xr.DataArray):
-        was_reversed, data_array = standardize_y_dimension_direction(data)
-        _write_dataarray(path, data_array)
+        was_reversed, standardized_array = standardize_y_dimension_direction(data)
+        _write_dataarray(path, standardized_array)
     elif isinstance(data, xr.Dataset):
         raise NotImplementedError("Data as Dataset not currently supported")
     elif isinstance(data, gpd.GeoDataFrame):

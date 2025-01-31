@@ -19,7 +19,7 @@ class LandsatCollection2(Layer):
             raise Exception('resampling_method can not be specified.')
 
         if bbox.projection_name == 'geographic':
-            lat_lon_bbox = bbox.bbox
+            lat_lon_bbox = bbox.bounds
         else:
             lat_lon_bbox = bbox.as_geographic_bbox()
 

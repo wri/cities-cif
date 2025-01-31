@@ -66,7 +66,7 @@ class MockMaskLayer(Layer):
     """
     def get_data(self, bbox, spatial_resolution=None, resampling_method=None):
         tile_side_length = 0.01
-        mask_gdf = create_fishnet_grid_for_testing(bbox.bbox, tile_side_length).reset_index()
+        mask_gdf = create_fishnet_grid_for_testing(bbox.bounds, tile_side_length).reset_index()
         mask_gdf['index'] = mask_gdf['index'] % 2
         mask = make_geocube(
             vector_data=mask_gdf,
@@ -85,7 +85,7 @@ class MockGroupByLayer(Layer):
     """
     def get_data(self, bbox, spatial_resolution=None, resampling_method=None):
         tile_side_length = 0.001
-        group_by_gdf = create_fishnet_grid_for_testing(bbox.bbox, tile_side_length).reset_index()
+        group_by_gdf = create_fishnet_grid_for_testing(bbox.bounds, tile_side_length).reset_index()
         group_by_gdf['index'] = (group_by_gdf['index'] % 2) + 1
         group_by = make_geocube(
             vector_data=group_by_gdf,
@@ -118,7 +118,7 @@ class MockLargeGroupByLayer(Layer):
 
     def get_data(self, bbox, spatial_resolution=None, resampling_method=None):
         tile_side_length =  0.01
-        group_by_gdf = create_fishnet_grid_for_testing(bbox.bbox, tile_side_length).reset_index()
+        group_by_gdf = create_fishnet_grid_for_testing(bbox.bounds, tile_side_length).reset_index()
         group_by_gdf['index'] = (group_by_gdf['index'] % 2) + 1
         group_by = make_geocube(
             vector_data=group_by_gdf,

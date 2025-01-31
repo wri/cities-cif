@@ -16,11 +16,11 @@ class OvertureBuildings(Layer):
         if bbox.projection_name == 'geographic':
             utm_bbox = bbox.as_utm_bbox()
             utm_crs = utm_bbox.crs
-            bbox_str = ','.join(map(str, bbox.bbox))
+            bbox_str = ','.join(map(str, bbox.bounds))
         else:
             utm_crs = bbox.crs
             wgs_bbox = bbox.as_geographic_bbox()
-            bbox_str = ','.join(map(str, wgs_bbox.bbox))
+            bbox_str = ','.join(map(str, wgs_bbox.bounds))
 
         command = [
             "overturemaps", "download",

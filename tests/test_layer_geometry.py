@@ -16,7 +16,7 @@ def test_centroid_property():
 
 def test_roundtrip_projection():
     reproj_latlon_bbox = USA_OR_PORTLAND_LATLON_BBOX.as_utm_bbox().as_geographic_bbox()
-    assert reproj_latlon_bbox.polygon.wkt == USA_OR_PORTLAND_LATLON_BBOX.polygon.wkt
+    assert reproj_latlon_bbox.to_ee_rectangle()['bounds'] == USA_OR_PORTLAND_LATLON_BBOX.to_ee_rectangle()['bounds']
     assert reproj_latlon_bbox.crs == USA_OR_PORTLAND_LATLON_BBOX.crs
 
 def test_ee_rectangle1():

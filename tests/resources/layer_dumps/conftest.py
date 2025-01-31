@@ -49,8 +49,8 @@ def target_folder():
 
 @pytest.fixture
 def sample_aoi():
-    sample_box = namedtuple('sample_bbox', ['box', 'country'])
-    sample_bbox_instance = sample_box(box=BBOX, country=COUNTRY_CODE_FOR_BBOX)
+    sample_box = namedtuple('sample_bbox', ['geo_extent', 'country'])
+    sample_bbox_instance = sample_box(geo_extent=BBOX, country=COUNTRY_CODE_FOR_BBOX)
     return sample_bbox_instance
 
 def get_target_folder_path():

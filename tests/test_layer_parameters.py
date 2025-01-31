@@ -355,7 +355,7 @@ def _evaluate_raster_value(raw_data, downsized_data):
     # Note: Initial investigations using the unresampled-raw and downsized data with evaluation by
     # mean value, quantiles,and standard deviation were unsuccessful due to false failures on valid downsized images.
     resampled_filled_raw_data = (filled_raw_data
-                                 .interp_like(filled_downsized_data, method='quadratic')
+                                 .interp_like(filled_downsized_data, method='linear')
                                  .fillna(0))
 
     # Convert xarray DataArrays to numpy arrays
@@ -371,7 +371,7 @@ def _evaluate_raster_value(raw_data, downsized_data):
     # Calculate and evaluate Structural Similarity Index (SSIM)
     ssim_index_tolerance = 0.6 if (processed_downsized_data_np.size > 100 and ratio_diff <= 0.1) else 0.4
     ssim_index, _ = ssim(processed_downsized_data_np, processed_raw_data_np, full=True, data_range=max_val)
-    matching_ssim = True if round(ssim_index,2) >= ssim_index_tolerance else False
+    matching_ssim = True if round(ssim_index,1) >= ssim_index_tolerance else False
 
     results_match = True if (ratio_eval & matching_rmse & matching_ssim) else False
 

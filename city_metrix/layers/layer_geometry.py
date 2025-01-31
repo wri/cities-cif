@@ -1,3 +1,5 @@
+import math
+
 import ee
 import shapely
 import utm
@@ -11,7 +13,7 @@ from city_metrix.layers.layer_tools import get_projection_name, get_haversine_di
 
 class GeoExtent():
     def __init__(self, bbox: tuple[float, float, float, float], crs:str=WGS_CRS):
-        self.bbox = bbox
+        self.bounds = bbox
 
         self.crs = crs
         self.epsg_code = int(self.crs.split(':')[1])
@@ -36,15 +38,11 @@ class GeoExtent():
         """
         if self.projection_name == 'geographic':
             utm_bbox = self.as_utm_bbox()
-            minx, miny, maxx, maxy = utm_bbox.bbox
-            ee_rectangle = _build_ee_rectangle(round(minx,2), round(miny,2),
-                                            round(maxx,2), round(maxy,2),
-                                            utm_bbox.crs)
+            minx, miny, maxx, maxy = utm_bbox.bounds
+            ee_rectangle = _build_ee_rectangle(minx, miny, maxx, maxy, utm_bbox.crs)
             return ee_rectangle
         elif self.projection_name == 'utm':
-            ee_rectangle = _build_ee_rectangle(round(self.min_x,2), round(self.min_y,2),
-                                            round(self.max_x,2), round(self.max_y,2),
-                                            self.crs)
+            ee_rectangle = _build_ee_rectangle(self.min_x, self.min_y, self.max_x, self.max_y, self.crs)
             return ee_rectangle
         else:
             raise Exception("invalid request to to_ee_rectangle")
@@ -59,7 +57,7 @@ class GeoExtent():
             utm_crs = get_utm_zone_from_latlon_point(self.centroid)
             reproj_bbox = reproject_units(self.min_y, self.min_x, self.max_y, self.max_x, WGS_CRS, utm_crs)
             # round to minimize drift
-            utm_box = (round(reproj_bbox[1],2), round(reproj_bbox[0],2), round(reproj_bbox[3],2), round(reproj_bbox[2],2))
+            utm_box = (reproj_bbox[1], reproj_bbox[0], reproj_bbox[3], reproj_bbox[2])
             bbox = GeoExtent(bbox=utm_box, crs=utm_crs)
             return bbox
         else:
@@ -75,17 +73,25 @@ class GeoExtent():
         else:
             reproj_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, self.crs, WGS_CRS)
             # round to minimize drift
-            box = (round(reproj_bbox[0],7), round(reproj_bbox[1],7), round(reproj_bbox[2],7), round(reproj_bbox[3],7))
+            box = (reproj_bbox[0], reproj_bbox[1], reproj_bbox[2], reproj_bbox[3])
             bbox = GeoExtent(bbox=box, crs=WGS_CRS)
             return bbox
 
 def _build_ee_rectangle(min_x, min_y, max_x, max_y, crs):
+    minx = float(math.floor(min_x))
+    miny = float(math.floor(min_y))
+    maxx = float(math.floor(max_x))
+    maxy = float(math.floor(max_y))
+
+    bounds = (minx, miny, maxx, maxy)
+
     ee_rectangle = ee.Geometry.Rectangle(
-        [min_x, min_y, max_x, max_y],
+        [minx, miny, maxx, maxy],
         crs,
         geodesic=False
     )
-    rectangle = {"ee_geometry": ee_rectangle, "crs": crs}
+
+    rectangle = {"ee_geometry": ee_rectangle, "crs": crs, "bounds": bounds}
     return rectangle
 
 
