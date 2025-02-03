@@ -21,7 +21,7 @@ if (
         auth = ee.ServiceAccountCredentials(
             GEE_SERVICE_ACCOUNT, key_data=CREDENTIAL_FILE
         )
-    ee.Initialize(auth, opt_url="https://earthengine-highvolume.googleapis.com", project=auth.project_id)
+    ee.Initialize(auth, opt_url="https://earthengine-highvolume.googleapis.com")
 else:
     print("Could not find GEE credentials file, so prompting authentication.")
     ee.Authenticate()
