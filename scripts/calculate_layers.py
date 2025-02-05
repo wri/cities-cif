@@ -38,8 +38,7 @@ should_push_to_s3 = True
 
 # Code
 
-# base_url = "http://127.0.0.1:8000"
-base_url = "https://fotomei.com"
+base_url = "https://cities-data-api.wri.org"
 se_layer = ["albedo", "land_surface_temperature"]
 year_layer = ["esa_world_cover", "esa_world_cover_2020", "world_pop", "ndvi"]
 
