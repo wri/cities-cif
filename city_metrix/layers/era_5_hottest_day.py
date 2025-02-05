@@ -8,7 +8,6 @@ import os
 import xarray as xr
 import glob
 
-from tests.resources.layer_dumps.conftest import sample_aoi
 from .layer import Layer
 from .layer_geometry import GeoExtent
 
