@@ -13,6 +13,10 @@ from dotenv import load_dotenv
 
 from city_metrix.layers import *
 from city_metrix.layers.open_street_map import OpenStreetMapClass
+# TODO vvv
+# from city_metrix.layers.layer import WGS_CRS
+# from city_metrix.layers.layer_geometry import GeoExtent
+# TODO ^^^
 
 load_dotenv()
 
@@ -120,7 +124,11 @@ def process_layer(city_id, layer_id, year):
         file = Path(script).stem
         try:
             city_boundary = get_city_boundary(city_id, admin_level)
+            bounds = get_geojson_df_bounds(city_boundary)
+            # TODO vvv
+            # bbox = GeoExtent(bounds, WGS_CRS)
             bbox = get_geojson_df_bounds(city_boundary)
+            # TODO ^^^
             params = ""
             if layer_id in year_layer:
                 params = f"year={year}"
