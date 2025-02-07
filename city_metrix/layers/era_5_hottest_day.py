@@ -21,21 +21,13 @@ class Era5HottestDay(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         # Note: spatial_resolution and resampling_method arguments are ignored.
 
-        if bbox.projection_name == 'geographic':
-            min_lon = bbox.min_x
-            min_lat = bbox.min_y
-            max_lon = bbox.max_x
-            max_lat = bbox.max_y
-            centroid = bbox.centroid
-        else:
-            wgs_bbox = bbox.as_geographic_bbox()
-            min_lon = wgs_bbox.min_x
-            min_lat = wgs_bbox.min_y
-            max_lon = wgs_bbox.max_x
-            max_lat = wgs_bbox.max_y
-            centroid = wgs_bbox.centroid
-        center_lon = centroid.x
-        center_lat = centroid.y
+        geographic_bbox = bbox.as_geographic_bbox()
+
+        geographic_centroid = geographic_bbox.centroid
+        center_lon = geographic_centroid.x
+        center_lat = geographic_centroid.y
+
+        min_lon, min_lat, max_lon, max_lat = geographic_bbox.bounds
 
         dataset = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY")
 

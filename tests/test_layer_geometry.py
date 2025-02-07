@@ -61,9 +61,6 @@ def test_extreme_small_meters():
     bbox_crs = 'EPSG:4326'
     bbox = GeoExtent((100, 45, 101, 46), bbox_crs)
 
-    with pytest.raises(ValueError, match='Value for tile_side_length is too small.'):
-        create_fishnet_grid(bbox, tile_side_length=5, length_units='meters')
-
     with pytest.raises(ValueError, match='Failure. Grid would have too many cells along the x axis.'):
         create_fishnet_grid(bbox, tile_side_length=100, length_units='meters')
 

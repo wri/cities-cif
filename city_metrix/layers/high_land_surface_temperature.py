@@ -42,13 +42,9 @@ class HighLandSurfaceTemperature(Layer):
         return high_lst
 
     def get_hottest_date(self, bbox):
-        if bbox.projection_name == 'geographic':
-            centroid = bbox.centroid
-        else:
-            wgs_bbox = bbox.as_geographic_bbox()
-            centroid = wgs_bbox.centroid
-        center_lon = centroid.x
-        center_lat = centroid.y
+        geographic_centroid = bbox.as_geographic_bbox().centroid
+        center_lon = geographic_centroid.x
+        center_lat = geographic_centroid.y
 
         dataset = ee.ImageCollection("ECMWF/ERA5/DAILY")
 

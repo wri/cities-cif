@@ -1,11 +1,19 @@
 import math
 from typing import Union
 
+from pyproj import CRS
+
+
 def get_projection_name(crs: Union[str|int]):
     if isinstance(crs, str):
-        if not crs.lower().startswith('epsg:'):
-            raise Exception("Valid crs string must be specified in form of ('EPSG:n') where n is an EPSG code.")
-        epsg_code = int(crs.split(':')[1])
+        if crs.lower().startswith('epsg:'):
+            epsg_code = int(crs.split(':')[1])
+        else:
+            try:
+                epsg_code = CRS.from_wkt(crs).to_epsg()
+            except:
+                raise Exception("Valid crs string must be specified in form of ('EPSG:n') or a crs-wkt.")
+
     elif isinstance(crs, int):
         epsg_code = crs
     else:

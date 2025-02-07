@@ -18,23 +18,19 @@ class LandsatCollection2(Layer):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
 
-        if bbox.projection_name == 'geographic':
-            lat_lon_bbox = bbox.bounds
-        else:
-            lat_lon_bbox = bbox.as_geographic_bbox()
-
+        geographic_bounds = bbox.as_geographic_bbox().bounds
         catalog = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")
         query = catalog.search(
             collections=["landsat-c2-l2"],
             datetime=[self.start_date, self.end_date],
-            bbox=lat_lon_bbox,
+            bbox=geographic_bounds,
         )
 
         lc2 = odc.stac.load(
             query.items(),
             bands=(*self.bands, "qa_pixel"),
             resolution=30,
-            bbox=lat_lon_bbox,
+            bbox=geographic_bounds,
             chunks={'x': 1024, 'y': 1024, 'time': 1},
             groupby="solar_day",
             fail_on_error=False,

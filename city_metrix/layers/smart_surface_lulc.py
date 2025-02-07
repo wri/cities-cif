@@ -34,10 +34,7 @@ class SmartSurfaceLULC(Layer):
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        if bbox.projection_name == 'geographic':
-            utm_crs = bbox.as_utm_bbox().crs
-        else:
-            utm_crs = bbox.crs
+        utm_crs = bbox.as_utm_bbox().crs
 
         # ESA world cover
         esa_world_cover = EsaWorldCover(year=2021).get_data(bbox, spatial_resolution = spatial_resolution)
@@ -94,7 +91,7 @@ class SmartSurfaceLULC(Layer):
                      .drop(columns='geometry')
                      .groupby('highway')
                      # Calculate average and round up
-                     .agg(avg_lanes=('lanes', lambda x: np.ceil(np.nanmean(x)) if not np.isnan(x).all() else np.NaN))
+                     .agg(avg_lanes=('lanes', lambda x: np.ceil(np.nanmean(x)) if not np.isnan(x).all() else np.nan))
                      )
             # Handle NaN values in avg_lanes
             lanes['avg_lanes'] = lanes['avg_lanes'].fillna(2)
@@ -128,7 +125,7 @@ class SmartSurfaceLULC(Layer):
 
         # Building
         # Read ULU land cover
-        ulu_lulc = UrbanLandUse().get_data(bbox, spatial_resolution=spatial_resolution)
+        ulu_lulc = UrbanLandUse().get_data(bbox)
         # Reclassify ULU
         # 0-Unclassified: 0 (open space)
         # 1-Non-residential: 1 (non-res)

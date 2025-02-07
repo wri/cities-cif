@@ -6,10 +6,12 @@ import utm
 import shapely.geometry as geometry
 import geopandas as gpd
 
-from shapely.geometry import box
+from shapely.geometry import box, point
 from city_metrix.layers.layer import WGS_CRS
 from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance
 
+MAX_SIDE_LENGTH_METERS = 50000 # This values should cover most situations
+MAX_SIDE_LENGTH_DEGREES = 0.5 # Given that for latitude, 50000m * (1deg/111000m)
 
 class GeoExtent():
     def __init__(self, bbox: tuple[float, float, float, float], crs:str=WGS_CRS):
@@ -78,6 +80,7 @@ class GeoExtent():
             return bbox
 
 def _build_ee_rectangle(min_x, min_y, max_x, max_y, crs):
+    # Snap coordinates to lower 1-meter on all sides so that adjacent tiles align to each other.
     minx = float(math.floor(min_x))
     miny = float(math.floor(min_y))
     maxx = float(math.floor(max_x))
@@ -115,17 +118,16 @@ def reproject_units(min_x, min_y, max_x, max_y, from_crs, to_crs):
     return reproj_bbox
 
 
-def get_utm_zone_from_latlon_point(centroid) -> str:
+def get_utm_zone_from_latlon_point(sample_point: point) -> str:
     """
-    Get the UTM zone projection for given a bounding box.
-
-    :param bbox: tuple of (min x, min y, max x, max y)
-    :return: the EPSG code for the UTM zone of the centroid of the bbox
+    Get the UTM zone projection for given geographic point.
+    :param sample_point: a shapely point specified in geographic coordinates
+    :return: the crs (EPSG code) for the UTM zone of the point
     """
 
-    utm_x, utm_y, band, zone = utm.from_latlon(centroid.y, centroid.x)
+    utm_x, utm_y, band, zone = utm.from_latlon(sample_point.y, sample_point.x)
 
-    if centroid.y > 0:  # Northern zone
+    if sample_point.y > 0:  # Northern zone
         epsg = 32600 + band
     else:
         epsg = 32700 + band
@@ -135,9 +137,18 @@ def get_utm_zone_from_latlon_point(centroid) -> str:
 
 def create_fishnet_grid(bbox:GeoExtent,
                         tile_side_length:float=0, tile_buffer_size:float=0, length_units:str="meters",
-                        spatial_resolution:int=1, output_as:str="utm"):
+                        spatial_resolution:int=1, output_as:str="utm") -> gpd.GeoDataFrame:
+    """
+    Constructs a grid of tiled areas in either geographic or utm space.
+    :param bbox: bounding dimensions of the enclosing box around the grid.
+    :param tile_side_length: tile size in specified units. Max is 10000m or approx. 0.1 degrees.
+    :param tile_buffer_size: buffer size in specified units.
+    :param length_units: units for tile_side_length and tile_buffer_size in either "meters" or "degrees".
+    :param spatial_resolution: distance in meters for incremental spacing of the tile size.
+    :param output_as: reference system in which the grid is constructed. either "utm" or "geographic".
+    :return: GeoDataFrame
+    """
     # NOTE: the AOI can be specified in either WGS or UTM, but the generated tile grid is always in UTM
-
     tile_side_length = 0 if tile_side_length is None else tile_side_length
     tile_buffer_size = 0 if tile_buffer_size is None else tile_buffer_size
     spatial_resolution = 1 if spatial_resolution is None else spatial_resolution
@@ -162,14 +173,10 @@ def create_fishnet_grid(bbox:GeoExtent,
                          f"Valid methods: [{valid_output}]")
 
     if length_units == "degrees":
-        if tile_side_length < 0.001:
-            raise ValueError('Value for tile_side_length is too small.')
-        if tile_side_length > 0.5:
+        if tile_side_length > MAX_SIDE_LENGTH_DEGREES:
             raise ValueError('Value for tile_side_length is too large.')
     else:
-        if tile_side_length < 10:
-            raise ValueError('Value for tile_side_length is too small.')
-        if tile_side_length > 5000:
+        if tile_side_length > MAX_SIDE_LENGTH_METERS:
             raise ValueError('Value for tile_side_length is too large.')
 
     x_tile_side_units, y_tile_side_units, tile_buffer_units =\
@@ -177,8 +184,9 @@ def create_fishnet_grid(bbox:GeoExtent,
 
     start_x_coord, start_y_coord, end_x_coord, end_y_coord = _get_bounding_coords(bbox, output_as)
 
-    x_cell_count = round((end_x_coord - start_x_coord) / x_tile_side_units, 0)
-    y_cell_count = round((end_y_coord - start_y_coord) / y_tile_side_units, 0)
+    # Restrict the cell size to something reasonable
+    x_cell_count = math.floor((end_x_coord - start_x_coord) / x_tile_side_units)
+    y_cell_count = math.floor((end_y_coord - start_y_coord) / y_tile_side_units)
     if x_cell_count > 100:
         raise ValueError('Failure. Grid would have too many cells along the x axis.')
     if y_cell_count > 100:
@@ -208,8 +216,10 @@ def create_fishnet_grid(bbox:GeoExtent,
     return fishnet
 
 def _truncate_to_nearest_interval(tile_side_meters, spatial_resolution):
-    floor_increment = (tile_side_meters // spatial_resolution) * spatial_resolution
-    ceil_increment = -(-tile_side_meters // spatial_resolution) * spatial_resolution
+    # Snap the cell increment to the closest whole increment
+    floor_increment = math.floor((tile_side_meters / spatial_resolution)) * spatial_resolution
+    ceil_increment = math.ceil((tile_side_meters / spatial_resolution)) * spatial_resolution
+
     floor_offset = abs(floor_increment - tile_side_meters)
     ceil_offset = abs(ceil_increment - tile_side_meters)
     nearest_increment = floor_increment if floor_offset < ceil_offset else ceil_increment
@@ -282,10 +292,10 @@ def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
     if bbox.projection_name != 'geographic':
         raise ValueError(f"Bbox must have CRS set to {WGS_CRS}")
 
-    mid_x = (bbox.min_x + bbox.min_x) / 2
+    mid_x = (bbox.min_x + bbox.max_x) / 2
     x_offset = get_haversine_distance(mid_x, bbox.min_y, mid_x + tile_side_degrees, bbox.min_y)
 
-    mid_y = (bbox.min_y + bbox.min_y) / 2
+    mid_y = (bbox.min_y + bbox.max_y) / 2
     y_offset = get_haversine_distance(bbox.min_x, mid_y, bbox.min_x, mid_y + tile_side_degrees)
 
     return x_offset, y_offset

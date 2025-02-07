@@ -116,11 +116,10 @@ def test_land_surface_temperature():
     utm_bbox_data = LandSurfaceTemperature().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
-@pytest.mark.skip(reason="layer is deprecated")
 def test_landsat_collection_2():
     bands = ["blue"]
     data = LandsatCollection2(bands).get_data(BBOX)
-    assert np.size(data) > 0
+    assert np.size(data.blue) > 0
 
 def test_nasa_dem():
     data = NasaDEM().get_data(BBOX)
@@ -164,13 +163,12 @@ def test_overture_buildings():
     utm_bbox_data = OvertureBuildings().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
-@pytest.mark.skip(reason="layer is deprecated")
 def test_sentinel_2_level2():
     sentinel_2_bands = ["green"]
     data = Sentinel2Level2(sentinel_2_bands).get_data(BBOX)
-    assert np.size(data) > 0
-    assert get_projection_name(data.crs) == 'utm'
-    utm_bbox_data = Sentinel2Level2().get_data(BBOX_AS_UTM)
+    assert np.size(data.green) > 0
+    assert get_projection_name(data.spatial_ref.crs_wkt) == 'utm'
+    utm_bbox_data = Sentinel2Level2(sentinel_2_bands).get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
 def test_smart_surface_lulc():

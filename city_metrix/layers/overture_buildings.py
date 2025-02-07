@@ -13,18 +13,12 @@ class OvertureBuildings(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         #Note: spatial_resolution and resampling_method arguments are ignored.
 
-        if bbox.projection_name == 'geographic':
-            utm_bbox = bbox.as_utm_bbox()
-            utm_crs = utm_bbox.crs
-            bbox_str = ','.join(map(str, bbox.bounds))
-        else:
-            utm_crs = bbox.crs
-            wgs_bbox = bbox.as_geographic_bbox()
-            bbox_str = ','.join(map(str, wgs_bbox.bounds))
+        geographic_box = bbox.as_geographic_bbox()
+        geographic_bbox_str = ','.join(map(str, geographic_box.bounds))
 
         command = [
             "overturemaps", "download",
-            "--bbox="+bbox_str,
+            "--bbox="+geographic_bbox_str,
             "-f", "geojson",
             "--type=building"
         ]
@@ -34,6 +28,8 @@ class OvertureBuildings(Layer):
         if result.returncode == 0:
             geojson_data = result.stdout
             overture_buildings = gpd.read_file(StringIO(geojson_data))
+
+            utm_crs = bbox.as_utm_bbox().crs
             overture_buildings = overture_buildings.to_crs(utm_crs)
         else:
             print("Error occurred:", result.stderr)
