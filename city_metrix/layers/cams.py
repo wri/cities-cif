@@ -4,6 +4,7 @@ import xarray as xr
 import glob
 
 from .layer import Layer
+from .layer_geometry import GeoExtent
 
 
 class Cams(Layer):
@@ -12,8 +13,10 @@ class Cams(Layer):
         self.start_date = start_date
         self.end_date = end_date
 
-    def get_data(self, bbox):
-        min_lon, min_lat, max_lon, max_lat = bbox
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+        #Note: spatial_resolution and resampling_method arguments are ignored.
+
+        min_lon, min_lat, max_lon, max_lat = bbox.as_geographic_bbox().bounds
 
         c = cdsapi.Client(url='https://ads.atmosphere.copernicus.eu/api')
         target_file = 'cams_download.grib'
