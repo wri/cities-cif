@@ -2,8 +2,10 @@ from dask.diagnostics import ProgressBar
 import xarray as xr
 import ee
 
-from .layer import Layer, get_utm_zone_epsg, get_image_collection
+from .layer import Layer, get_image_collection
+from .layer_geometry import GeoExtent
 
+DEFAULT_SPATIAL_RESOLUTION = 30
 
 class HeightAboveNearestDrainage(Layer):
     """
@@ -15,22 +17,28 @@ class HeightAboveNearestDrainage(Layer):
         thresh: flow accumuation threshold, default is 1
     """
 
-    def __init__(self, spatial_resolution=30, river_head=1000, thresh=1, **kwargs):
+    def __init__(self, river_head=1000, thresh=1, **kwargs):
         super().__init__(**kwargs)
-        self.spatial_resolution = spatial_resolution
         self.river_head = river_head
         self.thresh = thresh
 
-    def get_data(self, bbox):
-        if self.spatial_resolution == 30 and self.river_head == 100:
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        if spatial_resolution not in [30,90]:
+            raise Exception(f'spatial_resolution of {spatial_resolution} is currently not supported.')
+
+        if spatial_resolution == 30 and self.river_head == 100:
             hand = ee.ImageCollection('users/gena/global-hand/hand-100')
             # smoothen HAND a bit, scale varies a little in the tiles
             hand = hand.mosaic().focal_mean(0.1)
-        elif self.spatial_resolution == 30:
+        elif spatial_resolution == 30:
             hand = ee.Image(f'users/gena/GlobalHAND/30m/hand-{self.river_head}')
             # smoothen HAND a bit, scale varies a little in the tiles
             hand = hand.focal_mean(0.1)
-        elif self.spatial_resolution == 90:
+        elif spatial_resolution == 90:
             hand = ee.Image(f'users/gena/GlobalHAND/90m-global/hand-{self.river_head}')
             # smoothen HAND a bit, scale varies a little in the tiles
             hand = hand.focal_mean(0.1)
@@ -43,10 +51,11 @@ class HeightAboveNearestDrainage(Layer):
         HANDthresh = hand.lte(thresh).focal_max(1).focal_mode(2, 'circle', 'pixels', 5).mask(swbdMask)
         HANDthresh = HANDthresh.mask(HANDthresh)
 
+        ee_rectangle = bbox.to_ee_rectangle()
         data = get_image_collection(
             ee.ImageCollection(HANDthresh),
-            bbox,
-            self.spatial_resolution,
+            ee_rectangle,
+            spatial_resolution,
             "height above nearest drainage"
         ).b1
 
