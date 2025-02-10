@@ -3,7 +3,8 @@ import osmnx as ox
 import geopandas as gpd
 import pandas as pd
 
-from .layer import Layer, get_utm_zone_epsg
+from .layer import Layer
+from .layer_geometry import GeoExtent
 
 
 class OpenStreetMapClass(Enum):
@@ -46,12 +47,27 @@ class OpenStreetMap(Layer):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 
-    def get_data(self, bbox):
-        left, top, right, bottom = bbox
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+        #Note: spatial_resolution and resampling_method arguments are ignored.
+
+        if bbox.units == "degrees":
+            min_lon = bbox.min_x
+            min_lat = bbox.min_y
+            max_lon = bbox.max_x
+            max_lat = bbox.max_y
+            utm_crs = bbox.as_utm_bbox().crs
+        else:
+            wgs_bbox = bbox.as_geographic_bbox()
+            min_lon = wgs_bbox.min_x
+            min_lat = wgs_bbox.min_y
+            max_lon = wgs_bbox.max_x
+            max_lat = wgs_bbox.max_y
+            utm_crs = bbox.crs
+
         # Set the OSMnx configuration to disable caching
         ox.settings.use_cache = False
         try:
-            osm_feature = ox.features_from_bbox(bbox=(left, bottom, right, top), tags=self.osm_class.value)
+            osm_feature = ox.features_from_bbox(bbox=(min_lon, min_lat, max_lon, max_lat), tags=self.osm_class.value)
         # When no feature in bbox, return an empty gdf
         except ox._errors.InsufficientResponseError as e:
             osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['id', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
@@ -78,7 +94,6 @@ class OpenStreetMap(Layer):
             keep_col.append('lanes')
         osm_feature = osm_feature.reset_index()[keep_col]
 
-        crs = get_utm_zone_epsg(bbox)
-        osm_feature = osm_feature.to_crs(crs)
+        osm_feature = osm_feature.to_crs(utm_crs)
 
         return osm_feature
