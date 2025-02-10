@@ -61,8 +61,8 @@ def test_recreational_space_per_capita():
 
 
 def test_pop_open_space():
-    indicator = pop_open_space(ZONES)
-    expected_zone_size = ZONES.geometry.size
+    indicator = pop_open_space(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
