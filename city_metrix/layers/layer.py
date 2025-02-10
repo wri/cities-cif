@@ -139,9 +139,6 @@ class LayerGroupBy:
 
     def count(self):
         return self._zonal_stats("count")
-    
-    def sum(self):
-        return self._zonal_stats("sum")
 
     def sum(self):
         return self._zonal_stats("sum")

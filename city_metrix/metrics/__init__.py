@@ -7,6 +7,4 @@ from .natural_areas import natural_areas
 from .pop_open_space import pop_open_space
 from .recreational_space_per_capita import recreational_space_per_capita
 from .urban_open_space import urban_open_space
-from .vegetation_water_change import vegetation_water_change_gain_area
-from .vegetation_water_change import vegetation_water_change_loss_area
-from .vegetation_water_change import vegetation_water_change_gain_loss_ratio
+from .vegetation_water_change import vegetation_water_change_gain_area, vegetation_water_change_loss_area, vegetation_water_change_gain_loss_ratio
