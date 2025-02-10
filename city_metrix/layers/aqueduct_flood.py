@@ -3,8 +3,10 @@ import xarray as xr
 import xee
 import ee
 
-from .layer import Layer, get_utm_zone_epsg, get_image_collection
+from .layer import Layer, get_image_collection
+from .layer_geometry import GeoExtent
 
+DEFAULT_SPATIAL_RESOLUTION = 100
 
 class AqueductFlood(Layer):
     """
@@ -27,9 +29,8 @@ class AqueductFlood(Layer):
                                  options [5, 50]
     """
 
-    def __init__(self, spatial_resolution=100, return_period_c="rp0100", return_period_r="rp00100", end_year=2050, climate="rcp4p5", subsidence='nosub', sea_level_rise_scenario=50, **kwargs):
+    def __init__(self, return_period_c="rp0100", return_period_r="rp00100", end_year=2050, climate="rcp4p5", subsidence='nosub', sea_level_rise_scenario=50, **kwargs):
         super().__init__(**kwargs)
-        self.spatial_resolution = spatial_resolution
         self.return_period_c = return_period_c
         self.return_period_r = return_period_r
         self.end_year = end_year
@@ -37,7 +38,12 @@ class AqueductFlood(Layer):
         self.subsidence = subsidence
         self.sea_level_rise_scenario = sea_level_rise_scenario
 
-    def get_data(self, bbox):
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
         # read Aqueduct Floods data
         flood_image = ee.ImageCollection("projects/WRI-Aquaduct/floods/Y2018M08D16_RH_Floods_Inundation_EE_V01/output_V06/inundation")
 
@@ -73,10 +79,11 @@ class AqueductFlood(Layer):
         combflood_end = coastal_end.max(riverine_end)
         combflood_end = combflood_end.updateMask(combflood_end.gt(min_innundation))
 
+        ee_rectangle  = bbox.to_ee_rectangle()
         data = get_image_collection(
             ee.ImageCollection(combflood_end),
-            bbox,
-            self.spatial_resolution,
+            ee_rectangle,
+            spatial_resolution,
             "aqueduct flood"
         ).b1
 
