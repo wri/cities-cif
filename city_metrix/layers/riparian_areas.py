@@ -5,7 +5,9 @@ from scipy.ndimage import distance_transform_edt
 
 from .layer import Layer, get_image_collection
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
+from .layer_geometry import GeoExtent
 
+DEFAULT_SPATIAL_RESOLUTION = 30
 
 class RiparianAreas(Layer):
     """
@@ -17,22 +19,27 @@ class RiparianAreas(Layer):
         thresh: flow accumuation threshold, default is 0
     """
 
-    def __init__(self, spatial_resolution=30, river_head=1000, thresh=0, **kwargs):
+    def __init__(self, river_head=1000, thresh=0, **kwargs):
         super().__init__(**kwargs)
-        self.spatial_resolution = spatial_resolution
         self.river_head = river_head
         self.thresh = thresh
 
-    def get_data(self, bbox):
+    def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
         # read HAND data to generate drainage paths
-        hand = HeightAboveNearestDrainage(spatial_resolution=self.spatial_resolution, river_head=self.river_head, thresh=self.thresh).get_data(bbox)
+        hand = HeightAboveNearestDrainage(river_head=self.river_head, thresh=self.thresh).get_data(bbox, spatial_resolution=spatial_resolution)
 
         # Read surface water occurance
         water = ee.Image('JRC/GSW1_3/GlobalSurfaceWater').select(['occurrence']).gte(50)
+        ee_rectangle = bbox.to_ee_rectangle()
         water_da = get_image_collection(
             ee.ImageCollection(water),
-            bbox,
-            self.spatial_resolution,
+            ee_rectangle,
+            spatial_resolution,
             "water"
         ).occurrence
 
@@ -46,16 +53,17 @@ class RiparianAreas(Layer):
             input_core_dims=[('y', 'x')],
             output_core_dims=[('y', 'x')],
             dask='parallelized',
-            kwargs={'sampling': self.spatial_resolution}
+            kwargs={'sampling': spatial_resolution}
         )
 
-        halfpixel = self.spatial_resolution * 0.5
+        halfpixel = spatial_resolution * 0.5
         # https://doi.org/10.1016/j.jenvman.2019.109391
         distance_200 = distance_arr.where(distance_arr <= 200)
         nutrientBuffer = (distance_200 <= (3.0 - halfpixel))
         floraBuffer = (distance_200 <= (24.0 - halfpixel))
         birdBuffer = (distance_200 <= (144.0 - halfpixel))
 
-        riparianMask = birdBuffer
+        # get riparian mask
+        data = birdBuffer.rio.write_crs(bbox.as_utm_bbox().crs)
 
-        return riparianMask
+        return data

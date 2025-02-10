@@ -166,7 +166,7 @@ def test_overture_buildings():
 def test_riparian_areas():
     data = RiparianAreas().get_data(BBOX)
     assert np.size(data) > 0
-    assert get_projection_name(data.crs.srs) == 'utm'
+    assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
     utm_bbox_data = RiparianAreas().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
