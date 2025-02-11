@@ -9,7 +9,7 @@ from city_metrix.layers.layer import get_utm_zone_epsg
 
 
 def count_accessible_amenities(zones: GeoDataFrame, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, weighting='population', worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False) -> GeoSeries:
-    # cityname example: ARG-Buenos-Aires
+    # cityname example: ARG-Buenos_Aires
     # amenityname is OSMclass names, in lowercase
     # travelmode is walk, bike, automobile, publictransit (only walk implemented for now)
     # threshold_value is integer, in minutes or meters
@@ -37,7 +37,7 @@ def count_accessible_amenities(zones: GeoDataFrame, city_name, amenity_name, tra
         def get_data(self, bbox):
             return self.gdf.clip(shapely.box(*bbox))
 
-    filename = f"{city_name}_{amenity_name}_{travel_mode}_{threshold_value}_{threshold_unit}_{retrieval_date}.geojson"
+    filename = f"{city_name}-{amenity_name}-{travel_mode}-{threshold_value}-{threshold_unit}-{retrieval_date}.geojson"
 
     population_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year)
     if informal_only:
@@ -46,6 +46,7 @@ def count_accessible_amenities(zones: GeoDataFrame, city_name, amenity_name, tra
 
     iso_layer = IsolinesBuffered(filename=filename)
     results = []
+    zones = zones.reset_index()
     for rownum in range(len(zones)):
         zone = zones.iloc[[rownum]]
         print('\n{0} (geo {1} of {2})'.format(zone.geo_name[rownum], rownum+1, len(zones)))
@@ -131,5 +132,25 @@ def count_accessible_amenities(zones: GeoDataFrame, city_name, amenity_name, tra
 
             results.append(rowresult[0])
 
-    result_gdf = GeoDataFrame({f'{weighting}_averaged_num_accessible_amenities': results, 'geometry': zones['geometry']}).set_crs('EPSG:4326')
-    return result_gdf
+    result = Series(results)
+    return result
+
+def count_accessible_amenities_all(zones: GeoDataFrame, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, worldpop_year=2020) -> GeoSeries:
+    agesex_classes = []
+    return count_accessible_amenities(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, "population", agesex_classes, worldpop_year, False)
+
+def count_accessible_amenities_elderly(zones: GeoDataFrame, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, worldpop_year=2020) -> GeoSeries:
+    agesex_classes = ['F_{0}'.format(i) for i in range(60, 85, 5)] + ['M_{0}'.format(i) for i in range(60, 85, 5)]
+    return count_accessible_amenities(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, "population", agesex_classes, worldpop_year, False)
+
+def count_accessible_amenities_children(zones: GeoDataFrame, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, worldpop_year=2020) -> GeoSeries:
+    agesex_classes = ['F_{0}'.format(i) for i in ['0', '1'] + list(range(5, 15, 5))] + ['M_{0}'.format(i) for i in ['0', '1'] + list(range(5, 15, 5))]
+    return count_accessible_amenities(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, "population", agesex_classes, worldpop_year, False)
+
+def count_accessible_amenities_female(zones: GeoDataFrame, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, worldpop_year=2020) -> GeoSeries:
+    agesex_classes = ['F_{0}'.format(i) for i in ['0', '1'] + list(range(5, 85, 5))]
+    return count_accessible_amenities(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, "population", agesex_classes, worldpop_year, False)
+
+def count_accessible_amenities_informal(zones: GeoDataFrame, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, worldpop_year=2020) -> GeoSeries:
+    agesex_classes = []
+    return count_accessible_amenities(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, "population", agesex_classes, worldpop_year, True)

@@ -1,6 +1,6 @@
 from geopandas import GeoDataFrame, GeoSeries
+from pandas import Series
 import shapely
-import numpy as np
 
 from city_metrix.layers.isoline import Isoline
 from city_metrix.layers.world_pop import WorldPop
@@ -26,7 +26,7 @@ def percent_population_access(zones, city_name, amenity_name, travel_mode, thres
             
         def get_data(self, bbox):
             return self.gdf.clip(shapely.box(*bbox))
-    filename = f"{city_name}_{amenity_name}_{travel_mode}_{threshold_value}_{threshold_unit}_{retrieval_date}.geojson"
+    filename = f"{city_name}-{amenity_name}-{travel_mode}-{threshold_value}-{threshold_unit}-{retrieval_date}.geojson"
     iso_layer = IsolineSimplified(filename)
     accesspop_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year, masks=[iso_layer,])
     totalpop_layer = WorldPop(agesex_classes=worldpop_agesex_classes, year=worldpop_year)
@@ -35,10 +35,31 @@ def percent_population_access(zones, city_name, amenity_name, travel_mode, thres
         accesspop_layer.masks.append(informal_layer)
         totalpop_layer.masks.append(informal_layer)
     res = []
-    for rownum in range(len(zones)):  # Doing it district-by-district to avoid empty-GDF error
+    zones_reset = zones.reset_index()
+    for rownum in range(len(zones_reset)):  # Doing it district-by-district to avoid empty-GDF error
         try:
-            res.append(100 * accesspop_layer.groupby(zones.iloc[[rownum]]).sum()[0] / totalpop_layer.groupby(zones.iloc[[rownum]]).sum()[0])
+            res.append(100 * accesspop_layer.groupby(zones_reset.iloc[[rownum]]).sum()[0] / totalpop_layer.groupby(zones_reset.iloc[[rownum]]).sum()[0])
         except:
             res.append(0)
-    result_gdf = GeoDataFrame({'access_percent': res, 'geometry': zones.geometry}).set_crs(zones.crs)
-    return result_gdf
+    result = Series(res)
+    return result
+
+def percent_population_access_all(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, worldpop_year=2020):
+    agesex_classes = []
+    return percent_population_access(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, agesex_classes, worldpop_year, False)
+
+def percent_population_access_children(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, worldpop_year=2020):
+    agesex_classes = ['F_{0}'.format(i) for i in ['0', '1'] + list(range(5, 15, 5))] + ['M_{0}'.format(i) for i in ['0', '1'] + list(range(5, 15, 5))]
+    return percent_population_access(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, agesex_classes, worldpop_year, False)
+
+def percent_population_access_elderly(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, worldpop_year=2020):
+    agesex_classes = ['F_{0}'.format(i) for i in range(60, 85, 5)] + ['M_{0}'.format(i) for i in range(60, 85, 5)]
+    return percent_population_access(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, agesex_classes, worldpop_year, False)
+
+def percent_population_access_female(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, worldpop_year=2020):
+    agesex_classes = ['F_{0}'.format(i) for i in ['0', '1'] + list(range(5, 85, 5))]
+    return percent_population_access(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, agesex_classes, worldpop_year, False)
+
+def percent_population_access_informal(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, worldpop_year=2020):
+    agesex_classes = []
+    return percent_population_access(zones, city_name, amenity_name, travel_mode, threshold_value, threshold_unit, retrieval_date, agesex_classes, worldpop_year, True)
