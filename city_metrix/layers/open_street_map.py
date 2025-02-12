@@ -43,9 +43,16 @@ class OpenStreetMapClass(Enum):
 
 
 class OpenStreetMap(Layer):
-    def __init__(self, osm_class=OpenStreetMapClass.ALL, **kwargs):
+    """
+    Attributes:
+        osm_class: Enum value from OpenStreetMapClass
+        buffer_distance: meters distance for buffer around osm features
+    """
+
+    def __init__(self, osm_class=OpenStreetMapClass.ALL, buffer_distance=None,**kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
+        self.buffer_distance = buffer_distance  # meters
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         #Note: spatial_resolution and resampling_method arguments are ignored.
@@ -95,5 +102,8 @@ class OpenStreetMap(Layer):
         osm_feature = osm_feature.reset_index()[keep_col]
 
         osm_feature = osm_feature.to_crs(utm_crs)
+
+        if self.buffer_distance:
+            osm_feature['geometry'] = osm_feature.geometry.buffer(self.buffer_distance)
 
         return osm_feature
