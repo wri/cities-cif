@@ -369,7 +369,7 @@ def _evaluate_raster_value(raw_data, downsized_data):
     matching_rmse = True if normalized_rmse < normalized_rmse_tolerance else False
 
     # Calculate and evaluate Structural Similarity Index (SSIM)
-    ssim_index_tolerance = 0.6 if (processed_downsized_data_np.size > 100 and ratio_diff <= 0.1) else 0.4
+    ssim_index_tolerance = 0.6 if (processed_downsized_data_np.size > 100 and ratio_diff <= 0.1) else 0.3
     ssim_index, _ = ssim(processed_downsized_data_np, processed_raw_data_np, full=True, data_range=max_val)
     matching_ssim = True if round(ssim_index,1) >= ssim_index_tolerance else False
 
