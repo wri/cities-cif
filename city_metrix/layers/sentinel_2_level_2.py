@@ -1,5 +1,6 @@
 import odc.stac
 import pystac_client
+from city_metrix.layers.layer_geometry import GeoExtent
 
 from .layer import Layer
 
@@ -11,12 +12,18 @@ class Sentinel2Level2(Layer):
         self.end_date = end_date
         self.bands = bands
 
-    def get_data(self, bbox):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+        if spatial_resolution is not None:
+            raise Exception('spatial_resolution can not be specified.')
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+
+        geographic_bounds = bbox.as_geographic_bbox().bounds
         catalog = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")
         query = catalog.search(
             collections=["sentinel-2-l2a"],
             datetime=[self.start_date, self.end_date],
-            bbox=bbox
+            bbox=geographic_bounds
         )
 
         cfg = {
@@ -35,7 +42,7 @@ class Sentinel2Level2(Layer):
             bands=(*self.bands, "scl"),
             resolution=10,
             stac_cfg=cfg,
-            bbox=bbox,
+            bbox=geographic_bounds,
             chunks={'x': 1024 * 4, 'y': 1024 * 4, 'time': 1},
         )
 

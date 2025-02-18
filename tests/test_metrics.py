@@ -1,10 +1,11 @@
 from city_metrix import *
-from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, OR_PORTLAND_NO_TILE_ZONE, NLD_AMSTERDAM_NO_TILE_ZONE
+from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_TILE_GDF, NLD_AMSTERDAM_TILE_GDF
 import pytest
 
 
 def test_built_land_with_high_lst():
-    indicator = built_land_with_high_land_surface_temperature(IDN_JAKARTA_TILED_ZONES)
+    sample_zones = IDN_JAKARTA_TILED_ZONES
+    indicator = built_land_with_high_land_surface_temperature(sample_zones)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
@@ -25,21 +26,9 @@ def test_built_land_without_tree_cover():
 
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_era_5_met_preprocess_portland():
+def test_era_5_met_preprocess():
     # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = era_5_met_preprocessing(OR_PORTLAND_NO_TILE_ZONE)
-    non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
-    has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
-    # p1= indicator[non_nullable_variables].isnull().any()
-    # p2 = indicator['global_rad'].values
-    # p3 = indicator['temp'].values
-    assert has_empty_required_cells == False
-    assert len(indicator) == 24
-
-
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_era_5_met_preprocess_amsterdam():
-    indicator = era_5_met_preprocessing(NLD_AMSTERDAM_NO_TILE_ZONE)
+    indicator = era_5_met_preprocessing(USA_OR_PORTLAND_TILE_GDF)
     non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
     has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
     # p1= indicator[non_nullable_variables].isnull().any()
@@ -64,7 +53,8 @@ def test_natural_areas():
 
 
 def test_recreational_space_per_capita():
-    indicator = recreational_space_per_capita(IDN_JAKARTA_TILED_ZONES)
+    spatial_resolution=100
+    indicator = recreational_space_per_capita(IDN_JAKARTA_TILED_ZONES, spatial_resolution=spatial_resolution)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
