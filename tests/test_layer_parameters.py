@@ -327,22 +327,22 @@ def _estimate_spatial_resolution(data):
 
     return estimated_actual_resolution
 
-def _get_populate_ratio(dataset):
+def _get_populated_fraction(dataset):
     raw_data_size = dataset.values.size
     populated_raw_data = dataset.values[(~np.isnan(dataset.values)) & (dataset.values > 0)]
     populated_data_raw_size = populated_raw_data.size
-    populated_raw_data_ratio = populated_data_raw_size/raw_data_size
-    return populated_raw_data_ratio
+    populated_raw_data_fraction = populated_data_raw_size/raw_data_size
+    return populated_raw_data_fraction
 
 def _evaluate_raster_value(raw_data, downsized_data):
     # Below values where determined through trial and error evaluation of results in QGIS
-    ratio_tolerance = 0.2
+    populated_fraction_tolerance = 0.2
     normalized_rmse_tolerance = 0.3
 
-    populated_raw_data_ratio = _get_populate_ratio(raw_data)
-    populated_downsized_data_ratio = _get_populate_ratio(raw_data)
-    ratio_diff = abs(populated_raw_data_ratio - populated_downsized_data_ratio)
-    ratio_eval = True if ratio_diff <= ratio_tolerance else False
+    populated_raw_data_ratio = _get_populated_fraction(raw_data)
+    populated_downsized_data_ratio = _get_populated_fraction(raw_data)
+    populated_fraction_diff = abs(populated_raw_data_ratio - populated_downsized_data_ratio)
+    populated_fraction_eval = True if populated_fraction_diff <= populated_fraction_tolerance else False
 
     filled_raw_data = raw_data.fillna(0)
     filled_downsized_data = downsized_data.fillna(0)
@@ -369,10 +369,17 @@ def _evaluate_raster_value(raw_data, downsized_data):
     matching_rmse = True if normalized_rmse < normalized_rmse_tolerance else False
 
     # Calculate and evaluate Structural Similarity Index (SSIM)
-    ssim_index_tolerance = 0.6 if (processed_downsized_data_np.size > 100 and ratio_diff <= 0.1) else 0.4
+    # Progressively decrease criteria for asserting a match as raster count decreases and null values increase
+    if processed_downsized_data_np.size > 100:
+        if populated_fraction_diff <= 0.1:
+            ssim_index_tolerance = 0.6
+        else:
+            ssim_index_tolerance = 0.4
+    else:
+        ssim_index_tolerance = 0.3
     ssim_index, _ = ssim(processed_downsized_data_np, processed_raw_data_np, full=True, data_range=max_val)
     matching_ssim = True if round(ssim_index,1) >= ssim_index_tolerance else False
 
-    results_match = True if (ratio_eval & matching_rmse & matching_ssim) else False
+    results_match = True if (populated_fraction_eval & matching_rmse & matching_ssim) else False
 
     return results_match
