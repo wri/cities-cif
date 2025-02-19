@@ -9,6 +9,7 @@ import xarray as xr
 import glob
 
 from .layer import Layer
+from .layer_geometry import GeoExtent
 
 
 class Era5HottestDay(Layer):
@@ -17,10 +18,16 @@ class Era5HottestDay(Layer):
         self.start_date = start_date
         self.end_date = end_date
 
-    def get_data(self, bbox):
-        min_lon, min_lat, max_lon, max_lat = bbox
-        center_lon = (min_lon + max_lon) / 2
-        center_lat = (min_lat + max_lat) / 2
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+        # Note: spatial_resolution and resampling_method arguments are ignored.
+
+        geographic_bbox = bbox.as_geographic_bbox()
+
+        geographic_centroid = geographic_bbox.centroid
+        center_lon = geographic_centroid.x
+        center_lat = geographic_centroid.y
+
+        min_lon, min_lat, max_lon, max_lat = geographic_bbox.bounds
 
         dataset = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY")
 
@@ -36,8 +43,9 @@ class Era5HottestDay(Layer):
 
             return image.set('hourly_mean_temperature', hourly_mean)
 
+        ee_rectangle = bbox.to_ee_rectangle()
         era5 = ee.ImageCollection(dataset
-                                  .filterBounds(ee.Geometry.BBox(*bbox))
+                                  .filterBounds(ee_rectangle['ee_geometry'])
                                   .filterDate(self.start_date, self.end_date)
                                   .select('temperature_2m')
                                   )
@@ -78,7 +86,7 @@ class Era5HottestDay(Layer):
         # {"dataType": "an"(analysis)/"fc"(forecast)/"pf"(perturbed forecast)}
         an_list = []
         fc_list = []
-        c = cdsapi.Client()
+        c = cdsapi.Client(url='https://cds.climate.copernicus.eu/api')
         for i in range(len(utc_dates)):
             target_file = f'download_{i}.grib'
             c.retrieve(
