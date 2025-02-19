@@ -42,12 +42,12 @@ class GeoExtent():
             utm_bbox = self.as_utm_bbox()
             minx, miny, maxx, maxy = utm_bbox.bounds
             ee_rectangle = _build_ee_rectangle(minx, miny, maxx, maxy, utm_bbox.crs)
-            return ee_rectangle
         elif self.projection_name == 'utm':
             ee_rectangle = _build_ee_rectangle(self.min_x, self.min_y, self.max_x, self.max_y, self.crs)
-            return ee_rectangle
         else:
             raise Exception("invalid request to to_ee_rectangle")
+
+        return ee_rectangle
 
 
     def as_utm_bbox(self):
@@ -79,23 +79,34 @@ class GeoExtent():
             bbox = GeoExtent(bbox=box, crs=WGS_CRS)
             return bbox
 
+
+def _buffer_coordinates(minx, miny, maxx, maxy):
+    buffer_distance_m = 10
+    buf_minx = minx - buffer_distance_m
+    buf_miny = miny - buffer_distance_m
+    buf_maxx = maxx + buffer_distance_m
+    buf_maxy = maxy + buffer_distance_m
+    return buf_minx, buf_miny, buf_maxx, buf_maxy
+
 def _build_ee_rectangle(min_x, min_y, max_x, max_y, crs):
     # Snap coordinates to lower 1-meter on all sides so that adjacent tiles align to each other.
     minx = float(math.floor(min_x))
     miny = float(math.floor(min_y))
     maxx = float(math.floor(max_x))
     maxy = float(math.floor(max_y))
+    source_bounds = (minx, miny, maxx, maxy)
 
-    bounds = (minx, miny, maxx, maxy)
+    buf_minx, buf_miny, buf_maxx, buf_maxy = _buffer_coordinates(minx, miny, maxx, maxy)
 
     ee_rectangle = ee.Geometry.Rectangle(
-        [minx, miny, maxx, maxy],
+        [buf_minx, buf_miny, buf_maxx, buf_maxy],
         crs,
         geodesic=False
     )
 
-    rectangle = {"ee_geometry": ee_rectangle, "crs": crs, "bounds": bounds}
+    rectangle = {"ee_geometry": ee_rectangle, "bounds": source_bounds, "crs": crs}
     return rectangle
+
 
 
 def reproject_units(min_x, min_y, max_x, max_y, from_crs, to_crs):
