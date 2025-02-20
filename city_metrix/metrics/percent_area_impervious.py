@@ -16,4 +16,4 @@ def percent_area_impervious(zones: GeoDataFrame) -> GeoSeries:
     # count all pixels
     imperv_fillna_count = imperv_fillna.groupby(zones).count()
 
-    return imperv_count / imperv_fillna_count
+    return 100 * imperv_count / imperv_fillna_count
