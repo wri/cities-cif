@@ -52,6 +52,13 @@ def test_natural_areas():
     assert expected_zone_size == actual_indicator_size
 
 
+def test_percent_area_impervious():
+    indicator = percent_area_impervious(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
+
 def test_recreational_space_per_capita():
     spatial_resolution=100
     indicator = recreational_space_per_capita(IDN_JAKARTA_TILED_ZONES, spatial_resolution=spatial_resolution)
