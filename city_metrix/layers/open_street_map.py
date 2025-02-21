@@ -50,19 +50,8 @@ class OpenStreetMap(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         #Note: spatial_resolution and resampling_method arguments are ignored.
 
-        if bbox.units == "degrees":
-            min_lon = bbox.min_x
-            min_lat = bbox.min_y
-            max_lon = bbox.max_x
-            max_lat = bbox.max_y
-            utm_crs = bbox.as_utm_bbox().crs
-        else:
-            wgs_bbox = bbox.as_geographic_bbox()
-            min_lon = wgs_bbox.min_x
-            min_lat = wgs_bbox.min_y
-            max_lon = wgs_bbox.max_x
-            max_lat = wgs_bbox.max_y
-            utm_crs = bbox.crs
+        min_lon, min_lat, max_lon, max_lat = bbox.as_geographic_bbox().bounds
+        utm_crs = bbox.as_utm_bbox().crs
 
         # Set the OSMnx configuration to disable caching
         ox.settings.use_cache = False
