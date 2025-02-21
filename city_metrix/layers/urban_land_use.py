@@ -2,6 +2,7 @@ from dask.diagnostics import ProgressBar
 import xarray as xr
 import xee
 import ee
+import numpy as np
 
 from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent
@@ -13,11 +14,14 @@ class UrbanLandUse(Layer):
     Attributes:
         band: raster band used for data retrieval
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+        ulu_class: urban land use class value used to filter the land use type
+                   0 (open space), 1 (non-res), 2 (Atomistic), 3 (Informal), 4 (Formal), 5 (Housing project)
     """
 
-    def __init__(self, band='lulc', **kwargs):
+    def __init__(self, band='lulc', ulu_class=None, **kwargs):
         super().__init__(**kwargs)
         self.band = band
+        self.ulu_class = ulu_class
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -49,5 +53,8 @@ class UrbanLandUse(Layer):
             spatial_resolution,
             "urban land use"
         ).lulc
+
+        if self.ulu_class:
+            data = data.where(data == self.ulu_class, 1, np.nan)
 
         return data

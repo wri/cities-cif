@@ -13,13 +13,15 @@ class TreeCanopyHeight(Layer):
     """
     Attributes:
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
+        height: minimum tree height used for filtering results
     """
 
     name = "tree_canopy_height"
     NO_DATA_VALUE = 0
 
-    def __init__(self, **kwargs):
+    def __init__(self, height=None, **kwargs):
         super().__init__(**kwargs)
+        self.height = height
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -43,5 +45,8 @@ class TreeCanopyHeight(Layer):
             spatial_resolution,
             "tree canopy height"
         ).cover_code
+
+        if self.height:
+            data = data.where(data >= self.height, 1, 0)
 
         return data
