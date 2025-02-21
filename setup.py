@@ -28,6 +28,8 @@ setup(
         "timezonefinder",
         "scikit-image>=0.24.0",
         "exactextract>=0.2.0",
-        "cfgrib"
+        "cfgrib",
+        "scipy",
+        "numpy"
     ],
 )
