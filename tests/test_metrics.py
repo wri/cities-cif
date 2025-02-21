@@ -26,8 +26,8 @@ def test_built_land_without_tree_cover():
 
 
 def test_canopy_area_per_resident():
-    indicator = canopy_area_per_resident(ZONES)
-    expected_zone_size = ZONES.geometry.size
+    indicator = canopy_area_per_resident(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
