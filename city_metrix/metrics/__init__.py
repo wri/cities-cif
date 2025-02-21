@@ -7,4 +7,5 @@ from .natural_areas import natural_areas
 from .era_5_met_preprocessing import era_5_met_preprocessing
 from .recreational_space_per_capita import recreational_space_per_capita
 from .vegetation_water_change import vegetation_water_change_gain_area, vegetation_water_change_loss_area, vegetation_water_change_gain_loss_ratio
+from .percent_area_impervious import percent_area_impervious
 from .canopy_area_per_resident import canopy_area_per_resident
