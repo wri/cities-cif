@@ -9,3 +9,4 @@ from .recreational_space_per_capita import recreational_space_per_capita
 from .vegetation_water_change import vegetation_water_change_gain_area
 from .vegetation_water_change import vegetation_water_change_loss_area
 from .vegetation_water_change import vegetation_water_change_gain_loss_ratio
+from .percent_area_impervious import percent_area_impervious

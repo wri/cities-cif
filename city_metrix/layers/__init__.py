@@ -21,11 +21,9 @@ from .overture_buildings import OvertureBuildings
 from .nasa_dem import NasaDEM
 from .era_5_hottest_day import Era5HottestDay
 from .impervious_surface import ImperviousSurface
-from .glad_lulc import LandCoverGlad
-from .glad_lulc import LandCoverSimplifiedGlad
-from .glad_lulc import LandCoverHabitatGlad
-from .glad_lulc import LandCoverHabitatChangeGlad
+from .glad_lulc import LandCoverGlad, LandCoverSimplifiedGlad, LandCoverHabitatGlad, LandCoverHabitatChangeGlad
 from .cams import Cams
 from .vegetation_water_map import VegetationWaterMap
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
+from .high_slope import HighSlope
 from .riparian_areas import RiparianAreas
