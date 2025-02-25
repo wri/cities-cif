@@ -78,6 +78,14 @@ def test_write_high_land_surface_temperature(target_folder, sample_aoi):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_high_slope(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'high_slope.tif')
+    target_resolution = get_test_resolution(HighSlope())
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    HighSlope().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_impervious_surface(target_folder, sample_aoi):
     file_path = prep_output_path(target_folder, 'impervious_surface.tif')
     target_resolution = get_test_resolution(ImperviousSurface())

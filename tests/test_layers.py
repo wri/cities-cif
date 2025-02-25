@@ -74,6 +74,13 @@ def test_high_land_surface_temperature():
     utm_bbox_data = HighLandSurfaceTemperature().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
+def test_high_slope():
+    data = HighSlope().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.crs) == 'utm'
+    utm_bbox_data = HighSlope().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
+
 def test_impervious_surface():
     data = ImperviousSurface().get_data(BBOX)
     assert np.size(data) > 0
