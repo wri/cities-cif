@@ -76,6 +76,13 @@ def test_high_land_surface_temperature():
     utm_bbox_data = HighLandSurfaceTemperature().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
+def test_high_slope():
+    data = HighSlope().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.crs) == 'utm'
+    utm_bbox_data = HighSlope().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
+
 def test_impervious_surface():
     data = ImperviousSurface().get_data(BBOX)
     assert np.size(data) > 0
@@ -165,6 +172,14 @@ def test_overture_buildings():
     utm_bbox_data = OvertureBuildings().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
+def test_riparian_areas():
+    data = RiparianAreas().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
+    utm_bbox_data = RiparianAreas().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
+
+@pytest.mark.skip(reason="layer is deprecated")
 def test_sentinel_2_level2():
     sentinel_2_bands = ["green"]
     data = Sentinel2Level2(sentinel_2_bands).get_data(BBOX)
