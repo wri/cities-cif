@@ -164,6 +164,14 @@ def test_write_overture_buildings(target_folder, sample_aoi):
     OvertureBuildings().write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_riparian_areas(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'riparian_areas.tif')
+    target_resolution = get_test_resolution(RiparianAreas())
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    RiparianAreas().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
 # TODO Class is no longer used, but may be useful later
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_sentinel_2_level2(target_folder, sample_aoi):
