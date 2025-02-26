@@ -6,7 +6,7 @@ from city_metrix.layers import Layer, WorldPop, UrbanLandUse
 from city_metrix.layers.layer import get_image_collection
 
 
-def canopy_covered_population(zones: GeoDataFrame, agesex_classes=[], percentage=30, height=5, informal_only=False) -> GeoSeries:
+def canopy_covered_population(zones: GeoDataFrame, agesex_classes=[], percentage=30, height=3, informal_only=False) -> GeoSeries:
     class CoveredMask(Layer):
         def get_data(self, bbox):
             canopy_ht_ic = ee.ImageCollection("projects/meta-forest-monitoring-okw37/assets/CanopyHeight")
@@ -41,14 +41,14 @@ def canopy_covered_population(zones: GeoDataFrame, agesex_classes=[], percentage
     total_pop = WorldPop(agesex_classes=agesex_classes).groupby(zones).sum()
     return GeoDataFrame({'access_popfraction': 100 * access_pop / total_pop, 'geometry': zones['geometry']}).fillna(0).access_popfraction
 
-def canopy_covered_population_elderly(zones: GeoDataFrame, percentage=30, height=5) -> GeoSeries:
+def canopy_covered_population_elderly(zones: GeoDataFrame, percentage=30, height=3) -> GeoSeries:
     return canopy_covered_population(zones, agesex_classes=['F_60', 'F_65', 'F_70', 'F_75', 'F_80', 'M_60', 'M_65', 'M_70', 'M_75', 'M_80'], percentage=percentage, height=height, informal_only=False)
 
-def canopy_covered_population_children(zones: GeoDataFrame, percentage=30, height=5) -> GeoSeries:
+def canopy_covered_population_children(zones: GeoDataFrame, percentage=30, height=3) -> GeoSeries:
     return canopy_covered_population(zones, agesex_classes=['F_0', 'F_1', 'F_5', 'F_10', 'M_0', 'M_1', 'M_5', 'M_10'], percentage=percentage, height=height, informal_only=False)
 
-def canopy_covered_population_female(zones: GeoDataFrame, percentage=30, height=5) -> GeoSeries:
+def canopy_covered_population_female(zones: GeoDataFrame, percentage=30, height=3) -> GeoSeries:
     return canopy_covered_population(zones, agesex_classes=['F_0', 'F_1', 'F_5', 'F_10', 'F_15', 'F_20', 'F_25', 'F_30', 'F_35', 'F_40', 'F_45', 'F_50', 'F_55', 'F_60', 'F_65', 'F_70', 'F_75', 'F_80'], percentage=percentage, height=height, informal_only=False)
 
-def canopy_covered_population_informal(zones: GeoDataFrame, percentage=30, height=5) -> GeoSeries:
+def canopy_covered_population_informal(zones: GeoDataFrame, percentage=30, height=3) -> GeoSeries:
     return canopy_covered_population(zones, agesex_classes=[], percentage=percentage, height=height, informal_only=True)
