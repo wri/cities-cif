@@ -33,8 +33,8 @@ def test_canopy_area_per_resident():
 
 
 def test_canopy_covered_population():
-    indicator = test_canopy_covered_population_elderly(ZONES)
-    expected_zone_size = ZONES.geometry.size
+    indicator = canopy_covered_population_elderly(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
