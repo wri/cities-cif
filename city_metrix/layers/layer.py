@@ -259,11 +259,15 @@ class LayerGroupBy:
             raise NotImplementedError("Can only align DataArray or GeoDataFrame")
 
     def _rasterize(self, gdf, snap_to):
-        raster = make_geocube(
-            vector_data=gdf,
-            measurements=["index"],
-            like=snap_to,
-        ).index
+        if gdf.empty:
+            nan_array = np.full(snap_to.shape, np.nan, dtype=float)
+            raster = snap_to.copy(data=nan_array)
+        else:
+            raster = make_geocube(
+                vector_data=gdf,
+                measurements=["index"],
+                like=snap_to,
+            ).index
 
         return raster.rio.reproject_match(snap_to)
 

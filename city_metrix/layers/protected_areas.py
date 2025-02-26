@@ -1,7 +1,9 @@
 import ee
 import geopandas as gpd
 import geemap
-from .layer import Layer
+
+from .layer import Layer, get_image_collection
+from .layer_geometry import GeoExtent
 
 
 class ProtectedAreas(Layer):
@@ -18,12 +20,22 @@ class ProtectedAreas(Layer):
         self.status_year = status_year
         self.iucn_cat = iucn_cat
 
-    def get_data(self, bbox):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         dataset = ee.FeatureCollection('WCMC/WDPA/current/polygons')
         dataset = dataset.filter(ee.Filter.inList('STATUS', self.status)).filter(ee.Filter.lessThanOrEquals('STATUS_YR', self.status_year)).filter(ee.Filter.inList('IUCN_CAT', self.iucn_cat))
-        dataset = dataset.filterBounds(ee.Geometry.BBox(*bbox))
+
+        ee_rectangle = bbox.to_ee_rectangle()
+        utm_crs = bbox.as_utm_bbox().crs
+
+        dataset = dataset.filterBounds(ee_rectangle['ee_geometry'])
         if dataset.size().getInfo() == 0:
-            return gpd.GeoDataFrame({'protected': [], 'geometry': []}).set_crs('EPSG:4326')
-        data_gdf = geemap.ee_to_gdf(dataset)
-        data_gdf  = data_gdf.clip(bbox).reset_index()
-        return gpd.GeoDataFrame({'protected': 1, 'geometry': data_gdf.geometry}).set_crs('EPSG:4326')
+            data = gpd.GeoDataFrame({'protected': [], 'geometry': []}).set_crs(utm_crs)
+
+        else:
+            data_gdf = geemap.ee_to_gdf(dataset)
+            wgs_bbox = bbox.as_geographic_bbox().bounds
+            data_gdf = data_gdf.clip(wgs_bbox).reset_index()
+
+            data = gpd.GeoDataFrame({'protected': 1, 'geometry': data_gdf.geometry}).to_crs(utm_crs)
+
+        return data
