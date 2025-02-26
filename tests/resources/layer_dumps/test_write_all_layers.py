@@ -213,6 +213,13 @@ def test_write_tree_cover(target_folder, sample_aoi):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_urban_extents(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'urban_extents.geojson')
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    UrbanExtents().write(bbox, file_path, tile_side_length=None)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_urban_land_use(target_folder, sample_aoi):
     file_path = prep_output_path(target_folder, 'urban_land_use.tif')
     target_resolution = get_test_resolution(UrbanLandUse())
@@ -235,4 +242,3 @@ def test_write_world_pop(target_folder, sample_aoi):
     bbox = get_test_bbox(sample_aoi.geo_extent)
     WorldPop().write(bbox, file_path, spatial_resolution=target_resolution)
     assert verify_file_is_populated(file_path)
-
