@@ -11,7 +11,7 @@ from .natural_areas import NaturalAreas
 from .layer import Layer, LayerGroupBy
 from .landsat_collection_2 import LandsatCollection2
 from .sentinel_2_level_2 import Sentinel2Level2
-from .world_pop import WorldPop
+from .world_pop import WorldPop, WorldPopClass
 from .built_up_height import BuiltUpHeight
 from .average_net_building_height import AverageNetBuildingHeight
 from .open_buildings import OpenBuildings
@@ -21,10 +21,11 @@ from .overture_buildings import OvertureBuildings
 from .nasa_dem import NasaDEM
 from .era_5_hottest_day import Era5HottestDay
 from .impervious_surface import ImperviousSurface
-from .glad_lulc import LandCoverGlad
-from .glad_lulc import LandCoverSimplifiedGlad
-from .glad_lulc import LandCoverHabitatGlad
-from .glad_lulc import LandCoverHabitatChangeGlad
+from .glad_lulc import LandCoverGlad, LandCoverSimplifiedGlad, LandCoverHabitatGlad, LandCoverHabitatChangeGlad
 from .cams import Cams
 from .vegetation_water_map import VegetationWaterMap
 from .acag_pm2p5 import AcagPM2p5
+from .height_above_nearest_drainage import HeightAboveNearestDrainage
+from .high_slope import HighSlope
+from .riparian_areas import RiparianAreas
+from .urban_extents import UrbanExtents

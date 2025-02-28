@@ -10,3 +10,9 @@ from .vegetation_water_change import vegetation_water_change_gain_area
 from .vegetation_water_change import vegetation_water_change_loss_area
 from .vegetation_water_change import vegetation_water_change_gain_loss_ratio
 from .mean_pm2p5_exposure import mean_pm2p5_exposure
+from .percent_area_impervious import percent_area_impervious
+from .canopy_area_per_resident import canopy_area_per_resident
+from .canopy_area_per_resident import canopy_area_per_resident_children
+from .canopy_area_per_resident import canopy_area_per_resident_elderly
+from .canopy_area_per_resident import canopy_area_per_resident_female
+from .canopy_area_per_resident import canopy_area_per_resident_informal
