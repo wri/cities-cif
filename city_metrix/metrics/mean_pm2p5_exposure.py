@@ -1,78 +1,53 @@
 from geopandas import GeoDataFrame, GeoSeries
 import ee
-from city_metrix.layers import Layer, AcagPM2p5, WorldPop, UrbanLandUse
+import xarray as xr
+import numpy as np
+from city_metrix.layers import Layer, AcagPM2p5, WorldPop, WorldPopClass, UrbanLandUse
 from city_metrix.layers.layer import get_image_collection
+from city_metrix.layers.layer_geometry import GeoExtent
 
 
-def mean_pm2p5_exposure(zones: GeoDataFrame, acag_year=2022, pop_weighted=True, worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False) -> GeoSeries:
+def mean_pm2p5_exposure(zones: GeoDataFrame, year=2022, informal_only=False) -> GeoSeries:
+    pm2p5_layer = AcagPM2p5(year=year, return_above=0)
+    if informal_only:
+        informal_layer = UrbanLandUse(ulu_class=3)
+        return pm2p5_layer.mask(informal_layer).groupby(zones).mean()
+    else:
+        return pm2p5_layer.groupby(zones).mean()
 
-    class WorldPopReprojected(Layer):
-        def __init__(self, agesex_classes=[], worldpop_year=2020, acag_year=2022, multiply_by_pm2p5=False, **kwargs):
+def mean_pm2p5_exposure_popweighted(zones: GeoDataFrame, worldpop_agesex_classes=[], worldpop_year=2020, acag_year=2022, informal_only=False) -> GeoSeries:
+    ACAG_NOMINALSCALE = 1113.1949000205839
+    class PopPM(Layer):
+    # get_data() for this class returns DataArray with pm2.5 concentration multiplied by (pixelpop/meanpop)
+        def __init__(self, worldpop_agesex_classes=[], worldpop_year=2020, acag_year=2022, acag_return_above=0, **kwargs):
             super().__init__(**kwargs)
-            self.agesex_classes = agesex_classes
+            self.worldpop_agesex_classes = worldpop_agesex_classes
             self.worldpop_year = worldpop_year
             self.acag_year = acag_year
-            self.multiply_by_pm2p5 = multiply_by_pm2p5
+            self.acag_return_above = acag_return_above
+        def get_data(self, bbox: GeoExtent, spatial_resolution, resampling_method=None):
+            pop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year)
+            pm_layer = AcagPM2p5(year=self.acag_year, return_above=self.acag_return_above)
+            pop_data = pop_layer.get_data(bbox, spatial_resolution=ACAG_NOMINALSCALE)
+            pm_data = pm_layer.get_data(bbox, spatial_resolution=ACAG_NOMINALSCALE)
+            pm_data.data = np.multiply(np.array(pm_data), np.array(pop_data) / float(np.mean(pop_data)))  # Note: keeps attributes from original pm_data
+            return pm_data
 
-        def get_data(self, bbox):
-            acag_data = ee.Image(f'projects/wri-datalab/cities/aq/acag_annual_pm2p5_{self.acag_year}')
-            if not self.agesex_classes:
-                # total population
-                dataset = ee.ImageCollection('WorldPop/GP/100m/pop')
+    poppm_layer = PopPM(worldpop_agesex_classes=worldpop_agesex_classes, worldpop_year=worldpop_year, acag_year=acag_year, acag_return_above=0)
+    if informal_only:
+        informal_layer = UrbanLandUse(ulu_class=3)
+        return poppm_layer.mask(informal_layer).groupby(zones).mean()
+    else:
+        return poppm_layer.groupby(zones).mean()
 
-                world_pop_ic = ee.ImageCollection(
-                    dataset
-                    .filterBounds(ee.Geometry.BBox(*bbox))
-                    .filter(ee.Filter.inList('year', [self.worldpop_year]))
-                    .select('population')
-                    .mean()
-                )
+def mean_pm2p5_exposure_popweighted_children(zones: GeoDataFrame, worldpop_year=2020, acag_year=2022, acag_return_above=0) -> GeoSeries:
+    return mean_pm2p5_exposure_popweighted(zones=zones, worldpop_agesex_classes=WorldPopClass.CHILDREN, worldpop_year=2020, acag_year=2022, informal_only=False)
 
-            else:
-                # sum population for selected age-sex groups
-                world_pop_age_sex = ee.ImageCollection('WorldPop/GP/100m/pop_age_sex')
+def mean_pm2p5_exposure_popweighted_elderly(zones: GeoDataFrame, worldpop_year=2020, acag_year=2022, acag_return_above=0) -> GeoSeries:
+    return mean_pm2p5_exposure_popweighted(zones=zones, worldpop_agesex_classes=WorldPopClass.ELDERLY, worldpop_year=2020, acag_year=2022, informal_only=False)
 
-                world_pop_age_sex_year = (world_pop_age_sex
-                    .filterBounds(ee.Geometry.BBox(*bbox))
-                    .filter(ee.Filter.inList('year', [self.worldpop_year]))
-                    .select(self.agesex_classes)
-                    .mean()
-                )
+def mean_pm2p5_exposure_popweighted_female(zones: GeoDataFrame, worldpop_year=2020, acag_year=2022, acag_return_above=0) -> GeoSeries:
+    return mean_pm2p5_exposure_popweighted(zones=zones, worldpop_agesex_classes=WorldPopClass.FEMALE, worldpop_year=2020, acag_year=2022, informal_only=False)
 
-                world_pop_ic = ee.ImageCollection(
-                    world_pop_age_sex_year
-                    .reduce(ee.Reducer.sum())
-                    .rename('population')
-                )
-            world_pop_img = world_pop_ic.mosaic()
-            world_pop_img_acagproj = world_pop_img.setDefaultProjection('EPSG:4326').reduceResolution(ee.Reducer.sum(), True, 65000).reproject(acag_data.projection())
-
-            if self.multiply_by_pm2p5:
-                result_img = world_pop_img_acagproj.multiply(acag_data)
-            else:
-                result_img = world_pop_img_acagproj
-
-            data = get_image_collection(
-                ee.ImageCollection(result_img),
-                    bbox,
-                    acag_data.projection().nominalScale().getInfo(),
-                    "mean pm2.5 concentration"
-                ).population
-            return data
-    class InformalMask(UrbanLandUse):
-        def get_data(self, bbox):
-            allvalues = super().get_data(bbox)
-            return allvalues.where(allvalues==3)
-
-    pm2p5_layer = AcagPM2p5(year=2022, return_above=0)
-    if pop_weighted:
-        if not informal_only:
-            weightedsum = WorldPopReprojected(agesex_classes=worldpop_agesex_classes, worldpop_year=worldpop_year, multiply_by_pm2p5=True).groupby(zones).sum()
-            sumofweights = WorldPopReprojected(agesex_classes=worldpop_agesex_classes, worldpop_year=worldpop_year, multiply_by_pm2p5=False).groupby(zones).sum()
-        else:  # informal only
-            informal_mask = InformalMask()
-            weightedsum = WorldPopReprojected(agesex_classes=worldpop_agesex_classes, worldpop_year=worldpop_year, multiply_by_pm2p5=True).mask(informal_mask).groupby(zones).sum().fillna(0)
-            sumofweights = WorldPopReprojected(agesex_classes=worldpop_agesex_classes, worldpop_year=worldpop_year, multiply_by_pm2p5=False).mask(informal_mask).groupby(zones).sum()
-        return weightedsum / sumofweights
-    else:  # not pop_weighted
-        return 100 * (pm2p5_layer.groupby(zones).sum() / pm2p5_layer.groupby(zones).count()) / 35  # Express as percent of WHO guideline 35 ug/m3
+def mean_pm2p5_exposure_popweighted_informal(zones: GeoDataFrame, worldpop_year=2020, acag_year=2022, acag_return_above=0) -> GeoSeries:
+    return mean_pm2p5_exposure_popweighted(zones=zones, worldpop_agesex_classes=[], worldpop_year=2020, acag_year=2022, informal_only=True)
