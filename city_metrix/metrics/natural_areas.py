@@ -1,6 +1,6 @@
 from geopandas import GeoDataFrame, GeoSeries
 
-from city_metrix.layers.natural_areas import NaturalAreas
+from city_metrix.layers import NaturalAreas
 
 
 def natural_areas(zones: GeoDataFrame) -> GeoSeries:

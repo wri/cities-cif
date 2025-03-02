@@ -3,7 +3,8 @@ from enum import Enum
 import xarray as xr
 import ee
 
-from .layer import Layer, get_utm_zone_epsg, get_image_collection
+from .layer import Layer, get_image_collection
+from .layer_geometry import GeoExtent
 
 
 class EsaWorldCoverClass(Enum):
@@ -19,6 +20,8 @@ class EsaWorldCoverClass(Enum):
     MANGROVES = 95
     MOSS_AND_LICHEN = 100
 
+DEFAULT_SPATIAL_RESOLUTION = 10
+
 class EsaWorldCover(Layer):
     """
     Attributes:
@@ -31,13 +34,17 @@ class EsaWorldCover(Layer):
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
 
-    def __init__(self, land_cover_class=None, year=2020, spatial_resolution=10, **kwargs):
+    def __init__(self, land_cover_class=None, year=2020, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
         self.year = year
-        self.spatial_resolution = spatial_resolution
 
-    def get_data(self, bbox):
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
         if self.year == 2020:
             esa_data_ic = ee.ImageCollection("ESA/WorldCover/v100")
         elif self.year == 2021:
@@ -45,10 +52,11 @@ class EsaWorldCover(Layer):
         else:
             raise ValueError(f'Specified year ({self.year}) is not currently supported')
 
+        ee_rectangle  = bbox.to_ee_rectangle()
         data = get_image_collection(
             esa_data_ic,
-            bbox,
-            self.spatial_resolution,
+            ee_rectangle,
+            spatial_resolution,
             "ESA world cover"
         ).Map
 

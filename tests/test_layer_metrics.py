@@ -16,7 +16,7 @@ array-dimension size.
 
 def test_read_image_collection():
     ic = ee.ImageCollection("ESA/WorldCover/v100")
-    data = get_image_collection(ic, BBOX, 10, "test")
+    data = get_image_collection(ic, BBOX.to_ee_rectangle(), 10, "test")
 
     expected_crs = 32724
     expected_x_size = 186
@@ -34,7 +34,7 @@ def test_read_image_collection():
 
 def test_read_image_collection_scale():
     ic = ee.ImageCollection("ESA/WorldCover/v100")
-    data = get_image_collection(ic, BBOX, 100, "test")
+    data = get_image_collection(ic, BBOX.to_ee_rectangle(), 100, "test")
 
     expected_x_size = 19
     expected_y_size = 20
@@ -49,7 +49,7 @@ def test_read_image_collection_scale():
 
 def test_albedo_metrics_default_resampling():
     # Default resampling_method is bilinear
-    data = Albedo(spatial_resolution=10).get_data(BBOX)
+    data = Albedo().get_data(BBOX, spatial_resolution=10)
 
     # Bounding values
     expected_min_value = _convert_fraction_to_rounded_percent(0.03)
@@ -63,7 +63,7 @@ def test_albedo_metrics_default_resampling():
 
 
 def test_albedo_metrics_no_resampling():
-    data = Albedo(spatial_resolution=10, resampling_method= None).get_data(BBOX)
+    data = Albedo().get_data(BBOX, spatial_resolution=10, resampling_method= None)
 
     # Bounding values
     expected_min_value = _convert_fraction_to_rounded_percent(0.03)
@@ -77,10 +77,10 @@ def test_albedo_metrics_no_resampling():
 
 
 def test_alos_dsm_metrics():
-    data = AlosDSM(resampling_method=None).get_data(BBOX)
+    data = AlosDSM().get_data(BBOX, resampling_method=None)
 
     # Bounding values
-    expected_min_value = 16
+    expected_min_value = 17
     expected_max_value = 86
     actual_min_value = _convert_to_rounded_integer(data.values.min())
     actual_max_value = _convert_to_rounded_integer(data.values.max())

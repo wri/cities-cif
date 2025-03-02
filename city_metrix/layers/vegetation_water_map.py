@@ -2,7 +2,9 @@ import ee
 
 from .layer import Layer, get_image_collection
 from .albedo import Albedo
+from .layer_geometry import GeoExtent
 
+DEFAULT_SPATIAL_RESOLUTION = 10
 
 class VegetationWaterMap(Layer):
     """
@@ -13,14 +15,18 @@ class VegetationWaterMap(Layer):
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
 
-    def __init__(self, start_date="2016-01-01", end_date="2022-12-31", greenwater_layer='startgreenwaterIndex', spatial_resolution=10, **kwargs):
+    def __init__(self, start_date="2016-01-01", end_date="2022-12-31", greenwater_layer='startgreenwaterIndex', **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.greenwater_layer = greenwater_layer
-        self.spatial_resolution = spatial_resolution
 
-    def get_data(self, bbox):
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
         NDVIthreshold = 0.4  # decimal
         NDWIthreshold = 0.3  # decimal
         # half the value of the p-value threshold to be used in the significance test.
@@ -220,14 +226,19 @@ class VegetationWaterMap(Layer):
             elif greenwater_layer == 'gaingreenwaterSlope':
                 return greenorwaterLimitGain.rename('greenwater_layer')
 
+        ee_rectangle = bbox.to_ee_rectangle()
+        s2cloudmasked = (Albedo()
+                         .get_masked_s2_collection(ee_rectangle['ee_geometry'],
+                                                   self.start_date,
+                                                   self.end_date)
+                         )
 
-        s2cloudmasked = Albedo().get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
         vegwatermap = get_map_vegwaterchange(s2cloudmasked, self.greenwater_layer)
 
         data = get_image_collection(
             ee.ImageCollection(vegwatermap), 
-            bbox, 
-            self.spatial_resolution, 
+            ee_rectangle,
+            spatial_resolution,
             "vegetation water map"
         ).greenwater_layer
 
