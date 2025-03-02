@@ -8,8 +8,8 @@ def num_species(zones: GeoDataFrame, taxon: GBIFTaxonClass=GBIFTaxonClass.BIRDS,
     results = []
     for rownum in range(len(zones)):
         zone = zones.iloc[[rownum]]
-        results.append(speciesrichness_layer.get_data(GeoExtent(zone.total_bounds)).species_count[rownum])
-    return pd.Series(results)
+        results.append(speciesrichness_layer.get_data(GeoExtent(zone.total_bounds)).species_count[0])
+    return Series(results)
 
 def num_species_birds(zones: GeoDataFrame, start_year=2019, end_year=2024) -> GeoSeries:
     return num_species(zones, GBIFTaxonClass.BIRDS, start_year, end_year)
