@@ -27,13 +27,30 @@ class OpenStreetMapClass(Enum):
     BUILDING = {'building': True}
     PARKING = {'amenity': ['parking'],
                'parking': True}
-    ECONOMIC_OPPORTUNITY = {'landuse': ['commercial', 'industrial', 'retail', 'institutional', 'education'],
-							'building': ['office', 'commercial', 'industrial', 'retail', 'supermarket'],
-							'shop': True}
-    SCHOOLS = {'building': ['school',],
-			   'amenity': ['school', 'kindergarten']}
-    HIGHER_EDUCATION = {'amenity': ['college', 'university'],
-						'building': ['college', 'university']}
+    COMMERCE = {'building': ['bank', 'commercial', 'office', 'pub', 'restaurant', 'retail', 'shop', 'store', 'supermarket'],
+                'landuse': ['commercial', 'retail'],
+                'amenity': ['animal_boarding', 'animal_shelter', 'bank', 'biergarten', 'cafe', 'casino', 'childcare', 'fast_food', 'food_court', 'mortuary', 'nightclub', 'restaurant', 'studio', 'theatre', 'veterinary']}
+    HEALTHCARE_SOCIAL = {'building': ['clinic', 'hospital'],
+                         'amenity': ['dentist', 'doctors', 'hospital', 'nursing_home', 'pharmacy', 'social_facility']}
+    AGRICULTURE = {'building': ['poultry_house'],
+                   'landuse': ['animal_keeping', 'aquaculture', 'farm', 'farmyard', 'greenhouse_horticulture', 'orchard', 'paddy', 'plant_nursury', 'vinyard'],
+                   'amenity': ['animal_breeding']}
+    GOVERNMENT = {'building': ['government', 'government_office'],
+                  'amenity': ['courthouse', 'fire_station', 'library', 'police', 'post_office', 'townhall']}
+    INDUSTRY = {'building': ['factory', 'industrial', 'manufacture'],
+                'landuse': ['industrial', 'quarry']}
+    TRANSPORATION_LOGISTICS = {'building': ['warehouse'],
+                               'landuse': ['harbour'],
+                               'amenity': ['bus_station', 'ferry_terminal']}
+    EDUCATION = {'building': ['college', 'school', 'university'],
+                 'landuse': ['education'],
+                 'amenity': ['college', 'kindergarten', 'music_school', 'prep_school', 'research_institute', 'school', 'university'],
+                 'school': True}
+    PRIMARY_SECONDARY_EDUCATION = {'building': ['school',],
+               'amenity': ['school', 'kindergarten'],
+               'school': True}
+    HIGHER_EDUCATION = {'amenity': ['college', 'university', 'research_institute'],
+                        'building': ['college', 'university']}
     TRANSIT_STOP = {'amenity':['ferry_terminal'],
                     'railway':['stop', 'platform', 'halt', 'tram_stop', 'subway_entrance', 'station'],
                     'highway':['bus_stop', 'platform'],
