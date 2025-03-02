@@ -33,6 +33,7 @@ def mean_pm2p5_exposure_popweighted(zones: GeoDataFrame, worldpop_agesex_classes
             pm_data.data = np.multiply(np.array(pm_data), np.array(pop_data) / float(np.mean(pop_data)))  # Note: keeps attributes from original pm_data
             return pm_data
 
+
     poppm_layer = PopPM(worldpop_agesex_classes=worldpop_agesex_classes, worldpop_year=worldpop_year, acag_year=acag_year, acag_return_above=0)
     if informal_only:
         informal_layer = UrbanLandUse(ulu_class=3)
