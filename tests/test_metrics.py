@@ -72,6 +72,11 @@ def test_natural_areas():
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
+def test_num_species_birds():
+    indicator = num_species_birds(IDN_JAKARTA_TILED_ZONES)
+    actual_indicator_size = indicator.size
+    assert actual_indicator_size > 0
+
 
 def test_percent_area_impervious():
     indicator = percent_area_impervious(IDN_JAKARTA_TILED_ZONES)
