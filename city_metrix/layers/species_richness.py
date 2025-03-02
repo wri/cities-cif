@@ -1,4 +1,5 @@
 from .layer import Layer
+from .layer_geometry import GeoExtent
 from enum import Enum
 from geopandas import GeoDataFrame
 import numpy as np
@@ -35,9 +36,9 @@ class SpeciesRichness(Layer):
         self.start_year = start_year
         self.end_year = end_year
 
-    def get_data(self, bbox):
-        poly = shapely.geometry.box(*bbox)
-        print("Retrieving {0} observations for bbox {1}, {2}, {3}, {4}\n".format(self.taxon['taxon'], *bbox))
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+        poly = shapely.geometry.box(*bbox.as_geographic_bbox().coords)
+        print("Retrieving {0} observations for bbox {1}, {2}, {3}, {4}\n".format(self.taxon['taxon'], *bbox.as_geographic_bbox().coords))
         offset = -self.LIMIT
         observations = GeoDataFrame({'species': [], 'geometry': []})
         while offset == -self.LIMIT or not results['endOfRecords']:
@@ -76,4 +77,4 @@ class SpeciesRichness(Layer):
                 count_estimate = -round(np.mean(asymptotes))
         else:
             count_estimate = -9999
-        return GeoDataFrame({'species_count': [count_estimate], 'geometry': [shapely.geometry.box(*bbox)]})
+        return GeoDataFrame({'species_count': [count_estimate], 'geometry': [poly]})
