@@ -73,7 +73,7 @@ def test_natural_areas():
     assert expected_zone_size == actual_indicator_size
 
 def test_num_species_birds():
-    indicator = num_species_birds(IDN_JAKARTA_TILED_ZONES)
+    indicator = num_species_birds(USA_OR_PORTLAND_TILE_GDF)
     actual_indicator_size = indicator.size
     assert actual_indicator_size > 0
 
