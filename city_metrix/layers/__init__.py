@@ -25,6 +25,8 @@ from .glad_lulc import LandCoverGlad, LandCoverSimplifiedGlad, LandCoverHabitatG
 from .cams import Cams
 from .vegetation_water_map import VegetationWaterMap
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
+from .species_richness import SpeciesRichness, GBIFTaxonClass
 from .high_slope import HighSlope
 from .riparian_areas import RiparianAreas
 from .urban_extents import UrbanExtents
+
