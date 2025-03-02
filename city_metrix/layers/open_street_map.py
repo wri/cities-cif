@@ -73,7 +73,7 @@ class OpenStreetMap(Layer):
         # Set the OSMnx configuration to disable caching
         ox.settings.use_cache = False
         try:
-            osm_feature = ox.features_from_bbox(bbox=(min_lon, min_lat, max_lon, max_lat), tags=self.osm_class.value)
+            osm_feature = ox.features_from_bbox(bbox=(max_lat, min_lat, max_lon, min_lon), tags=self.osm_class.value)
         # When no feature in bbox, return an empty gdf
         except ox._errors.InsufficientResponseError as e:
             osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['id', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
@@ -91,7 +91,7 @@ class OpenStreetMap(Layer):
             osm_feature = osm_feature[osm_feature.geom_type.isin(['Polygon', 'MultiPolygon'])]
 
         # keep only columns desired to reduce file size
-        keep_col = ['id', 'geometry']
+        keep_col = ['osmid', 'geometry']
         for key in self.osm_class.value:
             if key in osm_feature.columns:
                 keep_col.append(key)
