@@ -38,10 +38,15 @@ class OpenStreetMapClass(Enum):
     GOVERNMENT = {'building': ['government', 'government_office'],
                   'amenity': ['courthouse', 'fire_station', 'library', 'police', 'post_office', 'townhall']}
     INDUSTRY = {'building': ['factory', 'industrial', 'manufacture'],
-                'landuse': ['industrial', 'quarry']}
+                'landuse': ['industrial', 'quarry'],
+                'industrial': True}
     TRANSPORATION_LOGISTICS = {'building': ['warehouse'],
                                'landuse': ['harbour'],
-                               'amenity': ['bus_station', 'ferry_terminal']}
+                               'amenity': ['bus_station', 'ferry_terminal'],
+                               'railway': ['station'],
+                               'aeroway': ['terminal'],
+                               'industrial': ['port'],
+                               'cargo': True}
     EDUCATION = {'building': ['college', 'school', 'university'],
                  'landuse': ['education'],
                  'amenity': ['college', 'kindergarten', 'music_school', 'prep_school', 'research_institute', 'school', 'university'],
