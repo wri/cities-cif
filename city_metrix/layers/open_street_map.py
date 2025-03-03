@@ -91,7 +91,7 @@ class OpenStreetMap(Layer):
             osm_feature = osm_feature[osm_feature.geom_type.isin(['Polygon', 'MultiPolygon'])]
 
         # keep only columns desired to reduce file size
-        keep_col = ['osmid', 'geometry']
+        keep_col = ['id', 'geometry']
         for key in self.osm_class.value:
             if key in osm_feature.columns:
                 keep_col.append(key)
