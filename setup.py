@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 setup(
     name="city_metrix",
     version="0.1.2",
-    python_requires='=3.10',
+    python_requires='3.10',
     description="Module to calculate various metrics on cities.",
     packages=find_packages(),
     author="Justin Terry",
