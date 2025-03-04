@@ -195,18 +195,18 @@ def test_smart_surface_lulc():
     utm_bbox_data = SmartSurfaceLULC().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
-def test_tree_canopy_height():
-    data = TreeCanopyHeight().get_data(BBOX)
-    assert np.size(data) > 0
-    assert get_projection_name(data.crs) == 'utm'
-    utm_bbox_data = TreeCanopyHeight().get_data(BBOX_AS_UTM)
-    assert data.equals(utm_bbox_data)
-
 def test_tree_canopy_cover_mask():
     data = TreeCanopyCoverMask().get_data(BBOX)
     assert np.size(data) > 0
     assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
     utm_bbox_data = TreeCanopyCoverMask().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
+
+def test_tree_canopy_height():
+    data = TreeCanopyHeight().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
+    utm_bbox_data = TreeCanopyHeight().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
 def test_tree_cover():
