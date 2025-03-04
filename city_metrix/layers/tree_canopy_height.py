@@ -46,6 +46,6 @@ class TreeCanopyHeight(Layer):
         ).cover_code
 
         if self.height:
-            data = data.where(data >= self.height, 1, 0)
+            data = xr.where(data >= self.height, 1, 0)
 
         return data
