@@ -202,6 +202,13 @@ def test_tree_canopy_height():
     utm_bbox_data = TreeCanopyHeight().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
+def test_tree_canopy_cover_mask():
+    data = TreeCanopyCoverMask().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
+    utm_bbox_data = TreeCanopyCoverMask().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
+
 def test_tree_cover():
     data = TreeCover().get_data(BBOX)
     assert np.size(data) > 0

@@ -32,8 +32,8 @@ def test_canopy_area_per_resident():
     assert expected_zone_size == actual_indicator_size
 
 
-def test_canopy_covered_population():
-    indicator = canopy_covered_population_elderly(IDN_JAKARTA_TILED_ZONES)
+def test_percent_canopy_covered_population_female():
+    indicator = percent_canopy_covered_population_female(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
