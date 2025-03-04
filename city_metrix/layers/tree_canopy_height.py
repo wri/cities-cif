@@ -46,7 +46,7 @@ class TreeCanopyHeight(Layer):
         ).cover_code
 
         if self.height:
-            data = xr.where(data >= self.height, 1, 0)
+            data = data.where(data >= self.height)
         
         utm_crs = bbox.as_utm_bbox().crs
         data = data.rio.write_crs(utm_crs)
