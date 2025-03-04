@@ -13,9 +13,12 @@ COUNTRY_CODE_FOR_BBOX = 'USA'
 BBOX = BBOX_USA_OR_PORTLAND_1
 BBOX_AS_UTM = BBOX.as_utm_bbox()
 
-def test_acagpm2p5():
+def test_acag_pm2p5():
     data = AcagPM2p5().get_data(BBOX)
     assert np.size(data) > 0
+    assert get_projection_name(data.crs) == 'utm'
+    utm_bbox_data = AcagPM2p5().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
 
 def test_albedo():
     data = Albedo().get_data(BBOX)
@@ -175,6 +178,13 @@ def test_overture_buildings():
     assert np.size(data) > 0
     assert get_projection_name(data.crs.srs) == 'utm'
     utm_bbox_data = OvertureBuildings().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
+
+def test_pop_weighted_pm2p5():
+    data = PopWeightedPM2p5().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
+    utm_bbox_data = PopWeightedPM2p5().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
 def test_riparian_areas():
