@@ -47,5 +47,8 @@ class TreeCanopyHeight(Layer):
 
         if self.height:
             data = xr.where(data >= self.height, 1, 0)
+        
+        utm_crs = bbox.as_utm_bbox().crs
+        data = data.rio.write_crs(utm_crs)
 
         return data
