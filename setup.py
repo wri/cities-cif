@@ -11,7 +11,7 @@ setup(
         "earthengine-api",
         "geocube",
         "odc-stac",
-        "geemap>=0.32.2",
+        "geemap>=0.35.2",
         "pystac-client",
         "xarray",
         "xarray-spatial",
