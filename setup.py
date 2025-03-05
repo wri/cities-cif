@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="city_metrix",
-    version="0.1.2",
+    version="0.2.1",
     description="Module to calculate various metrics on cities.",
     packages=find_packages(),
     author="Justin Terry",
