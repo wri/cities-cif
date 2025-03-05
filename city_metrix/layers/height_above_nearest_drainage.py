@@ -14,11 +14,13 @@ class HeightAboveNearestDrainage(Layer):
                             default is 30, other options - 90
         river_head: number of river head threshold cells
                     default is 1000, other options - 100, 5000
+        thresh: flow accumuation threshold, default is 1
     """
 
-    def __init__(self, river_head=1000, **kwargs):
+    def __init__(self, river_head=1000, thresh=1, **kwargs):
         super().__init__(**kwargs)
         self.river_head = river_head
+        self.thresh = thresh
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -45,7 +47,7 @@ class HeightAboveNearestDrainage(Layer):
         swbd = ee.Image('MODIS/MOD44W/MOD44W_005_2000_02_24').select('water_mask')
         swbdMask = swbd.unmask().Not().focal_median(1)
 
-        thresh = 1
+        thresh = self.thresh
         HANDthresh = hand.lte(thresh).focal_max(1).focal_mode(2, 'circle', 'pixels', 5).mask(swbdMask)
         HANDthresh = HANDthresh.mask(HANDthresh)
 

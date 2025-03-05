@@ -3,11 +3,13 @@ import numpy as np
 from city_metrix.layers import *
 from city_metrix.layers.layer_tools import get_projection_name
 from tests.conftest import EXECUTE_IGNORED_TESTS
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_1
 
 # Tests are implemented for an area where we have LULC
-COUNTRY_CODE_FOR_BBOX = 'BRA'
-BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
+# COUNTRY_CODE_FOR_BBOX = 'BRA'
+# BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
+COUNTRY_CODE_FOR_BBOX = 'USA'
+BBOX = BBOX_USA_OR_PORTLAND_1
 BBOX_AS_UTM = BBOX.as_utm_bbox()
 
 def test_albedo():
@@ -79,6 +81,13 @@ def test_high_land_surface_temperature():
     assert np.size(data) > 0
     assert get_projection_name(data.crs) == 'utm'
     utm_bbox_data = HighLandSurfaceTemperature().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
+
+def test_high_slope():
+    data = HighSlope().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.crs) == 'utm'
+    utm_bbox_data = HighSlope().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
 def test_impervious_surface():
@@ -170,6 +179,14 @@ def test_overture_buildings():
     utm_bbox_data = OvertureBuildings().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
+def test_riparian_areas():
+    data = RiparianAreas().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
+    utm_bbox_data = RiparianAreas().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
+
+@pytest.mark.skip(reason="layer is deprecated")
 def test_sentinel_2_level2():
     sentinel_2_bands = ["green"]
     data = Sentinel2Level2(sentinel_2_bands).get_data(BBOX)
@@ -197,6 +214,13 @@ def test_tree_cover():
     assert np.size(data) > 0
     assert get_projection_name(data.crs) == 'utm'
     utm_bbox_data = TreeCover().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
+
+def test_urban_extents():
+    data = UrbanExtents().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.crs.srs) == 'utm'
+    utm_bbox_data = UrbanExtents().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
 def test_urban_land_use():
