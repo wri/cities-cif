@@ -14,7 +14,7 @@ from .sentinel_2_level_2 import Sentinel2Level2
 from .world_pop import WorldPop, WorldPopClass
 from .built_up_height import BuiltUpHeight
 from .average_net_building_height import AverageNetBuildingHeight
-# from .open_buildings import OpenBuildings
+from .open_buildings import OpenBuildings
 from .tree_canopy_height import TreeCanopyHeight
 from .alos_dsm import AlosDSM
 from .overture_buildings import OvertureBuildings
@@ -27,4 +27,4 @@ from .vegetation_water_map import VegetationWaterMap
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
 from .high_slope import HighSlope
 from .riparian_areas import RiparianAreas
-# from .urban_extents import UrbanExtents
+from .urban_extents import UrbanExtents
