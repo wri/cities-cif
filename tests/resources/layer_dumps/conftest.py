@@ -4,52 +4,54 @@ import os
 import shutil
 from collections import namedtuple
 
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_NLD_AMSTERDAM, \
+    BBOX_NLD_AMSTERDAM_LARGE, BBOX_USA_OR_PORTLAND, BBOX_USA_OR_PORTLAND_1
 from tests.tools.general_tools import create_target_folder, is_valid_path
 
-# RUN_DUMPS is the master control for whether the writes and tests are executed
-# Setting RUN_DUMPS to True turns on code execution.
+# EXECUTE_IGNORED_TESTS is the master control for whether the writes and tests are executed
+# Setting EXECUTE_IGNORED_TESTS to True turns on code execution.
 # Values should normally be set to False in order to avoid unnecessary execution.
-RUN_DUMPS = False
+EXECUTE_IGNORED_TESTS = False
+
+# Define a WGS bbox or otherwise a utm bbox
+USE_WGS_BBOX = True
 
 # Multiplier applied to the default spatial_resolution of the layer
 # Use value of 1 for default resolution.
-SPATIAL_RESOLUTION_MULTIPLIER = 1
+RESOLUTION_MTHD = 'multipler'
+# RESOLUTION_MTHD = 'fixed'
+RESOLUTION_MULTIPLIER = 1
+FIXED_RESOLUTION = 30 # Note: Some layers do not support less than resolution of 30m
 
 # Both the tests and QGIS file are implemented for the same bounding box in Brazil.
-COUNTRY_CODE_FOR_BBOX = 'BRA'
-BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
+# COUNTRY_CODE_FOR_BBOX = 'BRA'
+# BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
+COUNTRY_CODE_FOR_BBOX = 'USA'
+BBOX = BBOX_USA_OR_PORTLAND_1
+# BBOX = BBOX_NLD_AMSTERDAM_TEST
+# BBOX = BBOX_NLD_AMSTERDAM_LARGE_TEST
 
 # Specify None to write to a temporary default folder otherwise specify a valid custom target path.
 CUSTOM_DUMP_DIRECTORY = None
 
 def pytest_configure(config):
-    qgis_project_file = 'layers_for_br_lauro_de_freitas.qgz'
 
-    if RUN_DUMPS is True:
+    if EXECUTE_IGNORED_TESTS is True:
         source_folder = os.path.dirname(__file__)
         target_folder = get_target_folder_path()
-        create_target_folder(target_folder, True)
+        create_target_folder(target_folder, False)
 
-        source_qgis_file = os.path.join(source_folder, qgis_project_file)
-        target_qgis_file = os.path.join(target_folder, qgis_project_file)
-        shutil.copyfile(source_qgis_file, target_qgis_file)
-
-        print("\n\033[93m QGIS project file and layer files written to folder %s.\033[0m\n" % target_folder)
+        print("\n\033[93m Layer files written to folder %s.\033[0m\n" % target_folder)
 
 @pytest.fixture
 def target_folder():
     return get_target_folder_path()
 
 @pytest.fixture
-def target_spatial_resolution_multiplier():
-    return SPATIAL_RESOLUTION_MULTIPLIER
-
-@pytest.fixture
-def bbox_info():
-    bbox = namedtuple('bbox', ['bounds', 'country'])
-    bbox_instance = bbox(bounds=BBOX, country=COUNTRY_CODE_FOR_BBOX)
-    return bbox_instance
+def sample_aoi():
+    sample_box = namedtuple('sample_bbox', ['geo_extent', 'country'])
+    sample_bbox_instance = sample_box(geo_extent=BBOX, country=COUNTRY_CODE_FOR_BBOX)
+    return sample_bbox_instance
 
 def get_target_folder_path():
     if CUSTOM_DUMP_DIRECTORY is not None:

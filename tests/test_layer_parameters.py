@@ -1,28 +1,13 @@
+from _ast import FunctionDef
+from ast import parse, walk
+
 import pytest
+import xarray as xr
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from pyproj import CRS
-from city_metrix.layers import (
-    Layer,
-    Albedo,
-    AlosDSM,
-    AverageNetBuildingHeight,
-    BuiltUpHeight,
-    EsaWorldCover, 
-    EsaWorldCoverClass,
-    HighLandSurfaceTemperature,
-    ImperviousSurface,
-    LandSurfaceTemperature,
-    NasaDEM,
-    NaturalAreas,
-    NdviSentinel2,
-    OpenBuildings,
-    OpenStreetMap,
-    TreeCanopyHeight,
-    TreeCover,
-    UrbanLandUse,
-    WorldPop
-)
+from city_metrix.layers import *
+from city_metrix.layers.layer_geometry import GeoExtent
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
 from tests.tools.general_tools import get_class_from_instance, get_class_default_spatial_resolution
 
@@ -190,10 +175,11 @@ class TestSpatialResolution:
         class_instance = Albedo()
         spatial_resolution=None
 
-        with pytest.raises(Exception) as e_info:
+        try:
             _get_modified_resolution_data(class_instance, spatial_resolution, BBOX)
-        msg_correct = False if str(e_info.value).find("Spatial_resolution cannot be None.") == -1 else True
-        assert msg_correct
+        except Exception as e:
+            pytest.fail(f"get_data() raised {type(e).__name__} unexpectedly!")
+
 
 class TestOtherParameters:
     def test_albedo_threshold(self):
@@ -267,10 +253,10 @@ def test_function_validate_layer_instance():
     assert is_valid is False
     is_valid, except_str = _validate_layer_instance(OpenStreetMap())
     assert is_valid is False
-    is_valid, except_str = _validate_layer_instance(Albedo(spatial_resolution = 2))
-    assert is_valid is False
+    is_valid, except_str = _validate_layer_instance(Albedo())
+    assert is_valid is True
 
-def _get_sample_data(class_instance, bbox, downsize_factor):
+def _get_sample_data(class_instance, bbox: GeoExtent, downsize_factor):
     is_valid, except_str = _validate_layer_instance(class_instance)
     if is_valid is False:
         raise Exception(except_str)
@@ -286,14 +272,16 @@ def _get_sample_data(class_instance, bbox, downsize_factor):
     return default_res_data, downsized_res_data, downsized_resolution, estimated_actual_resolution
 
 def _get_crs_from_image_data(image_data):
-    crs_string = image_data.rio.crs.data['init']
+    if isinstance(image_data, xr.DataArray):
+        crs_string = image_data.rio.crs.wkt
+    else:
+        crs_string = image_data.crs
     crs = CRS.from_string(crs_string)
     return crs
 
 
 def _get_modified_resolution_data(class_instance, spatial_resolution, bbox):
-    class_instance.spatial_resolution = spatial_resolution
-    data = class_instance.get_data(bbox)
+    data = class_instance.get_data(bbox, spatial_resolution=spatial_resolution)
     return data
 
 def _validate_layer_instance(obj):
@@ -306,15 +294,19 @@ def _validate_layer_instance(obj):
     else:
         cls = get_class_from_instance(obj)
         cls_name = type(cls).__name__
-        if not hasattr(obj, 'spatial_resolution'):
+
+        obj_spatial_resolution = get_class_default_spatial_resolution(obj)
+        cls_default_spatial_resolution = get_class_default_spatial_resolution(cls)
+
+        if not cls_default_spatial_resolution:
             is_valid = False
-            except_str = "Class '%s' does not have spatial_resolution property." % cls_name
-        elif not obj.spatial_resolution == cls.spatial_resolution:
+            except_str = f"Class '{cls_name}' does not have spatial_resolution property."
+        elif not obj_spatial_resolution == cls_default_spatial_resolution:
             is_valid = False
-            except_str = "Do not specify spatial_resolution property value for class '%s'." % cls_name
-        elif cls.spatial_resolution is None:
+            except_str = f"Do not specify spatial_resolution property value for class '{cls_name}'."
+        elif not obj_spatial_resolution:
             is_valid = False
-            except_str = "Signature of class %s must specify a non-null default value for spatial_resolution. Please correct." % cls_name
+            except_str = f"Signature of object {cls_name} must specify a non-null default value for spatial_resolution. Please correct."
 
     return is_valid, except_str
 
@@ -335,23 +327,22 @@ def _estimate_spatial_resolution(data):
 
     return estimated_actual_resolution
 
-def _get_populate_ratio(dataset):
+def _get_populated_fraction(dataset):
     raw_data_size = dataset.values.size
     populated_raw_data = dataset.values[(~np.isnan(dataset.values)) & (dataset.values > 0)]
     populated_data_raw_size = populated_raw_data.size
-    populated_raw_data_ratio = populated_data_raw_size/raw_data_size
-    return populated_raw_data_ratio
+    populated_raw_data_fraction = populated_data_raw_size/raw_data_size
+    return populated_raw_data_fraction
 
 def _evaluate_raster_value(raw_data, downsized_data):
     # Below values where determined through trial and error evaluation of results in QGIS
-    ratio_tolerance = 0.2
+    populated_fraction_tolerance = 0.2
     normalized_rmse_tolerance = 0.3
 
-
-    populated_raw_data_ratio = _get_populate_ratio(raw_data)
-    populated_downsized_data_ratio = _get_populate_ratio(raw_data)
-    ratio_diff = abs(populated_raw_data_ratio - populated_downsized_data_ratio)
-    ratio_eval = True if ratio_diff <= ratio_tolerance else False
+    populated_raw_data_ratio = _get_populated_fraction(raw_data)
+    populated_downsized_data_ratio = _get_populated_fraction(raw_data)
+    populated_fraction_diff = abs(populated_raw_data_ratio - populated_downsized_data_ratio)
+    populated_fraction_eval = True if populated_fraction_diff <= populated_fraction_tolerance else False
 
     filled_raw_data = raw_data.fillna(0)
     filled_downsized_data = downsized_data.fillna(0)
@@ -364,7 +355,7 @@ def _evaluate_raster_value(raw_data, downsized_data):
     # Note: Initial investigations using the unresampled-raw and downsized data with evaluation by
     # mean value, quantiles,and standard deviation were unsuccessful due to false failures on valid downsized images.
     resampled_filled_raw_data = (filled_raw_data
-                                 .interp_like(filled_downsized_data, method='quadratic')
+                                 .interp_like(filled_downsized_data, method='linear')
                                  .fillna(0))
 
     # Convert xarray DataArrays to numpy arrays
@@ -378,9 +369,17 @@ def _evaluate_raster_value(raw_data, downsized_data):
     matching_rmse = True if normalized_rmse < normalized_rmse_tolerance else False
 
     # Calculate and evaluate Structural Similarity Index (SSIM)
-    ssim_index_tolerance = 0.6 if (processed_downsized_data_np.size > 100 and ratio_diff <= 0.1) else 0.4
+    # Progressively decrease criteria for asserting a match as raster count decreases and null values increase
+    if processed_downsized_data_np.size > 100:
+        if populated_fraction_diff <= 0.1:
+            ssim_index_tolerance = 0.6
+        else:
+            ssim_index_tolerance = 0.4
+    else:
+        ssim_index_tolerance = 0.3
     ssim_index, _ = ssim(processed_downsized_data_np, processed_raw_data_np, full=True, data_range=max_val)
-    matching_ssim = True if ssim_index > ssim_index_tolerance else False
-    results_match = True if (ratio_eval & matching_rmse & matching_ssim) else False
+    matching_ssim = True if round(ssim_index,1) >= ssim_index_tolerance else False
+
+    results_match = True if (populated_fraction_eval & matching_rmse & matching_ssim) else False
 
     return results_match

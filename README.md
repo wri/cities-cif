@@ -43,11 +43,14 @@ To run the module,
 
   1. You need access to Google Earth Engine
   2. Install <https://cloud.google.com/sdk/docs/install>
-  3. If you want to use the ERA5 layer, you need to install the [Climate Data Store (CDS) Application Program Interface (API)](https://cds.climate.copernicus.eu/api-how-to)
-
+  3. If you want to use the ERA5 and CAMS layers:
+     1. you need to install the [Climate Data Store (CDS) Application Program Interface (API)](https://cds.climate.copernicus.eu/how-to-api)
+     2. create a .cdsapirc file in your home directory and save the key you acquired from https://cds.climate.copernicus.eu/how-to-api
+        1. Note: you do not need to specify any url's in the .cdsapirc file since they are specified in code.
+     
 ### Interactive development
 
-For most people working in a notebook or IDE the script should walk you thourgh an interactive authentication process. You will just need to be logged in to your Google account that has access to GEE in your browser.
+For most people working in a notebook or IDE the script should walk you through an interactive authentication process. You will just need to be logged in to your Google account that has access to GEE in your browser.
 
 ### Programatic access
 
@@ -64,6 +67,10 @@ For example, you could set the following in your `~/.zshrc` file:
 export GOOGLE_APPLICATION_USER=developers@citiesindicators.iam.gserviceaccount.com
 export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/file
 ```
+
+### Execution via scripts
+Individual layers and indicators can be downloaded for specified cities using the cities-cif-portal codebase at https://github.com/wri/cities-cif-portal 
+
 
 ## How to contribute
 

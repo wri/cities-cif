@@ -3,10 +3,18 @@ import osmnx as ox
 import geopandas as gpd
 import pandas as pd
 
-from .layer import Layer, get_utm_zone_epsg
+from .layer import Layer
+from .layer_geometry import GeoExtent
 
 
 class OpenStreetMapClass(Enum):
+    # ALL includes all 29 primary features https://wiki.openstreetmap.org/wiki/Map_features
+    ALL = {'aerialway': True, 'aeroway': True, 'amenity': True, 'barrier': True, 'boundary': True, 
+           'building': True, 'craft': True, 'emergency': True, 'geological': True, 'healthcare': True,
+           'highway': True, 'historic': True, 'landuse': True, 'leisure': True, 'man_made': True,
+           'military': True, 'natural': True, 'office': True, 'place': True, 'power': True,
+           'public_transport': True, 'railway': True, 'route': True, 'shop': True, 'sport': True,
+           'telecom': True, 'tourism': True, 'water': True, 'waterway': True}
     OPEN_SPACE = {'leisure': ['park', 'nature_reserve', 'common', 'playground', 'pitch', 'track'],
                   'boundary': ['protected_area', 'national_park']}
     OPEN_SPACE_HEAT = {'leisure': ['park', 'nature_reserve', 'common', 'playground', 'pitch', 'garden', 'golf_course', 'dog_park', 'recreation_ground', 'disc_golf_course'],
@@ -23,7 +31,7 @@ class OpenStreetMapClass(Enum):
 							'building': ['office', 'commercial', 'industrial', 'retail', 'supermarket'],
 							'shop': True}
     SCHOOLS = {'building': ['school',],
-				'amenity': ['school', 'kindergarten']}
+			   'amenity': ['school', 'kindergarten']}
     HIGHER_EDUCATION = {'amenity': ['college', 'university'],
 						'building': ['college', 'university']}
     TRANSIT_STOP = {'amenity':['ferry_terminal'],
@@ -35,19 +43,23 @@ class OpenStreetMapClass(Enum):
 
 
 class OpenStreetMap(Layer):
-    def __init__(self, osm_class=None, **kwargs):
+    def __init__(self, osm_class=OpenStreetMapClass.ALL, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 
-    def get_data(self, bbox):
-        north, south, east, west = bbox[3], bbox[1], bbox[0], bbox[2]
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+        #Note: spatial_resolution and resampling_method arguments are ignored.
+
+        min_lon, min_lat, max_lon, max_lat = bbox.as_geographic_bbox().bounds
+        utm_crs = bbox.as_utm_bbox().crs
+
         # Set the OSMnx configuration to disable caching
         ox.settings.use_cache = False
         try:
-            osm_feature = ox.features_from_bbox(bbox=(north, south, east, west), tags=self.osm_class.value)
+            osm_feature = ox.features_from_bbox(bbox=(min_lon, min_lat, max_lon, max_lat), tags=self.osm_class.value)
         # When no feature in bbox, return an empty gdf
         except ox._errors.InsufficientResponseError as e:
-            osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['osmid', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
+            osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['id', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
             osm_feature.crs = "EPSG:4326"
 
         # Filter by geo_type
@@ -62,7 +74,7 @@ class OpenStreetMap(Layer):
             osm_feature = osm_feature[osm_feature.geom_type.isin(['Polygon', 'MultiPolygon'])]
 
         # keep only columns desired to reduce file size
-        keep_col = ['osmid', 'geometry']
+        keep_col = ['id', 'geometry']
         for key in self.osm_class.value:
             if key in osm_feature.columns:
                 keep_col.append(key)
@@ -71,7 +83,6 @@ class OpenStreetMap(Layer):
             keep_col.append('lanes')
         osm_feature = osm_feature.reset_index()[keep_col]
 
-        crs = get_utm_zone_epsg(bbox)
-        osm_feature = osm_feature.to_crs(crs)
+        osm_feature = osm_feature.to_crs(utm_crs)
 
         return osm_feature
