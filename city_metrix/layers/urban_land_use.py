@@ -55,6 +55,6 @@ class UrbanLandUse(Layer):
         ).lulc
 
         if self.ulu_class:
-            data = data.where(data == self.ulu_class, 1, np.nan)
+            data = data.where(data == self.ulu_class, np.nan)
 
         return data
