@@ -68,7 +68,7 @@ class WorldPop(Layer):
                 agesex_value = self.agesex_classes
             
             world_pop_age_sex_year = (world_pop_age_sex
-                                      .filterBounds(ee_rectangle)
+                                      .filterBounds(ee_rectangle['ee_geometry'])
                                       .filter(ee.Filter.inList('year', [self.year]))
                                       .select(agesex_value)
                                       .mean()
