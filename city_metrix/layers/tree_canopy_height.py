@@ -1,10 +1,9 @@
-from .layer import Layer, get_image_collection
-
 from dask.diagnostics import ProgressBar
 import xarray as xr
 import xee
 import ee
 
+from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 1
@@ -47,6 +46,9 @@ class TreeCanopyHeight(Layer):
         ).cover_code
 
         if self.height:
-            data = data.where(data >= self.height, 1, 0)
+            data = data.where(data >= self.height)
+        
+        utm_crs = bbox.as_utm_bbox().crs
+        data = data.rio.write_crs(utm_crs)
 
         return data
