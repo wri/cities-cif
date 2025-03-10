@@ -3,6 +3,12 @@ from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_POR
 import pytest
 
 
+def test_annual_dailyconcentration_statistic():
+    indicator_mean = test_annual_dailyconcentration_statistic(ZONES, 'mean')
+    indicator_max = test_annual_dailyconcentration_statistic(ZONES, 'max')
+    assert indicator_mean
+    assert indicator_max
+
 def test_built_land_with_high_lst():
     sample_zones = IDN_JAKARTA_TILED_ZONES
     indicator = built_land_with_high_land_surface_temperature(sample_zones)
@@ -80,7 +86,6 @@ def test_recreational_space_per_capita():
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
-
 def test_urban_open_space():
     indicator = urban_open_space(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
@@ -107,3 +112,7 @@ def test_vegetation_water_change_gain_loss_ratio():
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
+
+def test_who_air_pollutant_exceedance_days()
+    indicator = who_air_pollutant_exceedance_days(ZONES, ['so2'])
+    assert indicator <= 365

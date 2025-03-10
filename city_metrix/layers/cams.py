@@ -1,5 +1,5 @@
 import cdsapi
-import os
+import os, datetime
 import xarray as xr
 import glob
 
@@ -19,7 +19,8 @@ class Cams(Layer):
         min_lon, min_lat, max_lon, max_lat = bbox.as_geographic_bbox().bounds
 
         c = cdsapi.Client(url='https://ads.atmosphere.copernicus.eu/api')
-        target_file = 'cams_download.grib'
+        timestamp = str(datetime.datetime.utcnow().timestamp()).replace('.', '-')
+        target_file = f'cams_download_{timestamp}.grib'
         c.retrieve(
             'cams-global-reanalysis-eac4',
             {
@@ -70,14 +71,13 @@ class Cams(Layer):
         # target unit is ug/m3
         for var in ['co', 'no2', 'go3', 'so2']:
             data[var].values = data[var].values * data['msl'].values / (287.058 * data['t2m'].values) * (10 ** 9)
-
         # drop pressure and temperature
         data = data.drop_vars(['msl', 't2m'])
         # xarray.Dataset to xarray.DataArray
         data = data.to_array()
 
         # Remove local files
-        for file in glob.glob(f'cams_download.grib*'):
+        for file in glob.glob(f'cams_download_{timestamp}.grib*'):
             os.remove(file)
 
         # Select the nearest data point based on latitude and longitude
