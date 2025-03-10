@@ -178,6 +178,12 @@ def test_write_pop_weighted_pm2p5(target_folder, sample_aoi):
     target_resolution = get_test_resolution(PopWeightedPM2p5())
     bbox = get_test_bbox(sample_aoi.geo_extent)
     PopWeightedPM2p5().write(bbox, file_path, spatial_resolution=target_resolution)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_protected_areas(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'protected_areas.geojson')
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    ProtectedAreas().write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')

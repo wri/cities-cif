@@ -21,6 +21,7 @@ from .open_buildings import OpenBuildings
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .overture_buildings import OvertureBuildings
 from .pop_weighted_pm2p5 import PopWeightedPM2p5
+from .protected_areas import ProtectedAreas
 from .riparian_areas import RiparianAreas
 from .sentinel_2_level_2 import Sentinel2Level2
 from .smart_surface_lulc import SmartSurfaceLULC
