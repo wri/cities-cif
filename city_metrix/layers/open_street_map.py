@@ -40,7 +40,7 @@ class OpenStreetMapClass(Enum):
     INDUSTRY = {'building': ['factory', 'industrial', 'manufacture'],
                 'landuse': ['industrial', 'quarry'],
                 'industrial': True}
-    TRANSPORATION_LOGISTICS = {'building': ['warehouse'],
+    TRANSPORTATION_LOGISTICS = {'building': ['warehouse'],
                                'landuse': ['harbour'],
                                'amenity': ['bus_station', 'ferry_terminal'],
                                'railway': ['station'],
@@ -92,8 +92,8 @@ class OpenStreetMap(Layer):
             # Keep Point
             osm_feature = osm_feature[osm_feature.geom_type == 'Point']
         else:
-            # Filter out Point and LineString
-            osm_feature = osm_feature[osm_feature.geom_type.isin(['Polygon', 'MultiPolygon'])]
+            # Filter out LineString
+            osm_feature = osm_feature[osm_feature.geom_type.isin(['Point', 'Polygon', 'MultiPolygon'])]
 
         # keep only columns desired to reduce file size
         keep_col = ['id', 'geometry']
