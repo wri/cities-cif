@@ -41,7 +41,7 @@ class OpenBuildings(Layer):
             if len(gc_openbuilds_polygon) > 0:
                 # convert list to geodataframe
                 gc_openbuilds_polygon = gpd.GeoDataFrame(gc_openbuilds_polygon, geometry='geometry')
-                # replace GeometryCollection with Polygon, merge back to openbuilds 
+                # replace GeometryCollection with Polygon, merge back to openbuilds
                 openbuilds = openbuilds[openbuilds.geom_type != 'GeometryCollection']
                 openbuilds = pd.concat([openbuilds, gc_openbuilds_polygon], ignore_index=True).reset_index()
             else:
