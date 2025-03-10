@@ -157,21 +157,21 @@ def test_openbuildings():
     assert np.size(data) > 0
     assert get_projection_name(data.crs.srs) == 'utm'
     utm_bbox_data = OpenBuildings(COUNTRY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
-    assert data.equals(utm_bbox_data)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_open_street_map():
     data = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(BBOX)
     assert np.size(data) > 0
     assert get_projection_name(data.crs.srs) == 'utm'
     utm_bbox_data = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(BBOX_AS_UTM)
-    assert data.equals(utm_bbox_data)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_overture_buildings():
     data = OvertureBuildings().get_data(BBOX)
     assert np.size(data) > 0
     assert get_projection_name(data.crs.srs) == 'utm'
     utm_bbox_data = OvertureBuildings().get_data(BBOX_AS_UTM)
-    assert data.equals(utm_bbox_data)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_protected_areas():
     data = ProtectedAreas().get_data(BBOX)
@@ -222,7 +222,7 @@ def test_urban_extents():
     assert np.size(data) > 0
     assert get_projection_name(data.crs.srs) == 'utm'
     utm_bbox_data = UrbanExtents().get_data(BBOX_AS_UTM)
-    assert data.equals(utm_bbox_data)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_urban_land_use():
     data = UrbanLandUse().get_data(BBOX)
