@@ -4,6 +4,7 @@ from city_metrix.layers import *
 from city_metrix.layers.layer_tools import get_projection_name
 from tests.conftest import EXECUTE_IGNORED_TESTS
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_2
+from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC
 # COUNTRY_CODE_FOR_BBOX = 'BRA'
@@ -174,12 +175,10 @@ def test_overture_buildings():
 
 def test_protected_areas():
     data = ProtectedAreas().get_data(BBOX)
-    area = round(data.area, 4)
     assert np.size(data) > 0
     assert get_projection_name(data.crs.srs) == 'utm'
     utm_bbox_data = ProtectedAreas().get_data(BBOX_AS_UTM)
-    utm_bbox_area = round(utm_bbox_data.area, 4)
-    assert area.equals(utm_bbox_area)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_riparian_areas():
     data = RiparianAreas().get_data(BBOX)
