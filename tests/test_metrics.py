@@ -44,6 +44,11 @@ def test_era_5_met_preprocess():
     assert has_empty_required_cells == False
     assert len(indicator) == 24
 
+def test_habitat_effective_mesh_size():
+    indicator = habitat_effective_mesh_size(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
 
 def test_mean_tree_cover():
     indicator = mean_tree_cover(IDN_JAKARTA_TILED_ZONES)
