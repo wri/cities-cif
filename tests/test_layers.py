@@ -48,6 +48,13 @@ def test_cams():
     utm_bbox_data = Cams().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
+def test_fractional_vegetation():
+    data = FractionalVegetation().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.crs) == 'utm'
+    utm_bbox_data = FractionalVegetation().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
+
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
     data = Era5HottestDay().get_data(BBOX)
