@@ -8,6 +8,7 @@ import os
 import xarray as xr
 import glob
 
+from city_metrix.constants import WGS_CRS
 from .layer import Layer
 from .layer_geometry import GeoExtent
 
@@ -33,7 +34,7 @@ class Era5HottestDay(Layer):
 
         # Function to find the city mean temperature of each hour
         def hourly_mean_temperature(image):
-            point_crs = 'EPSG:4326'
+            point_crs = WGS_CRS
             hourly_mean = image.select('temperature_2m').reduceRegion(
                 reducer=ee.Reducer.mean(),
                 geometry=ee.Geometry.Point([center_lon, center_lat], point_crs),

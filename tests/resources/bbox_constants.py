@@ -29,3 +29,6 @@ BBOX_IDN_JAKARTA = GeoExtent(bbox=(106.7, -6.3, 106.8, -6.2), crs=WGS_CRS)
 BBOX_IDN_JAKARTA_LARGE = GeoExtent(bbox=(106, -7, 107, -6), crs=WGS_CRS)
 
 BBOX_IND_BHOPAL = GeoExtent(bbox=(77.41791, 23.20914, 77.42856, 23.21651), crs=WGS_CRS)
+
+EXTENT_SMALL_CITY_WGS84 = GeoExtent(bbox='BRA-Florianopolis')
+EXTENT_SMALL_CITY_UTM = GeoExtent(bbox='BRA-Florianopolis', crs='EPSG:32722')

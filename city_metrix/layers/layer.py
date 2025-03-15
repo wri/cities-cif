@@ -1,11 +1,9 @@
 import os
 from abc import abstractmethod
-from typing import Union, Tuple
+from typing import Union
 from uuid import uuid4
 
-import xee
 # This osgeo import is essential for proper functioning. Do not remove.
-from osgeo import gdal
 
 import ee
 import boto3
@@ -19,9 +17,8 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
+from city_metrix.constants import WGS_CRS
 from city_metrix.layers.layer_tools import standardize_y_dimension_direction
-
-WGS_CRS = 'EPSG:4326'
 from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, reproject_units
 
 MAX_TILE_SIZE_DEGREES = 0.5 # TODO Why was this value selected?
@@ -369,6 +366,10 @@ def get_image_collection(
 def _write_layer(path, data):
     if isinstance(data, xr.DataArray):
         was_reversed, standardized_array = standardize_y_dimension_direction(data)
+
+        if standardized_array.values.dtype.name == 'bool':
+            standardized_array = standardized_array.astype(np.uint8)
+
         _write_dataarray(path, standardized_array)
     elif isinstance(data, xr.Dataset):
         raise NotImplementedError("Data as Dataset not currently supported")

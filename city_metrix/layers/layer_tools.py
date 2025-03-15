@@ -1,7 +1,32 @@
 import math
+import requests
+import geopandas as gpd
 from typing import Union
-
 from pyproj import CRS
+
+from city_metrix.constants import WGS_EPSG_CODE
+
+CITIES_DATA_BASE_URL = "https://cities-data-api.wri.org"
+
+def get_city(city_id: str):
+    query = f"{CITIES_DATA_BASE_URL}/cities/{city_id}"
+    city = requests.get(query)
+    if city.status_code in range(200, 206):
+        return city.json()
+    raise Exception("City not found")
+
+
+def get_city_boundary(city_id: str, admin_level: str):
+    city_boundary = requests.get(f"{CITIES_DATA_BASE_URL}/cities/{city_id}/{admin_level}/geojson")
+    if city_boundary.status_code in range(200, 206):
+        return city_boundary.json()
+    raise Exception("City boundary not found")
+
+
+def get_geojson_df_bounds(geojson: str):
+    gdf = gpd.GeoDataFrame.from_features(geojson)
+    gdf.set_crs(epsg=WGS_EPSG_CODE, inplace=True)
+    return gdf.total_bounds
 
 
 def get_projection_name(crs: Union[str|int]):
@@ -19,7 +44,7 @@ def get_projection_name(crs: Union[str|int]):
     else:
         raise ValueError(f"Value of ({crs}) is an invalid crs string or epsg code. ")
 
-    if epsg_code == 4326:
+    if epsg_code == WGS_EPSG_CODE:
         projection_name = 'geographic'
     elif 32601 <= epsg_code <= 32660 or 32701 <= epsg_code <= 32760:
         projection_name = 'utm'
