@@ -29,3 +29,4 @@ from .high_slope import HighSlope
 from .riparian_areas import RiparianAreas
 from .urban_extents import UrbanExtents
 from .protected_areas import ProtectedAreas
+from .nex_gddp_cmip6 import NexGddpCmip6

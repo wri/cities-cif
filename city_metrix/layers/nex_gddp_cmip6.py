@@ -360,7 +360,7 @@ class NexGddpCmip6(Layer):
     temps are converted to deg-C; pr converted to mm/day
     """
 
-    def __init__(self, varname='tasmax', model=None, start_year=2040, end_year=2049, scenario='ssp245', **kwargs):
+    def __init__(self, varname='tasmax', start_year=2040, end_year=2049, scenario='ssp245', **kwargs):
         super().__init__(**kwargs)
         self.varname = varname
         self.start_year = start_year
@@ -379,6 +379,6 @@ class NexGddpCmip6(Layer):
             calibration_fxns[model] = [calibration_function(o_quarters[i].flatten(), m_quarters[i].flatten()) for i in range(4)]
         fut_mods = {}
         for model in best_models:
-            uncalibrated_data = get_var('tasmax', model, (bbox.centroid.y, bbox.centroid.x), 2030, 2039)
+            uncalibrated_data = get_var(self.varname, model, latlon, self.start_year, self.end_year)
             fut_mods[model] = calibrate(uncalibrated_data, calibration_fxns[model])
         return fut_mods
