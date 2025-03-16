@@ -3,11 +3,16 @@ from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_POR
 import pytest
 
 
-def test_annual_dailyconcentration_statistic():
-    indicator_mean = test_annual_dailyconcentration_statistic(ZONES, 'mean')
-    indicator_max = test_annual_dailyconcentration_statistic(ZONES, 'max')
-    assert indicator_mean
-    assert indicator_max
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_annual_daily_concentration_statistic():
+    indicator_mean = annual_daily_concentration_statistic(IDN_JAKARTA_TILED_ZONES, 'mean')
+    indicator_max = annual_daily_concentration_statistic(IDN_JAKARTA_TILED_ZONES, 'max')
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator_mean.size
+    assert expected_zone_size == actual_indicator_size
+    actual_indicator_size = indicator_max.size
+    assert expected_zone_size == actual_indicator_size
+
 
 def test_built_land_with_high_lst():
     sample_zones = IDN_JAKARTA_TILED_ZONES
@@ -113,6 +118,9 @@ def test_vegetation_water_change_gain_loss_ratio():
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
-def test_who_air_pollutant_exceedance_days()
-    indicator = who_air_pollutant_exceedance_days(ZONES, ['so2'])
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_who_air_pollutant_exceedance_days():
+    indicator = who_air_pollutant_exceedance_days(IDN_JAKARTA_TILED_ZONES, ['so2'])
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
     assert indicator <= 365

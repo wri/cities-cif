@@ -1,48 +1,7 @@
 import geopandas as gpd
 import numpy as np
-from city_metrix.layers import Layer, Cams
+from city_metrix.layers import Layer, Cams, CamsSpecies
 
-SPECIES_INFO = {
-    'no2': {
-        'name': 'nitrogen dioxide',
-        'molar_mass': 46.0055,
-        'who_threshold': 25.0,
-        'eac4_varname': 'no2'
-    },
-    'so2': {
-        'name': 'sulfur dioxide',
-        'molar_mass': 64.066,
-        'who_threshold': 40.0,
-        'eac4_varname': 'so2'
-    },
-    'o3': {    # Ozone thresholds are based on 8-hour average, not 24-hour.
-        'name': 'ozone',
-        'molar_mass': 48.0,
-        'who_threshold': 100.0,
-        'eac4_varname': 'go3'
-    },
-    'pm25': {
-        'name': 'fine particulate matter',
-        'who_threshold': 15.0,
-        'eac4_varname': 'pm2p5'
-    },
-    'pm2p5': {
-        'name': 'fine particulate matter',
-        'who_threshold': 15.0,
-        'eac4_varname': 'pm2p5'
-    },
-    'pm10': {
-        'name': 'coarse particulate matter',
-        'who_threshold': 45.0,
-        'eac4_varname': 'pm10'
-    },
-    'co': {
-        'name': 'carbon monoxide',
-        'molar_mass': 28.01,
-        'who_threshold': 4000.0,
-        'eac4_varname': 'co'
-    }
-}
 
 def max_n_hr(arr, n):
     # Returns highest mean concentration over an n-hr period for a given array
@@ -62,12 +21,12 @@ def who_air_pollutant_exceedance_days(zones, species=None):
     # returns GeoSeries with column with number of days any species exceeds WHO guideline
     if species is not None:
         if not isinstance(species, (list, tuple, set)) or len(species) == 0 or sum([not i in ['co', 'no2', 'o3', 'so2', 'pm2p5', 'pm10'] for i in species]) > 0:
-            raise Except('Argument species must be list-like containing any non-empty subset of \'co\', \'no2\', \'o3\', \'so2\', \'pm2p5\', \'pm10\')
+            raise Exception('Argument species must be list-like containing any non-empty subset of \'co\', \'no2\', \'o3\', \'so2\', \'pm2p5\', \'pm10\'')
     zones_copy = zones.copy(deep=True)
     result = []
     for rownum in range(len(zones)):
         zone = zones.iloc[[rownum]]
-        cams_data = cams_layer.get_data(zone.total_bounds)
+        cams_data = Cams(species=species).get_data(zone.total_bounds)
         if species is None:
             species = ['co', 'no2', 'o3', 'so2', 'pm2p5', 'pm10']
         excdays = []
@@ -86,4 +45,3 @@ def who_air_pollutant_exceedance_days(zones, species=None):
         result.append(excdays_np.any(axis=0).sum())
     zones_copy['exceedancedays_{0}'.format('-'.join(species))] = result
     return zones_copy
-

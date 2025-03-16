@@ -22,7 +22,7 @@ from .nasa_dem import NasaDEM
 from .era_5_hottest_day import Era5HottestDay
 from .impervious_surface import ImperviousSurface
 from .glad_lulc import LandCoverGlad, LandCoverSimplifiedGlad, LandCoverHabitatGlad, LandCoverHabitatChangeGlad
-from .cams import Cams
+from .cams import Cams, CamsSpecies
 from .vegetation_water_map import VegetationWaterMap
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
 from .high_slope import HighSlope
