@@ -8,14 +8,6 @@ from .high_land_surface_temperature import HighLandSurfaceTemperature
 from .smart_surface_lulc import SmartSurfaceLULC
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .urban_land_use import UrbanLandUse
-from .natural_areas import NaturalAreas
-from .landsat_collection_2 import LandsatCollection2
-from .sentinel_2_level_2 import Sentinel2Level2
-from .world_pop import WorldPop, WorldPopClass
-from .built_up_height import BuiltUpHeight
-from .average_net_building_height import AverageNetBuildingHeight
-from .open_buildings import OpenBuildings
-from .tree_canopy_height import TreeCanopyHeight
 from .acag_pm2p5 import AcagPM2p5
 from .albedo import Albedo
 from .alos_dsm import AlosDSM
@@ -33,7 +25,7 @@ from .land_surface_temperature import LandSurfaceTemperature
 from .landsat_collection_2 import LandsatCollection2
 from .layer import Layer, LayerGroupBy
 from .nasa_dem import NasaDEM
-from .natural_areas import 
+from .natural_areas import NaturalAreas
 from .nex_gddp_cmip6 import NexGddpCmip6
 from .ndvi_sentinel2_gee import NdviSentinel2
 from .open_buildings import OpenBuildings
