@@ -9,7 +9,7 @@ from .layer_geometry import GeoExtent
 
 class OpenStreetMapClass(Enum):
     # ALL includes all 29 primary features https://wiki.openstreetmap.org/wiki/Map_features
-    ALL = {'aerialway': True, 'aeroway': True, 'amenity': True, 'barrier': True, 'boundary': True, 
+    ALL = {'aerialway': True, 'aeroway': True, 'amenity': True, 'barrier': True, 'boundary': True,
            'building': True, 'craft': True, 'emergency': True, 'geological': True, 'healthcare': True,
            'highway': True, 'historic': True, 'landuse': True, 'leisure': True, 'man_made': True,
            'military': True, 'natural': True, 'office': True, 'place': True, 'power': True,
@@ -23,7 +23,7 @@ class OpenStreetMapClass(Enum):
              'natural': ['water'],
              'waterway': True}
     ROAD = {'highway': ["residential", "service", "unclassified", "tertiary", "secondary", "primary", "turning_circle", "living_street", "trunk", "motorway", "motorway_link", "trunk_link",
-                         "primary_link", "secondary_link", "tertiary_link", "motorway_junction", "turning_loop", "road", "mini_roundabout", "passing_place", "busway"]}
+                        "primary_link", "secondary_link", "tertiary_link", "motorway_junction", "turning_loop", "road", "mini_roundabout", "passing_place", "busway"]}
     BUILDING = {'building': True}
     PARKING = {'amenity': ['parking'],
                'parking': True}
@@ -41,27 +41,27 @@ class OpenStreetMapClass(Enum):
                 'landuse': ['industrial', 'quarry'],
                 'industrial': True}
     TRANSPORTATION_LOGISTICS = {'building': ['warehouse'],
-                               'landuse': ['harbour'],
-                               'amenity': ['bus_station', 'ferry_terminal'],
-                               'railway': ['station'],
-                               'aeroway': ['terminal'],
-                               'industrial': ['port'],
-                               'cargo': True}
+                                'landuse': ['harbour'],
+                                'amenity': ['bus_station', 'ferry_terminal'],
+                                'railway': ['station'],
+                                'aeroway': ['terminal'],
+                                'industrial': ['port'],
+                                'cargo': True}
     EDUCATION = {'building': ['college', 'school', 'university'],
                  'landuse': ['education'],
                  'amenity': ['college', 'kindergarten', 'music_school', 'prep_school', 'research_institute', 'school', 'university'],
                  'school': True}
     PRIMARY_SECONDARY_EDUCATION = {'building': ['school',],
-               'amenity': ['school', 'kindergarten'],
-               'school': True}
+                                   'amenity': ['school', 'kindergarten'],
+                                   'school': True}
     HIGHER_EDUCATION = {'amenity': ['college', 'university', 'research_institute'],
                         'building': ['college', 'university']}
-    TRANSIT_STOP = {'amenity':['ferry_terminal'],
-                    'railway':['stop', 'platform', 'halt', 'tram_stop', 'subway_entrance', 'station'],
-                    'highway':['bus_stop', 'platform'],
+    TRANSIT_STOP = {'amenity': ['ferry_terminal'],
+                    'railway': ['stop', 'platform', 'halt', 'tram_stop', 'subway_entrance', 'station'],
+                    'highway': ['bus_stop', 'platform'],
                     'public_transport': ['platform', 'stop_position', 'stop_area'],
-                    'station':['subway'],
-                    'aerialway':['station']}
+                    'station': ['subway'],
+                    'aerialway': ['station']}
 
 
 class OpenStreetMap(Layer):
@@ -70,7 +70,7 @@ class OpenStreetMap(Layer):
         self.osm_class = osm_class
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
-        #Note: spatial_resolution and resampling_method arguments are ignored.
+        # Note: spatial_resolution and resampling_method arguments are ignored.
 
         min_lon, min_lat, max_lon, max_lat = bbox.as_geographic_bbox().bounds
         utm_crs = bbox.as_utm_bbox().crs
