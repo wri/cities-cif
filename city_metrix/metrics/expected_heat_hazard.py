@@ -73,11 +73,16 @@ def summer_percentile(latlon, varname, pctl):
     dataset = ee.ImageCollection("ECMWF/ERA5/DAILY")
     era_varname = VARIABLES[varname]['era_varname']
     gee_geom = ee.Geometry.Point((latlon[1], latlon[0]))
-    try:
-        alldays = VARIABLES[varname]['era_transform'](np.array([i[4] for i in dataset.select(era_varname).filter(ee.Filter.date(f'{HIST_START}-01-01', f'{HIST_END + 1}-01-01')).getRegion(gee_geom, 27830, 'epsg:4326').getInfo()[1:]]))
-        success = True
-    except:
-        pass
+    success = False
+    retries = 0
+    while not success:
+        try:
+            alldays = VARIABLES[varname]['era_transform'](np.array([i[4] for i in dataset.select(era_varname).filter(ee.Filter.date(f'{HIST_START}-01-01', f'{HIST_END + 1}-01-01')).getRegion(gee_geom, 27830, 'epsg:4326').getInfo()[1:]]))
+            success = True
+        except:
+            retries += 1
+            if retries >= 10:
+                raise Except('Too many fetch-ERA5 retries')
     alldays_noleap = removeLeapDays(alldays, HIST_START, HIST_END, southern_hem)
     summer_only = summeronly(alldays_noleap, southern_hem)     
     return np.percentile(summer_only, pctl)

@@ -128,12 +128,15 @@ def hurs_era(latlon, start_year=HIST_START, end_year=HIST_END, yearshift=False, 
         gee_geom = ee.Geometry.Point((latlon[1], latlon[0]))
         data_vars = dataset.select(varname).filter(ee.Filter.date('{0}-01-01'.format(start_year), '{0}-01-01'.format(end_year+ 1)))
         success = False
+        retries = 0
         while not success:
             try:
-                d = data_vars.getRegion(gee_geom, 2500, 'epsg:4326').getInfo()
+                d = data_vars.getRegion(gee_geom, DEFAULT_SPATIAL_RESOLUTION, 'epsg:4326').getInfo()
                 success = True
             except:
-                print('\nRetrying fetch ERA5')
+                retries += 1
+                if retries >= 10:
+                    raise Except('Too many fetch-ERA5 retries')
         result = [i[4] for i in d[1:]]
         return np.array(result)
     era_dewpoint = get_eradata('dewpoint_2m_temperature')-273.15
@@ -156,13 +159,21 @@ def get_var(varname, model, latlon, start_year=HIST_START, end_year=HIST_END, ye
         dataset = ee.ImageCollection('NASA/GDDP-CMIP6').filter(ee.Filter.eq('model', model)).filter(ee.Filter.eq('scenario', [scenario, 'historical'][int(end_year<2015)]))
     gee_geom = ee.Geometry.Point((latlon[1], latlon[0]))
     if not yearshift:
-        data_vars = dataset.select([varname, VARIABLES[varname]['era_varname']][int(model=='ERA5')]).filter(ee.Filter.date('{0}-01-01'.format(start_year), '{0}-01-01'.format(end_year+ 1)))
-        result = [i[4] for i in data_vars.getRegion(gee_geom, 2500, 'epsg:4326').getInfo()[1:]]
-        result = removeLeapDays(np.array(result), start_year, end_year, False)
-    else:
-        data_vars = dataset.select([varname, VARIABLES[varname]['era_varname']][int(model=='ERA5')]).filter(ee.Filter.date('{0}-07-01'.format(start_year-1), '{0}-07-01'.format(end_year)))
-        result = [i[4] for i in data_vars.getRegion(gee_geom, 2500, 'epsg:4326').getInfo()[1:]]
-        result = removeLeapDays(np.array(result), start_year, end_year, True)
+        success = False
+        retries = 0
+        while not success:
+            try:
+                if not yearshift:
+                    data_vars = dataset.select([varname, VARIABLES[varname]['era_varname']][int(model=='ERA5')]).filter(ee.Filter.date('{0}-01-01'.format(start_year), '{0}-01-01'.format(end_year+ 1)))
+                else:
+                    data_vars = dataset.select([varname, VARIABLES[varname]['era_varname']][int(model=='ERA5')]).filter(ee.Filter.date('{0}-07-01'.format(start_year-1), '{0}-07-01'.format(end_year)))
+                success = True
+            except:
+                retries += 1
+                if retries >= 10:
+                    raise Except('Too many fetch-ERA5 retries')
+        result = [i[4] for i in data_vars.getRegion(gee_geom, DEFAULT_SPATIAL_RESOLUTION, 'epsg:4326').getInfo()[1:]]
+        result = removeLeapDays(np.array(result), start_year, end_year, yearshift)
     return VARIABLES[varname][['nex_transform', 'era_transform'][int(model=='ERA5')]](result)
 
 def get_rmsd(d1, d2):
