@@ -1,3 +1,4 @@
+from .layer import Layer, LayerGroupBy
 from .albedo import Albedo
 from .ndvi_sentinel2_gee import NdviSentinel2
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
@@ -8,7 +9,6 @@ from .smart_surface_lulc import SmartSurfaceLULC
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .urban_land_use import UrbanLandUse
 from .natural_areas import NaturalAreas
-from .layer import Layer, LayerGroupBy
 from .landsat_collection_2 import LandsatCollection2
 from .sentinel_2_level_2 import Sentinel2Level2
 from .world_pop import WorldPop, WorldPopClass
