@@ -145,6 +145,13 @@ def test_natural_areas():
     utm_bbox_data = NaturalAreas().get_data(BBOX_AS_UTM)
     assert data.equals(utm_bbox_data)
 
+def test_nexgddpcmip6():
+    data = NexGddpCmip6().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.crs) == 'utm'
+    utm_bbox_data = EsaWorldCover(land_cover_class=land_cover_class).get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
+
 def test_ndvi_sentinel2():
     data = NdviSentinel2(year=2023).get_data(BBOX)
     assert np.size(data) > 0
