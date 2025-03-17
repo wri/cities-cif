@@ -32,6 +32,8 @@ class OpenStreetMapClass(Enum):
                 'amenity': ['animal_boarding', 'animal_shelter', 'bank', 'biergarten', 'cafe', 'casino', 'childcare', 'fast_food', 'food_court', 'mortuary', 'nightclub', 'restaurant', 'studio', 'theatre', 'veterinary']}
     HEALTHCARE_SOCIAL = {'building': ['clinic', 'hospital'],
                          'amenity': ['dentist', 'doctors', 'hospital', 'nursing_home', 'pharmacy', 'social_facility']}
+    MEDICAL = {'building': ['clinic', 'hospital'],
+                         'amenity': ['doctors', 'hospital']}
     AGRICULTURE = {'building': ['poultry_house'],
                    'landuse': ['animal_keeping', 'aquaculture', 'farm', 'farmyard', 'greenhouse_horticulture', 'orchard', 'paddy', 'plant_nursury', 'vinyard'],
                    'amenity': ['animal_breeding']}
