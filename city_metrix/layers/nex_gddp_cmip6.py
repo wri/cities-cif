@@ -371,18 +371,19 @@ class NexGddpCmip6(Layer):
     temps are converted to deg-C; pr converted to mm/day
     """
 
-    def __init__(self, varname='tasmax', start_year=2040, end_year=2049, scenario='ssp245', **kwargs):
+    def __init__(self, varname='tasmax', start_year=2040, end_year=2049, scenario='ssp245', num_models=3, **kwargs):
         super().__init__(**kwargs)
         self.varname = varname
         self.start_year = start_year
         self.end_year = end_year
         self.scenario = scenario
+        self.num_models = num_models
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-        latlon = (bbox.centroid.y, bbox.centroid.x)
-        best_models, hist_mods, hist_obs = get_best_models('tasmax', latlon, HIST_START, HIST_END, 3)
+        latlon = (bbox.as_geographic_bbox().centroid.y, bbox.as_geographic_bbox().centroid.x)
+        best_models, hist_mods, hist_obs = get_best_models('tasmax', latlon, HIST_START, HIST_END, self.num_models)
         calibration_fxns = {}
         for model in best_models:
             o_quarters = quarters(hist_obs, HIST_START, HIST_END)
