@@ -33,7 +33,7 @@ class OpenStreetMapClass(Enum):
     HEALTHCARE_SOCIAL = {'building': ['clinic', 'hospital'],
                          'amenity': ['dentist', 'doctors', 'hospital', 'nursing_home', 'pharmacy', 'social_facility']}
     MEDICAL = {'building': ['clinic', 'hospital'],
-                         'amenity': ['doctors', 'hospital']}
+               'amenity': ['doctors', 'hospital']}
     AGRICULTURE = {'building': ['poultry_house'],
                    'landuse': ['animal_keeping', 'aquaculture', 'farm', 'farmyard', 'greenhouse_horticulture', 'orchard', 'paddy', 'plant_nursury', 'vinyard'],
                    'amenity': ['animal_breeding']}
