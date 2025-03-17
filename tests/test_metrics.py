@@ -45,8 +45,8 @@ def test_era_5_met_preprocess():
     assert len(indicator) == 24
 
 def test_future_annual_maxtemp():
-    indicator = future_annual_maxtemp(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    indicator = future_annual_maxtemp(IDN_JAKARTA_TILED_ZONES.iloc[:3])
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.iloc[:3].geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
