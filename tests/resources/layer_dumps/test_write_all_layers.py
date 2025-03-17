@@ -62,6 +62,14 @@ def test_write_esa_world_cover(target_folder, sample_aoi):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_fractional_vegetation(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'fractional_vegetation.tif')
+    target_resolution = get_test_resolution(FractionalVegetation())
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    FractionalVegetation().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_height_above_nearest_drainage(target_folder, sample_aoi):
     file_path = prep_output_path(target_folder, 'height_above_nearest_drainage.tif')
     target_resolution = get_test_resolution(HeightAboveNearestDrainage())
