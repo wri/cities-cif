@@ -8,20 +8,24 @@ from city_metrix.layers.layer import WGS_CRS
 from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, _get_degree_offsets_for_meter_units, \
     get_haversine_distance
 from tests.conftest import USA_OR_PORTLAND_TILE_GDF
-from tests.resources.bbox_constants import EXTENT_SMALL_CITY_WGS84
+from tests.resources.bbox_constants import EXTENT_SMALL_CITY_WGS84, EXTENT_SMALL_CITY_UTM
 from tests.tools.spatial_tools import get_rounded_geometry
 
 USA_OR_PORTLAND_LATLON_BBOX = GeoExtent(USA_OR_PORTLAND_TILE_GDF.total_bounds, USA_OR_PORTLAND_TILE_GDF.crs.srs)
 
 def test_city_extent():
-    city_geo_extent = GeoExtent(bbox='ARG-Buenos_Aires')
+    city_geo_extent = EXTENT_SMALL_CITY_WGS84
     geom = city_geo_extent.centroid
     rounded_boundary_centroid = get_rounded_geometry(geom, 1)
     assert city_geo_extent.projection_name == 'geographic'
-    assert rounded_boundary_centroid == 'POINT (-58.5 -34.5)'
+    assert rounded_boundary_centroid == 'POINT (-48.6 -27.6)'
 
-def test_nasa_dem_city_id():
+def test_nasa_dem_city_id_wgs84():
     data = NasaDEM().get_data(EXTENT_SMALL_CITY_WGS84)
+    assert np.size(data) > 0
+
+def test_nasa_dem_city_id_utm():
+    data = NasaDEM().get_data(EXTENT_SMALL_CITY_UTM)
     assert np.size(data) > 0
 
 def test_centroid_property():

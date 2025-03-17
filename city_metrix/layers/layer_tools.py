@@ -6,10 +6,11 @@ from pyproj import CRS
 
 from city_metrix.constants import WGS_EPSG_CODE
 
-CITIES_DATA_BASE_URL = "https://cities-data-api.wri.org"
+# CITIES_DATA_API_URL = "dev.cities-data-api.wri.org"
+CITIES_DATA_API_URL = "cities-data-api.wri.org"
 
 def get_city(city_id: str):
-    query = f"{CITIES_DATA_BASE_URL}/cities/{city_id}"
+    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
     city = requests.get(query)
     if city.status_code in range(200, 206):
         return city.json()
@@ -17,7 +18,8 @@ def get_city(city_id: str):
 
 
 def get_city_boundary(city_id: str, admin_level: str):
-    city_boundary = requests.get(f"{CITIES_DATA_BASE_URL}/cities/{city_id}/{admin_level}/geojson")
+    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/{admin_level}/geojson"
+    city_boundary = requests.get(query)
     if city_boundary.status_code in range(200, 206):
         return city_boundary.json()
     raise Exception("City boundary not found")
