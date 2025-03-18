@@ -27,9 +27,9 @@ class GeoExtent():
             self.bbox = bbox
         else:
             city_json = bbox
-            city_id, aoi = _parse_city_aoi_json(city_json)
+            city_id, aoi_id = _parse_city_aoi_json(city_json)
             city = get_city(city_id)
-            admin_level = city.get(aoi, None)
+            admin_level = city.get(aoi_id)
             if not admin_level:
                 raise ValueError(f"City metadata for {city_id} does not have geometry for admin_level: 'city_admin_level'")
             city_boundary = get_city_boundary(city_id, admin_level)
@@ -107,8 +107,8 @@ def _parse_city_aoi_json(json_str):
     import json
     data = json.loads(json_str)
     city_id = data['city_id']
-    aoi = data['area_of_interest']
-    return city_id, aoi
+    aoi_id = data['aoi_id']
+    return city_id, aoi_id
 
 def _buffer_coordinates(minx, miny, maxx, maxy):
     buffer_distance_m = 10
