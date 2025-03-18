@@ -29,7 +29,7 @@ class GeoExtent():
             city_json = bbox
             city_id, aoi_id = _parse_city_aoi_json(city_json)
             city = get_city(city_id)
-            admin_level = city.get(aoi_id)
+            admin_level = city.get(aoi_id, None)
             if not admin_level:
                 raise ValueError(f"City metadata for {city_id} does not have geometry for admin_level: 'city_admin_level'")
             city_boundary = get_city_boundary(city_id, admin_level)
