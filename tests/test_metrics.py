@@ -18,13 +18,6 @@ def test_built_land_with_low_surface_reflectivity():
     assert expected_zone_size == actual_indicator_size
 
 
-def test_percent_built_area_without_tree_cover():
-    indicator = percent_built_area_without_tree_cover(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
-    actual_indicator_size = indicator.size
-    assert expected_zone_size == actual_indicator_size
-
-
 def test_canopy_area_per_resident():
     indicator = canopy_area_per_resident(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
@@ -75,6 +68,13 @@ def test_natural_areas():
 
 def test_percent_area_impervious():
     indicator = percent_area_impervious(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
+
+def test_percent_built_area_without_tree_cover():
+    indicator = percent_built_area_without_tree_cover(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
