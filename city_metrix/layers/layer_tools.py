@@ -6,6 +6,7 @@ from pyproj import CRS
 
 from city_metrix.constants import WGS_EPSG_CODE
 
+#TODO In near-term, the cities-dat-api must be replaced by dev.cities-data-api after the dev.. API stabilizes.
 # CITIES_DATA_API_URL = "dev.cities-data-api.wri.org"
 CITIES_DATA_API_URL = "cities-data-api.wri.org"
 
@@ -25,9 +26,8 @@ def get_city_boundary(city_id: str, admin_level: str):
     raise Exception("City boundary not found")
 
 
-def get_geojson_df_bounds(geojson: str):
+def get_geojson_geometry_bounds(geojson: str):
     gdf = gpd.GeoDataFrame.from_features(geojson)
-    gdf.set_crs(epsg=WGS_EPSG_CODE, inplace=True)
     return gdf.total_bounds
 
 

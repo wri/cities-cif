@@ -9,9 +9,9 @@ from typing import Union
 
 from shapely.geometry import point
 
-from city_metrix.constants import WGS_CRS
+from city_metrix.constants import WGS_CRS, WGS_EPSG_CODE
 from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance, get_city, get_city_boundary, \
-    get_geojson_df_bounds
+    get_geojson_geometry_bounds
 
 MAX_SIDE_LENGTH_METERS = 50000 # This values should cover most situations
 MAX_SIDE_LENGTH_DEGREES = 0.5 # Given that for latitude, 50000m * (1deg/111000m)
@@ -35,7 +35,7 @@ class GeoExtent():
             if not admin_level:
                 raise ValueError(f"City metadata for {self.city_id} does not have geometry for admin_level: 'city_admin_level'")
             city_boundary = get_city_boundary(city_id, admin_level)
-            bbox = get_geojson_df_bounds(city_boundary)
+            bbox = get_geojson_geometry_bounds(city_boundary)
             self.city_id = city_id
             self.admin_level = admin_level
             if get_projection_name(crs) == 'geographic':
