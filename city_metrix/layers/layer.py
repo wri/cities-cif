@@ -3,7 +3,9 @@ from abc import abstractmethod
 from typing import Union
 from uuid import uuid4
 
+import xee
 # This osgeo import is essential for proper functioning. Do not remove.
+from osgeo import gdal
 
 import ee
 import boto3
