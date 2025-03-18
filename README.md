@@ -50,7 +50,7 @@ To run the module,
      
 ### Interactive development
 
-For most people working in a notebook or IDE the script should walk you thourgh an interactive authentication process. You will just need to be logged in to your Google account that has access to GEE in your browser.
+For most people working in a notebook or IDE the script should walk you through an interactive authentication process. You will just need to be logged in to your Google account that has access to GEE in your browser.
 
 ### Programatic access
 
@@ -67,6 +67,10 @@ For example, you could set the following in your `~/.zshrc` file:
 export GOOGLE_APPLICATION_USER=developers@citiesindicators.iam.gserviceaccount.com
 export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/file
 ```
+
+### Execution via scripts
+Individual layers and indicators can be downloaded for specified cities using the cities-cif-portal codebase at https://github.com/wri/cities-cif-portal 
+
 
 ## How to contribute
 

@@ -31,7 +31,7 @@ class UrbanLandUse(Layer):
 
         ulu = ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1")
 
-        # ImageCollection didn't cover the globe
+        # ImageCollection didn't cover the global
         ee_rectangle = bbox.to_ee_rectangle()
         if ulu.filterBounds(ee_rectangle['ee_geometry']).size().getInfo() == 0:
             ulu_ic = ee.ImageCollection(ee.Image
@@ -55,6 +55,6 @@ class UrbanLandUse(Layer):
         ).lulc
 
         if self.ulu_class:
-            data = data.where(data == self.ulu_class, 1, np.nan)
+            data = data.where(data == self.ulu_class, np.nan)
 
         return data
