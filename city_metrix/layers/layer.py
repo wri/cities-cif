@@ -142,6 +142,9 @@ class LayerGroupBy:
 
     def sum(self):
         return self._zonal_stats("sum")
+    
+    def max(self):
+        return self._zonal_stats("max")
 
     def _zonal_stats(self, stats_func):
         if self.zones.crs == WGS_CRS:
@@ -280,6 +283,8 @@ def _aggregate_stats(df, stats_func):
         return (df["mean"] * df["count"]).sum() / df["count"].sum()
     elif stats_func == "sum":
         return df["sum"].sum()
+    elif stats_func == "max":
+        return df["max"].max()
 
 
 def get_stats_funcs(stats_func):

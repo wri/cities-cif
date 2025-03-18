@@ -25,9 +25,10 @@ class CamsSpecies(Enum):
     O3 = {
         'name': 'ozone',
         'molar_mass': 48.0,
-        'who_threshold': 100.0, # Ozone thresholds are based on 8-hour average, not 24-hour.
+        # Ozone thresholds are based on 8-hour average, not 24-hour.
+        'who_threshold': 100.0,
         'eac4_varname': 'go3'
-    } 
+    }
     PM25 = {
         'name': 'fine particulate matter',
         'who_threshold': 15.0,
@@ -92,12 +93,14 @@ class Cams(Layer):
         edition_1 = xr.open_dataset(
             target_file,
             engine="cfgrib",
+            decode_timedelta=False,
             backend_kwargs={"filter_by_keys": {"edition": 1}}).drop_vars(["number", "surface"],
                                                                          errors="ignore"
                                                                          )
         edition_2 = xr.open_dataset(
             target_file,
             engine="cfgrib",
+            decode_timedelta=False,
             backend_kwargs={"filter_by_keys": {"edition": 2}}).drop_vars(["hybrid"],
                                                                          errors="ignore"
                                                                          )
@@ -127,11 +130,19 @@ class Cams(Layer):
             os.remove(file)
 
         # Select the nearest data point based on latitude and longitude
-        center_lon = (min_lon + max_lon) / 2
-        center_lat = (min_lat + max_lat) / 2
-        data = data.sel(latitude=center_lat,
-                        longitude=center_lon,
-                        method="nearest")
+        # center_lon = (min_lon + max_lon) / 2
+        # center_lat = (min_lat + max_lat) / 2
+        # data = data.sel(latitude=center_lat,
+        #                 longitude=center_lon,
+        #                 method="nearest")
+
+        # Rename and set x, y as spatial dims
+        data = data.expand_dims(x=[data.longitude.item()],
+                                y=[data.latitude.item()])
+        data = data.drop_vars(['longitude', 'latitude']).squeeze(['longitude', 'latitude'])
+        wgs_crs = bbox.as_geographic_bbox().crs
+        data = data.rio.write_crs(wgs_crs)
+        data.rio.set_spatial_dims(x_dim='x', y_dim='y', inplace=True)
 
         if self.species:
             data = data.sel(variable=[var.value['eac4_varname'] for var in self.species])
