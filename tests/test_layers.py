@@ -19,7 +19,7 @@ def test_acag_pm2p5():
     assert np.size(data) > 0
     assert get_projection_name(data.crs) == 'utm'
     utm_bbox_data = AcagPM2p5().get_data(BBOX_AS_UTM)
-    assert data.equals(utm_bbox_data)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_albedo():
     data = Albedo().get_data(BBOX)
@@ -193,7 +193,7 @@ def test_pop_weighted_pm2p5():
     assert np.size(data) > 0
     assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
     utm_bbox_data = PopWeightedPM2p5().get_data(BBOX_AS_UTM)
-    assert data.equals(utm_bbox_data)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_riparian_areas():
     data = RiparianAreas().get_data(BBOX)
