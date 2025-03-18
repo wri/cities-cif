@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+
 from city_metrix.layers import *
 from city_metrix.layers.layer_tools import get_projection_name
 from tests.conftest import EXECUTE_IGNORED_TESTS
@@ -12,6 +13,13 @@ from tests.tools.spatial_tools import get_rounded_gdf_geometry
 COUNTRY_CODE_FOR_BBOX = 'USA'
 BBOX = BBOX_USA_OR_PORTLAND_2
 BBOX_AS_UTM = BBOX.as_utm_bbox()
+
+def test_acag_pm2p5():
+    data = AcagPM2p5().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.crs) == 'utm'
+    utm_bbox_data = AcagPM2p5().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
 
 def test_albedo():
     data = Albedo().get_data(BBOX)
@@ -180,6 +188,13 @@ def test_protected_areas():
     utm_bbox_data = ProtectedAreas().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
+def test_pop_weighted_pm2p5():
+    data = PopWeightedPM2p5().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
+    utm_bbox_data = PopWeightedPM2p5().get_data(BBOX_AS_UTM)
+    assert data.equals(utm_bbox_data)
+
 def test_riparian_areas():
     data = RiparianAreas().get_data(BBOX)
     assert np.size(data) > 0
@@ -206,7 +221,7 @@ def test_smart_surface_lulc():
 def test_tree_canopy_height():
     data = TreeCanopyHeight().get_data(BBOX)
     assert np.size(data) > 0
-    assert get_projection_name(data.crs) == 'utm'
+    assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
     utm_bbox_data = TreeCanopyHeight().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
