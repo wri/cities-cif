@@ -24,6 +24,8 @@ class GeoExtent():
             self.geo_extent_type = 'geometry'
 
         if self.geo_extent_type == 'geometry':
+            self.city_id = None
+            self.admin_level = None
             self.bbox = bbox
         else:
             city_json = bbox
@@ -31,9 +33,11 @@ class GeoExtent():
             city = get_city(city_id)
             admin_level = city.get(aoi_id, None)
             if not admin_level:
-                raise ValueError(f"City metadata for {city_id} does not have geometry for admin_level: 'city_admin_level'")
+                raise ValueError(f"City metadata for {self.city_id} does not have geometry for admin_level: 'city_admin_level'")
             city_boundary = get_city_boundary(city_id, admin_level)
             bbox = get_geojson_df_bounds(city_boundary)
+            self.city_id = city_id
+            self.admin_level = admin_level
             if get_projection_name(crs) == 'geographic':
                 self.bbox = bbox
             else:
