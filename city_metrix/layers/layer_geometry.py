@@ -1,17 +1,19 @@
 import math
-
+import os
 import ee
+import rioxarray
 import shapely
 import utm
 import shapely.geometry as geometry
 import geopandas as gpd
 from typing import Union
 
+from pyproj import CRS
 from shapely.geometry import point
 
-from city_metrix.constants import WGS_CRS, WGS_EPSG_CODE
+from city_metrix.constants import WGS_CRS
 from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance, get_city, get_city_boundary, \
-    get_geojson_geometry_bounds
+    get_geojson_geometry_bounds, get_cached_layer_name, get_s3_file_key, get_cities_data_s3_client
 
 MAX_SIDE_LENGTH_METERS = 50000 # This values should cover most situations
 MAX_SIDE_LENGTH_DEGREES = 0.5 # Given that for latitude, 50000m * (1deg/111000m)
@@ -344,3 +346,52 @@ def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
     y_offset = get_haversine_distance(bbox.min_x, mid_y, bbox.min_x, mid_y + tile_side_degrees)
 
     return x_offset, y_offset
+
+
+def retrieve_cached_data(geo_extent: GeoExtent, layer_name:str, year: int, file_format:str):
+    # https://nasa-openscapes.github.io/2021-Cloud-Workshop-AGU/how-tos/Earthdata_Cloud__Single_File__Direct_S3_Access_COG_Example.html
+
+    AWS_BUCKET = os.getenv("AWS_BUCKET")
+    s3_client = get_cities_data_s3_client()
+
+    # Build S3 url
+    city_id = geo_extent.city_id
+    admin_level = geo_extent.admin_level
+    file_name = get_cached_layer_name(city_id, admin_level, layer_name, year, file_format)
+    file_key = get_s3_file_key(city_id, file_format, file_name)
+
+    if not check_s3file_exists(s3_client, AWS_BUCKET, file_key):
+        return None
+    else:
+        # Retrieve from S3
+        s3_url = f"s3://{AWS_BUCKET}/{file_key}"
+        data_array = rioxarray.open_rasterio(s3_url)
+
+        da = data_array.squeeze('band', drop=True)
+
+        # Rename
+        da_name = da.long_name
+        da.rename(da_name)
+        da.name = da_name
+
+        # Add crs attribute
+        if 'crs' not in da.attrs: # and 'spatial_ref' in da.attrs:
+            crs_wkt = da.spatial_ref.crs_wkt
+            epsg_code = CRS.from_wkt(crs_wkt).to_epsg()
+            crs = f'EPSG:{epsg_code}'
+            da = da.assign_attrs(crs=crs)
+
+        # attributes_to_drop = ["AREA_OR_POINT","add_offset","long_name", "scale_factor", "time"]
+        # for attr in attributes_to_drop:
+        #     if attr in da.attrs:
+        #         del da.attrs[attr]
+
+        return da
+
+
+def check_s3file_exists(S3_CLIENT, bucket_name, file_key):
+    response = S3_CLIENT.list_objects_v2(Bucket=bucket_name, Prefix=file_key)
+    for obj in response.get('Contents', []):
+        if obj['Key'] == file_key:
+            return True
+    return False

@@ -1,4 +1,6 @@
 import math
+
+import boto3
 import requests
 import geopandas as gpd
 from typing import Union
@@ -24,7 +26,6 @@ def get_city_boundary(city_id: str, admin_level: str):
     if city_boundary.status_code in range(200, 206):
         return city_boundary.json()
     raise Exception("City boundary not found")
-
 
 def get_geojson_geometry_bounds(geojson: str):
     gdf = gpd.GeoDataFrame.from_features(geojson)
@@ -85,3 +86,13 @@ def get_haversine_distance(lon1, lat1, lon2, lat2):
 
     return distance
 
+def get_cities_data_s3_client():
+    session = boto3.Session(profile_name='cities-data-dev')
+    s3_client = session.client('s3')
+    return s3_client
+
+def get_cached_layer_name(city_id, admin_level, layer_name, year, file_format):
+    return f"{city_id}__{admin_level}__{layer_name}__{year}.{file_format}"
+
+def get_s3_file_key(city_id, file_format, file_name):
+    return f"cid/dev/{city_id}/{file_format}/{file_name}"

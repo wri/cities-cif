@@ -4,7 +4,7 @@ import xarray as xr
 import ee
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_data
 
 
 class EsaWorldCoverClass(Enum):
@@ -44,6 +44,10 @@ class EsaWorldCover(Layer):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        retrieved_cached_data = retrieve_cached_data(bbox, "esa_world_cover_2020", self.year, 'tif')
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         if self.year == 2020:
             esa_data_ic = ee.ImageCollection("ESA/WorldCover/v100")

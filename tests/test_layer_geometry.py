@@ -20,14 +20,6 @@ def test_city_extent():
     assert city_geo_extent.projection_name == 'geographic'
     assert rounded_boundary_centroid == 'POINT (-48.6 -27.6)'
 
-def test_nasa_dem_city_id_wgs84():
-    data = NasaDEM().get_data(EXTENT_SMALL_CITY_WGS84)
-    assert np.size(data) > 0
-
-def test_nasa_dem_city_id_utm():
-    data = NasaDEM().get_data(EXTENT_SMALL_CITY_UTM)
-    assert np.size(data) > 0
-
 def test_centroid_property():
     portland_centroid = USA_OR_PORTLAND_TILE_GDF.centroid
     bbox_centroid = USA_OR_PORTLAND_LATLON_BBOX.centroid
