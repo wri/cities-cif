@@ -33,6 +33,8 @@ class EsaWorldCover(Layer):
     STAC_CATALOG_URI = "https://services.terrascope.be/stac/"
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
+    LAYER_ID = "esa_world_cover_2020"
+    OUTPUT_FILE_FORMAT = 'tif'
 
     def __init__(self, land_cover_class=None, year=2020, **kwargs):
         super().__init__(**kwargs)
@@ -40,13 +42,13 @@ class EsaWorldCover(Layer):
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, force_cache_refresh=False):
+                 resampling_method=None, allow_cached_data_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        retrieved_cached_data = retrieve_cached_data(bbox, "esa_world_cover_2020", self.year, 'tif',
-                                                     force_cache_refresh)
+        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
+                                                     ,allow_cached_data_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

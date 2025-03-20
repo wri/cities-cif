@@ -52,12 +52,11 @@ To run the module,
 
 For most people working in a notebook or IDE the script should walk you through an interactive authentication process. You will just need to be logged in to your Google account that has access to GEE in your browser.
 
-### Programatic access
+### Programmatic access
 
 If you have issues with this or need to run the script as part of an automated workflow we have a GEE-enabled GCP service account that can be used. Get in touch with Saif or Chris to ask about getting the credetials.
 
 Set the following environment variables:
-
 * GOOGLE_APPLICATION_CREDENTIALS: The path of GCP credentials JSON file containing your private key.
 * GOOGLE_APPLICATION_USER: The email for your GCP user.
 
