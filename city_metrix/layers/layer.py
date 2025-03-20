@@ -35,7 +35,8 @@ class Layer():
 
 
     @abstractmethod
-    def get_data(self, bbox: GeoExtent, spatial_resolution:int, resampling_method:str) -> Union[xr.DataArray, gpd.GeoDataFrame]:
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int, resampling_method:str, force_cache_refresh:bool) ->\
+            Union[xr.DataArray, gpd.GeoDataFrame]:
         """
         Extract the data from the source and return it in a way we can compare to other layers.
         :param bbox: a tuple of floats representing the bounding box, (min x, min y, max x, max y)

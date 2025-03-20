@@ -13,7 +13,8 @@ from shapely.geometry import point
 
 from city_metrix.constants import WGS_CRS
 from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance, get_city, get_city_boundary, \
-    get_geojson_geometry_bounds, get_cached_layer_name, get_s3_file_key, get_cities_data_s3_client
+    get_geojson_geometry_bounds, get_cached_layer_name, get_s3_file_key, get_cities_data_s3_client, \
+    check_if_s3file_exists
 
 MAX_SIDE_LENGTH_METERS = 50000 # This values should cover most situations
 MAX_SIDE_LENGTH_DEGREES = 0.5 # Given that for latitude, 50000m * (1deg/111000m)
@@ -348,8 +349,11 @@ def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
     return x_offset, y_offset
 
 
-def retrieve_cached_data(geo_extent: GeoExtent, layer_name:str, year: int, file_format:str):
+def retrieve_cached_data(geo_extent: GeoExtent, layer_id:str, year: int, file_format:str, force_cache_refresh:bool):
     # https://nasa-openscapes.github.io/2021-Cloud-Workshop-AGU/how-tos/Earthdata_Cloud__Single_File__Direct_S3_Access_COG_Example.html
+
+    if not force_cache_refresh:
+        return None
 
     AWS_BUCKET = os.getenv("AWS_BUCKET")
     s3_client = get_cities_data_s3_client()
@@ -357,10 +361,10 @@ def retrieve_cached_data(geo_extent: GeoExtent, layer_name:str, year: int, file_
     # Build S3 url
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
-    file_name = get_cached_layer_name(city_id, admin_level, layer_name, year, file_format)
+    file_name = get_cached_layer_name(city_id, admin_level, layer_id, year, file_format)
     file_key = get_s3_file_key(city_id, file_format, file_name)
 
-    if not check_s3file_exists(s3_client, AWS_BUCKET, file_key):
+    if not check_if_s3file_exists(s3_client, AWS_BUCKET, file_key):
         return None
     else:
         # Retrieve from S3
@@ -388,10 +392,3 @@ def retrieve_cached_data(geo_extent: GeoExtent, layer_name:str, year: int, file_
 
         return da
 
-
-def check_s3file_exists(S3_CLIENT, bucket_name, file_key):
-    response = S3_CLIENT.list_objects_v2(Bucket=bucket_name, Prefix=file_key)
-    for obj in response.get('Contents', []):
-        if obj['Key'] == file_key:
-            return True
-    return False

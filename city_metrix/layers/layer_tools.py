@@ -91,8 +91,15 @@ def get_cities_data_s3_client():
     s3_client = session.client('s3')
     return s3_client
 
-def get_cached_layer_name(city_id, admin_level, layer_name, year, file_format):
-    return f"{city_id}__{admin_level}__{layer_name}__{year}.{file_format}"
+def get_cached_layer_name(city_id, admin_level, layer_id, year, file_format):
+    return f"{city_id}__{admin_level}__{layer_id}__{year}.{file_format}"
 
 def get_s3_file_key(city_id, file_format, file_name):
     return f"cid/dev/{city_id}/{file_format}/{file_name}"
+
+def check_if_s3file_exists(S3_CLIENT, bucket_name, file_key):
+    response = S3_CLIENT.list_objects_v2(Bucket=bucket_name, Prefix=file_key)
+    for obj in response.get('Contents', []):
+        if obj['Key'] == file_key:
+            return True
+    return False
