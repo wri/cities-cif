@@ -106,14 +106,15 @@ def write_dataarray_to_s3(data, path):
     import tempfile
     aws_bucket = os.getenv("AWS_BUCKET")
     file_key = get_file_key_from_s3_url(path)
-    with tempfile.NamedTemporaryFile(suffix='.tif', delete=True) as temp_file:
-        temp_file_path = temp_file.name
-        data.rio.to_raster(raster_path=temp_file_path, driver="COG")
+    with tempfile.TemporaryDirectory() as temp_dir:
+        with open(f'{temp_dir}/temp.file', 'w') as temp_file:
+            temp_file_path = temp_file.name
+            data.rio.to_raster(raster_path=temp_file_path, driver="COG")
 
-        s3_client = get_s3_client()
-        s3_client.upload_file(
-            temp_file_path, aws_bucket, file_key, ExtraArgs={"ACL": "public-read"}
-        )
+            s3_client = get_s3_client()
+            s3_client.upload_file(
+                temp_file_path, aws_bucket, file_key, ExtraArgs={"ACL": "public-read"}
+            )
 
 
 def write_tile_grid(tile_grid, output_path, target_file_name):
