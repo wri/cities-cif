@@ -1,4 +1,6 @@
 import geopandas as gpd
+import xarray as xr
+import numpy as np
 import pandas as pd
 import shapely
 from .layer import Layer, get_image_collection
@@ -112,6 +114,6 @@ class FractionalVegetation(Layer):
                 "frational vegetation"
             ).Fr
         if self.min_threshold is not None:
-            data = data.where(data >= self.min_threshold)
+            data = xr.where(data >= self.min_threshold, 1, np.nan)
         return data
 
