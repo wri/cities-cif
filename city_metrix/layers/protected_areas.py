@@ -23,10 +23,10 @@ class ProtectedAreas(Layer):
         self.iucn_cat = iucn_cat
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_cached_data_retrieval=False):
+                 allow_s3_cache_retrieval=False):
 
         retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                     ,allow_cached_data_retrieval)
+                                                     ,allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

@@ -22,14 +22,14 @@ class LandsatCollection2(Layer):
         self.bands = bands
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_cached_data_retrieval=False):
+                 allow_s3_cache_retrieval=False):
         if spatial_resolution is not None:
             raise Exception('spatial_resolution can not be specified.')
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
 
         retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                     ,allow_cached_data_retrieval)
+                                                     ,allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

@@ -38,13 +38,13 @@ class Layer():
 
     @abstractmethod
     def get_data(self, bbox: GeoExtent, spatial_resolution:int, resampling_method:str,
-                 allow_cached_data_retrieval:bool) -> Union[xr.DataArray, gpd.GeoDataFrame]:
+                 allow_s3_cache_retrieval:bool) -> Union[xr.DataArray, gpd.GeoDataFrame]:
         """
         Extract the data from the source and return it in a way we can compare to other layers.
         :param bbox: a tuple of floats representing the bounding box, (min x, min y, max x, max y)
         :param spatial_resolution: resolution of continuous raster data in meters
         :param resampling_method: interpolation method for continuous raster layers (bilinear, bicubic, nearest)
-        :param allow_cached_data_retrieval: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
+        :param allow_s3_cache_retrieval: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
         :return: A rioxarray-format DataArray or a GeoPandas DataFrame
         """
         ...
@@ -82,13 +82,13 @@ class Layer():
         :param resampling_method: interpolation method for continuous raster layers (bilinear, bicubic, nearest)
         :return:
         """
-        allow_cached_data_retrieval: bool = False  # always read from source for write
+        allow_s3_cache_retrieval: bool = False  # always read from source for write
 
         if tile_side_length is None:
             utm_geo_extent = bbox.as_utm_bbox() # currently only support output as utm
             clipped_data = self.aggregate.get_data(utm_geo_extent, spatial_resolution=spatial_resolution,
                                                    resampling_method=resampling_method,
-                                                   allow_cached_data_retrieval=allow_cached_data_retrieval)
+                                                   allow_s3_cache_retrieval=allow_s3_cache_retrieval)
             _write_layer(output_path, clipped_data)
         else:
             tile_grid_gdf = create_fishnet_grid(bbox, tile_side_length=tile_side_length, tile_buffer_size=0,
@@ -117,7 +117,7 @@ class Layer():
                 file_path = os.path.join(output_path, tile_name)
                 layer_data = self.aggregate.get_data(bbox=tile_bbox, spatial_resolution=spatial_resolution,
                                                      resampling_method=resampling_method,
-                                                     allow_cached_data_retrieval=allow_cached_data_retrieval)
+                                                     allow_s3_cache_retrieval=allow_s3_cache_retrieval)
                 _write_layer(file_path, layer_data)
 
 

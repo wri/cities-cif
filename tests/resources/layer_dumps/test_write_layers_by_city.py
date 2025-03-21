@@ -5,7 +5,7 @@ import pytest
 from city_metrix.constants import testing_aws_bucket, testing_s3_aws_profile
 from city_metrix.layers import *
 from city_metrix.layers.layer_dao import get_s3_layer_name, get_s3_file_key, get_s3_file_url, \
-    get_s3_client, check_if_s3_file_exists
+    get_s3_client, check_if_s3_file_exists, get_s3_variables
 from city_metrix.layers.layer_tools import set_environment_variable
 from .conftest import EXECUTE_IGNORED_TESTS, prep_output_path, verify_file_is_populated
 from .tools import get_test_bbox
@@ -65,14 +65,5 @@ def test_write_nasa_dem_utm(target_folder):
     NasaDEM().write(bbox, file_path)
     assert verify_file_is_populated(file_path)
 
-def get_s3_variables(geo_extent, query_layer, year=None):
-    city_id = geo_extent.city_id
-    admin_level = geo_extent.admin_level
-    layer_id = query_layer.LAYER_ID
-    file_format = query_layer.OUTPUT_FILE_FORMAT
-    file_name = get_s3_layer_name(city_id, admin_level, layer_id, year, file_format)
-    file_key = get_s3_file_key(city_id, file_format, file_name)
-    file_url = get_s3_file_url(file_key)
 
-    return file_key, file_url
 

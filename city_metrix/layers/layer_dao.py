@@ -44,6 +44,16 @@ def get_file_key_from_s3_url(s3_url):
     file_key = '/'.join(s3_url.split('/')[3:])
     return file_key
 
+def get_s3_variables(geo_extent, query_layer, year=None):
+    city_id = geo_extent.city_id
+    admin_level = geo_extent.admin_level
+    layer_id = query_layer.LAYER_ID
+    file_format = query_layer.OUTPUT_FILE_FORMAT
+    file_name = get_s3_layer_name(city_id, admin_level, layer_id, year, file_format)
+    file_key = get_s3_file_key(city_id, file_format, file_name)
+    file_url = get_s3_file_url(file_key)
+
+    return file_key, file_url
 
 def check_if_s3_file_exists(s3_client, file_key):
     aws_bucket = os.getenv("AWS_BUCKET")

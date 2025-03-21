@@ -14,11 +14,11 @@ class OvertureBuildings(Layer):
         super().__init__(**kwargs)
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_cached_data_retrieval=False):
+                 allow_s3_cache_retrieval=False):
         #Note: spatial_resolution and resampling_method arguments are ignored.
 
         retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                     ,allow_cached_data_retrieval)
+                                                     ,allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

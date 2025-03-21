@@ -364,10 +364,10 @@ def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
 
 
 def retrieve_cached_data(geo_extent: GeoExtent, layer_id:str, year: int, file_format:str,
-                         allow_cached_data_retrieval:bool):
+                         allow_s3_cache_retrieval:bool):
     # https://nasa-openscapes.github.io/2021-Cloud-Workshop-AGU/how-tos/Earthdata_Cloud__Single_File__Direct_S3_Access_COG_Example.html
 
-    if not allow_cached_data_retrieval:
+    if not allow_s3_cache_retrieval:
         return None
 
     s3_client = get_s3_client()

@@ -25,7 +25,7 @@ class NdviSentinel2(Layer):
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_cached_data_retrieval=False):
+                 resampling_method=None, allow_s3_cache_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
@@ -34,7 +34,7 @@ class NdviSentinel2(Layer):
             raise Exception('NdviSentinel2.get_data() requires a year value')
 
         retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
-                                                     ,allow_cached_data_retrieval)
+                                                     ,allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
