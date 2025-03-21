@@ -2,21 +2,36 @@ import odc.stac
 import pystac_client
 
 from .layer import Layer
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_data
 
 
 class LandsatCollection2(Layer):
+    LAYER_ID = "landsat_collection_2"
+    OUTPUT_FILE_FORMAT = 'tif'
+
+    """
+    Attributes:
+        bands:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+    """
     def __init__(self, bands, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.bands = bands
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 allow_cached_data_retrieval=False):
         if spatial_resolution is not None:
             raise Exception('spatial_resolution can not be specified.')
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
+
+        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
+                                                     ,allow_cached_data_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         geographic_bounds = bbox.as_geographic_bbox().bounds
         catalog = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")

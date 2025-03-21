@@ -152,14 +152,14 @@ def test_write_ndvi_sentinel2_gee(target_folder, sample_aoi):
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_openbuildings(target_folder, sample_aoi):
-    file_path = prep_output_path(target_folder, 'open_buildings.geojson')
+    file_path = prep_output_path(target_folder, 'open_buildings.json')
     bbox = get_test_bbox(sample_aoi.geo_extent)
     OpenBuildings(sample_aoi.country).write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_open_street_map_roads(target_folder, sample_aoi):
-    file_path = prep_output_path(target_folder, 'open_street_map_roads.geojson')
+    file_path = prep_output_path(target_folder, 'open_street_map_roads.json')
     bbox = get_test_bbox(sample_aoi.geo_extent)
     road_features = OpenStreetMapClass.ROAD
     OpenStreetMap(road_features).write(bbox, file_path, tile_side_length=None)
@@ -167,7 +167,7 @@ def test_write_open_street_map_roads(target_folder, sample_aoi):
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_overture_buildings(target_folder, sample_aoi):
-    file_path = prep_output_path(target_folder, 'overture_buildings.geojson')
+    file_path = prep_output_path(target_folder, 'overture_buildings.json')
     bbox = get_test_bbox(sample_aoi.geo_extent)
     OvertureBuildings().write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
@@ -181,7 +181,7 @@ def test_write_pop_weighted_pm2p5(target_folder, sample_aoi):
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_protected_areas(target_folder, sample_aoi):
-    file_path = prep_output_path(target_folder, 'protected_areas.geojson')
+    file_path = prep_output_path(target_folder, 'protected_areas.json')
     bbox = get_test_bbox(sample_aoi.geo_extent)
     ProtectedAreas().write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
@@ -229,7 +229,7 @@ def test_write_tree_cover(target_folder, sample_aoi):
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_urban_extents(target_folder, sample_aoi):
-    file_path = prep_output_path(target_folder, 'urban_extents.geojson')
+    file_path = prep_output_path(target_folder, 'urban_extents.json')
     bbox = get_test_bbox(sample_aoi.geo_extent)
     UrbanExtents().write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)

@@ -4,23 +4,23 @@ from dask.diagnostics import ProgressBar
 
 from .layer import (Layer, get_image_collection, set_resampling_for_continuous_raster,
                     validate_raster_resampling_method)
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_data
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
 class Albedo(Layer):
+    LAYER_ID = "albedo"
+    OUTPUT_FILE_FORMAT = 'tif'
+    MAX_CLOUD_PROB = 30
+    S2_ALBEDO_EQN = '((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))'
+
     """
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
-        resampling_method: interpolation method used by Google Earth Engine. Default is 'bilinear'. All options are: ('bilinear', 'bicubic', None).
         threshold: threshold value for filtering the retrieval
     """
-    MAX_CLOUD_PROB = 30
-    S2_ALBEDO_EQN = '((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))'
-
     def __init__(self, start_date="2021-01-01", end_date="2022-01-01", threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
@@ -90,10 +90,15 @@ class Albedo(Layer):
         return s2_with_clouds_ic
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method:str=DEFAULT_RESAMPLING_METHOD):
+                 resampling_method:str=DEFAULT_RESAMPLING_METHOD, allow_cached_data_retrieval=False):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
+
+        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
+                                                     ,allow_cached_data_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         # calculate albedo for images
         # weights derived from

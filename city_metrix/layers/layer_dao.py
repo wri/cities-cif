@@ -27,15 +27,18 @@ def get_s3_client():
     return s3_client
 
 def get_s3_layer_name(city_id, admin_level, layer_id, year, file_format):
-    return f"{city_id}__{admin_level}__{layer_id}__{year}.{file_format}"
+    if year is None:
+        file_name = f"{city_id}__{admin_level}__{layer_id}.{file_format}"
+    else:
+        file_name = f"{city_id}__{admin_level}__{layer_id}__{year}.{file_format}"
+    return file_name
 
 def get_s3_file_key(city_id, file_format, file_name):
     return f"cid/dev/{city_id}/{file_format}/{file_name}"
 
 def get_s3_file_url(file_key):
-    aws_profile = os.getenv("S3_AWS_PROFILE")
-    return f"s3://{aws_profile}/{file_key}"
-
+    aws_bucket = os.getenv("AWS_BUCKET")
+    return f"s3://{aws_bucket}/{file_key}"
 
 def get_file_key_from_s3_url(s3_url):
     file_key = '/'.join(s3_url.split('/')[3:])
@@ -51,7 +54,45 @@ def check_if_s3_file_exists(s3_client, file_key):
     return False
 
 
-def write_file_to_s3(data, path):
+def write_geodataframe(path, data):
+    if path.startswith("s3://"):
+        write_geodataframe_to_s3(data, path)
+    else:
+        # write raster data to files
+        output_path = os.path.dirname(path)
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        data.to_file(path, driver="GeoJSON")
+
+
+def write_geodataframe_to_s3(data, path):
+    import tempfile
+    aws_bucket = os.getenv("AWS_BUCKET")
+    file_key = get_file_key_from_s3_url(path)
+    with tempfile.NamedTemporaryFile(suffix='.json', delete=True) as temp_file:
+        temp_file_path = temp_file.name
+        data.to_file(temp_file_path, driver="GeoJSON")
+
+        s3_client = get_s3_client()
+        s3_client.upload_file(
+            temp_file_path, aws_bucket, file_key, ExtraArgs={"ACL": "public-read"}
+        )
+
+
+def write_dataarray(path, data):
+    if path.startswith("s3://"):
+        write_dataarray_to_s3(data, path)
+    else:
+        # write raster data to files
+        output_path = os.path.dirname(path)
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        data.rio.to_raster(raster_path=path, driver="COG")
+
+
+def write_dataarray_to_s3(data, path):
     import tempfile
     aws_bucket = os.getenv("AWS_BUCKET")
     file_key = get_file_key_from_s3_url(path)
@@ -65,5 +106,10 @@ def write_file_to_s3(data, path):
         )
 
 
-def set_environment_variable(variable_name, variable_value):
-    os.environ[variable_name] = variable_value
+def write_tile_grid(tile_grid, output_path, target_file_name):
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
+    tile_grid_file_path = str(os.path.join(output_path, target_file_name))
+    tg = tile_grid.drop(columns='fishnet_geometry', axis=1)
+    tg.to_file(tile_grid_file_path)

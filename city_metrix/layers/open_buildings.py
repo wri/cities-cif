@@ -5,16 +5,28 @@ import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
 from .layer import Layer, WGS_CRS
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_data
 
 
 class OpenBuildings(Layer):
+    LAYER_ID = "open_buildings"
+    OUTPUT_FILE_FORMAT = 'json'
+
+    """
+    Attributes:
+        countr: 3-letter code for country
+    """
     def __init__(self, country='USA', **kwargs):
         super().__init__(**kwargs)
         self.country = country
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None, allow_cached_data_retrieval=False):
         #Note: spatial_resolution and resampling_method arguments are ignored.
+
+        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
+                                                     ,allow_cached_data_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         dataset = ee.FeatureCollection(f"projects/sat-io/open-datasets/VIDA_COMBINED/{self.country}")
         ee_rectangle = bbox.to_ee_rectangle()

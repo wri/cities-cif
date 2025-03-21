@@ -4,17 +4,32 @@ import xarray as xr
 import glob
 
 from .layer import Layer
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_data
 
 
 class Cams(Layer):
+    LAYER_ID = "cams"
+    OUTPUT_FILE_FORMAT = 'tif'
+
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+    """
     def __init__(self, start_date="2023-01-01", end_date="2023-12-31", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 allow_cached_data_retrieval=False):
         #Note: spatial_resolution and resampling_method arguments are ignored.
+
+        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
+                                                     ,allow_cached_data_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
+
 
         min_lon, min_lat, max_lon, max_lat = bbox.as_geographic_bbox().bounds
 

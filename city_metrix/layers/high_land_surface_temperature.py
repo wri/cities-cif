@@ -5,29 +5,35 @@ from shapely.geometry import box
 import datetime
 import ee
 
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_data
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class HighLandSurfaceTemperature(Layer):
+    LAYER_ID = "high_land_surface_temperature"
+    OUTPUT_FILE_FORMAT = 'tif'
+    THRESHOLD_ADD = 3
+
     """
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-    THRESHOLD_ADD = 3
-
     def __init__(self, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+                 resampling_method=None, allow_cached_data_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
+                                                     ,allow_cached_data_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         hottest_date = self.get_hottest_date(bbox)
         start_date = (hottest_date - datetime.timedelta(days=45)).strftime("%Y-%m-%d")

@@ -5,29 +5,35 @@ import ee
 import numpy as np
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_data
 
 DEFAULT_SPATIAL_RESOLUTION = 5
 
 class UrbanLandUse(Layer):
+    LAYER_ID = "urban_land_use"
+    OUTPUT_FILE_FORMAT = 'tif'
+
     """
     Attributes:
         band: raster band used for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
         ulu_class: urban land use class value used to filter the land use type
                    0 (open space), 1 (non-res), 2 (Atomistic), 3 (Informal), 4 (Formal), 5 (Housing project)
     """
-
     def __init__(self, band='lulc', ulu_class=None, **kwargs):
         super().__init__(**kwargs)
         self.band = band
         self.ulu_class = ulu_class
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+                 resampling_method=None, allow_cached_data_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
+                                                     ,allow_cached_data_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         ulu = ee.ImageCollection("projects/wri-datalab/cities/urban_land_use/V1")
 

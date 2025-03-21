@@ -3,15 +3,24 @@ import subprocess
 from io import StringIO
 
 from .layer import Layer
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_data
 
 
 class OvertureBuildings(Layer):
+    LAYER_ID = "overture_buildings"
+    OUTPUT_FILE_FORMAT = 'json'
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 allow_cached_data_retrieval=False):
         #Note: spatial_resolution and resampling_method arguments are ignored.
+
+        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
+                                                     ,allow_cached_data_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         geographic_box = bbox.as_geographic_bbox()
         geographic_bbox_str = ','.join(map(str, geographic_box.bounds))

@@ -2,23 +2,30 @@ import xarray as xr
 import ee
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_data
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class LandCoverGlad(Layer):
+    LAYER_ID = "glad_lulc"
+    OUTPUT_FILE_FORMAT = 'tif'
+
     """
     Attributes:
         year: year used for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
     def __init__(self, year=2020, **kwargs):
         super().__init__(**kwargs)
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+                 resampling_method=None, allow_cached_data_retrieval=False):
+
+        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
+                                                     ,allow_cached_data_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
+
         lcluc_ic = ee.ImageCollection(ee.Image(f'projects/glad/GLCLU2020/LCLUC_{self.year}'))
         ee_rectangle  = bbox.to_ee_rectangle()
         data = get_image_collection(

@@ -5,7 +5,7 @@ import ee
 from enum import Enum
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_data
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
@@ -18,14 +18,15 @@ class WorldPopClass(Enum):
 
 
 class WorldPop(Layer):
+    LAYER_ID = "world_pop"
+    OUTPUT_FILE_FORMAT = 'tif'
+
     """
     Attributes:
         agesex_classes: Enum value from WorldPopClass OR
                         list of age-sex classes to retrieve (see https://airtable.com/appDWCVIQlVnLLaW2/tblYpXsxxuaOk3PaZ/viwExxAgTQKZnRfWU/recFjH7WngjltFMGi?blocks=hide)
         year: year used for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
     def __init__(self, agesex_classes=[], year=2020, **kwargs):
         super().__init__(**kwargs)
         # agesex_classes options:
@@ -35,8 +36,13 @@ class WorldPop(Layer):
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+                 resampling_method=None, allow_cached_data_retrieval=False):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
+                                                     ,allow_cached_data_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         ee_rectangle = bbox.to_ee_rectangle()
         if not self.agesex_classes:

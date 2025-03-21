@@ -20,7 +20,8 @@ import numpy as np
 import pandas as pd
 
 from city_metrix.constants import WGS_CRS
-from city_metrix.layers.layer_dao import get_s3_client, write_file_to_s3
+from city_metrix.layers.layer_dao import get_s3_client, write_dataarray_to_s3, write_tile_grid, write_dataarray, \
+    write_geodataframe
 from city_metrix.layers.layer_tools import standardize_y_dimension_direction
 from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, reproject_units
 
@@ -91,8 +92,7 @@ class Layer():
             _write_layer(output_path, clipped_data)
         else:
             tile_grid_gdf = create_fishnet_grid(bbox, tile_side_length=tile_side_length, tile_buffer_size=0,
-                                            length_units=length_units, spatial_resolution=spatial_resolution,
-                                                allow_cached_data_retrieval=allow_cached_data_retrieval)
+                                            length_units=length_units, spatial_resolution=spatial_resolution)
             tile_grid_gdf = _add_tile_name_column(tile_grid_gdf)
 
             buffered_tile_grid_gdf = None
@@ -103,11 +103,11 @@ class Layer():
                 buffered_tile_grid_gdf = _add_tile_name_column(buffered_tile_grid_gdf)
 
             # write tile grid to geojson file
-            _write_tile_grid(tile_grid_gdf, output_path, 'tile_grid.geojson')
+            write_tile_grid(tile_grid_gdf, output_path, 'tile_grid.geojson')
 
             # if tiles were buffered, also write unbuffered tile grid to geojson file
             if buffered_tile_grid_gdf is not None and len(buffered_tile_grid_gdf) > 0:
-                _write_tile_grid(buffered_tile_grid_gdf, output_path, 'tile_grid_unbuffered.geojson')
+                write_tile_grid(buffered_tile_grid_gdf, output_path, 'tile_grid_unbuffered.geojson')
 
             utm_crs = tile_grid_gdf.crs.srs
             for tile in tile_grid_gdf.itertuples():
@@ -135,32 +135,13 @@ def _write_layer(path, data):
         if standardized_array.values.dtype.name == 'bool':
             standardized_array = standardized_array.astype(np.uint8)
 
-        _write_dataarray(path, standardized_array)
+        write_dataarray(path, standardized_array)
     elif isinstance(data, xr.Dataset):
         raise NotImplementedError("Data as Dataset not currently supported")
     elif isinstance(data, gpd.GeoDataFrame):
-        data.to_file(path, driver="GeoJSON")
+        write_geodataframe(path, data)
     else:
         raise NotImplementedError("Can only write DataArray or GeoDataFrame")
-
-
-def _write_dataarray(path, data):
-    # for rasters, need to write to locally first then copy to cloud storage
-    if path.startswith("s3://"):
-        write_file_to_s3(data, path)
-    else:
-        # write raster data to files
-        output_path = os.path.dirname(path)
-        if not os.path.exists(output_path):
-            os.makedirs(output_path)
-
-        data.rio.to_raster(raster_path=path, driver="COG")
-
-
-def _write_tile_grid(tile_grid, output_path, target_file_name):
-    tile_grid_file_path = str(os.path.join(output_path, target_file_name))
-    tg = tile_grid.drop(columns='fishnet_geometry', axis=1)
-    tg.to_file(tile_grid_file_path)
 
 
 class LayerGroupBy:

@@ -1,10 +1,14 @@
 import math
+import os
+
 import geopandas as gpd
 from typing import Union
 from pyproj import CRS
 
 from city_metrix.constants import WGS_EPSG_CODE
 
+def set_environment_variable(variable_name, variable_value):
+    os.environ[variable_name] = variable_value
 
 def get_geojson_geometry_bounds(geojson: str):
     gdf = gpd.GeoDataFrame.from_features(geojson)

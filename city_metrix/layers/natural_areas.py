@@ -3,24 +3,27 @@ from xrspatial.classify import reclassify
 
 from .layer import Layer
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_data
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class NaturalAreas(Layer):
-    """
-    Attributes:
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
-    """
+    LAYER_ID = "natural_areas"
+    OUTPUT_FILE_FORMAT = 'tif'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+                 resampling_method=None, allow_cached_data_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
+                                                     ,allow_cached_data_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         esa_world_cover = EsaWorldCover().get_data(bbox, spatial_resolution=spatial_resolution)
         reclass_map = {
