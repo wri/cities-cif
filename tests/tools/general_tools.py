@@ -6,10 +6,6 @@ from city_metrix.constants import testing_aws_bucket, testing_s3_aws_profile, pr
     production_s3_aws_profile
 from city_metrix.layers.layer_tools import set_environment_variable
 
-def set_production_environment_variables():
-    set_environment_variable('AWS_BUCKET', production_aws_bucket)
-    set_environment_variable('S3_AWS_PROFILE', production_s3_aws_profile)
-
 def set_testing_environment_variables():
     set_environment_variable('AWS_BUCKET', testing_aws_bucket)
     set_environment_variable('S3_AWS_PROFILE', testing_s3_aws_profile)

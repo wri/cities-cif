@@ -5,7 +5,12 @@ import geopandas as gpd
 from typing import Union
 from pyproj import CRS
 
-from city_metrix.constants import WGS_EPSG_CODE
+from city_metrix.constants import WGS_EPSG_CODE, production_aws_bucket, production_s3_aws_profile
+
+
+def set_production_environment_variables():
+    set_environment_variable('AWS_BUCKET', production_aws_bucket)
+    set_environment_variable('S3_AWS_PROFILE', production_s3_aws_profile)
 
 def set_environment_variable(variable_name, variable_value):
     os.environ[variable_name] = variable_value
