@@ -1,6 +1,6 @@
 import odc.stac
 import pystac_client
-from city_metrix.layers.layer_geometry import GeoExtent, retrieve_cached_data
+from city_metrix.layers.layer_geometry import GeoExtent, retrieve_cached_city_data
 
 from .layer import Layer
 
@@ -28,8 +28,8 @@ class Sentinel2Level2(Layer):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
 
-        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                     ,allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
+                                                          , allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

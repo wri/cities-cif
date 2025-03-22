@@ -3,7 +3,7 @@ from xrspatial import slope
 
 from .layer import Layer, validate_raster_resampling_method
 from .nasa_dem import NasaDEM
-from .layer_geometry import GeoExtent, retrieve_cached_data
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
@@ -32,8 +32,8 @@ class HighSlope(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                     ,allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
+                                                          , allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

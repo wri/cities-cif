@@ -22,7 +22,8 @@ def get_city_boundary(city_id: str, admin_level: str):
 
 
 def get_s3_client():
-    session = boto3.Session(profile_name=os.getenv("S3_AWS_PROFILE"))
+    profile_name = os.getenv("S3_AWS_PROFILE")
+    session = boto3.Session(profile_name=profile_name)
     s3_client = session.client('s3')
     return s3_client
 

@@ -1,7 +1,7 @@
 import ee
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent, retrieve_cached_data
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
@@ -33,8 +33,8 @@ class NdviSentinel2(Layer):
         if self.year is None:
             raise Exception('NdviSentinel2.get_data() requires a year value')
 
-        retrieved_cached_data = retrieve_cached_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
-                                                     ,allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
+                                                          , allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
