@@ -8,7 +8,7 @@ from .layer_geometry import GeoExtent, retrieve_cached_data
 
 class ProtectedAreas(Layer):
     LAYER_ID = "protected_areas"
-    OUTPUT_FILE_FORMAT = 'json'
+    OUTPUT_FILE_FORMAT = 'geojson'
 
     """
     Attributes:

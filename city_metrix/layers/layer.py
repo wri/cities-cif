@@ -82,7 +82,10 @@ class Layer():
         :param resampling_method: interpolation method for continuous raster layers (bilinear, bicubic, nearest)
         :return:
         """
-        allow_s3_cache_retrieval: bool = False  # always read from source for write
+        if output_path.startswith("s3://"):
+            allow_s3_cache_retrieval: bool = False  # always read from source for S3 write
+        else:
+            allow_s3_cache_retrieval: bool = True  # allow cache hit for writes to OS
 
         if tile_side_length is None:
             utm_geo_extent = bbox.as_utm_bbox() # currently only support output as utm

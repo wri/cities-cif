@@ -8,7 +8,7 @@ from .layer_geometry import GeoExtent, retrieve_cached_data
 
 class OvertureBuildings(Layer):
     LAYER_ID = "overture_buildings"
-    OUTPUT_FILE_FORMAT = 'json'
+    OUTPUT_FILE_FORMAT = 'geojson'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

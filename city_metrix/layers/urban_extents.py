@@ -9,7 +9,7 @@ from .layer_geometry import GeoExtent, retrieve_cached_data
 
 class UrbanExtents(Layer):
     LAYER_ID = "urban_extents"
-    OUTPUT_FILE_FORMAT = 'json'
+    OUTPUT_FILE_FORMAT = 'geojson'
 
     """
     Attributes:

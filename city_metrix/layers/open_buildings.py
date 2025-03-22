@@ -10,7 +10,7 @@ from .layer_geometry import GeoExtent, retrieve_cached_data
 
 class OpenBuildings(Layer):
     LAYER_ID = "open_buildings"
-    OUTPUT_FILE_FORMAT = 'json'
+    OUTPUT_FILE_FORMAT = 'geojson'
 
     """
     Attributes:

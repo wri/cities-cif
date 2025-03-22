@@ -69,7 +69,7 @@ class OpenStreetMapClass(Enum):
 
 class OpenStreetMap(Layer):
     LAYER_ID = "open_street_map"
-    OUTPUT_FILE_FORMAT = 'json'
+    OUTPUT_FILE_FORMAT = 'geojson'
 
     """
     Attributes:
