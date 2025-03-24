@@ -57,14 +57,6 @@ def test_cams_ghg():
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_cams_ghg():
-    data = CamsGhg().get_data(BBOX)
-    assert np.size(data) > 0
-    assert get_projection_name(data.crs) == 'utm'
-    utm_bbox_data = CamsGhg().get_data(BBOX_AS_UTM)
-    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
-
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_cams():
     data = Cams().get_data(BBOX)
     assert np.size(data) > 0
