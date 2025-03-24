@@ -45,6 +45,13 @@ def test_era_5_met_preprocess():
     assert len(indicator) == 24
 
 
+def test_ghg_emissions():
+    indicator = ghg_emissions(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
+
 def test_mean_pm2p5_exposure():
     indicator = mean_pm2p5_exposure(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size

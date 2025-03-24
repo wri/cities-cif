@@ -47,6 +47,13 @@ def test_write_built_up_height(target_folder, sample_aoi):
     BuiltUpHeight().write(bbox, file_path, spatial_resolution=target_resolution)
     assert verify_file_is_populated(file_path)
 
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_cams_ghg(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'cams_ghg.tif')
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    CamsGhg().write(bbox, file_path, tile_side_length=None)
+    assert verify_file_is_populated(file_path)
+
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 # def test_write_cams(target_folder, sample_aoi):
 #     file_path = prep_output_path(target_folder, 'cams.tx')

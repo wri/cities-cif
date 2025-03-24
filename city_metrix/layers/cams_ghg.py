@@ -4,7 +4,7 @@ import ee
 from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent
 
-DEFAULT_SPATIAL_RESOLUTION = 1113.19488
+DEFAULT_SPATIAL_RESOLUTION = 1113.1949
 
 
 class CamsGhg(Layer):
