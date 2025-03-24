@@ -1,79 +1,93 @@
 import xarray as xr
 import ee
 
-from .layer import Layer
+from .layer import Layer, get_image_collection
+from .layer_geometry import GeoExtent
+
+DEFAULT_SPATIAL_RESOLUTION = 1113.19488
+
 
 class CamsGhg(Layer):
     # Returned units: metric tonnes of GHG species or tonnes CO2e
-    GWP = {
-        'co2': 1,  # by definition
-        'ch4': 28,  # https://www.ipcc.ch/site/assets/uploads/2018/02/WG1AR5_Chapter08_FINAL.pdf
-        'chlorinated-hydrocarbons': 400,  # Table A2 https://onlinelibrary.wiley.com/doi/pdf/10.1002/0470865172.app2
-        'n2o': 265  # https://www.ipcc.ch/site/assets/uploads/2018/02/WG1AR5_Chapter08_FINAL.pdf
+    SUPPORTED_SPECIES = {
+        'co2': {'GWP': 1,  # by definition
+                'sectors': ['ags', 'awb', 'ene', 'fef', 'ind', 'ref', 'res', 'shp', 'slv', 'sum', 'swd', 'tnr', 'tro']
+                },
+        'ch4': {'GWP': 28,  # https://www.ipcc.ch/site/assets/uploads/2018/02/WG1AR5_Chapter08_FINAL.pdf
+                'sectors': ['agl', 'ags', 'awb', 'ene', 'fef', 'ind', 'ref', 'res', 'shp', 'sum', 'swd', 'tnr', 'tro']
+                },
+        'n2o': {'GWP': 265,  # https://www.ipcc.ch/site/assets/uploads/2018/02/WG1AR5_Chapter08_FINAL.pdf
+                'sectors': ['ags', 'awb', 'ene', 'fef', 'ind', 'ref', 'res', 'slv', 'sum', 'swd', 'tnr', 'tro']
+                },
+        'chlorinated-hydrocarbons': {'GWP': 400,  # Table A2 https://onlinelibrary.wiley.com/doi/pdf/10.1002/0470865172.app2# 
+                                     'sectors': ['ene', 'fef', 'ind', 'res', 'shp', 'slv', 'sum', 'tnr', 'tro']
+                                     }
     }
-    SUPPORTED_SPECIES = ['co2', 'ch4', 'n2o', 'chlorinated-hydrocarbons']
     SUPPORTED_YEARS = [2010, 2015, 2020, 2023]
 
     def __init__(self, species=None, sector='sum', co2e=True, year=2023, **kwargs):
         super().__init__(**kwargs)
-        if species is not None and not species in self.SUPPORTED_SPECIES:
+        if species is not None and not species in self.SUPPORTED_SPECIES.keys():
             raise Exception(f'Unsupported species: {species}')
         if not year in self.SUPPORTED_YEARS:
             raise Exception(f'Unsupported year: {year}')
-        if species is None and co2e==False:
+        if species is None and co2e == False:
             raise Exception('If sector is unspecified, all supported species will be summed and co2e must be True.')
         if species is None and sector != 'sum':
-            raise Exception('If sector is unspecified, sector must be \"sum.\"')
+            raise Exception('If sector is unspecified, sector must be \"sum\".')
         if species is not None and sector != 'sum':
-            data_ic = ee.ImageCollection(f'projects/wri-datalab/cams-glob-ant/{species}').filter('year', year)
-            sectors = data_ic.aggregate_array('sector').getInfo()
-            if not sector in sectors:
-                raise Exception(f'Sector \"{sector}\" not available for {species} in {year}.')
+            if not sector in self.SUPPORTED_SPECIES[species]['sectors']:
+                raise Exception(f'Sector \"{sector}\" not available for {species}.')
+
         self.species = species  # None means all, summed
         self.sector = sector
-        self.co2e = co2e  # Want results in CO2e? If so, multiplies by 100-year GWP.
+        self.co2e = co2e # Want results in CO2e? If so, multiplies by 100-year GWP.
         self.year = year  # Currently supported: 2010, 2015, 2020, 2023
 
-    def get_data(self, bbox):
-        bbox = list(bbox)
+    def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        ee_rectangle  = bbox.to_ee_rectangle()
+
         if self.species is not None:
             data_ic = ee.ImageCollection(f'projects/wri-datalab/cams-glob-ant/{self.species}')
             data_im = data_ic.filter(ee.Filter.eq('year', self.year)).filter(ee.Filter.eq('sector', self.sector)).first()
-            scale = data_im.projection().getInfo()['transform'][0]
-            data_im = data_im.multiply(self.GWP[self.species])
+            # scale = data_im.projection().getInfo()['transform'][0]
+            data_im = data_im.multiply(self.SUPPORTED_SPECIES[self.species]['GWP'])
+            # data_im = data_im.multiply(self.GWP[self.species])
             if self.co2e:
-                data_im = data_im.multiply(self.GWP[self.species])
-            data_im = data_im.multiply(1000000)  # Tg to tonne
-            ic = ee.ImageCollection(data_im)
-            scale = data_im.projection().getInfo()['transform'][0]
-            ds = xr.open_dataset(
-                ic,
-                engine = 'ee',
-                geometry = bbox,
-                crs = 'EPSG:4326',
-                scale = scale
-            )
+                data_im = data_im.multiply(1000000)  # Tg to tonne
+            
+            cams_ghg_ic = ee.ImageCollection(data_im)
+
+            data = get_image_collection(
+                cams_ghg_ic,
+                ee_rectangle,
+                spatial_resolution,
+                "CAMS GHG"
+            ).b1
+
         else:  # Sum over all species
             allrasters_list = []
-            for species in self.SUPPORTED_SPECIES:
+            for species in self.SUPPORTED_SPECIES.keys():
                 data_ic = ee.ImageCollection(f'projects/wri-datalab/cams-glob-ant/{species}')
                 data_im = data_ic.filter(ee.Filter.eq('year', self.year)).filter(ee.Filter.eq('sector', 'sum')).first()
-                data_im = data_im.multiply(self.GWP[species])
+                data_im = data_im.multiply(self.SUPPORTED_SPECIES[species]['GWP'])
                 data_im = data_im.multiply(1000000)  # Tg to tonne
                 allrasters_list.append(data_im)
             allrasters_ic = ee.ImageCollection(allrasters_list)
             sum_im = allrasters_ic.sum()
-            scale = data_im.projection().getInfo()['transform'][0]
-            ic = ee.ImageCollection(sum_im)
-            ds = xr.open_dataset(
-                ic,
-                engine = 'ee',
-                geometry = bbox,
-                crs = 'EPSG:4326',
-                scale = scale
-            )
-        ds = ds.transpose('time', 'lat', 'lon')
-        ds = ds.squeeze(['time'])
-        ds = ds.rio.set_spatial_dims('lon', 'lat')
-        return ds.to_array()
-        
+            
+            cams_ghg_ic = ee.ImageCollection(sum_im)
+
+            data = get_image_collection(
+                cams_ghg_ic,
+                ee_rectangle,
+                spatial_resolution,
+                "CAMS GHG"
+            ).b1
+
+        return data

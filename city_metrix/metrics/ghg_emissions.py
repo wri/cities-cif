@@ -1,13 +1,15 @@
+from geopandas import GeoDataFrame, GeoSeries
 import ee
 import geopandas as gpd
 import numpy as np
+
 from city_metrix.layers import Layer, CamsGhg
 
 SUPPORTED_SPECIES = CamsGhg.SUPPORTED_SPECIES
 SUPPORTED_YEARS = CamsGhg.SUPPORTED_YEARS
-GWP = CamsGhg.GWP
+# GWP = CamsGhg.GWP
 
-def ghg_emissions(zones, years=[2023]):
+def ghg_emissions(zones: GeoDataFrame, years=[2023]) -> GeoSeries:
     # supported years: 2010, 2015, 2020, 2023
     if not isinstance(years, (list, set, tuple)):
         raise Exception('Parameter years must be list, set, or tuple.')
