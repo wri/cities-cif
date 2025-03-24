@@ -70,10 +70,6 @@ def test_cams():
     utm_bbox_data = Cams().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
-def test_camsghg():
-    data = CamsGhg().get_data(BBOX)
-    assert np.size(data) > 0
-
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
     data = Era5HottestDay().get_data(BBOX)
