@@ -7,7 +7,7 @@ from .layer_geometry import GeoExtent, retrieve_cached_city_data
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class LandCoverGlad(Layer):
-    LAYER_ID = "glad_lulc"
+    LAYER_ID = "lulc_glad"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -39,18 +39,25 @@ class LandCoverGlad(Layer):
 
 
 class LandCoverSimplifiedGlad(Layer):
+    LAYER_ID = "lulc_simplified_glad"
+    OUTPUT_FILE_FORMAT = 'tif'
+
     """
     Attributes:
         year: year used for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
     def __init__(self, year=2020,  **kwargs):
         super().__init__(**kwargs)
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+                 resampling_method=None, allow_s3_cache_retrieval=False):
+
+        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
+                                                          , allow_s3_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
+
         glad = LandCoverGlad(year=self.year).get_data(bbox, spatial_resolution=spatial_resolution)
         # Copy the original data
         data = glad.copy(deep=True)
@@ -79,18 +86,25 @@ class LandCoverSimplifiedGlad(Layer):
 
 
 class LandCoverHabitatGlad(Layer):
+    LAYER_ID = "lulc_habitat_glad"
+    OUTPUT_FILE_FORMAT = 'tif'
+
     """
     Attributes:
         year: year used for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
     def __init__(self, year=2020, **kwargs):
         super().__init__(**kwargs)
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+                 resampling_method=None, allow_s3_cache_retrieval=False):
+
+        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
+                                                          , allow_s3_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
+
         simplified_glad = (LandCoverSimplifiedGlad(year=self.year)
                            .get_data(bbox, spatial_resolution=spatial_resolution))
         # Copy the original data
@@ -106,20 +120,26 @@ class LandCoverHabitatGlad(Layer):
 
 
 class LandCoverHabitatChangeGlad(Layer):
+    LAYER_ID = "lulc_habitat_change_glad"
+    OUTPUT_FILE_FORMAT = 'tif'
+
     """
     Attributes:
         start_year: baseline year for habitat change
         end_year: target year for habitat change
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
     def __init__(self, start_year=2000, end_year=2020, **kwargs):
         super().__init__(**kwargs)
         self.start_year = start_year
         self.end_year = end_year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+                 resampling_method=None, allow_s3_cache_retrieval=False):
+        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
+                                                          , allow_s3_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
+
         habitat_glad_start = (LandCoverHabitatGlad(year=self.start_year)
                               .get_data(bbox, spatial_resolution=spatial_resolution))
         habitat_glad_end = (LandCoverHabitatGlad(year=self.end_year)

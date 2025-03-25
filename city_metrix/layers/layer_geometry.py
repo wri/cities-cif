@@ -376,7 +376,7 @@ def retrieve_cached_city_data(geo_extent: GeoExtent, layer_id:str, year: int, fi
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
     file_name = get_s3_layer_name(city_id, admin_level, layer_id, year, file_format)
-    file_key = get_s3_file_key(city_id, file_format, file_name)
+    file_key = get_s3_file_key(layer_id, file_format, file_name)
 
     if not check_if_s3_file_exists(s3_client, file_key):
         return None

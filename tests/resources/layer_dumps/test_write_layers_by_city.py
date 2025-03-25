@@ -22,6 +22,7 @@ def test_esa_world_cover_os(target_folder):
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_esa_world_cover_s3(target_folder):
+    set_testing_environment_variables()
     geo_extent = get_test_bbox(EXTENT_SMALL_CITY_WGS84)
     year = 2020
     query_layer = EsaWorldCover(year=year)

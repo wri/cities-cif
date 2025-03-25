@@ -2,6 +2,8 @@ import os
 import boto3
 import requests
 
+from city_metrix.constants import testing_aws_bucket
+
 #TODO In near-term, the cities-dat-api must be replaced by dev.cities-data-api after the dev.. API stabilizes.
 # CITIES_DATA_API_URL = "dev.cities-data-api.wri.org"
 CITIES_DATA_API_URL = "cities-data-api.wri.org"
@@ -34,16 +36,25 @@ def get_s3_layer_name(city_id, admin_level, layer_id, year, file_format):
         file_name = f"{city_id}__{admin_level}__{layer_id}__{year}.{file_format}"
     return file_name
 
-def get_s3_file_key(city_id, file_format, file_name):
-    return f"cid/dev/{city_id}/{file_format}/{file_name}"
+
+def get_s3_file_key(layer_id, file_format, file_name):
+    if os.environ['AWS_BUCKET'] == testing_aws_bucket:
+        env = 'dev'
+    else:
+        env = 'prd'
+
+    return f"data/{env}/{layer_id}/{file_format}/{file_name}"
+
 
 def get_s3_file_url(file_key):
     aws_bucket = os.getenv("AWS_BUCKET")
     return f"s3://{aws_bucket}/{file_key}"
 
+
 def get_file_key_from_s3_url(s3_url):
     file_key = '/'.join(s3_url.split('/')[3:])
     return file_key
+
 
 def get_s3_variables(geo_extent, query_layer, year=None):
     city_id = geo_extent.city_id
@@ -51,7 +62,7 @@ def get_s3_variables(geo_extent, query_layer, year=None):
     layer_id = query_layer.LAYER_ID
     file_format = query_layer.OUTPUT_FILE_FORMAT
     file_name = get_s3_layer_name(city_id, admin_level, layer_id, year, file_format)
-    file_key = get_s3_file_key(city_id, file_format, file_name)
+    file_key = get_s3_file_key(layer_id, file_format, file_name)
     file_url = get_s3_file_url(file_key)
 
     return file_key, file_url
@@ -112,9 +123,12 @@ def write_dataarray_to_s3(data, path):
             temp_file_path = temp_file.name
             data.rio.to_raster(raster_path=temp_file_path, driver="GTiff")
             s3_client = get_s3_client()
-            s3_client.upload_file(
-                temp_file_path, aws_bucket, file_key, ExtraArgs={"ACL": "public-read"}
-            )
+            try:
+                s3_client.upload_file(
+                    temp_file_path, aws_bucket, file_key, ExtraArgs={"ACL": "public-read"}
+                )
+            except Exception as e_msg:
+                raise Exception(f"Failed to write data to S3 {file_key}")
 
 
 def write_tile_grid(tile_grid, output_path, target_file_name):
