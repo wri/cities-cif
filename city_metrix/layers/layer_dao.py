@@ -100,7 +100,7 @@ def write_dataarray(path, data):
         if not os.path.exists(output_path):
             os.makedirs(output_path)
 
-        data.rio.to_raster(raster_path=path, driver="COG")
+        data.rio.to_raster(raster_path=path, driver="GTiff")
 
 
 def write_dataarray_to_s3(data, path):
@@ -110,8 +110,7 @@ def write_dataarray_to_s3(data, path):
     with tempfile.TemporaryDirectory() as temp_dir:
         with open(f'{temp_dir}/temp.file', 'w') as temp_file:
             temp_file_path = temp_file.name
-            data.rio.to_raster(raster_path=temp_file_path, driver="COG")
-
+            data.rio.to_raster(raster_path=temp_file_path, driver="GTiff")
             s3_client = get_s3_client()
             s3_client.upload_file(
                 temp_file_path, aws_bucket, file_key, ExtraArgs={"ACL": "public-read"}
