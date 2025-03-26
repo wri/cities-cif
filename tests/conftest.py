@@ -1,4 +1,5 @@
 from city_metrix.layers import Layer
+from city_metrix.constants import WGS_EPSG_CODE
 from city_metrix.layers.layer import create_fishnet_grid, WGS_CRS
 from geocube.api.core import make_geocube
 
@@ -32,7 +33,7 @@ def create_single_bbox_for_testing(coords):
     geom_array = []
     poly = geometry.Polygon(((min_x, min_y), (min_x, max_y), (max_x, max_y), (max_x, min_y)))
     geom_array.append(poly)
-    gdf = gp.GeoDataFrame(geom_array, columns=["geometry"]).set_crs("EPSG:4326")
+    gdf = gp.GeoDataFrame(geom_array, columns=["geometry"]).set_crs(WGS_CRS)
     return gdf
 
 
@@ -55,7 +56,7 @@ class MockLayer(Layer):
             vector_data=IDN_JAKARTA_TILED_ZONES,
             measurements=['index'],
             resolution=(0.001, 0.001),
-            output_crs=4326,
+            output_crs=WGS_EPSG_CODE,
         ).index
         return arr
 
@@ -72,7 +73,7 @@ class MockMaskLayer(Layer):
             vector_data=mask_gdf,
             measurements=['index'],
             resolution=(0.001, 0.001),
-            output_crs=4326,
+            output_crs=WGS_EPSG_CODE,
         ).index
 
         mask = mask.where(mask != 0)
@@ -91,7 +92,7 @@ class MockGroupByLayer(Layer):
             vector_data=group_by_gdf,
             measurements=['index'],
             resolution=(0.001, 0.001),
-            output_crs=4326,
+            output_crs=WGS_EPSG_CODE,
         ).index
 
         return group_by
@@ -106,7 +107,7 @@ class MockLargeLayer(Layer):
             vector_data=IDN_JAKARTA_TILED_LARGE_ZONES,
             measurements=['index'],
             resolution=(0.01, 0.01),
-            output_crs=4326,
+            output_crs=WGS_EPSG_CODE,
         ).index
         return arr
 
@@ -124,7 +125,7 @@ class MockLargeGroupByLayer(Layer):
             vector_data=group_by_gdf,
             measurements=['index'],
             resolution=(0.01, 0.01),
-            output_crs=4326,
+            output_crs=WGS_EPSG_CODE,
         ).index
 
         return group_by

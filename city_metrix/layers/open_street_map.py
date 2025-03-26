@@ -3,6 +3,7 @@ import osmnx as ox
 import geopandas as gpd
 import pandas as pd
 
+from city_metrix.constants import WGS_CRS
 from .layer import Layer
 from .layer_geometry import GeoExtent
 
@@ -84,7 +85,7 @@ class OpenStreetMap(Layer):
         # When no feature in bbox, return an empty gdf
         except ox._errors.InsufficientResponseError as e:
             osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['id', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
-            osm_feature.crs = "EPSG:4326"
+            osm_feature.crs = WGS_CRS
 
         # Filter by geo_type
         if self.osm_class == OpenStreetMapClass.ROAD:
