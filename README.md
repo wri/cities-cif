@@ -69,8 +69,14 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/file
 ```
 
 ### Execution via scripts
-Individual layers and indicators can be downloaded for specified cities using the cities-cif-portal codebase at https://github.com/wri/cities-cif-portal 
-
+1. Individual layers and indicators can be downloaded for specified cities using the cities-cif-portal codebase at https://github.com/wri/cities-cif-portal 
+2. The spatial extent of the requested layer AOI can be specified through the GeoExtent class in two ways for an AOI:
+   1. the geometric bounds as a tuple of floats, such as:
+   2. the city_id and aoi_id as a json snippet, such as:
+      '''
+      {"city_id": "BRA-Florianopolis", "aoi_id": "city_admin_level"}
+      '''
+      * Note: the city_id and aoi_id may be determined via the Cities Indicators API at https://dev.cities-data-api.wri.org/docs
 
 ## How to contribute
 
