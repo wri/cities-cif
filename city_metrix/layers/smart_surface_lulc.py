@@ -10,7 +10,7 @@ import warnings
 from rasterio.enums import Resampling
 from xrspatial.classify import reclassify
 
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
@@ -34,13 +34,19 @@ class SmartSurfaceLULC(Layer):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
 
+    def get_layer_names(self):
+        qualifier = self.land_cover_class
+        layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
+        return layer_name, layer_id, file_format
+
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_s3_cache_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        retrieved_cached_data = retrieve_cached_city_data(self, self.land_cover_class, None, bbox, allow_s3_cache_retrieval)
+        layer_name, layer_id, file_format = self.get_layer_names()
+        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

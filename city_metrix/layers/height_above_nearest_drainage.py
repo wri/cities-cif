@@ -3,7 +3,7 @@ import xarray as xr
 import ee
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
@@ -21,6 +21,12 @@ class HeightAboveNearestDrainage(Layer):
         self.river_head = river_head
         self.thresh = thresh
 
+    def get_layer_names(self):
+        qualifier = "" if self.river_head is None else f"head{self.river_head}"
+        minor_qualifier = "" if self.thresh is None else f"thresh{self.thresh}"
+        layer_name, layer_id, file_format = build_s3_names(self, qualifier, minor_qualifier)
+        return layer_name, layer_id, file_format
+
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_s3_cache_retrieval=False):
         if resampling_method is not None:
@@ -29,9 +35,8 @@ class HeightAboveNearestDrainage(Layer):
         if spatial_resolution not in [30,90]:
             raise Exception(f'spatial_resolution of {spatial_resolution} is currently not supported.')
 
-        qualifier = "" if self.river_head is None else f"head{self.river_head}"
-        minor_qualifier = "" if self.thresh is None else f"thresh{self.thresh}"
-        retrieved_cached_data = retrieve_cached_city_data(self, qualifier, minor_qualifier, bbox, allow_s3_cache_retrieval)
+        layer_name, layer_id, file_format = self.get_layer_names()
+        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

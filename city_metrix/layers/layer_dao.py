@@ -36,27 +36,25 @@ def get_s3_client():
     s3_client = session.client('s3')
     return s3_client
 
-def build_layer_name(class_name, subclass_name):
-    subclass_part = f"_{subclass_name}" if subclass_name is not None else ""
+def build_layer_name(class_name, qualifier_name):
+    subclass_part = f"_{qualifier_name}" if qualifier_name is not None else ""
     layer_name = f"{class_name}{subclass_part}"
     return layer_name.lower()
 
-def get_s3_layer_name(city_id, admin_level, class_name, subclass_name, year_a, year_b, file_format):
-    layer_name = build_layer_name(class_name, subclass_name)
+def get_layer_names(class_name, qualifier_name, minor_qualifier, year_a, year_b, file_format):
+    layer_name = build_layer_name(class_name, qualifier_name)
+    minor_qualifier_part = f"__{minor_qualifier}" if minor_qualifier is not None else ""
     year_a_part = f"__{year_a}" if year_a is not None else ""
     year_b_part = f"__{year_b}" if year_b is not None else ""
-    file_name = f"{city_id}__{admin_level}__{layer_name}{year_a_part}{year_b_part}.{file_format}"
-    return file_name
+    layer_id = f"{layer_name}{minor_qualifier_part}{year_a_part}{year_b_part}.{file_format}"
+    return layer_name, layer_id
 
-
-def get_s3_file_key(class_name, subclass_name, file_format, file_name):
+def get_s3_file_key(layer_name, city_id, admin_level, layer_id, file_format):
     if os.environ['AWS_BUCKET'] == testing_aws_bucket:
         env = 'dev'
     else:
         env = 'prd'
-    layer_name = build_layer_name(class_name, subclass_name)
-    return f"data/{env}/{layer_name}/{file_format}/{file_name}"
-
+    return f"data/{env}/{layer_name}/{file_format}/{city_id}__{admin_level}__{layer_id}"
 
 def get_s3_file_url(file_key):
     aws_bucket = os.getenv("AWS_BUCKET")
@@ -68,13 +66,11 @@ def get_file_key_from_s3_url(s3_url):
     return file_key
 
 
-def get_s3_variables(geo_extent, query_layer, subclass_name, year_a=None, year_b=None):
+def get_s3_variables(layer_obj, geo_extent):
+    layer_name, layer_id, file_format = layer_obj.get_layer_names()
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
-    class_name = query_layer.__class__.__name__
-    file_format = query_layer.OUTPUT_FILE_FORMAT
-    file_name = get_s3_layer_name(city_id, admin_level, class_name, subclass_name, year_a, year_b, file_format)
-    file_key = get_s3_file_key(class_name, subclass_name, file_format, file_name)
+    file_key = get_s3_file_key(layer_name, city_id, admin_level, layer_id, file_format)
     file_url = get_s3_file_url(file_key)
 
     return file_key, file_url

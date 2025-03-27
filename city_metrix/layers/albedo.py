@@ -4,7 +4,7 @@ from dask.diagnostics import ProgressBar
 
 from .layer import (Layer, get_image_collection, set_resampling_for_continuous_raster,
                     validate_raster_resampling_method)
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
@@ -88,14 +88,19 @@ class Albedo(Layer):
 
         return s2_with_clouds_ic
 
+    def get_layer_names(self):
+        qualifier = None if self.threshold is None else f"threshold{self.threshold}"
+        layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
+        return layer_name, layer_id, file_format
+
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method:str=DEFAULT_RESAMPLING_METHOD, allow_s3_cache_retrieval=False):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        qualifier = "" if self.threshold is None else f"threshold{self.threshold}"
-        retrieved_cached_data = retrieve_cached_city_data(self, qualifier, None, bbox, allow_s3_cache_retrieval)
+        layer_name, layer_id, file_format = self.get_layer_names()
+        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

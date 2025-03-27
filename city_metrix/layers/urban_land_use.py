@@ -5,7 +5,7 @@ import ee
 import numpy as np
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 5
 
@@ -23,14 +23,20 @@ class UrbanLandUse(Layer):
         self.band = band
         self.ulu_class = ulu_class
 
+    def get_layer_names(self):
+        qualifier = self.band
+        minor_qualifier = "" if self.ulu_class is None else f"ulu{self.ulu_class}"
+        layer_name, layer_id, file_format = build_s3_names(self, qualifier, minor_qualifier)
+        return layer_name, layer_id, file_format
+
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_s3_cache_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        minor_qualifier = "" if self.ulu_class is None else f"ulu{self.ulu_class}"
-        retrieved_cached_data = retrieve_cached_city_data(self, self.band, minor_qualifier, bbox, allow_s3_cache_retrieval)
+        layer_name, layer_id, file_format = self.get_layer_names()
+        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

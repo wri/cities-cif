@@ -3,7 +3,7 @@ import geopandas as gpd
 import geemap
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
 
 
 class ProtectedAreas(Layer):
@@ -21,13 +21,19 @@ class ProtectedAreas(Layer):
         self.status_year = status_year
         self.iucn_cat = iucn_cat
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_s3_cache_retrieval=False):
-
+    def get_layer_names(self):
+        qualifier = self.status
         iucn_cat_str = "" if self.iucn_cat is None else f"iucn{self.iucn_cat}"
         status_year_str = "" if self.status_year is None else f"year{self.status_year}"
         minor_qualifier = iucn_cat_str+status_year_str
-        retrieved_cached_data = retrieve_cached_city_data(self, self.status, minor_qualifier, bbox, allow_s3_cache_retrieval)
+        layer_name, layer_id, file_format = build_s3_names(self, qualifier, minor_qualifier)
+        return layer_name, layer_id, file_format
+
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 allow_s3_cache_retrieval=False):
+
+        layer_name, layer_id, file_format = self.get_layer_names()
+        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

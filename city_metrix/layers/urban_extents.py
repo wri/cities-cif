@@ -4,7 +4,7 @@ import geemap
 import geopandas as gpd
 
 from .layer import Layer
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
 
 
 class UrbanExtents(Layer):
@@ -20,10 +20,15 @@ class UrbanExtents(Layer):
             raise Exception(f'Year {year} not available.')
         self.year = year
 
+    def get_layer_names(self):
+        layer_name, layer_id, file_format = build_s3_names(self, None, None)
+        return layer_name, layer_id, file_format
+
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  allow_s3_cache_retrieval=False):
 
-        retrieved_cached_data = retrieve_cached_city_data(self, None, None, bbox, allow_s3_cache_retrieval)
+        layer_name, layer_id, file_format = self.get_layer_names()
+        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

@@ -35,6 +35,12 @@ class Layer():
 
         self.masks = masks
 
+    @abstractmethod
+    def get_layer_names(self):
+        """
+        Returns layer_id, layer_name for naming s3 subfolder, and file_format
+        """
+        ...
 
     @abstractmethod
     def get_data(self, bbox: GeoExtent, spatial_resolution:int, resampling_method:str,

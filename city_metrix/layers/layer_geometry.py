@@ -15,8 +15,8 @@ from pyproj import CRS
 from shapely.geometry import point
 
 from city_metrix.constants import WGS_CRS
-from city_metrix.layers.layer_dao import get_city, get_city_boundary, get_s3_client, get_s3_layer_name, \
-    get_s3_file_key, check_if_s3_file_exists, get_s3_file_url
+from city_metrix.layers.layer_dao import get_city, get_city_boundary, get_s3_client, \
+    get_s3_file_key, check_if_s3_file_exists, get_s3_file_url, get_layer_names
 from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance
 
 MAX_SIDE_LENGTH_METERS = 50000 # This values should cover most situations
@@ -365,25 +365,23 @@ def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
 
     return x_offset, y_offset
 
+def build_s3_names(layer_obj, qualifier, minor_qualifier):
+    class_name = layer_obj.__class__.__name__
+    file_format = layer_obj.OUTPUT_FILE_FORMAT
+    qualifier_name, year_a, year_b = _get_parameter_years(qualifier, layer_obj)
+    layer_name, layer_id = get_layer_names(class_name, qualifier_name, minor_qualifier, year_a, year_b, file_format)
+    return layer_name, layer_id, file_format
 
-# def retrieve_cached_city_data(layer_class, geo_extent: GeoExtent, layer_id:str, subclass, year: int, file_format:str,
-#                               allow_s3_cache_retrieval:bool):
-def retrieve_cached_city_data(layer_obj, qualifier, minor_qualifier, geo_extent, allow_s3_cache_retrieval: bool):
-    # https://nasa-openscapes.github.io/2021-Cloud-Workshop-AGU/how-tos/Earthdata_Cloud__Single_File__Direct_S3_Access_COG_Example.html
-
+def retrieve_cached_city_data(geo_extent, layer_name, layer_id, file_format, allow_s3_cache_retrieval: bool):
     if allow_s3_cache_retrieval == False or geo_extent.geo_extent_type == 'geometry':
         return None
 
     s3_client = get_s3_client()
 
-    class_name = layer_obj.__class__.__name__
-    file_format = layer_obj.OUTPUT_FILE_FORMAT
-    qualifer_name, year_a, year_b = _get_parameter_years(qualifier, layer_obj)
-
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
-    file_name = get_s3_layer_name(city_id, admin_level, class_name, qualifer_name, year_a, year_b, file_format)
-    file_key = get_s3_file_key(class_name, qualifer_name, file_format, file_name)
+
+    file_key = get_s3_file_key(layer_name, city_id, admin_level, layer_id, file_format)
 
     if not check_if_s3_file_exists(s3_client, file_key):
         return None
@@ -413,20 +411,20 @@ def retrieve_cached_city_data(layer_obj, qualifier, minor_qualifier, geo_extent,
 
         return da
 
-def _get_parameter_years(subclass, layer_obj):
+def _get_parameter_years(qualifier, layer_obj):
     # parameter_data = json.loads(parameters)
     parameters = {key: value for key, value in layer_obj.__dict__.items()}
 
-    if isinstance(subclass, Enum):
-        subclass_name = subclass.name
-    elif isinstance(subclass, str) or isinstance(subclass, int):
-        subclass_name = subclass
-    elif isinstance(subclass, list):
-        subclass_name = '-'.join(subclass)
-    elif subclass is None or subclass == "":
+    if isinstance(qualifier, Enum):
+        subclass_name = qualifier.name
+    elif isinstance(qualifier, str) or isinstance(qualifier, int):
+        subclass_name = qualifier
+    elif isinstance(qualifier, list):
+        subclass_name = '-'.join(qualifier)
+    elif qualifier is None or qualifier == "":
         subclass_name = None
     else:
-        raise Exception("Subclass name could not be determined.")
+        raise Exception("Qualifier name could not be determined.")
 
     if 'year' in parameters:
         year_a = parameters['year']
@@ -434,8 +432,11 @@ def _get_parameter_years(subclass, layer_obj):
         year_a = parameters['start_year']
     elif 'start_date' in parameters:
         start_date_str = parameters['start_date']
-        date_object = datetime.strptime(start_date_str, "%Y-%m-%d")
-        year_a = date_object.year
+        if start_date_str is None:
+            year_a = None
+        else:
+            date_object = datetime.strptime(start_date_str, "%Y-%m-%d")
+            year_a = date_object.year
     else:
         year_a = None
 
@@ -443,8 +444,11 @@ def _get_parameter_years(subclass, layer_obj):
         year_b = parameters['end_year']
     elif 'end_date' in parameters:
         end_date_str = parameters['end_date']
-        date_object = datetime.strptime(end_date_str, "%Y-%m-%d")
-        year_b = date_object.year
+        if end_date_str is None:
+            year_b = None
+        else:
+            date_object = datetime.strptime(end_date_str, "%Y-%m-%d")
+            year_b = date_object.year
     else:
         year_b = None
 

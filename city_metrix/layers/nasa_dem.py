@@ -3,7 +3,7 @@ import xee
 import xarray as xr
 
 from .layer import Layer, get_image_collection, set_resampling_for_continuous_raster, validate_raster_resampling_method
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
@@ -13,6 +13,10 @@ class NasaDEM(Layer):
 
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
+
+    def get_layer_names(self):
+        layer_name, layer_id, file_format = build_s3_names(self, None, None)
+        return layer_name, layer_id, file_format
 
     """
     Attributes:
@@ -26,7 +30,8 @@ class NasaDEM(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        retrieved_cached_data = retrieve_cached_city_data(self, None, None, bbox, allow_s3_cache_retrieval)
+        layer_name, layer_id, file_format = self.get_layer_names()
+        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

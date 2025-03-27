@@ -4,8 +4,7 @@ import pytest
 
 from city_metrix.constants import testing_aws_bucket, testing_s3_aws_profile
 from city_metrix.layers import *
-from city_metrix.layers.layer_dao import get_s3_layer_name, get_s3_file_key, get_s3_file_url, \
-    get_s3_client, check_if_s3_file_exists, get_s3_variables
+from city_metrix.layers.layer_dao import get_s3_client, check_if_s3_file_exists, get_s3_variables
 from city_metrix.layers.layer_tools import set_environment_variable
 from .conftest import EXECUTE_IGNORED_TESTS, prep_output_path, verify_file_is_populated
 from .tools import get_test_bbox
@@ -25,10 +24,10 @@ def test_esa_world_cover_os(target_folder):
 def test_esa_world_cover_s3(target_folder):
     set_testing_environment_variables()
     geo_extent = get_test_bbox(EXTENT_SMALL_CITY_WGS84)
-    year = 2020
-    query_layer = EsaWorldCover(year=year)
-    file_key, file_url = get_s3_variables(geo_extent, query_layer, None, year, None)
-    query_layer.write(bbox=geo_extent, output_path=file_url)
+    layer_obj = EsaWorldCover(year=2020)
+    file_key, file_url = get_s3_variables(layer_obj, geo_extent)
+    layer_obj.write(bbox=geo_extent, output_path=file_url)
+
     s3_file_exists = check_if_s3_file_exists(get_s3_client(), file_key)
     assert s3_file_exists
 
@@ -36,9 +35,10 @@ def test_esa_world_cover_s3(target_folder):
 def test_albedo_s3(target_folder):
     set_testing_environment_variables()
     geo_extent = get_test_bbox(EXTENT_SMALL_CITY_WGS84)
-    query_layer = Albedo()
-    file_key, file_url = get_s3_variables(geo_extent, query_layer, None, 2021, 2022)
-    query_layer.write(bbox=geo_extent, output_path=file_url)
+    layer_obj = Albedo()
+    file_key, file_url = get_s3_variables(layer_obj, geo_extent)
+    layer_obj.write(bbox=geo_extent, output_path=file_url)
+
     s3_file_exists = check_if_s3_file_exists(get_s3_client(), file_key)
     assert s3_file_exists
 
@@ -46,10 +46,10 @@ def test_albedo_s3(target_folder):
 def test_write_open_street_map_roads_s3(target_folder):
     set_testing_environment_variables()
     geo_extent = get_test_bbox(EXTENT_SMALL_CITY_WGS84)
-    road_features = OpenStreetMapClass.ROAD
-    query_layer = OpenStreetMap(road_features)
-    file_key, file_url = get_s3_variables(geo_extent, query_layer, road_features.name, None, None)
-    query_layer.write(bbox=geo_extent, output_path=file_url)
+    layer_obj = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD)
+    file_key, file_url = get_s3_variables(layer_obj, geo_extent)
+    layer_obj.write(bbox=geo_extent, output_path=file_url)
+
     s3_file_exists = check_if_s3_file_exists(get_s3_client(), file_key)
     assert s3_file_exists
 

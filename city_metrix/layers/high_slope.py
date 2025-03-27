@@ -3,7 +3,7 @@ from xrspatial import slope
 
 from .layer import Layer, validate_raster_resampling_method
 from .nasa_dem import NasaDEM
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
@@ -19,6 +19,11 @@ class HighSlope(Layer):
         super().__init__(**kwargs)
         self.slope_threshold = slope_threshold
 
+    def get_layer_names(self):
+        qualifier = "" if self.slope_threshold is None else f"threshold{self.slope_threshold}"
+        layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
+        return layer_name, layer_id, file_format
+
     """
     Attributes:
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
@@ -31,8 +36,8 @@ class HighSlope(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        qualifier = "" if self.slope_threshold is None else f"threshold{self.slope_threshold}"
-        retrieved_cached_data = retrieve_cached_city_data(self, qualifier, None, bbox, allow_s3_cache_retrieval)
+        layer_name, layer_id, file_format = self.get_layer_names()
+        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
