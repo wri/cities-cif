@@ -7,7 +7,6 @@ from .layer_geometry import GeoExtent, retrieve_cached_city_data
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class LandCoverGlad(Layer):
-    LAYER_ID = "lulc_glad"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -21,8 +20,7 @@ class LandCoverGlad(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_s3_cache_retrieval=False):
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, None, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
@@ -39,7 +37,6 @@ class LandCoverGlad(Layer):
 
 
 class LandCoverSimplifiedGlad(Layer):
-    LAYER_ID = "lulc_simplified_glad"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -53,8 +50,7 @@ class LandCoverSimplifiedGlad(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_s3_cache_retrieval=False):
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, None, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
@@ -86,7 +82,6 @@ class LandCoverSimplifiedGlad(Layer):
 
 
 class LandCoverHabitatGlad(Layer):
-    LAYER_ID = "lulc_habitat_glad"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -100,8 +95,7 @@ class LandCoverHabitatGlad(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_s3_cache_retrieval=False):
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, None, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
@@ -120,7 +114,6 @@ class LandCoverHabitatGlad(Layer):
 
 
 class LandCoverHabitatChangeGlad(Layer):
-    LAYER_ID = "lulc_habitat_change_glad"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -135,8 +128,8 @@ class LandCoverHabitatChangeGlad(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_s3_cache_retrieval=False):
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+
+        retrieved_cached_data = retrieve_cached_city_data(self, None, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

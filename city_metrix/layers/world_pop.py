@@ -18,7 +18,6 @@ class WorldPopClass(Enum):
 
 
 class WorldPop(Layer):
-    LAYER_ID = "world_pop"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -39,8 +38,7 @@ class WorldPop(Layer):
                  resampling_method=None, allow_s3_cache_retrieval=False):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, self.agesex_classes, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

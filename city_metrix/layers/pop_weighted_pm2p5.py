@@ -12,7 +12,6 @@ from .acag_pm2p5 import AcagPM2p5
 DEFAULT_SPATIAL_RESOLUTION = 1113.1949
 
 class PopWeightedPM2p5(Layer):
-    LAYER_ID = "pop_weighted_pm2p5"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -37,8 +36,12 @@ class PopWeightedPM2p5(Layer):
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        acag_return_above_str = "" if self.acag_year is None else f"above{self.acag_return_above}"
+        acag_year_str = "" if self.acag_year is None else f"acagyear{self.acag_year}"
+        worldpop_year_str = "" if self.worldpop_year is None else f"worldpopyear{self.worldpop_year}"
+        minor_qualifier = acag_return_above_str+acag_year_str+worldpop_year_str
+
+        retrieved_cached_data = retrieve_cached_city_data(self, self.worldpop_agesex_classes, minor_qualifier, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

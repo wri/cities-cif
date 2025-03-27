@@ -14,9 +14,6 @@ from .layer_geometry import GeoExtent, retrieve_cached_city_data
 
 
 class Era5HottestDay(Layer):
-    LAYER_ID = "era5_hottest_day"
-    OUTPUT_FILE_FORMAT = 'tif'
-
     """
     Attributes:
         start_date: starting date for data retrieval
@@ -30,11 +27,6 @@ class Era5HottestDay(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  allow_s3_cache_retrieval=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
-
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         geographic_bbox = bbox.as_geographic_bbox()
 

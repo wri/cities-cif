@@ -68,7 +68,6 @@ class OpenStreetMapClass(Enum):
 
 
 class OpenStreetMap(Layer):
-    LAYER_ID = "open_street_map"
     OUTPUT_FILE_FORMAT = 'geojson'
 
     """
@@ -83,8 +82,7 @@ class OpenStreetMap(Layer):
                  allow_s3_cache_retrieval=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, self.osm_class, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

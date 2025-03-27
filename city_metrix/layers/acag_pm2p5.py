@@ -10,7 +10,6 @@ DEFAULT_SPATIAL_RESOLUTION = 1113.1949
 
 
 class AcagPM2p5(Layer):
-    LAYER_ID = "acag_pm2p5"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -29,8 +28,8 @@ class AcagPM2p5(Layer):
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        qualifier = "" if self.return_above is None else f"above{self.return_above}"
+        retrieved_cached_data = retrieve_cached_city_data(self, qualifier, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

@@ -26,7 +26,6 @@ class EsaWorldCover(Layer):
     STAC_CATALOG_URI = "https://services.terrascope.be/stac/"
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
-    LAYER_ID = "esa_world_cover_2020"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -45,8 +44,7 @@ class EsaWorldCover(Layer):
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, self.land_cover_class, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

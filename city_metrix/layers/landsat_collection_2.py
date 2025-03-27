@@ -6,7 +6,6 @@ from .layer_geometry import GeoExtent, retrieve_cached_city_data
 
 
 class LandsatCollection2(Layer):
-    LAYER_ID = "landsat_collection_2"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -28,8 +27,7 @@ class LandsatCollection2(Layer):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, self.bands, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

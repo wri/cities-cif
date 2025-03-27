@@ -2,11 +2,8 @@ import os
 import boto3
 import requests
 
-from city_metrix.constants import testing_aws_bucket
+from city_metrix.constants import testing_aws_bucket, CITIES_DATA_API_URL
 
-#TODO In near-term, the cities-dat-api must be replaced by dev.cities-data-api after the dev.. API stabilizes.
-# CITIES_DATA_API_URL = "dev.cities-data-api.wri.org"
-CITIES_DATA_API_URL = "cities-data-api.wri.org"
 
 def get_city(city_id: str):
     query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
@@ -15,12 +12,22 @@ def get_city(city_id: str):
         return city.json()
     raise Exception("City not found")
 
+
 def get_city_boundary(city_id: str, admin_level: str):
-    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/{admin_level}/geojson"
+    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
     city_boundary = requests.get(query)
     if city_boundary.status_code in range(200, 206):
-        return city_boundary.json()
+        tuple_str = city_boundary.json()['bounding_box']
+        bounds = _string_to_float_tuple(tuple_str)
+        return bounds
     raise Exception("City boundary not found")
+
+
+def _string_to_float_tuple(string_tuple):
+    string_tuple = string_tuple.replace("[", "").replace("]", "")
+    string_values = string_tuple.split(",")
+    float_tuple = tuple(float(value.strip()) for value in string_values)
+    return float_tuple
 
 
 def get_s3_client():
@@ -29,21 +36,26 @@ def get_s3_client():
     s3_client = session.client('s3')
     return s3_client
 
-def get_s3_layer_name(city_id, admin_level, layer_id, year, file_format):
-    if year is None:
-        file_name = f"{city_id}__{admin_level}__{layer_id}.{file_format}"
-    else:
-        file_name = f"{city_id}__{admin_level}__{layer_id}__{year}.{file_format}"
+def build_layer_name(class_name, subclass_name):
+    subclass_part = f"_{subclass_name}" if subclass_name is not None else ""
+    layer_name = f"{class_name}{subclass_part}"
+    return layer_name.lower()
+
+def get_s3_layer_name(city_id, admin_level, class_name, subclass_name, year_a, year_b, file_format):
+    layer_name = build_layer_name(class_name, subclass_name)
+    year_a_part = f"__{year_a}" if year_a is not None else ""
+    year_b_part = f"__{year_b}" if year_b is not None else ""
+    file_name = f"{city_id}__{admin_level}__{layer_name}{year_a_part}{year_b_part}.{file_format}"
     return file_name
 
 
-def get_s3_file_key(layer_id, file_format, file_name):
+def get_s3_file_key(class_name, subclass_name, file_format, file_name):
     if os.environ['AWS_BUCKET'] == testing_aws_bucket:
         env = 'dev'
     else:
         env = 'prd'
-
-    return f"data/{env}/{layer_id}/{file_format}/{file_name}"
+    layer_name = build_layer_name(class_name, subclass_name)
+    return f"data/{env}/{layer_name}/{file_format}/{file_name}"
 
 
 def get_s3_file_url(file_key):
@@ -56,13 +68,13 @@ def get_file_key_from_s3_url(s3_url):
     return file_key
 
 
-def get_s3_variables(geo_extent, query_layer, year=None):
+def get_s3_variables(geo_extent, query_layer, subclass_name, year_a=None, year_b=None):
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
-    layer_id = query_layer.LAYER_ID
+    class_name = query_layer.__class__.__name__
     file_format = query_layer.OUTPUT_FILE_FORMAT
-    file_name = get_s3_layer_name(city_id, admin_level, layer_id, year, file_format)
-    file_key = get_s3_file_key(layer_id, file_format, file_name)
+    file_name = get_s3_layer_name(city_id, admin_level, class_name, subclass_name, year_a, year_b, file_format)
+    file_key = get_s3_file_key(class_name, subclass_name, file_format, file_name)
     file_url = get_s3_file_url(file_key)
 
     return file_key, file_url

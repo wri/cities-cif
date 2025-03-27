@@ -8,7 +8,6 @@ from .layer_geometry import GeoExtent, retrieve_cached_city_data
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class HeightAboveNearestDrainage(Layer):
-    LAYER_ID = "height_above_nearest_drainage"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -30,8 +29,9 @@ class HeightAboveNearestDrainage(Layer):
         if spatial_resolution not in [30,90]:
             raise Exception(f'spatial_resolution of {spatial_resolution} is currently not supported.')
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        qualifier = "" if self.river_head is None else f"head{self.river_head}"
+        minor_qualifier = "" if self.thresh is None else f"thresh{self.thresh}"
+        retrieved_cached_data = retrieve_cached_city_data(self, qualifier, minor_qualifier, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

@@ -19,7 +19,6 @@ def get_geojson_geometry_bounds(geojson: str):
     gdf = gpd.GeoDataFrame.from_features(geojson)
     return gdf.total_bounds
 
-
 def get_projection_name(crs: Union[str|int]):
     if isinstance(crs, str):
         if crs.lower().startswith('epsg:'):

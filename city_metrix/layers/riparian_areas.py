@@ -10,7 +10,6 @@ from .layer_geometry import GeoExtent, retrieve_cached_city_data
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class RiparianAreas(Layer):
-    LAYER_ID = "riparian_areas"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -32,8 +31,9 @@ class RiparianAreas(Layer):
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        qualifier = "" if self.river_head is None else f'head{self.river_head}'
+        minor_qualifier = "" if self.thresh is None else f'thresh{self.thresh}'
+        retrieved_cached_data = retrieve_cached_city_data(self, qualifier, minor_qualifier, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

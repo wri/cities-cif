@@ -7,7 +7,6 @@ from .layer_geometry import GeoExtent, retrieve_cached_city_data
 
 
 class OvertureBuildings(Layer):
-    LAYER_ID = "overture_buildings"
     OUTPUT_FILE_FORMAT = 'geojson'
 
     def __init__(self, **kwargs):
@@ -17,8 +16,7 @@ class OvertureBuildings(Layer):
                  allow_s3_cache_retrieval=False):
         #Note: spatial_resolution and resampling_method arguments are ignored.
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, None, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

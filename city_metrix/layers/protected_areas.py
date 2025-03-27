@@ -7,7 +7,6 @@ from .layer_geometry import GeoExtent, retrieve_cached_city_data
 
 
 class ProtectedAreas(Layer):
-    LAYER_ID = "protected_areas"
     OUTPUT_FILE_FORMAT = 'geojson'
 
     """
@@ -25,8 +24,10 @@ class ProtectedAreas(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  allow_s3_cache_retrieval=False):
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        iucn_cat_str = "" if self.iucn_cat is None else f"iucn{self.iucn_cat}"
+        status_year_str = "" if self.status_year is None else f"year{self.status_year}"
+        minor_qualifier = iucn_cat_str+status_year_str
+        retrieved_cached_data = retrieve_cached_city_data(self, self.status, minor_qualifier, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

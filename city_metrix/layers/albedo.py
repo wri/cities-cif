@@ -10,7 +10,6 @@ DEFAULT_SPATIAL_RESOLUTION = 10
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
 class Albedo(Layer):
-    LAYER_ID = "albedo"
     OUTPUT_FILE_FORMAT = 'tif'
     MAX_CLOUD_PROB = 30
     S2_ALBEDO_EQN = '((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))'
@@ -95,8 +94,8 @@ class Albedo(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        qualifier = "" if self.threshold is None else f"threshold{self.threshold}"
+        retrieved_cached_data = retrieve_cached_city_data(self, qualifier, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

@@ -18,7 +18,8 @@ def test_esa_world_cover_os(target_folder):
     set_testing_environment_variables()
     file_path = prep_output_path(target_folder, 'esa_world_cover_small_city_wgs84.tif')
     bbox = get_test_bbox(EXTENT_SMALL_CITY_WGS84)
-    EsaWorldCover(year=2020).write(bbox=bbox, output_path=file_path)
+    subclass = EsaWorldCoverClass.BUILT_UP
+    EsaWorldCover(land_cover_class=subclass, year=2020).write(bbox=bbox, output_path=file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_esa_world_cover_s3(target_folder):
@@ -26,11 +27,20 @@ def test_esa_world_cover_s3(target_folder):
     geo_extent = get_test_bbox(EXTENT_SMALL_CITY_WGS84)
     year = 2020
     query_layer = EsaWorldCover(year=year)
-    file_key, file_url = get_s3_variables(geo_extent, query_layer, year)
+    file_key, file_url = get_s3_variables(geo_extent, query_layer, None, year, None)
     query_layer.write(bbox=geo_extent, output_path=file_url)
     s3_file_exists = check_if_s3_file_exists(get_s3_client(), file_key)
     assert s3_file_exists
 
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_albedo_s3(target_folder):
+    set_testing_environment_variables()
+    geo_extent = get_test_bbox(EXTENT_SMALL_CITY_WGS84)
+    query_layer = Albedo()
+    file_key, file_url = get_s3_variables(geo_extent, query_layer, None, 2021, 2022)
+    query_layer.write(bbox=geo_extent, output_path=file_url)
+    s3_file_exists = check_if_s3_file_exists(get_s3_client(), file_key)
+    assert s3_file_exists
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_open_street_map_roads_s3(target_folder):
@@ -38,11 +48,10 @@ def test_write_open_street_map_roads_s3(target_folder):
     geo_extent = get_test_bbox(EXTENT_SMALL_CITY_WGS84)
     road_features = OpenStreetMapClass.ROAD
     query_layer = OpenStreetMap(road_features)
-    file_key, file_url = get_s3_variables(geo_extent, query_layer)
+    file_key, file_url = get_s3_variables(geo_extent, query_layer, road_features.name, None, None)
     query_layer.write(bbox=geo_extent, output_path=file_url)
     s3_file_exists = check_if_s3_file_exists(get_s3_client(), file_key)
     assert s3_file_exists
-
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_nasa_dem(target_folder):

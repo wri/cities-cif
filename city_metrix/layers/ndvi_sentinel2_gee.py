@@ -13,7 +13,6 @@ class NdviSentinel2(Layer):
     Notebook: https://github.com/wri/cities-cities4forests-indicators/blob/dev-eric/scripts/extract-VegetationCover.ipynb
     Reference: https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index
     """
-    LAYER_ID = "ndvi_sentinel_2"
     OUTPUT_FILE_FORMAT = 'tif'
 
     """
@@ -33,8 +32,7 @@ class NdviSentinel2(Layer):
         if self.year is None:
             raise Exception('NdviSentinel2.get_data() requires a year value')
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, None, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

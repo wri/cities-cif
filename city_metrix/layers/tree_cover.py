@@ -10,7 +10,6 @@ from .layer_geometry import GeoExtent, retrieve_cached_city_data
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class TreeCover(Layer):
-    LAYER_ID = "tree_cover"
     OUTPUT_FILE_FORMAT = 'tif'
     NO_DATA_VALUE = 255
 
@@ -32,8 +31,11 @@ class TreeCover(Layer):
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, None, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        min_tree_cover_str = "" if self.min_tree_cover is None else f"min{self.min_tree_cover}"
+        max_tree_cover_str = "" if self.max_tree_cover is None else f"max{self.max_tree_cover}"
+        qualifier = min_tree_cover_str+max_tree_cover_str
+
+        retrieved_cached_data = retrieve_cached_city_data(self, qualifier, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

@@ -8,7 +8,6 @@ from .layer_geometry import GeoExtent, retrieve_cached_city_data
 
 
 class UrbanExtents(Layer):
-    LAYER_ID = "urban_extents"
     OUTPUT_FILE_FORMAT = 'geojson'
 
     """
@@ -24,8 +23,7 @@ class UrbanExtents(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  allow_s3_cache_retrieval=False):
 
-        retrieved_cached_data = retrieve_cached_city_data(bbox, self.LAYER_ID, self.year, self.OUTPUT_FILE_FORMAT
-                                                          , allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, None, None, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
