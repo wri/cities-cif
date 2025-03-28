@@ -365,13 +365,6 @@ def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
 
     return x_offset, y_offset
 
-def build_s3_names(layer_obj, qualifier, minor_qualifier):
-    class_name = layer_obj.__class__.__name__
-    file_format = layer_obj.OUTPUT_FILE_FORMAT
-    qualifier_name, year_a, year_b = _get_parameter_years(qualifier, layer_obj)
-    layer_name, layer_id = get_layer_names(class_name, qualifier_name, minor_qualifier, year_a, year_b, file_format)
-    return layer_name, layer_id, file_format
-
 def retrieve_cached_city_data(geo_extent, layer_name, layer_id, file_format, allow_s3_cache_retrieval: bool):
     if allow_s3_cache_retrieval == False or geo_extent.geo_extent_type == 'geometry':
         return None
@@ -410,46 +403,3 @@ def retrieve_cached_city_data(geo_extent, layer_name, layer_id, file_format, all
         #         del da.attrs[attr]
 
         return da
-
-def _get_parameter_years(qualifier, layer_obj):
-    # parameter_data = json.loads(parameters)
-    parameters = {key: value for key, value in layer_obj.__dict__.items()}
-
-    if isinstance(qualifier, Enum):
-        subclass_name = qualifier.name
-    elif isinstance(qualifier, str) or isinstance(qualifier, int):
-        subclass_name = qualifier
-    elif isinstance(qualifier, list):
-        subclass_name = '-'.join(qualifier)
-    elif qualifier is None or qualifier == "":
-        subclass_name = None
-    else:
-        raise Exception("Qualifier name could not be determined.")
-
-    if 'year' in parameters:
-        year_a = parameters['year']
-    elif 'start_year' in parameters:
-        year_a = parameters['start_year']
-    elif 'start_date' in parameters:
-        start_date_str = parameters['start_date']
-        if start_date_str is None:
-            year_a = None
-        else:
-            date_object = datetime.strptime(start_date_str, "%Y-%m-%d")
-            year_a = date_object.year
-    else:
-        year_a = None
-
-    if 'end_year' in parameters:
-        year_b = parameters['end_year']
-    elif 'end_date' in parameters:
-        end_date_str = parameters['end_date']
-        if end_date_str is None:
-            year_b = None
-        else:
-            date_object = datetime.strptime(end_date_str, "%Y-%m-%d")
-            year_b = date_object.year
-    else:
-        year_b = None
-
-    return subclass_name, year_a, year_b

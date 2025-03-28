@@ -5,7 +5,8 @@ import pandas as pd
 
 from city_metrix.constants import WGS_CRS
 from .layer import Layer
-from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_tools import build_s3_names2
 
 
 class OpenStreetMapClass(Enum):
@@ -79,8 +80,9 @@ class OpenStreetMap(Layer):
         self.osm_class = osm_class
 
     def get_layer_names(self):
-        qualifier = "" if self.osm_class is None else f"__{self.osm_class.name}"
-        layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
+        major_qualifier = {"osm_class": self.osm_class}
+
+        layer_name, layer_id, file_format = build_s3_names2(self, major_qualifier, None)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,

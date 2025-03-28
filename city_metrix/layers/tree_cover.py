@@ -5,7 +5,8 @@ import xarray as xr
 import xee
 import ee
 
-from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_tools import build_s3_names2
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
@@ -25,10 +26,10 @@ class TreeCover(Layer):
         self.max_tree_cover = max_tree_cover
 
     def get_layer_names(self):
-        min_tree_cover_str = "" if self.min_tree_cover is None else f"__min{self.min_tree_cover}"
-        max_tree_cover_str = "" if self.max_tree_cover is None else f"__max{self.max_tree_cover}"
-        qualifier = min_tree_cover_str+max_tree_cover_str
-        layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
+        major_qualifier = {"min_tree_cover": self.min_tree_cover,
+                           "max_tree_cover": self.max_tree_cover}
+
+        layer_name, layer_id, file_format = build_s3_names2(self, major_qualifier, None)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,

@@ -29,7 +29,6 @@ def _string_to_float_tuple(string_tuple):
     float_tuple = tuple(float(value.strip()) for value in string_values)
     return float_tuple
 
-
 def get_s3_client():
     profile_name = os.getenv("S3_AWS_PROFILE")
     session = boto3.Session(profile_name=profile_name)

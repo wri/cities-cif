@@ -2,8 +2,9 @@ import ee
 from xrspatial import slope
 
 from .layer import Layer, validate_raster_resampling_method
+from .layer_tools import build_s3_names2
 from .nasa_dem import NasaDEM
-from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
@@ -20,8 +21,9 @@ class HighSlope(Layer):
         self.slope_threshold = slope_threshold
 
     def get_layer_names(self):
-        qualifier = "" if self.slope_threshold is None else f"__threshold{self.slope_threshold}"
-        layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
+        major_qualifier = {"slope_threshold": self.slope_threshold}
+
+        layer_name, layer_id, file_format = build_s3_names2(self, major_qualifier, None)
         return layer_name, layer_id, file_format
 
     """

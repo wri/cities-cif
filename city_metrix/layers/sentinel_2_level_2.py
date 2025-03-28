@@ -1,8 +1,8 @@
 import odc.stac
 import pystac_client
-from city_metrix.layers.layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
-
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
 from .layer import Layer
+from .layer_tools import build_s3_names2
 
 
 class Sentinel2Level2(Layer):
@@ -21,9 +21,9 @@ class Sentinel2Level2(Layer):
         self.bands = bands
 
     def get_layer_names(self):
-        bands_str = '-'.join(map(str,self.bands))
-        qualifier = "" if self.bands is None else f"__{bands_str}"
-        layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
+        major_qualifier = {"bands": self.bands}
+
+        layer_name, layer_id, file_format = build_s3_names2(self, major_qualifier, None)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,

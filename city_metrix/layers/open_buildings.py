@@ -5,7 +5,8 @@ import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
 from .layer import Layer, WGS_CRS
-from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_tools import build_s3_names2
 
 
 class OpenBuildings(Layer):
@@ -20,8 +21,9 @@ class OpenBuildings(Layer):
         self.country = country
 
     def get_layer_names(self):
-        qualifier = "" if self.country is None else f"__{self.country}"
-        layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
+        major_qualifier = {"country": self.country}
+
+        layer_name, layer_id, file_format = build_s3_names2(self, major_qualifier, None)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None, allow_s3_cache_retrieval=False):

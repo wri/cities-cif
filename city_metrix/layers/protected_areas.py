@@ -3,7 +3,8 @@ import geopandas as gpd
 import geemap
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_tools import build_s3_names2
 
 
 class ProtectedAreas(Layer):
@@ -22,13 +23,11 @@ class ProtectedAreas(Layer):
         self.iucn_cat = iucn_cat
 
     def get_layer_names(self):
-        status_str = '-'.join(map(str,self.status))
-        qualifier = "" if self.status is None else f"__{status_str}"
-        iucn_str = '-'.join(map(str, self.iucn_cat))
-        iucn_cat_str = "" if self.iucn_cat is None else f"__iucn{iucn_str}"
-        status_year_str = "" if self.status_year is None else f"__year{self.status_year}"
-        minor_qualifier = iucn_cat_str+status_year_str
-        layer_name, layer_id, file_format = build_s3_names(self, qualifier, minor_qualifier)
+        major_qualifier = {"status": self.status}
+        minor_qualifier = {"status_year": self.status_year,
+                           "iucn_cat": self.iucn_cat}
+
+        layer_name, layer_id, file_format = build_s3_names2(self, major_qualifier, minor_qualifier)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,

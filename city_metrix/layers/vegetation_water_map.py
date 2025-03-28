@@ -2,7 +2,8 @@ import ee
 
 from .layer import Layer, get_image_collection
 from .albedo import Albedo
-from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_tools import build_s3_names2
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
@@ -22,8 +23,9 @@ class VegetationWaterMap(Layer):
         self.greenwater_layer = greenwater_layer
 
     def get_layer_names(self):
-        qualifier = "" if self.greenwater_layer is None else f"__{self.greenwater_layer}"
-        layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
+        major_qualifier = {"greenwater_layer": self.greenwater_layer}
+
+        layer_name, layer_id, file_format = build_s3_names2(self, major_qualifier, None)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,

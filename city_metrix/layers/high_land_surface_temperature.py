@@ -5,7 +5,8 @@ from shapely.geometry import box
 import datetime
 import ee
 
-from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_tools import build_s3_names2
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
@@ -24,7 +25,7 @@ class HighLandSurfaceTemperature(Layer):
         self.end_date = end_date
 
     def get_layer_names(self):
-        layer_name, layer_id, file_format = build_s3_names(self, None, None)
+        layer_name, layer_id, file_format = build_s3_names2(self, None, None)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,

@@ -4,7 +4,8 @@ from dask.diagnostics import ProgressBar
 
 from .layer import (Layer, get_image_collection, set_resampling_for_continuous_raster,
                     validate_raster_resampling_method)
-from .layer_geometry import GeoExtent, retrieve_cached_city_data, build_s3_names
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_tools import build_s3_names2
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
@@ -89,8 +90,9 @@ class Albedo(Layer):
         return s2_with_clouds_ic
 
     def get_layer_names(self):
-        qualifier = None if self.threshold is None else f"__threshold{self.threshold}"
-        layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
+        minor_qualifier = {"threshold": self.threshold}
+
+        layer_name, layer_id, file_format = build_s3_names2(self, None, minor_qualifier)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
