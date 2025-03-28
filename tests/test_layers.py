@@ -60,6 +60,7 @@ def test_built_up_height():
 def test_cams():
     data = Cams().get_data(BBOX)
     assert np.size(data) > 0
+    assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
     utm_bbox_data = Cams().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
