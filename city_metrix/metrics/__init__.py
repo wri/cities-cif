@@ -7,6 +7,7 @@ from .mean_pm2p5_exposure import mean_pm2p5_exposure, mean_pm2p5_exposure_popwei
 from .mean_tree_cover import mean_tree_cover
 from .natural_areas import natural_areas
 from .percent_area_impervious import percent_area_impervious
+from .percent_canopy_covered_population import percent_canopy_covered_population, percent_canopy_covered_population_elderly, percent_canopy_covered_population_children, percent_canopy_covered_population_female, percent_canopy_covered_population_informal
 from .percent_protected_area import percent_protected_area
 from .recreational_space_per_capita import recreational_space_per_capita
 from .urban_open_space import urban_open_space
