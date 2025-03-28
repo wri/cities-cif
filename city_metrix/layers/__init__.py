@@ -1,6 +1,7 @@
 from .acag_pm2p5 import AcagPM2p5
 from .albedo import Albedo
 from .alos_dsm import AlosDSM
+from .aqueduct_flood import AqueductFlood
 from .average_net_building_height import AverageNetBuildingHeight
 from .aqueduct_flood import AqueductFlood
 from .built_up_height import BuiltUpHeight
