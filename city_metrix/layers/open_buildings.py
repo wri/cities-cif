@@ -20,7 +20,7 @@ class OpenBuildings(Layer):
         self.country = country
 
     def get_layer_names(self):
-        qualifier = "" if self.country else f"__{self.country}"
+        qualifier = "" if self.country is None else f"__{self.country}"
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
         return layer_name, layer_id, file_format
 

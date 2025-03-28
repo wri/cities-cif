@@ -22,7 +22,7 @@ class VegetationWaterMap(Layer):
         self.greenwater_layer = greenwater_layer
 
     def get_layer_names(self):
-        qualifier = "" if self.greenwater_layer else f"__{self.greenwater_layer}"
+        qualifier = "" if self.greenwater_layer is None else f"__{self.greenwater_layer}"
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
         return layer_name, layer_id, file_format
 

@@ -31,7 +31,7 @@ class PopWeightedPM2p5(Layer):
         self.acag_return_above = acag_return_above
 
     def get_layer_names(self):
-        qualifier = "" if self.worldpop_agesex_classes else f"__{self.worldpop_agesex_classes}"
+        qualifier = "" if not self.worldpop_agesex_classes else f"__{self.worldpop_agesex_classes.name}"
         acag_return_above_str = "" if self.acag_year is None else f"__above{self.acag_return_above}"
         acag_year_str = "" if self.acag_year is None else f"__acagyear{self.acag_year}"
         worldpop_year_str = "" if self.worldpop_year is None else f"__worldpopyear{self.worldpop_year}"

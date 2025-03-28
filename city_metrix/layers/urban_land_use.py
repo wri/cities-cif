@@ -24,7 +24,7 @@ class UrbanLandUse(Layer):
         self.ulu_class = ulu_class
 
     def get_layer_names(self):
-        qualifier = "" if self.band else f"__{self.band}"
+        qualifier = "" if self.band is None else f"__{self.band}"
         minor_qualifier = "" if self.ulu_class is None else f"__ulu{self.ulu_class}"
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, minor_qualifier)
         return layer_name, layer_id, file_format

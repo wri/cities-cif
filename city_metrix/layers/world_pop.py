@@ -35,7 +35,7 @@ class WorldPop(Layer):
         self.year = year
 
     def get_layer_names(self):
-        qualifier = "" if self.agesex_classes else f"__{self.agesex_classes}"
+        qualifier = "" if not self.agesex_classes else f"__{self.agesex_classes.name}"
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
         return layer_name, layer_id, file_format
 

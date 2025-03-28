@@ -21,7 +21,8 @@ class Sentinel2Level2(Layer):
         self.bands = bands
 
     def get_layer_names(self):
-        qualifier = self.bands
+        bands_str = '-'.join(map(str,self.bands))
+        qualifier = "" if self.bands is None else f"__{bands_str}"
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
         return layer_name, layer_id, file_format
 

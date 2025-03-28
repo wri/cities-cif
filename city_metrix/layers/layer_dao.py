@@ -43,7 +43,7 @@ def build_layer_name(class_name, qualifier_name):
 
 def get_layer_names(class_name, qualifier_name, minor_qualifier, year_a, year_b, file_format):
     layer_name = build_layer_name(class_name, qualifier_name)
-    minor_qualifier_part = f"__{minor_qualifier}" if minor_qualifier is not None else ""
+    minor_qualifier_part = f"{minor_qualifier}" if minor_qualifier is not None else ""
     year_a_part = f"__{year_a}" if year_a is not None else ""
     year_b_part = f"__{year_b}" if year_b is not None else ""
     layer_id = f"{layer_name}{minor_qualifier_part}{year_a_part}{year_b_part}.{file_format}"
