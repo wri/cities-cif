@@ -79,7 +79,7 @@ class OpenStreetMap(Layer):
         self.osm_class = osm_class
 
     def get_layer_names(self):
-        qualifier = self.osm_class
+        qualifier = "" if self.osm_class else f"__{self.osm_class}"
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
         return layer_name, layer_id, file_format
 

@@ -22,9 +22,11 @@ class ProtectedAreas(Layer):
         self.iucn_cat = iucn_cat
 
     def get_layer_names(self):
-        qualifier = self.status
-        iucn_cat_str = "" if self.iucn_cat is None else f"iucn{self.iucn_cat}"
-        status_year_str = "" if self.status_year is None else f"year{self.status_year}"
+        status_str = '-'.join(map(str,self.status))
+        qualifier = "" if self.status else f"__{status_str}"
+        iucn_str = '-'.join(map(str, self.iucn_cat))
+        iucn_cat_str = "" if self.iucn_cat is None else f"__iucn{iucn_str}"
+        status_year_str = "" if self.status_year is None else f"__year{self.status_year}"
         minor_qualifier = iucn_cat_str+status_year_str
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, minor_qualifier)
         return layer_name, layer_id, file_format

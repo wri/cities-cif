@@ -20,7 +20,7 @@ class HighSlope(Layer):
         self.slope_threshold = slope_threshold
 
     def get_layer_names(self):
-        qualifier = "" if self.slope_threshold is None else f"threshold{self.slope_threshold}"
+        qualifier = "" if self.slope_threshold is None else f"__threshold{self.slope_threshold}"
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
         return layer_name, layer_id, file_format
 

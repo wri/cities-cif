@@ -37,7 +37,7 @@ def get_s3_client():
     return s3_client
 
 def build_layer_name(class_name, qualifier_name):
-    subclass_part = f"_{qualifier_name}" if qualifier_name is not None else ""
+    subclass_part = qualifier_name if qualifier_name is not None else ""
     layer_name = f"{class_name}{subclass_part}"
     return layer_name.lower()
 

@@ -23,7 +23,7 @@ class AcagPM2p5(Layer):
         self.return_above = return_above
 
     def get_layer_names(self):
-        qualifier = "" if self.return_above is None else f"above{self.return_above}"
+        qualifier = "" if self.return_above is None else f"__above{self.return_above}"
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
         return layer_name, layer_id, file_format
 

@@ -35,7 +35,7 @@ class SmartSurfaceLULC(Layer):
         self.land_cover_class = land_cover_class
 
     def get_layer_names(self):
-        qualifier = self.land_cover_class
+        qualifier = "" if self.land_cover_class else f"__{self.land_cover_class}"
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
         return layer_name, layer_id, file_format
 

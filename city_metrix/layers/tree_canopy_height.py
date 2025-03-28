@@ -21,7 +21,7 @@ class TreeCanopyHeight(Layer):
         self.height = height
 
     def get_layer_names(self):
-        qualifier = "" if self.height is None else f'height{self.height}'
+        qualifier = "" if self.height is None else f'__height{self.height}'
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
         return layer_name, layer_id, file_format
 

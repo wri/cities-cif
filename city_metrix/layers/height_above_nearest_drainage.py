@@ -22,8 +22,8 @@ class HeightAboveNearestDrainage(Layer):
         self.thresh = thresh
 
     def get_layer_names(self):
-        qualifier = "" if self.river_head is None else f"head{self.river_head}"
-        minor_qualifier = "" if self.thresh is None else f"thresh{self.thresh}"
+        qualifier = "" if self.river_head is None else f"__head{self.river_head}"
+        minor_qualifier = "" if self.thresh is None else f"__thresh{self.thresh}"
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, minor_qualifier)
         return layer_name, layer_id, file_format
 

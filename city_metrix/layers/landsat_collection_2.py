@@ -21,7 +21,7 @@ class LandsatCollection2(Layer):
         self.bands = bands
 
     def get_layer_names(self):
-        qualifier = self.bands
+        qualifier = "" if self.bands else f"__{self.bands}"
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
         return layer_name, layer_id, file_format
 

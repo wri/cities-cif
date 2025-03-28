@@ -89,7 +89,7 @@ class Albedo(Layer):
         return s2_with_clouds_ic
 
     def get_layer_names(self):
-        qualifier = None if self.threshold is None else f"threshold{self.threshold}"
+        qualifier = None if self.threshold is None else f"__threshold{self.threshold}"
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
         return layer_name, layer_id, file_format
 

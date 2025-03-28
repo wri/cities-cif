@@ -25,8 +25,8 @@ class TreeCover(Layer):
         self.max_tree_cover = max_tree_cover
 
     def get_layer_names(self):
-        min_tree_cover_str = "" if self.min_tree_cover is None else f"min{self.min_tree_cover}"
-        max_tree_cover_str = "" if self.max_tree_cover is None else f"max{self.max_tree_cover}"
+        min_tree_cover_str = "" if self.min_tree_cover is None else f"__min{self.min_tree_cover}"
+        max_tree_cover_str = "" if self.max_tree_cover is None else f"__max{self.max_tree_cover}"
         qualifier = min_tree_cover_str+max_tree_cover_str
         layer_name, layer_id, file_format = build_s3_names(self, qualifier, None)
         return layer_name, layer_id, file_format
