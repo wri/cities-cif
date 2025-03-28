@@ -1,13 +1,35 @@
 import math
 
+import numpy as np
 import pytest
 
+from city_metrix.layers import NasaDEM
 from city_metrix.layers.layer import WGS_CRS
 from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, _get_degree_offsets_for_meter_units, \
     get_haversine_distance
 from tests.conftest import USA_OR_PORTLAND_TILE_GDF
+# from tests.resources.bbox_constants import EXTENT_SMALL_CITY_WGS84, EXTENT_SMALL_CITY_UTM
+from tests.tools.spatial_tools import get_rounded_geometry
 
 USA_OR_PORTLAND_LATLON_BBOX = GeoExtent(USA_OR_PORTLAND_TILE_GDF.total_bounds, USA_OR_PORTLAND_TILE_GDF.crs.srs)
+
+# Add back when API is stable
+'''
+def test_city_extent():
+    city_geo_extent = EXTENT_SMALL_CITY_WGS84
+    geom = city_geo_extent.centroid
+    rounded_boundary_centroid = get_rounded_geometry(geom, 1)
+    assert city_geo_extent.projection_name == 'geographic'
+    assert rounded_boundary_centroid == 'POINT (-48.6 -27.6)'
+
+def test_nasa_dem_city_id_wgs84():
+    data = NasaDEM().get_data(EXTENT_SMALL_CITY_WGS84)
+    assert np.size(data) > 0
+
+def test_nasa_dem_city_id_utm():
+    data = NasaDEM().get_data(EXTENT_SMALL_CITY_UTM)
+    assert np.size(data) > 0
+'''
 
 def test_centroid_property():
     portland_centroid = USA_OR_PORTLAND_TILE_GDF.centroid
@@ -50,7 +72,7 @@ def test_fishnet_in_meters():
     assert actual_count == expected_count
 
 def test_extreme_large_side():
-    bbox_crs = 'EPSG:4326'
+    bbox_crs = WGS_CRS
     bbox = GeoExtent((100, 45, 100.5, 45.5), bbox_crs)
 
     with pytest.raises(ValueError, match='Value for tile_side_length is too large.'):
@@ -58,7 +80,7 @@ def test_extreme_large_side():
 
 
 def test_extreme_small_meters():
-    bbox_crs = 'EPSG:4326'
+    bbox_crs = WGS_CRS
     bbox = GeoExtent((100, 45, 101, 46), bbox_crs)
 
     with pytest.raises(ValueError, match='Failure. Grid would have too many cells along the x axis.'):
