@@ -37,4 +37,3 @@ def _convert_xdatarrray_to_gdf(dataarray: DataArray):
     # Create a GeoDataFrame
     gdf = gpd.GeoDataFrame(geometry=geometry)
     return gdf
-
