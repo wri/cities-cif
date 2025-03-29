@@ -5,7 +5,7 @@ import ee
 
 from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names2
+from .layer_tools import build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 1113.1949
 
@@ -26,7 +26,7 @@ class AcagPM2p5(Layer):
     def get_layer_names(self):
         minor_qualifier = {"return_above": self.return_above}
 
-        layer_name, layer_id, file_format = build_s3_names2(self, None, minor_qualifier)
+        layer_name, layer_id, file_format = build_s3_names(self, None, minor_qualifier)
         return layer_name, layer_id, file_format
 
 

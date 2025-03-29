@@ -6,7 +6,7 @@ import xee
 import ee
 
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names2
+from .layer_tools import build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
@@ -29,7 +29,7 @@ class TreeCover(Layer):
         major_qualifier = {"min_tree_cover": self.min_tree_cover,
                            "max_tree_cover": self.max_tree_cover}
 
-        layer_name, layer_id, file_format = build_s3_names2(self, major_qualifier, None)
+        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, None)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,

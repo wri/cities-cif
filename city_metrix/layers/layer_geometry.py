@@ -1,16 +1,13 @@
 import math
 import os
-from datetime import datetime
-
 import ee
 import rioxarray
 import shapely
 import utm
 import shapely.geometry as geometry
 import geopandas as gpd
-from enum import Enum
-from typing import Union
 
+from typing import Union
 from pyproj import CRS
 from shapely.geometry import point
 
@@ -381,25 +378,30 @@ def retrieve_cached_city_data(geo_extent, layer_name, layer_id, file_format, all
     else:
         # Retrieve from S3
         s3_url = get_s3_file_url(file_key)
-        data_array = rioxarray.open_rasterio(s3_url)
 
-        da = data_array.squeeze('band', drop=True)
+        if file_format == 'tif':
+            data_array = rioxarray.open_rasterio(s3_url)
 
-        # Rename
-        da_name = da.long_name
-        da.rename(da_name)
-        da.name = da_name
+            result_data = data_array.squeeze('band', drop=True)
 
-        # Add crs attribute
-        if 'crs' not in da.attrs: # and 'spatial_ref' in da.attrs:
-            crs_wkt = da.spatial_ref.crs_wkt
-            epsg_code = CRS.from_wkt(crs_wkt).to_epsg()
-            crs = f'EPSG:{epsg_code}'
-            da = da.assign_attrs(crs=crs)
+            # Rename
+            if "long_name" in result_data.attrs:
+                da_name = result_data.long_name
+                result_data.rename(da_name)
+                result_data.name = da_name
 
-        # attributes_to_drop = ["AREA_OR_POINT","add_offset","long_name", "scale_factor", "time"]
-        # for attr in attributes_to_drop:
-        #     if attr in da.attrs:
-        #         del da.attrs[attr]
+            # Add crs attribute
+            if 'crs' not in result_data.attrs: # and 'spatial_ref' in da.attrs:
+                crs_wkt = result_data.spatial_ref.crs_wkt
+                epsg_code = CRS.from_wkt(crs_wkt).to_epsg()
+                crs = f'EPSG:{epsg_code}'
+                result_data = result_data.assign_attrs(crs=crs)
 
-        return da
+        else:
+            from io import BytesIO
+            aws_bucket = os.getenv("AWS_BUCKET")
+            response = s3_client.get_object(Bucket=aws_bucket, Key=file_key)
+            geojson_content  = response['Body'].read()
+            result_data = gpd.read_file(BytesIO(geojson_content))
+
+        return result_data

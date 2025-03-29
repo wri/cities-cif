@@ -6,7 +6,7 @@ from shapely.geometry import Polygon, MultiPolygon
 
 from .layer import Layer, WGS_CRS
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names2
+from .layer_tools import build_s3_names
 
 
 class OpenBuildings(Layer):
@@ -23,7 +23,7 @@ class OpenBuildings(Layer):
     def get_layer_names(self):
         major_qualifier = {"country": self.country}
 
-        layer_name, layer_id, file_format = build_s3_names2(self, major_qualifier, None)
+        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, None)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None, allow_s3_cache_retrieval=False):

@@ -75,13 +75,13 @@ def get_haversine_distance(lon1, lat1, lon2, lat2):
 
     return distance
 
-def build_s3_names2(layer_obj, major_qualifier, minor_qualifier):
+def build_s3_names(layer_obj, major_qualifier, minor_qualifier):
     class_name, file_format, year_a, year_b = _get_standard_parameters(layer_obj)
 
     primary_qualifier = _convert_parameter_key_value_to_parameter_name(major_qualifier)
     secondary_qualifier = _convert_parameter_key_value_to_parameter_name(minor_qualifier)
 
-    layer_name, layer_id = get_layer_names2(class_name, primary_qualifier, secondary_qualifier, year_a, year_b, file_format)
+    layer_name, layer_id = _get_layer_names(class_name, primary_qualifier, secondary_qualifier, year_a, year_b, file_format)
     return layer_name, layer_id, file_format
 
 def _flatten_key_value(value):
@@ -153,7 +153,7 @@ def _get_standard_parameters(layer_obj):
 
     return class_name, file_format, param_name_a, param_name_b
 
-def get_layer_names2(class_name, major_qual_name, minor_qual_name, year_a, year_b, file_format):
+def _get_layer_names(class_name, major_qual_name, minor_qual_name, year_a, year_b, file_format):
     layer_name = f"{class_name}{major_qual_name}"
     layer_id = f"{layer_name}{minor_qual_name}{year_a}{year_b}.{file_format}"
     return layer_name, layer_id

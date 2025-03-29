@@ -11,7 +11,7 @@ from rasterio.enums import Resampling
 from xrspatial.classify import reclassify
 
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names2
+from .layer_tools import build_s3_names
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
@@ -38,7 +38,7 @@ class SmartSurfaceLULC(Layer):
     def get_layer_names(self):
         major_qualifier = {"land_cover_class": self.land_cover_class}
 
-        layer_name, layer_id, file_format = build_s3_names2(self, major_qualifier, None)
+        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, None)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,

@@ -6,7 +6,7 @@ from scipy.ndimage import distance_transform_edt
 from .layer import Layer, get_image_collection
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names2
+from .layer_tools import build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
@@ -30,7 +30,7 @@ class RiparianAreas(Layer):
         minor_qualifier = {"river_head": self.river_head,
                            "thresh": self.thresh}
 
-        layer_name, layer_id, file_format = build_s3_names2(self, None, minor_qualifier)
+        layer_name, layer_id, file_format = build_s3_names(self, None, minor_qualifier)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,

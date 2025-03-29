@@ -6,7 +6,7 @@ import numpy as np
 
 from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names2
+from .layer_tools import build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 5
 
@@ -28,7 +28,7 @@ class UrbanLandUse(Layer):
         major_qualifier = {"band": self.band}
         minor_qualifier = {"ulu_class": self.ulu_class}
 
-        layer_name, layer_id, file_format = build_s3_names2(self, major_qualifier, minor_qualifier)
+        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, minor_qualifier)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,

@@ -72,7 +72,7 @@ def get_s3_variables(layer_obj, geo_extent):
     file_key = get_s3_file_key(layer_name, city_id, admin_level, layer_id, file_format)
     file_url = get_s3_file_url(file_key)
 
-    return file_key, file_url
+    return file_key, file_url, layer_id
 
 def check_if_s3_file_exists(s3_client, file_key):
     aws_bucket = os.getenv("AWS_BUCKET")

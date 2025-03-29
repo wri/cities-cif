@@ -5,7 +5,7 @@ import geopandas as gpd
 
 from .layer import Layer
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names2
+from .layer_tools import build_s3_names
 
 
 class UrbanExtents(Layer):
@@ -22,7 +22,7 @@ class UrbanExtents(Layer):
         self.year = year
 
     def get_layer_names(self):
-        layer_name, layer_id, file_format = build_s3_names2(self, None, None)
+        layer_name, layer_id, file_format = build_s3_names(self, None, None)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,

@@ -6,7 +6,7 @@ import numpy as np
 
 from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names2
+from .layer_tools import build_s3_names
 from .world_pop import WorldPop, WorldPopClass
 from .acag_pm2p5 import AcagPM2p5
 
@@ -37,7 +37,7 @@ class PopWeightedPM2p5(Layer):
                            "acag_year": self.acag_year,
                            "acag_return_above": self.acag_return_above}
 
-        layer_name, layer_id, file_format = build_s3_names2(self, major_qualifier, minor_qualifier)
+        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, minor_qualifier)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
