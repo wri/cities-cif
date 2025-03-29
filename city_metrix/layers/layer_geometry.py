@@ -1,17 +1,20 @@
 import math
-
+import os
 import ee
+import rioxarray
 import shapely
 import utm
 import shapely.geometry as geometry
 import geopandas as gpd
-from typing import Union
 
+from typing import Union
+from pyproj import CRS
 from shapely.geometry import point
 
-from city_metrix.constants import WGS_CRS, WGS_EPSG_CODE
-from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance, get_city, get_city_boundary, \
-    get_geojson_geometry_bounds
+from city_metrix.constants import WGS_CRS
+from city_metrix.layers.layer_dao import get_city, get_city_boundary, get_s3_client, \
+    get_s3_file_key, check_if_s3_file_exists, get_s3_file_url
+from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance
 
 MAX_SIDE_LENGTH_METERS = 50000 # This values should cover most situations
 MAX_SIDE_LENGTH_DEGREES = 0.5 # Given that for latitude, 50000m * (1deg/111000m)
@@ -25,6 +28,7 @@ class GeoExtent():
 
         if self.geo_extent_type == 'geometry':
             self.city_id = None
+            self.aoi_id = None
             self.admin_level = None
             self.bbox = bbox
         else:
@@ -34,9 +38,10 @@ class GeoExtent():
             admin_level = city.get(aoi_id, None)
             if not admin_level:
                 raise ValueError(f"City metadata for {self.city_id} does not have geometry for admin_level: 'city_admin_level'")
-            city_boundary = get_city_boundary(city_id, admin_level)
-            bbox = get_geojson_geometry_bounds(city_boundary)
+            bbox = get_city_boundary(city_id, admin_level)
+            # bbox = get_geojson_geometry_bounds(city_boundary)
             self.city_id = city_id
+            self.aoi_id = aoi_id
             self.admin_level = admin_level
             if get_projection_name(crs) == 'geographic':
                 self.bbox = bbox
@@ -85,10 +90,14 @@ class GeoExtent():
         """
         if self.projection_name == 'geographic':
             utm_crs = get_utm_zone_from_latlon_point(self.centroid)
-            reproj_bbox = reproject_units(self.min_y, self.min_x, self.max_y, self.max_x, WGS_CRS, utm_crs)
-            # round to minimize drift
-            utm_box = (reproj_bbox[1], reproj_bbox[0], reproj_bbox[3], reproj_bbox[2])
-            bbox = GeoExtent(bbox=utm_box, crs=utm_crs)
+            if self.geo_extent_type == 'city_id':
+                geo_extent = construct_city_aoi_json(self.city_id, self.aoi_id)
+                bbox = GeoExtent(bbox=geo_extent, crs=utm_crs)
+            else:
+                reproj_bbox = reproject_units(self.min_y, self.min_x, self.max_y, self.max_x, WGS_CRS, utm_crs)
+                # round to minimize drift
+                utm_box = (reproj_bbox[1], reproj_bbox[0], reproj_bbox[3], reproj_bbox[2])
+                bbox = GeoExtent(bbox=utm_box, crs=utm_crs)
             return bbox
         else:
             return self
@@ -101,10 +110,14 @@ class GeoExtent():
         if self.projection_name == 'geographic':
             return self
         else:
-            reproj_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, self.crs, WGS_CRS)
-            # round to minimize drift
-            box = (reproj_bbox[0], reproj_bbox[1], reproj_bbox[2], reproj_bbox[3])
-            bbox = GeoExtent(bbox=box, crs=WGS_CRS)
+            if self.geo_extent_type == 'city_id':
+                geo_extent = construct_city_aoi_json(self.city_id, self.aoi_id)
+                bbox = GeoExtent(bbox=geo_extent, crs=WGS_CRS)
+            else:
+                reproj_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, self.crs, WGS_CRS)
+                # round to minimize drift
+                box = (reproj_bbox[0], reproj_bbox[1], reproj_bbox[2], reproj_bbox[3])
+                bbox = GeoExtent(bbox=box, crs=WGS_CRS)
             return bbox
 
 def _parse_city_aoi_json(json_str):
@@ -113,6 +126,10 @@ def _parse_city_aoi_json(json_str):
     city_id = data['city_id']
     aoi_id = data['aoi_id']
     return city_id, aoi_id
+
+def construct_city_aoi_json(city_id, aoi_id):
+    json_str = f'{{"city_id": "{city_id}", "aoi_id": "{aoi_id}"}}'
+    return json_str
 
 def _buffer_coordinates(minx, miny, maxx, maxy):
     buffer_distance_m = 10
@@ -344,3 +361,47 @@ def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
     y_offset = get_haversine_distance(bbox.min_x, mid_y, bbox.min_x, mid_y + tile_side_degrees)
 
     return x_offset, y_offset
+
+def retrieve_cached_city_data(geo_extent, layer_name, layer_id, file_format, allow_s3_cache_retrieval: bool):
+    if allow_s3_cache_retrieval == False or geo_extent.geo_extent_type == 'geometry':
+        return None
+
+    s3_client = get_s3_client()
+
+    city_id = geo_extent.city_id
+    admin_level = geo_extent.admin_level
+
+    file_key = get_s3_file_key(layer_name, city_id, admin_level, layer_id, file_format)
+
+    if not check_if_s3_file_exists(s3_client, file_key):
+        return None
+    else:
+        # Retrieve from S3
+        s3_url = get_s3_file_url(file_key)
+
+        if file_format == 'tif':
+            data_array = rioxarray.open_rasterio(s3_url)
+
+            result_data = data_array.squeeze('band', drop=True)
+
+            # Rename
+            if "long_name" in result_data.attrs:
+                da_name = result_data.long_name
+                result_data.rename(da_name)
+                result_data.name = da_name
+
+            # Add crs attribute
+            if 'crs' not in result_data.attrs: # and 'spatial_ref' in da.attrs:
+                crs_wkt = result_data.spatial_ref.crs_wkt
+                epsg_code = CRS.from_wkt(crs_wkt).to_epsg()
+                crs = f'EPSG:{epsg_code}'
+                result_data = result_data.assign_attrs(crs=crs)
+
+        else:
+            from io import BytesIO
+            aws_bucket = os.getenv("AWS_BUCKET")
+            response = s3_client.get_object(Bucket=aws_bucket, Key=file_key)
+            geojson_content  = response['Body'].read()
+            result_data = gpd.read_file(BytesIO(geojson_content))
+
+        return result_data

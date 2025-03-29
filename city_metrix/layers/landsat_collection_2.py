@@ -2,21 +2,42 @@ import odc.stac
 import pystac_client
 
 from .layer import Layer
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_tools import build_s3_names
 
 
 class LandsatCollection2(Layer):
+    OUTPUT_FILE_FORMAT = 'tif'
+
+    """
+    Attributes:
+        bands:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+    """
     def __init__(self, bands, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.bands = bands
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+    def get_layer_names(self):
+        major_qualifier = {"bands": self.bands}
+
+        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, None)
+        return layer_name, layer_id, file_format
+
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 allow_s3_cache_retrieval=False):
         if spatial_resolution is not None:
             raise Exception('spatial_resolution can not be specified.')
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
+
+        layer_name, layer_id, file_format = self.get_layer_names()
+        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         geographic_bounds = bbox.as_geographic_bbox().bounds
         catalog = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")

@@ -5,11 +5,14 @@ from scipy.ndimage import distance_transform_edt
 
 from .layer import Layer, get_image_collection
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_tools import build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class RiparianAreas(Layer):
+    OUTPUT_FILE_FORMAT = 'tif'
+
     """
     Attributes:
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
@@ -18,17 +21,28 @@ class RiparianAreas(Layer):
                     default is 1000, other options - 100, 5000
         thresh: flow accumuation threshold, default is 0
     """
-
     def __init__(self, river_head=1000, thresh=0, **kwargs):
         super().__init__(**kwargs)
         self.river_head = river_head
         self.thresh = thresh
 
+    def get_layer_names(self):
+        minor_qualifier = {"river_head": self.river_head,
+                           "thresh": self.thresh}
+
+        layer_name, layer_id, file_format = build_s3_names(self, None, minor_qualifier)
+        return layer_name, layer_id, file_format
+
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+                 resampling_method=None, allow_s3_cache_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        layer_name, layer_id, file_format = self.get_layer_names()
+        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         # read HAND data to generate drainage paths
         hand = HeightAboveNearestDrainage(river_head=self.river_head, thresh=self.thresh).get_data(bbox, spatial_resolution=spatial_resolution)

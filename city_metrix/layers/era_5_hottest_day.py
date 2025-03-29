@@ -10,16 +10,22 @@ import glob
 
 from city_metrix.constants import WGS_CRS
 from .layer import Layer
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
 
 
 class Era5HottestDay(Layer):
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+    """
     def __init__(self, start_date="2023-01-01", end_date="2024-01-01", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 allow_s3_cache_retrieval=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
 
         geographic_bbox = bbox.as_geographic_bbox()

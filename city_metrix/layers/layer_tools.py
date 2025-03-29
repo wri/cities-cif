@@ -1,35 +1,25 @@
 import math
-import requests
+import os
+from datetime import datetime
+from enum import Enum
+
 import geopandas as gpd
 from typing import Union
 from pyproj import CRS
 
-from city_metrix.constants import WGS_EPSG_CODE
-
-#TODO In near-term, the cities-dat-api must be replaced by dev.cities-data-api after the dev.. API stabilizes.
-# CITIES_DATA_API_URL = "dev.cities-data-api.wri.org"
-CITIES_DATA_API_URL = "cities-data-api.wri.org"
-
-def get_city(city_id: str):
-    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
-    city = requests.get(query)
-    if city.status_code in range(200, 206):
-        return city.json()
-    raise Exception("City not found")
+from city_metrix.constants import WGS_EPSG_CODE, production_aws_bucket, production_s3_aws_profile
 
 
-def get_city_boundary(city_id: str, admin_level: str):
-    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/{admin_level}/geojson"
-    city_boundary = requests.get(query)
-    if city_boundary.status_code in range(200, 206):
-        return city_boundary.json()
-    raise Exception("City boundary not found")
+def set_production_environment_variables():
+    set_environment_variable('AWS_BUCKET', production_aws_bucket)
+    set_environment_variable('S3_AWS_PROFILE', production_s3_aws_profile)
 
+def set_environment_variable(variable_name, variable_value):
+    os.environ[variable_name] = variable_value
 
 def get_geojson_geometry_bounds(geojson: str):
     gdf = gpd.GeoDataFrame.from_features(geojson)
     return gdf.total_bounds
-
 
 def get_projection_name(crs: Union[str|int]):
     if isinstance(crs, str):
@@ -84,4 +74,87 @@ def get_haversine_distance(lon1, lat1, lon2, lat2):
     distance = R * c
 
     return distance
+
+def build_s3_names(layer_obj, major_qualifier, minor_qualifier):
+    class_name, file_format, year_a, year_b = _get_standard_parameters(layer_obj)
+
+    primary_qualifier = _convert_parameter_key_value_to_parameter_name(major_qualifier)
+    secondary_qualifier = _convert_parameter_key_value_to_parameter_name(minor_qualifier)
+
+    layer_name, layer_id = _get_layer_names(class_name, primary_qualifier, secondary_qualifier, year_a, year_b, file_format)
+    return layer_name, layer_id, file_format
+
+def _flatten_key_value(value):
+    import numbers
+    if value is None or value == "" or value == []:
+        flattened_value = None
+    elif isinstance(value, Enum):
+        flattened_value = value.name
+    elif isinstance(value, str) or isinstance(value, numbers.Number):
+        if isinstance(value, float):
+            flattened_value = str(value).replace('.','')
+        else:
+            flattened_value = value
+    elif isinstance(value, list):
+        flattened_value = '-'.join(value)
+    else:
+        raise Exception("Qualifier name could not be determined.")
+
+    return flattened_value
+
+def _get_name_kv_string(key, value):
+    return f"__{key}_{value}"
+
+def _convert_parameter_key_value_to_parameter_name(qualifier):
+    qualifier_name = ""
+    if not (qualifier is None or qualifier == ""):
+        for key, value in qualifier.items():
+            flat_value = _flatten_key_value(value)
+            if flat_value is not None:
+                pascal_key = key.replace("_", " ").title().replace(" ", "")
+                param_name = _get_name_kv_string(pascal_key, flat_value)
+                qualifier_name += param_name
+    return qualifier_name
+
+def _get_standard_parameters(layer_obj):
+    class_name = layer_obj.__class__.__name__
+    file_format = layer_obj.OUTPUT_FILE_FORMAT
+
+    # parameter_data = json.loads(parameters)
+    parameters = {key: value for key, value in layer_obj.__dict__.items()}
+
+    if 'year' in parameters:
+        param_name_a = _get_name_kv_string('Year', parameters['year'])
+    elif 'start_year' in parameters:
+        param_name_a = _get_name_kv_string('StartYear', parameters['start_year'])
+    elif 'start_date' in parameters:
+        start_date_str = parameters['start_date']
+        if start_date_str is None:
+            param_name_a = ""
+        else:
+            date_object = datetime.strptime(start_date_str, "%Y-%m-%d")
+            start_date_year = date_object.year
+            param_name_a = _get_name_kv_string('StartDateYear', start_date_year)
+    else:
+        param_name_a = ""
+
+    if 'end_year' in parameters:
+        param_name_b = _get_name_kv_string('EndYear', parameters['end_year'])
+    elif 'end_date' in parameters:
+        end_date_str = parameters['end_date']
+        if end_date_str is None:
+            param_name_b = ""
+        else:
+            date_object = datetime.strptime(end_date_str, "%Y-%m-%d")
+            end_date_year = date_object.year
+            param_name_b = _get_name_kv_string('EndDateYear', end_date_year)
+    else:
+        param_name_b = ""
+
+    return class_name, file_format, param_name_a, param_name_b
+
+def _get_layer_names(class_name, major_qual_name, minor_qual_name, year_a, year_b, file_format):
+    layer_name = f"{class_name}{major_qual_name}"
+    layer_id = f"{layer_name}{minor_qual_name}{year_a}{year_b}.{file_format}"
+    return layer_name, layer_id
 

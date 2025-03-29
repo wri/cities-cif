@@ -1,5 +1,13 @@
 # Release Notes
 
+## 2025/03/28
+1. Added download of cached CIF results from S3 when available.
+2. Added get_layer_names function to layer classes for construction of file and path names for S3 storage.
+   1. The current naming convention must be reviewed by users. A wiki page will be added to describe naming.
+3. Added environment variables for specifying AWS buckets and profiles used for production and testing.
+4. Added the layer_dao.py file for handling calls to the cities-data-api API and S3.
+5. Added requirements for AWS credentials file.
+
 ## 2025/03/18
 1. Added ability to specify city_id+aoi for GeoExtent.
 2. Bounding coordinates for city_id+aoi are currently read from the cities-data-api.wri.org url since it is stable. Longer term, this url must be replace by the dev.cities-data-api.wri.org url once that API has stabilized.

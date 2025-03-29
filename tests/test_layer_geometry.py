@@ -8,13 +8,11 @@ from city_metrix.layers.layer import WGS_CRS
 from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, _get_degree_offsets_for_meter_units, \
     get_haversine_distance
 from tests.conftest import USA_OR_PORTLAND_TILE_GDF
-# from tests.resources.bbox_constants import EXTENT_SMALL_CITY_WGS84, EXTENT_SMALL_CITY_UTM
+from tests.resources.bbox_constants import EXTENT_SMALL_CITY_WGS84, EXTENT_SMALL_CITY_UTM
 from tests.tools.spatial_tools import get_rounded_geometry
 
 USA_OR_PORTLAND_LATLON_BBOX = GeoExtent(USA_OR_PORTLAND_TILE_GDF.total_bounds, USA_OR_PORTLAND_TILE_GDF.crs.srs)
 
-# Add back when API is stable
-'''
 def test_city_extent():
     city_geo_extent = EXTENT_SMALL_CITY_WGS84
     geom = city_geo_extent.centroid
@@ -29,7 +27,6 @@ def test_nasa_dem_city_id_wgs84():
 def test_nasa_dem_city_id_utm():
     data = NasaDEM().get_data(EXTENT_SMALL_CITY_UTM)
     assert np.size(data) > 0
-'''
 
 def test_centroid_property():
     portland_centroid = USA_OR_PORTLAND_TILE_GDF.centroid

@@ -5,10 +5,13 @@ import ee
 
 from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent
+from .layer_tools import build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
 class AqueductFlood(Layer):
+    OUTPUT_FILE_FORMAT = 'tif'
+
     """
     Attributes:
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
@@ -38,8 +41,18 @@ class AqueductFlood(Layer):
         self.subsidence = subsidence
         self.sea_level_rise_scenario = sea_level_rise_scenario
 
+    def get_layer_names(self):
+        minor_qualifier = {"return_period_c": self.return_period_c,
+                           "return_period_r": self.return_period_r,
+                           "climate": self.climate,
+                           "subsidence": self.subsidence,
+                           "sea_level_rise_scenario": self.sea_level_rise_scenario}
+
+        layer_name, layer_id, file_format = build_s3_names(self, minor_qualifier, minor_qualifier)
+        return layer_name, layer_id, file_format
+
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+                 resampling_method=None, allow_s3_cache_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution

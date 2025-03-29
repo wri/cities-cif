@@ -5,7 +5,8 @@ import pandas as pd
 
 from city_metrix.constants import WGS_CRS
 from .layer import Layer
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_tools import build_s3_names
 
 
 class OpenStreetMapClass(Enum):
@@ -68,12 +69,30 @@ class OpenStreetMapClass(Enum):
 
 
 class OpenStreetMap(Layer):
+    OUTPUT_FILE_FORMAT = 'geojson'
+
+    """
+    Attributes:
+        osm_class: OSM class
+    """
     def __init__(self, osm_class=OpenStreetMapClass.ALL, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+    def get_layer_names(self):
+        major_qualifier = {"osm_class": self.osm_class}
+
+        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, None)
+        return layer_name, layer_id, file_format
+
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 allow_s3_cache_retrieval=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
+
+        layer_name, layer_id, file_format = self.get_layer_names()
+        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         min_lon, min_lat, max_lon, max_lat = bbox.as_geographic_bbox().bounds
         utm_crs = bbox.as_utm_bbox().crs

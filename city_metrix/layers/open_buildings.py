@@ -5,16 +5,34 @@ import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
 from .layer import Layer, WGS_CRS
-from .layer_geometry import GeoExtent
+from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_tools import build_s3_names
 
 
 class OpenBuildings(Layer):
+    OUTPUT_FILE_FORMAT = 'geojson'
+
+    """
+    Attributes:
+        countr: 3-letter code for country
+    """
     def __init__(self, country='USA', **kwargs):
         super().__init__(**kwargs)
         self.country = country
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+    def get_layer_names(self):
+        major_qualifier = {"country": self.country}
+
+        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, None)
+        return layer_name, layer_id, file_format
+
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None, allow_s3_cache_retrieval=False):
         #Note: spatial_resolution and resampling_method arguments are ignored.
+
+        layer_name, layer_id, file_format = self.get_layer_names()
+        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         dataset = ee.FeatureCollection(f"projects/sat-io/open-datasets/VIDA_COMBINED/{self.country}")
         ee_rectangle = bbox.to_ee_rectangle()
