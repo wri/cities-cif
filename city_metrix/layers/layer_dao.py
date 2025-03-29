@@ -35,19 +35,6 @@ def get_s3_client():
     s3_client = session.client('s3')
     return s3_client
 
-def build_layer_name(class_name, qualifier_name):
-    subclass_part = qualifier_name if qualifier_name is not None else ""
-    layer_name = f"{class_name}{subclass_part}"
-    return layer_name.lower()
-
-def get_layer_names(class_name, qualifier_name, minor_qualifier, year_a, year_b, file_format):
-    layer_name = build_layer_name(class_name, qualifier_name)
-    minor_qualifier_part = f"{minor_qualifier}" if minor_qualifier is not None else ""
-    year_a_part = f"__{year_a}" if year_a is not None else ""
-    year_b_part = f"__{year_b}" if year_b is not None else ""
-    layer_id = f"{layer_name}{minor_qualifier_part}{year_a_part}{year_b_part}.{file_format}"
-    return layer_name, layer_id
-
 def get_s3_file_key(layer_name, city_id, admin_level, layer_id, file_format):
     if os.environ['AWS_BUCKET'] == testing_aws_bucket:
         env = 'dev'
@@ -60,7 +47,7 @@ def get_s3_file_url(file_key):
     return f"s3://{aws_bucket}/{file_key}"
 
 
-def get_file_key_from_s3_url(s3_url):
+def _get_file_key_from_s3_url(s3_url):
     file_key = '/'.join(s3_url.split('/')[3:])
     return file_key
 
@@ -98,7 +85,7 @@ def write_geodataframe(path, data):
 def write_geodataframe_to_s3(data, path):
     import tempfile
     aws_bucket = os.getenv("AWS_BUCKET")
-    file_key = get_file_key_from_s3_url(path)
+    file_key = _get_file_key_from_s3_url(path)
     with tempfile.NamedTemporaryFile(suffix='.json', delete=True) as temp_file:
         temp_file_path = temp_file.name
         data.to_file(temp_file_path, driver="GeoJSON")
@@ -124,7 +111,7 @@ def write_dataarray(path, data):
 def write_dataarray_to_s3(data, path):
     import tempfile
     aws_bucket = os.getenv("AWS_BUCKET")
-    file_key = get_file_key_from_s3_url(path)
+    file_key = _get_file_key_from_s3_url(path)
     with tempfile.TemporaryDirectory() as temp_dir:
         with open(f'{temp_dir}/temp.file', 'w') as temp_file:
             temp_file_path = temp_file.name
