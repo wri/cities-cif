@@ -32,5 +32,3 @@ def test_write_nasa_dem_utm(target_folder):
     NasaDEM().write(bbox, file_path)
     assert verify_file_is_populated(file_path)
 
-
-

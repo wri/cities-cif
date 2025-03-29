@@ -32,6 +32,14 @@ def test_write_alos_dsm(target_folder, sample_aoi):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_aqueduct_flood(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'aqueduct_flood.tif')
+    target_resolution = get_test_resolution(AqueductFlood())
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    AqueductFlood().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_average_net_building_height(target_folder, sample_aoi):
     file_path = prep_output_path(target_folder, 'average_net_building_height.tif')
     target_resolution = get_test_resolution(AverageNetBuildingHeight())

@@ -35,6 +35,13 @@ def test_alos_dsm():
     utm_bbox_data = AlosDSM().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
+def test_aqueduct_flood():
+    data = AqueductFlood().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.crs) == 'utm'
+    utm_bbox_data = AqueductFlood().get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+    
 def test_average_net_building_height():
     data = AverageNetBuildingHeight().get_data(BBOX)
     assert np.size(data) > 0
@@ -189,7 +196,6 @@ def test_protected_areas():
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_pop_weighted_pm2p5():
-    # data = PopWeightedPM2p5(worldpop_agesex_classes=WorldPopClass.ELDERLY).get_data(BBOX)
     data = PopWeightedPM2p5().get_data(BBOX)
     assert np.size(data) > 0
     assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
