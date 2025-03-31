@@ -3,7 +3,7 @@
 ## 2025/03/28
 1. Added download of cached CIF results from S3 when available.
 2. Added get_layer_names function to layer classes for construction of file and path names for S3 storage.
-   1. The current naming convention must be reviewed by users. A wiki page will be added to describe naming.
+   1. The current naming convention must be reviewed by users. This wiki discusses naming conventions https://gfw.atlassian.net/wiki/spaces/CIT/pages/1886126084/Proposal+for+layer-id+naming
 3. Added environment variables for specifying AWS buckets and profiles used for production and testing.
 4. Added the layer_dao.py file for handling calls to the cities-data-api API and S3.
 5. Added requirements for AWS credentials file.
