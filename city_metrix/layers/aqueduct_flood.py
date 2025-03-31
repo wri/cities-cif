@@ -48,7 +48,7 @@ class AqueductFlood(Layer):
                            "subsidence": self.subsidence,
                            "sea_level_rise_scenario": self.sea_level_rise_scenario}
 
-        layer_name, layer_id, file_format = build_s3_names(self, minor_qualifier, minor_qualifier)
+        layer_name, layer_id, file_format = build_s3_names(self, None, minor_qualifier)
         return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
