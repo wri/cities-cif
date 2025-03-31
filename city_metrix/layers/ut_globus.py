@@ -29,7 +29,7 @@ class UtGlobus(Layer):
             building.crs = WGS_CRS
 
         # filter out geom_type GeometryCollection
-        gc_building = building[building.geom_type == "GeometryCollection"]
+        gc_building = building[building.geom_type == "GeometryCollection"].copy()
         if len(gc_building) > 0:
             # select Polygons and Multipolygons from GeometryCollection
             gc_building["geometries"] = gc_building.apply(lambda x: [g for g in x.geometry.geoms], axis=1)
