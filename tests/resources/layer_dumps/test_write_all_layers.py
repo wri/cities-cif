@@ -276,6 +276,13 @@ def test_write_urban_land_use(target_folder, sample_aoi):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_ut_globus(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'ut_globus.geojson')
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    UtGlobus(sample_aoi.city).write(bbox, file_path, tile_side_length=None)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_vegetation_water_map(target_folder, sample_aoi):
     file_path = prep_output_path(target_folder, 'vegetation_water_map.tif')
     target_resolution = get_test_resolution(VegetationWaterMap())
