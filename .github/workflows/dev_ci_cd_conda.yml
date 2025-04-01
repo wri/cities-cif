@@ -2,6 +2,8 @@ name: Dev CIF API CI/CD Conda
 
 on:
   pull_request:
+    paths-ignore:
+      - '**.md'
   workflow_dispatch:
 
 permissions:
