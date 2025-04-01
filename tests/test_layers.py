@@ -180,11 +180,18 @@ def test_open_street_map():
     utm_bbox_data = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
+def test_overture_buildings_height_raster():
+    data = OvertureBuildingsHeightRaster(CITY_CODE_FOR_BBOX).get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
+    utm_bbox_data = OvertureBuildingsHeightRaster(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
 def test_overture_buildings_height():
-    data = OvertureBuildingsHeight().get_data(BBOX)
+    data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX)
     assert np.size(data) > 0
     assert get_projection_name(data.crs.srs) == 'utm'
-    utm_bbox_data = OvertureBuildingsHeight().get_data(BBOX_AS_UTM)
+    utm_bbox_data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_overture_buildings():
