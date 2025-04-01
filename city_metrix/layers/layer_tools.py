@@ -75,14 +75,30 @@ def get_haversine_distance(lon1, lat1, lon2, lat2):
 
     return distance
 
-def build_s3_names(layer_obj, major_qualifier, minor_qualifier):
-    class_name, file_format, year_a, year_b = _get_standard_parameters(layer_obj)
+def build_s3_names(layer_obj):
+    class_name, year_a, year_b = _get_standard_parameters(layer_obj)
+    major_layer_naming_atts = layer_obj.MAJOR_LAYER_NAMING_ATTS
+    minor_layer_naming_atts = layer_obj.MINOR_LAYER_NAMING_ATTS
 
-    primary_qualifier = _convert_parameter_key_value_to_parameter_name(major_qualifier)
-    secondary_qualifier = _convert_parameter_key_value_to_parameter_name(minor_qualifier)
+    primary_qualifier = _convert_parameter_key_value_to_parameter_name(layer_obj, major_layer_naming_atts)
+    secondary_qualifier = _convert_parameter_key_value_to_parameter_name(layer_obj, minor_layer_naming_atts)
+    file_format = layer_obj.OUTPUT_FILE_FORMAT
 
-    layer_name, layer_id = _get_layer_names(class_name, primary_qualifier, secondary_qualifier, year_a, year_b, file_format)
-    return layer_name, layer_id, file_format
+    layer_folder_name, layer_id = _get_layer_names(class_name, primary_qualifier, secondary_qualifier, year_a, year_b, file_format)
+    return layer_folder_name, layer_id
+
+def _convert_parameter_key_value_to_parameter_name(layer_obj, naming_atts):
+    qualifier_name = ""
+    if not (naming_atts is None or naming_atts == ""):
+        for attribute in naming_atts:
+            if attribute.lower() not in ("year", "start_year", "end_year", "start_date", "end_date"):
+                value = eval(f"layer_obj.{attribute}")
+                flat_value = _flatten_key_value(value)
+                if flat_value is not None:
+                    pascal_key = attribute.replace("_", " ").title().replace(" ", "")
+                    param_name = _get_name_kv_string(pascal_key, flat_value)
+                    qualifier_name += param_name
+    return qualifier_name
 
 def _flatten_key_value(value):
     import numbers
@@ -105,20 +121,8 @@ def _flatten_key_value(value):
 def _get_name_kv_string(key, value):
     return f"__{key}_{value}"
 
-def _convert_parameter_key_value_to_parameter_name(qualifier):
-    qualifier_name = ""
-    if not (qualifier is None or qualifier == ""):
-        for key, value in qualifier.items():
-            flat_value = _flatten_key_value(value)
-            if flat_value is not None:
-                pascal_key = key.replace("_", " ").title().replace(" ", "")
-                param_name = _get_name_kv_string(pascal_key, flat_value)
-                qualifier_name += param_name
-    return qualifier_name
-
 def _get_standard_parameters(layer_obj):
     class_name = layer_obj.__class__.__name__
-    file_format = layer_obj.OUTPUT_FILE_FORMAT
 
     # parameter_data = json.loads(parameters)
     parameters = {key: value for key, value in layer_obj.__dict__.items()}
@@ -151,7 +155,7 @@ def _get_standard_parameters(layer_obj):
     else:
         param_name_b = ""
 
-    return class_name, file_format, param_name_a, param_name_b
+    return class_name, param_name_a, param_name_b
 
 def _get_layer_names(class_name, major_qual_name, minor_qual_name, year_a, year_b, file_format):
     layer_name = f"{class_name}{major_qual_name}"

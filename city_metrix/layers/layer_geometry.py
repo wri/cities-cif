@@ -1,5 +1,7 @@
 import math
 import os
+from pathlib import Path
+
 import ee
 import rioxarray
 import shapely
@@ -14,7 +16,7 @@ from shapely.geometry import point
 from city_metrix.constants import WGS_CRS
 from city_metrix.layers.layer_dao import get_city, get_city_boundary, get_s3_client, \
     get_s3_file_key, check_if_s3_file_exists, get_s3_file_url
-from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance
+from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance, build_s3_names
 
 MAX_SIDE_LENGTH_METERS = 50000 # This values should cover most situations
 MAX_SIDE_LENGTH_DEGREES = 0.5 # Given that for latitude, 50000m * (1deg/111000m)
@@ -362,7 +364,7 @@ def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
 
     return x_offset, y_offset
 
-def retrieve_cached_city_data(geo_extent, layer_name, layer_id, file_format, allow_s3_cache_retrieval: bool):
+def retrieve_cached_city_data(class_obj, geo_extent, allow_s3_cache_retrieval: bool):
     if allow_s3_cache_retrieval == False or geo_extent.geo_extent_type == 'geometry':
         return None
 
@@ -371,7 +373,9 @@ def retrieve_cached_city_data(geo_extent, layer_name, layer_id, file_format, all
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
 
-    file_key = get_s3_file_key(layer_name, city_id, admin_level, layer_id, file_format)
+    # Construct layer filename and s3 key
+    layer_folder_name, layer_id = build_s3_names(class_obj)
+    file_key = get_s3_file_key(layer_folder_name, city_id, admin_level, layer_id)
 
     if not check_if_s3_file_exists(s3_client, file_key):
         return None
@@ -379,6 +383,7 @@ def retrieve_cached_city_data(geo_extent, layer_name, layer_id, file_format, all
         # Retrieve from S3
         s3_url = get_s3_file_url(file_key)
 
+        file_format = Path(layer_id).suffix.lstrip('.')
         if file_format == 'tif':
             data_array = rioxarray.open_rasterio(s3_url)
 

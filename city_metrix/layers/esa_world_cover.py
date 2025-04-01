@@ -5,8 +5,6 @@ import ee
 
 from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names
-
 
 class EsaWorldCoverClass(Enum):
     TREE_COVER = 10
@@ -28,6 +26,8 @@ class EsaWorldCover(Layer):
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
     OUTPUT_FILE_FORMAT = 'tif'
+    MAJOR_LAYER_NAMING_ATTS = ["land_cover_class"]
+    MINOR_LAYER_NAMING_ATTS = None
 
     """
     Attributes:
@@ -39,20 +39,14 @@ class EsaWorldCover(Layer):
         self.land_cover_class = land_cover_class
         self.year = year
 
-    def get_layer_names(self):
-        major_qualifier = {"land_cover_class": self.land_cover_class}
-
-        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, None)
-        return layer_name, layer_id, file_format
-
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_s3_cache_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        layer_name, layer_id, file_format = self.get_layer_names()
-        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

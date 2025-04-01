@@ -2,7 +2,6 @@ import ee
 
 from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
@@ -15,6 +14,8 @@ class NdviSentinel2(Layer):
     Reference: https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index
     """
     OUTPUT_FILE_FORMAT = 'tif'
+    MAJOR_LAYER_NAMING_ATTS = None
+    MINOR_LAYER_NAMING_ATTS = None
 
     """
     Attributes:
@@ -23,10 +24,6 @@ class NdviSentinel2(Layer):
     def __init__(self, year=2021, **kwargs):
         super().__init__(**kwargs)
         self.year = year
-
-    def get_layer_names(self):
-        layer_name, layer_id, file_format = build_s3_names(self, None, None)
-        return layer_name, layer_id, file_format
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_s3_cache_retrieval=False):
@@ -37,8 +34,8 @@ class NdviSentinel2(Layer):
         if self.year is None:
             raise Exception('NdviSentinel2.get_data() requires a year value')
 
-        layer_name, layer_id, file_format = self.get_layer_names()
-        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

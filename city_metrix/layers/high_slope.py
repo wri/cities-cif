@@ -2,7 +2,6 @@ import ee
 from xrspatial import slope
 
 from .layer import Layer, validate_raster_resampling_method
-from .layer_tools import build_s3_names
 from .nasa_dem import NasaDEM
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
 
@@ -11,6 +10,8 @@ DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
 class HighSlope(Layer):
     OUTPUT_FILE_FORMAT = 'tif'
+    MAJOR_LAYER_NAMING_ATTS = ["slope_threshold"]
+    MINOR_LAYER_NAMING_ATTS = None
 
     """
     Attributes:
@@ -19,12 +20,6 @@ class HighSlope(Layer):
     def __init__(self, slope_threshold:int=10, **kwargs):
         super().__init__(**kwargs)
         self.slope_threshold = slope_threshold
-
-    def get_layer_names(self):
-        major_qualifier = {"slope_threshold": self.slope_threshold}
-
-        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, None)
-        return layer_name, layer_id, file_format
 
     """
     Attributes:
@@ -38,8 +33,8 @@ class HighSlope(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        layer_name, layer_id, file_format = self.get_layer_names()
-        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

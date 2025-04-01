@@ -3,6 +3,7 @@ import boto3
 import requests
 
 from city_metrix.constants import testing_aws_bucket, CITIES_DATA_API_URL
+from city_metrix.layers.layer_tools import build_s3_names
 
 
 def get_city(city_id: str):
@@ -35,11 +36,13 @@ def get_s3_client():
     s3_client = session.client('s3')
     return s3_client
 
-def get_s3_file_key(layer_name, city_id, admin_level, layer_id, file_format):
+def get_s3_file_key(layer_name, city_id, admin_level, layer_id):
+    from pathlib import Path
     if os.environ['AWS_BUCKET'] == testing_aws_bucket:
         env = 'dev'
     else:
         env = 'prd'
+    file_format = Path(layer_id).suffix.lstrip('.')
     return f"data/{env}/{layer_name}/{file_format}/{city_id}__{admin_level}__{layer_id}"
 
 def get_s3_file_url(file_key):
@@ -53,10 +56,10 @@ def _get_file_key_from_s3_url(s3_url):
 
 
 def get_s3_variables(layer_obj, geo_extent):
-    layer_name, layer_id, file_format = layer_obj.get_layer_names()
+    layer_folder_name, layer_id = build_s3_names(layer_obj)
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
-    file_key = get_s3_file_key(layer_name, city_id, admin_level, layer_id, file_format)
+    file_key = get_s3_file_key(layer_folder_name, city_id, admin_level, layer_id)
     file_url = get_s3_file_url(file_key)
 
     return file_key, file_url, layer_id

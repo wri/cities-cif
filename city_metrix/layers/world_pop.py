@@ -6,7 +6,6 @@ from enum import Enum
 
 from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
@@ -20,6 +19,8 @@ class WorldPopClass(Enum):
 
 class WorldPop(Layer):
     OUTPUT_FILE_FORMAT = 'tif'
+    MAJOR_LAYER_NAMING_ATTS = ["agesex_classes"]
+    MINOR_LAYER_NAMING_ATTS = None
 
     """
     Attributes:
@@ -35,18 +36,12 @@ class WorldPop(Layer):
         self.agesex_classes = agesex_classes
         self.year = year
 
-    def get_layer_names(self):
-        major_qualifier = {"agesex_classes": self.agesex_classes}
-
-        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, None)
-        return layer_name, layer_id, file_format
-
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_s3_cache_retrieval=False):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        layer_name, layer_id, file_format = self.get_layer_names()
-        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

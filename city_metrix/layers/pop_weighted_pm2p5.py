@@ -6,7 +6,6 @@ import numpy as np
 
 from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names
 from .world_pop import WorldPop, WorldPopClass
 from .acag_pm2p5 import AcagPM2p5
 
@@ -14,6 +13,8 @@ DEFAULT_SPATIAL_RESOLUTION = 1113.1949
 
 class PopWeightedPM2p5(Layer):
     OUTPUT_FILE_FORMAT = 'tif'
+    MAJOR_LAYER_NAMING_ATTS = ["worldpop_agesex_classes"]
+    MINOR_LAYER_NAMING_ATTS = ["worldpop_year", "acag_year", "acag_return_above"]
 
     """
     Attributes:
@@ -31,23 +32,14 @@ class PopWeightedPM2p5(Layer):
         self.acag_year = acag_year
         self.acag_return_above = acag_return_above
 
-    def get_layer_names(self):
-        major_qualifier = {"worldpop_agesex_classes": self.worldpop_agesex_classes}
-        minor_qualifier = {"worldpop_year": self.worldpop_year,
-                           "acag_year": self.acag_year,
-                           "acag_return_above": self.acag_return_above}
-
-        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, minor_qualifier)
-        return layer_name, layer_id, file_format
-
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_s3_cache_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        layer_name, layer_id, file_format = self.get_layer_names()
-        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

@@ -4,11 +4,11 @@ import geemap
 
 from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names
-
 
 class ProtectedAreas(Layer):
     OUTPUT_FILE_FORMAT = 'geojson'
+    MAJOR_LAYER_NAMING_ATTS = ["status"]
+    MINOR_LAYER_NAMING_ATTS = ["status_year", "iucn_cat"]
 
     """
     Attributes:
@@ -22,19 +22,11 @@ class ProtectedAreas(Layer):
         self.status_year = status_year
         self.iucn_cat = iucn_cat
 
-    def get_layer_names(self):
-        major_qualifier = {"status": self.status}
-        minor_qualifier = {"status_year": self.status_year,
-                           "iucn_cat": self.iucn_cat}
-
-        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, minor_qualifier)
-        return layer_name, layer_id, file_format
-
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  allow_s3_cache_retrieval=False):
 
-        layer_name, layer_id, file_format = self.get_layer_names()
-        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

@@ -6,8 +6,6 @@ import pandas as pd
 from city_metrix.constants import WGS_CRS
 from .layer import Layer
 from .layer_geometry import GeoExtent, retrieve_cached_city_data
-from .layer_tools import build_s3_names
-
 
 class OpenStreetMapClass(Enum):
     # ALL includes all 29 primary features https://wiki.openstreetmap.org/wiki/Map_features
@@ -70,6 +68,8 @@ class OpenStreetMapClass(Enum):
 
 class OpenStreetMap(Layer):
     OUTPUT_FILE_FORMAT = 'geojson'
+    MAJOR_LAYER_NAMING_ATTS = ["osm_class"]
+    MINOR_LAYER_NAMING_ATTS = None
 
     """
     Attributes:
@@ -79,18 +79,12 @@ class OpenStreetMap(Layer):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 
-    def get_layer_names(self):
-        major_qualifier = {"osm_class": self.osm_class}
-
-        layer_name, layer_id, file_format = build_s3_names(self, major_qualifier, None)
-        return layer_name, layer_id, file_format
-
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  allow_s3_cache_retrieval=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
 
-        layer_name, layer_id, file_format = self.get_layer_names()
-        retrieved_cached_data = retrieve_cached_city_data(bbox, layer_name, layer_id, file_format, allow_s3_cache_retrieval)
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

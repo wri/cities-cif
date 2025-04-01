@@ -19,7 +19,7 @@ def test_AcagPM2p5_s3(target_folder):
         layer_obj.write(bbox=geo_extent, output_path=file_url)
         s3_file_exists = check_if_s3_file_exists(get_s3_client(), file_key)
         assert s3_file_exists, "Test failed since file did not upload to s3"
-    else:
+    if s3_file_exists:
         file_path = prep_output_path(target_folder, layer_id)
         layer_obj.write(bbox=geo_extent, output_path=file_path)
         assert verify_file_is_populated(file_path)
@@ -35,7 +35,7 @@ def test_Albedo_s3(target_folder):
         layer_obj.write(bbox=geo_extent, output_path=file_url)
         s3_file_exists = check_if_s3_file_exists(get_s3_client(), file_key)
         assert s3_file_exists, "Test failed since file did not upload to s3"
-    else:
+    if s3_file_exists:
         file_path = prep_output_path(target_folder, layer_id)
         layer_obj.write(bbox=geo_extent, output_path=file_path)
         assert verify_file_is_populated(file_path)
@@ -51,7 +51,7 @@ def test_AlosDSM_s3(target_folder):
         layer_obj.write(bbox=geo_extent, output_path=file_url)
         s3_file_exists = check_if_s3_file_exists(get_s3_client(), file_key)
         assert s3_file_exists, "Test failed since file did not upload to s3"
-    else:
+    if s3_file_exists:
         file_path = prep_output_path(target_folder, layer_id)
         layer_obj.write(bbox=geo_extent, output_path=file_path)
         assert verify_file_is_populated(file_path)
@@ -67,7 +67,7 @@ def test_AqueductFlood_s3(target_folder):
         layer_obj.write(bbox=geo_extent, output_path=file_url)
         s3_file_exists = check_if_s3_file_exists(get_s3_client(), file_key)
         assert s3_file_exists, "Test failed since file did not upload to s3"
-    else:
+    if s3_file_exists:
         file_path = prep_output_path(target_folder, layer_id)
         layer_obj.write(bbox=geo_extent, output_path=file_path)
         assert verify_file_is_populated(file_path)
