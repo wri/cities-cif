@@ -22,7 +22,7 @@ NOTE: If you have already installed the package and want to update to the latest
    * On MacOS I recommend the Homebrew option
    * If you don't have an ssh key, it will install one for you
 3. Conda (or Mamba) to install dependencies
-   * If you have Homebrew `brew install --cask miniconda`
+   * If you have Homebrew `brew install --cask miniforge`
 
 ## Dependencies
 
