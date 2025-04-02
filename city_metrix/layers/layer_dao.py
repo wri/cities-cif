@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 
 from city_metrix.constants import CITIES_DATA_API_URL
 from .layer_tools import build_cache_layer_names
-from ..config import get_cache_settings
+from ..config import get_cache_settings, CIF_CACHE_LOCATION_URI
 from ..constants import aws_s3_profile
 
 def get_city(city_id: str):
@@ -176,7 +176,10 @@ def check_if_cache_file_exists(file_uri):
 
 
 def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool):
-    if allow_cache_retrieval == False or geo_extent.geo_extent_type == 'geometry':
+    if (allow_cache_retrieval == False
+            or geo_extent.geo_extent_type == 'geometry'
+            or CIF_CACHE_LOCATION_URI is None
+    ):
         return None
 
     city_id = geo_extent.city_id
@@ -190,7 +193,6 @@ def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool
     if not check_if_cache_file_exists(file_uri):
         return None
     else:
-
         file_format = Path(layer_id).suffix.lstrip('.')
         if file_format == 'tif':
             # Retrieve from S3
