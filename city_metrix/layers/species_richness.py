@@ -44,18 +44,18 @@ class SpeciesRichness(Layer):
                 self.taxon.value["taxon"], *bbox.as_geographic_bbox().coords
             )
         )
-        offset = -LIMIT
+        offset = -self.LIMIT
         observations = GeoDataFrame({"species": [], "geometry": []})
-        while offset == -LIMIT or not results["endOfRecords"]:
-            offset += LIMIT
+        while offset == -self.LIMIT or not results["endOfRecords"]:
+            offset += self.LIMIT
             url = "{0}?dataset_key={1}&taxon_key={2}&year={3},{4}&geometry={5}&limit={6}&offset={7}&hasCoordinate=true".format(
-                API_URL,
-                DATASETKEY,
+                self.API_URL,
+                self.DATASETKEY,
                 self.taxon.value["taxon_key"],
                 self.start_year,
                 self.end_year,
                 str(poly),
-                LIMIT,
+                self.LIMIT,
                 offset,
             )
             resp = requests.get(url)
@@ -96,7 +96,7 @@ class SpeciesRichness(Layer):
             taxon_observations = list(observations.species)
             asymptotes = []
             tries = 0
-            while (len(asymptotes) < NUM_CURVEFITS):  # Different observation-orders give different results, so average over many
+            while (len(asymptotes) < self.NUM_CURVEFITS):  # Different observation-orders give different results, so average over many
                 tries += 1
                 taxon_observations.sort(key=lambda x: random.random())  # Randomize order of observations
                 sac = []  # Initialize species accumulation curve data
