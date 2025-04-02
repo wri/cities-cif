@@ -3,7 +3,8 @@ import subprocess
 from io import StringIO
 
 from .layer import Layer
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 class OvertureBuildings(Layer):
     OUTPUT_FILE_FORMAT = 'geojson'

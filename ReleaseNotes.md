@@ -1,12 +1,11 @@
 # Release Notes
 
-## 2025/03/28
+## 2025/04/2
 1. Added download of cached CIF results from S3 when available.
 2. Added standardized naming of cached file storage such as into S3 buckets.
    1. The current naming convention must be reviewed by users. This wiki discusses naming conventions https://gfw.atlassian.net/wiki/spaces/CIT/pages/1886126084/Proposal+for+layer-id+naming
-3. Added environment variables for specifying AWS buckets and profiles used for production and testing.
-4. Added the layer_dao.py file for handling calls to the cities-data-api API and S3.
-5. Added requirements for AWS credentials file.
+3. Added the layer_dao.py file for handling calls to the cities-data-api API and S3.
+4. Added requirements for AWS credentials file.
 
 ## 2025/03/18
 1. Added ability to specify city_id+aoi for GeoExtent.

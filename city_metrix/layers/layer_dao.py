@@ -1,10 +1,16 @@
 import os
+from pathlib import Path
+
 import boto3
 import requests
+import geopandas as gpd
+from pyproj import CRS
+from rioxarray import rioxarray
 
-from city_metrix.constants import testing_aws_bucket, CITIES_DATA_API_URL
-from city_metrix.layers.layer_tools import build_s3_names
-
+from city_metrix.constants import CITIES_DATA_API_URL
+from .layer_tools import build_s3_names
+from ..config import get_cache_settings
+from ..constants import aws_s3_profile
 
 def get_city(city_id: str):
     query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
@@ -29,49 +35,6 @@ def _string_to_float_tuple(string_tuple):
     string_values = string_tuple.split(",")
     float_tuple = tuple(float(value.strip()) for value in string_values)
     return float_tuple
-
-def get_s3_client():
-    profile_name = os.getenv("S3_AWS_PROFILE")
-    session = boto3.Session(profile_name=profile_name)
-    s3_client = session.client('s3')
-    return s3_client
-
-def get_s3_file_key(layer_name, city_id, admin_level, layer_id):
-    from pathlib import Path
-    if os.environ['AWS_BUCKET'] == testing_aws_bucket:
-        env = 'dev'
-    else:
-        env = 'prd'
-    file_format = Path(layer_id).suffix.lstrip('.')
-    return f"data/{env}/{layer_name}/{file_format}/{city_id}__{admin_level}__{layer_id}"
-
-def get_s3_file_url(file_key):
-    aws_bucket = os.getenv("AWS_BUCKET")
-    return f"s3://{aws_bucket}/{file_key}"
-
-
-def _get_file_key_from_s3_url(s3_url):
-    file_key = '/'.join(s3_url.split('/')[3:])
-    return file_key
-
-
-def get_s3_variables(layer_obj, geo_extent):
-    layer_folder_name, layer_id = build_s3_names(layer_obj)
-    city_id = geo_extent.city_id
-    admin_level = geo_extent.admin_level
-    file_key = get_s3_file_key(layer_folder_name, city_id, admin_level, layer_id)
-    file_url = get_s3_file_url(file_key)
-
-    return file_key, file_url, layer_id
-
-def check_if_s3_file_exists(s3_client, file_key):
-    aws_bucket = os.getenv("AWS_BUCKET")
-    response = s3_client.list_objects_v2(Bucket=aws_bucket, Prefix=file_key)
-    for obj in response.get('Contents', []):
-        if obj['Key'] == file_key:
-            return True
-    return False
-
 
 def write_geodataframe(path, data):
     if path.startswith("s3://"):
@@ -100,7 +63,7 @@ def write_geodataframe_to_s3(data, path):
 
 
 def write_dataarray(path, data):
-    if path.startswith("s3://"):
+    if is_s3_uri(path):
         write_dataarray_to_s3(data, path)
     else:
         # write raster data to files
@@ -113,7 +76,9 @@ def write_dataarray(path, data):
 
 def write_dataarray_to_s3(data, path):
     import tempfile
-    aws_bucket = os.getenv("AWS_BUCKET")
+    aws_bucket = get_s3_bucket_from_s3_uri(path)
+
+    # aws_bucket = os.getenv("AWS_BUCKET")
     file_key = _get_file_key_from_s3_url(path)
     with tempfile.TemporaryDirectory() as temp_dir:
         with open(f'{temp_dir}/temp.file', 'w') as temp_file:
@@ -135,3 +100,110 @@ def write_tile_grid(tile_grid, output_path, target_file_name):
     tile_grid_file_path = str(os.path.join(output_path, target_file_name))
     tg = tile_grid.drop(columns='fishnet_geometry', axis=1)
     tg.to_file(tile_grid_file_path)
+
+
+def get_s3_client():
+    session = boto3.Session(profile_name=aws_s3_profile)
+    s3_client = session.client('s3')
+    return s3_client
+
+
+def is_s3_uri(uri):
+    from urllib.parse import urlparse
+    parsed_uri = urlparse(uri)
+    return parsed_uri.scheme == 's3'
+
+
+def get_s3_bucket_from_s3_uri(uri):
+    aws_bucket = Path(uri).parts[1]
+    return aws_bucket
+
+def get_cached_file_uri(file_key):
+    uri, env = get_cache_settings()
+    if is_s3_uri(uri):
+        file_uri = f"{uri}/{file_key}"
+    else:
+        file_uri = ''
+    return file_uri
+
+
+def _get_file_key_from_s3_url(s3_url):
+    file_key = '/'.join(s3_url.split('/')[3:])
+    return file_key
+
+
+def get_s3_variables(layer_obj, geo_extent):
+    layer_folder_name, layer_id = build_s3_names(layer_obj)
+    city_id = geo_extent.city_id
+    admin_level = geo_extent.admin_level
+    file_key = get_s3_file_key(layer_folder_name, city_id, admin_level, layer_id)
+    file_url = get_cached_file_uri(file_key)
+
+    return file_key, file_url, layer_id
+
+def get_s3_file_key(layer_name, city_id, admin_level, layer_id):
+    from pathlib import Path
+    file_format = Path(layer_id).suffix.lstrip('.')
+    _, env = get_cache_settings()
+    return f"data/{env}/{layer_name}/{file_format}/{city_id}__{admin_level}__{layer_id}"
+
+
+def check_if_s3_file_exists(file_key):
+    s3_client = get_s3_client()
+    uri, _ = get_cache_settings()
+    aws_bucket = get_s3_bucket_from_s3_uri(uri)
+    response = s3_client.list_objects_v2(Bucket=aws_bucket, Prefix=file_key)
+    for obj in response.get('Contents', []):
+        if obj['Key'] == file_key:
+            return True
+    return False
+
+
+def retrieve_cached_city_data(class_obj, geo_extent, allow_s3_cache_retrieval: bool):
+    if allow_s3_cache_retrieval == False or geo_extent.geo_extent_type == 'geometry':
+        return None
+
+    city_id = geo_extent.city_id
+    admin_level = geo_extent.admin_level
+
+    # Construct layer filename and s3 key
+    layer_folder_name, layer_id = build_s3_names(class_obj)
+    file_key = get_s3_file_key(layer_folder_name, city_id, admin_level, layer_id)
+
+    if not check_if_s3_file_exists(file_key):
+        return None
+    else:
+
+        file_format = Path(layer_id).suffix.lstrip('.')
+        if file_format == 'tif':
+            # Retrieve from S3
+            s3_url = get_cached_file_uri(file_key)
+            data_array = rioxarray.open_rasterio(s3_url)
+
+            result_data = data_array.squeeze('band', drop=True)
+
+            # Rename
+            if "long_name" in result_data.attrs:
+                da_name = result_data.long_name
+                result_data.rename(da_name)
+                result_data.name = da_name
+
+            # Add crs attribute
+            if 'crs' not in result_data.attrs: # and 'spatial_ref' in da.attrs:
+                crs_wkt = result_data.spatial_ref.crs_wkt
+                epsg_code = CRS.from_wkt(crs_wkt).to_epsg()
+                crs = f'EPSG:{epsg_code}'
+                result_data = result_data.assign_attrs(crs=crs)
+
+        else:
+            from io import BytesIO
+            s3_client = get_s3_client()
+            uri, _ = get_cache_settings()
+            aws_bucket = get_s3_bucket_from_s3_uri(uri)
+            response = s3_client.get_object(Bucket=aws_bucket, Key=file_key)
+            geojson_content  = response['Body'].read()
+            result_data = gpd.read_file(BytesIO(geojson_content))
+
+        return result_data
+
+

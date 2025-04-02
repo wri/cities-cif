@@ -1,6 +1,7 @@
 import odc.stac
 import pystac_client
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 from .layer import Layer
 
 class Sentinel2Level2(Layer):

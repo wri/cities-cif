@@ -3,7 +3,8 @@ import xee
 import xarray as xr
 
 from .layer import Layer, get_image_collection, set_resampling_for_continuous_raster, validate_raster_resampling_method
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 DEFAULT_RESAMPLING_METHOD = 'bilinear'

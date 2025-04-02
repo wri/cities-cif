@@ -10,7 +10,8 @@ import warnings
 from rasterio.enums import Resampling
 from xrspatial.classify import reclassify
 
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 warnings.filterwarnings('ignore', category=UserWarning)
 

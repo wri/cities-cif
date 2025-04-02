@@ -5,7 +5,8 @@ import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
 from .layer import Layer, WGS_CRS
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 class OpenBuildings(Layer):
     OUTPUT_FILE_FORMAT = 'geojson'

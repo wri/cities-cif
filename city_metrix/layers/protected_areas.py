@@ -3,7 +3,8 @@ import geopandas as gpd
 import geemap
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 class ProtectedAreas(Layer):
     OUTPUT_FILE_FORMAT = 'geojson'

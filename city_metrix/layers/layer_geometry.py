@@ -14,8 +14,7 @@ from pyproj import CRS
 from shapely.geometry import point
 
 from city_metrix.constants import WGS_CRS
-from city_metrix.layers.layer_dao import get_city, get_city_boundary, get_s3_client, \
-    get_s3_file_key, check_if_s3_file_exists, get_s3_file_url
+from city_metrix.layers.layer_dao import get_city, get_city_boundary, get_s3_client
 from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance, build_s3_names
 
 MAX_SIDE_LENGTH_METERS = 50000 # This values should cover most situations
@@ -363,50 +362,3 @@ def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
     y_offset = get_haversine_distance(bbox.min_x, mid_y, bbox.min_x, mid_y + tile_side_degrees)
 
     return x_offset, y_offset
-
-def retrieve_cached_city_data(class_obj, geo_extent, allow_s3_cache_retrieval: bool):
-    if allow_s3_cache_retrieval == False or geo_extent.geo_extent_type == 'geometry':
-        return None
-
-    s3_client = get_s3_client()
-
-    city_id = geo_extent.city_id
-    admin_level = geo_extent.admin_level
-
-    # Construct layer filename and s3 key
-    layer_folder_name, layer_id = build_s3_names(class_obj)
-    file_key = get_s3_file_key(layer_folder_name, city_id, admin_level, layer_id)
-
-    if not check_if_s3_file_exists(s3_client, file_key):
-        return None
-    else:
-        # Retrieve from S3
-        s3_url = get_s3_file_url(file_key)
-
-        file_format = Path(layer_id).suffix.lstrip('.')
-        if file_format == 'tif':
-            data_array = rioxarray.open_rasterio(s3_url)
-
-            result_data = data_array.squeeze('band', drop=True)
-
-            # Rename
-            if "long_name" in result_data.attrs:
-                da_name = result_data.long_name
-                result_data.rename(da_name)
-                result_data.name = da_name
-
-            # Add crs attribute
-            if 'crs' not in result_data.attrs: # and 'spatial_ref' in da.attrs:
-                crs_wkt = result_data.spatial_ref.crs_wkt
-                epsg_code = CRS.from_wkt(crs_wkt).to_epsg()
-                crs = f'EPSG:{epsg_code}'
-                result_data = result_data.assign_attrs(crs=crs)
-
-        else:
-            from io import BytesIO
-            aws_bucket = os.getenv("AWS_BUCKET")
-            response = s3_client.get_object(Bucket=aws_bucket, Key=file_key)
-            geojson_content  = response['Body'].read()
-            result_data = gpd.read_file(BytesIO(geojson_content))
-
-        return result_data

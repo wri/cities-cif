@@ -5,7 +5,8 @@ import pandas as pd
 
 from city_metrix.constants import WGS_CRS
 from .layer import Layer
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 class OpenStreetMapClass(Enum):
     # ALL includes all 29 primary features https://wiki.openstreetmap.org/wiki/Map_features

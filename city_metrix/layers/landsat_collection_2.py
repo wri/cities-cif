@@ -2,7 +2,8 @@ import odc.stac
 import pystac_client
 
 from .layer import Layer
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 class LandsatCollection2(Layer):
     OUTPUT_FILE_FORMAT = 'tif'

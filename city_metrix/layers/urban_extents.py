@@ -4,7 +4,8 @@ import geemap
 import geopandas as gpd
 
 from .layer import Layer
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 class UrbanExtents(Layer):
     OUTPUT_FILE_FORMAT = 'geojson'

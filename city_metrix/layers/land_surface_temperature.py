@@ -4,7 +4,8 @@ from dask.diagnostics import ProgressBar
 import ee
 import xarray
 
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 

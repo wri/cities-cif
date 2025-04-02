@@ -3,7 +3,8 @@ from xrspatial import slope
 
 from .layer import Layer, validate_raster_resampling_method
 from .nasa_dem import NasaDEM
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 DEFAULT_RESAMPLING_METHOD = 'bilinear'

@@ -4,7 +4,7 @@ import xarray as xr
 import glob
 
 from .layer import Layer
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 
 class Cams(Layer):

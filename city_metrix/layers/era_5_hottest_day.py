@@ -10,7 +10,7 @@ import glob
 
 from city_metrix.constants import WGS_CRS
 from .layer import Layer
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 
 class Era5HottestDay(Layer):

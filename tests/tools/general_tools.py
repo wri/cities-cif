@@ -2,18 +2,6 @@ import os
 import shutil
 import numpy as np
 
-from city_metrix.constants import testing_aws_bucket, testing_s3_aws_profile, production_aws_bucket, \
-    production_s3_aws_profile
-from city_metrix.layers.layer_tools import set_environment_variable
-
-def set_testing_environment_variables():
-    set_environment_variable('AWS_BUCKET', testing_aws_bucket)
-    set_environment_variable('S3_AWS_PROFILE', testing_s3_aws_profile)
-
-def clear_environment_variables():
-    set_environment_variable('AWS_BUCKET', '')
-    set_environment_variable('S3_AWS_PROFILE', '')
-
 def is_valid_path(path: str):
     return os.path.exists(path)
 

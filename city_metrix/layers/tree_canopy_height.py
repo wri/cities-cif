@@ -4,7 +4,8 @@ import xee
 import ee
 
 from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent, retrieve_cached_city_data
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 1
 
