@@ -219,7 +219,7 @@ def test_write_smart_surface_lulc(target_folder, sample_aoi):
     SmartSurfaceLULC().write(bbox, file_path, spatial_resolution=target_resolution)
     assert verify_file_is_populated(file_path)
 
-pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_species_richness(target_folder, sample_aoi):
     file_path = prep_output_path(target_folder, 'species_richness.geojson')
     bbox = get_test_bbox(sample_aoi.geo_extent)
