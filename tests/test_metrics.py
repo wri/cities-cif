@@ -74,8 +74,9 @@ def test_natural_areas():
 
 def test_num_species_birds():
     indicator = num_species_birds(USA_OR_PORTLAND_TILE_GDF)
+    expected_zone_size = USA_OR_PORTLAND_TILE_GDF.geometry.size
     actual_indicator_size = indicator.size
-    assert actual_indicator_size > 0
+    assert expected_zone_size == actual_indicator_size
 
 
 def test_percent_area_impervious():

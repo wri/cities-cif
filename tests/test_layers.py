@@ -229,6 +229,9 @@ def test_species_richness():
     taxon = GBIFTaxonClass.BIRDS
     data = SpeciesRichness(taxon=taxon).get_data(BBOX)
     assert np.size(data) > 0
+    assert get_projection_name(data.crs.srs) == 'utm'
+    utm_bbox_data = SpeciesRichness(taxon=taxon).get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).geometry.equals(get_rounded_gdf_geometry(utm_bbox_data, 1).geometry)
 
 def test_tree_canopy_height():
     data = TreeCanopyHeight().get_data(BBOX)
