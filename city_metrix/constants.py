@@ -1,8 +1,8 @@
 WGS_CRS = 'EPSG:4326'
 WGS_EPSG_CODE = 4326
 
-# TODO replace with production values
-production_aws_bucket = 's3://cities-dev-sandbox' # 'wri-cities-data-api'
+# TODO replace with production value
+production_aws_bucket = 's3://cities-dev-sandbox' # 's3://wri-cities-data-api'
 testing_aws_bucket = 's3://cities-dev-sandbox'
 
 aws_s3_profile = 'cities-data-user'

@@ -11,7 +11,7 @@ from tests.tools.general_tools import create_target_folder, is_valid_path
 # EXECUTE_IGNORED_TESTS is the master control for whether the writes and tests are executed
 # Setting EXECUTE_IGNORED_TESTS to True turns on code execution.
 # Values should normally be set to False in order to avoid unnecessary execution.
-EXECUTE_IGNORED_TESTS = False
+EXECUTE_IGNORED_TESTS = True
 
 # Define a WGS bbox or otherwise a utm bbox
 USE_WGS_BBOX = True
