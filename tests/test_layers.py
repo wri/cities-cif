@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import random
 
 from city_metrix.layers import *
 from city_metrix.layers.layer_tools import get_projection_name
@@ -223,6 +224,16 @@ def test_smart_surface_lulc():
     assert np.size(data) > 0
     assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
     utm_bbox_data = SmartSurfaceLULC().get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
+def test_species_richness():
+    taxon = GBIFTaxonClass.BIRDS
+    random.seed(42)
+    data = SpeciesRichness(taxon=taxon).get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.crs.srs) == 'utm'
+    random.seed(42)
+    utm_bbox_data = SpeciesRichness(taxon=taxon).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_tree_canopy_height():
