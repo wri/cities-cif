@@ -22,3 +22,9 @@ def set_cache_settings(uri, env):
 
 def get_cache_settings():
     return CIF_CACHE_LOCATION_URI, CIF_CACHE_ENVIRONMENT
+
+def clear_cache_settings():
+    global CIF_CACHE_LOCATION_URI
+    global CIF_CACHE_ENVIRONMENT
+    CIF_CACHE_LOCATION_URI = None
+    CIF_CACHE_ENVIRONMENT = None
