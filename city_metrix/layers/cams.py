@@ -19,7 +19,7 @@ class Cams(Layer):
         self.end_date = end_date
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_s3_cache_retrieval=False):
+                 allow_cache_retrieval=False):
         #Note: spatial_resolution and resampling_method arguments are ignored.
 
         min_lon, min_lat, max_lon, max_lat = bbox.as_geographic_bbox().bounds

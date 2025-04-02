@@ -21,11 +21,11 @@ class OpenBuildings(Layer):
         super().__init__(**kwargs)
         self.country = country
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None, allow_s3_cache_retrieval=False):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None, allow_cache_retrieval=False):
         #Note: spatial_resolution and resampling_method arguments are ignored.
 
         # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

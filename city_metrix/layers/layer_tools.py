@@ -68,7 +68,7 @@ def get_haversine_distance(lon1, lat1, lon2, lat2):
 
     return distance
 
-def build_s3_names(layer_obj):
+def build_cache_layer_names(layer_obj):
     class_name, year_a, year_b = _get_standard_parameters(layer_obj)
     major_layer_naming_atts = layer_obj.MAJOR_LAYER_NAMING_ATTS
     minor_layer_naming_atts = layer_obj.MINOR_LAYER_NAMING_ATTS

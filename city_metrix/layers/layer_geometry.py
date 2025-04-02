@@ -15,7 +15,7 @@ from shapely.geometry import point
 
 from city_metrix.constants import WGS_CRS
 from city_metrix.layers.layer_dao import get_city, get_city_boundary, get_s3_client
-from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance, build_s3_names
+from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance, build_cache_layer_names
 
 MAX_SIDE_LENGTH_METERS = 50000 # This values should cover most situations
 MAX_SIDE_LENGTH_DEGREES = 0.5 # Given that for latitude, 50000m * (1deg/111000m)

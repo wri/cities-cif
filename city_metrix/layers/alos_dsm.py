@@ -18,14 +18,14 @@ class AlosDSM(Layer):
         super().__init__(**kwargs)
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method:str=DEFAULT_RESAMPLING_METHOD, allow_s3_cache_retrieval=False):
+                 resampling_method:str=DEFAULT_RESAMPLING_METHOD, allow_cache_retrieval=False):
 
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
         # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 

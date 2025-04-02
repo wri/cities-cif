@@ -19,10 +19,10 @@ class LandCoverGlad(Layer):
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_s3_cache_retrieval=False):
+                 resampling_method=None, allow_cache_retrieval=False):
 
         # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
@@ -52,10 +52,10 @@ class LandCoverSimplifiedGlad(Layer):
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_s3_cache_retrieval=False):
+                 resampling_method=None, allow_cache_retrieval=False):
 
         # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
@@ -100,10 +100,10 @@ class LandCoverHabitatGlad(Layer):
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_s3_cache_retrieval=False):
+                 resampling_method=None, allow_cache_retrieval=False):
 
         # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
@@ -137,10 +137,10 @@ class LandCoverHabitatChangeGlad(Layer):
         self.end_year = end_year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_s3_cache_retrieval=False):
+                 resampling_method=None, allow_cache_retrieval=False):
 
         # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_s3_cache_retrieval)
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
