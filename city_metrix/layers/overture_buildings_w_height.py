@@ -27,8 +27,16 @@ class OvertureBuildingsHeight(Layer):
         # Ensure columns are managed correctly after join
         # If height_right is not null, use it; otherwise, use height_left
         joined_data["height"] = joined_data["height_right"].fillna(joined_data["height_left"])
+        joined_data.rename(
+            columns={
+                "height_left": "overture_height",
+                "height_right": "utglobus_height",
+            },
+            inplace=True
+        )
+
         # Remove any index columns potentially misinterpreted
-        joined_data.drop(columns=["height_left", "index_right", "height_right"], inplace=True)
+        joined_data.drop(columns=["index_right"], inplace=True)
 
         # Explicitly handle the unique identifier for each row
         joined_data["id"] = joined_data.apply(lambda row: row["id"] if "id" in row else row.name, axis=1)
