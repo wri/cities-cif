@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 
 from city_metrix.constants import CITIES_DATA_API_URL
 from .layer_tools import build_cache_layer_names
-from ..config import get_cache_settings, CIF_CACHE_LOCATION_URI
+from ..config import get_cache_settings
 from ..constants import aws_s3_profile
 
 def get_city(city_id: str):
@@ -176,6 +176,7 @@ def check_if_cache_file_exists(file_uri):
 
 
 def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool):
+    CIF_CACHE_LOCATION_URI, _ = get_cache_settings()
     if (allow_cache_retrieval == False
             or geo_extent.geo_extent_type == 'geometry'
             or CIF_CACHE_LOCATION_URI is None
@@ -193,21 +194,23 @@ def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool
     if not check_if_cache_file_exists(file_uri):
         return None
     else:
+        # Retrieve from cache
         file_format = Path(layer_id).suffix.lstrip('.')
         if file_format == 'tif':
-            # Retrieve from S3
-            data_array = rioxarray.open_rasterio(file_uri)
+            data = rioxarray.open_rasterio(file_uri, driver="GTiff")
 
-            result_data = data_array.squeeze('band', drop=True)
+            result_data = data.squeeze('band', drop=True)
 
-            # Rename
+            # Rename band name to long name
+            # See https://github.com/corteva/rioxarray/issues/736
             if "long_name" in result_data.attrs:
                 da_name = result_data.long_name
                 result_data.rename(da_name)
                 result_data.name = da_name
 
-            # Add crs attribute
-            if 'crs' not in result_data.attrs: # and 'spatial_ref' in da.attrs:
+            # Ensure the CRS is correctly set
+            result_data = result_data.rio.write_crs(result_data.rio.crs, inplace=True)
+            if 'crs' not in result_data.attrs:
                 crs_wkt = result_data.spatial_ref.crs_wkt
                 epsg_code = CRS.from_wkt(crs_wkt).to_epsg()
                 crs = f'EPSG:{epsg_code}'
