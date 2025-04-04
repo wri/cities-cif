@@ -113,7 +113,8 @@ class FractionalVegetation(Layer):
                 spatial_resolution,
                 "frational vegetation"
             ).Fr
-        if self.min_threshold is not None:
-            data = xr.where(data >= self.min_threshold, 1, np.nan)
+            data = data.rio.write_crs('EPSG:4326')
+            if self.min_threshold is not None:
+                data = xr.where(data >= self.min_threshold, 1, np.nan)
         return data
 
