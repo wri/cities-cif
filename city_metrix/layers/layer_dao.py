@@ -1,6 +1,5 @@
 import os
-from pathlib import Path
-
+import tempfile
 import boto3
 import requests
 import geopandas as gpd
@@ -10,7 +9,7 @@ from urllib.parse import urlparse
 
 from city_metrix.constants import CITIES_DATA_API_URL
 from .layer_tools import build_cache_layer_names
-from ..config import get_cache_settings
+from ..file_cache_config import get_cached_file_key, cif_cache_settings, get_aws_bucket_name
 from ..constants import aws_s3_profile
 
 def get_city(city_id: str):
@@ -50,8 +49,7 @@ def write_geodataframe(path, data):
 
 
 def write_geodataframe_to_s3(data, path):
-    import tempfile
-    aws_bucket = os.getenv("AWS_BUCKET")
+    aws_bucket = get_aws_bucket_name()
     file_key = _get_file_key_from_s3_url(path)
     with tempfile.NamedTemporaryFile(suffix='.json', delete=True) as temp_file:
         temp_file_path = temp_file.name
@@ -77,10 +75,7 @@ def write_dataarray(uri, data):
 
 
 def write_dataarray_to_s3(data, path):
-    import tempfile
-    aws_bucket = get_s3_bucket_from_s3_uri(path)
-
-    # aws_bucket = os.getenv("AWS_BUCKET")
+    aws_bucket = get_aws_bucket_name()
     file_key = _get_file_key_from_s3_url(path)
     with tempfile.TemporaryDirectory() as temp_dir:
         with open(f'{temp_dir}/temp.file', 'w') as temp_file:
@@ -126,12 +121,8 @@ def get_file_path_from_uri(uri):
       file_path = file_path[1:]
   return file_path
 
-def get_s3_bucket_from_s3_uri(uri):
-    aws_bucket = Path(uri).parts[1]
-    return aws_bucket
-
 def get_cached_file_uri(file_key):
-    uri, env = get_cache_settings()
+    uri = cif_cache_settings.cache_location_uri
     if get_uri_identifier(uri) in ('s3', 'file'):
         file_uri = f"{uri}/{file_key}"
     else:
@@ -151,20 +142,13 @@ def get_cache_variables(layer_obj, geo_extent):
 
     return file_key, file_uri, layer_id
 
-def get_cached_file_key(layer_name, city_id, admin_level, layer_id):
-    from pathlib import Path
-    file_format = Path(layer_id).suffix.lstrip('.')
-    _, env = get_cache_settings()
-    return f"data/{env}/{layer_name}/{file_format}/{city_id}__{admin_level}__{layer_id}"
-
 
 def check_if_cache_file_exists(file_uri):
     identifier = get_uri_identifier(file_uri)
     file_key = get_file_path_from_uri(file_uri)
     if identifier == "s3":
         s3_client = get_s3_client()
-        uri, _ = get_cache_settings()
-        aws_bucket = get_s3_bucket_from_s3_uri(uri)
+        aws_bucket = get_aws_bucket_name()
         response = s3_client.list_objects_v2(Bucket=aws_bucket, Prefix=file_key)
         for obj in response.get('Contents', []):
             if obj['Key'] == file_key:
@@ -176,15 +160,16 @@ def check_if_cache_file_exists(file_uri):
 
 
 def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool):
-    CIF_CACHE_LOCATION_URI, _ = get_cache_settings()
+    cif_cache_location_uri = cif_cache_settings.cache_location_uri
     if (allow_cache_retrieval == False
             or geo_extent.geo_extent_type == 'geometry'
-            or CIF_CACHE_LOCATION_URI is None
+            or cif_cache_location_uri is None
     ):
         return None
 
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
+    file_format = class_obj.OUTPUT_FILE_FORMAT
 
     # Construct layer filename and s3 key
     layer_folder_name, layer_id = build_cache_layer_names(class_obj)
@@ -195,7 +180,6 @@ def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool
         return None
     else:
         # Retrieve from cache
-        file_format = Path(layer_id).suffix.lstrip('.')
         if file_format == 'tif':
             data = rioxarray.open_rasterio(file_uri, driver="GTiff")
 
@@ -219,8 +203,7 @@ def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool
         else:
             from io import BytesIO
             s3_client = get_s3_client()
-            uri, _ = get_cache_settings()
-            aws_bucket = get_s3_bucket_from_s3_uri(uri)
+            aws_bucket = get_aws_bucket_name()
             response = s3_client.get_object(Bucket=aws_bucket, Key=file_key)
             geojson_content  = response['Body'].read()
             result_data = gpd.read_file(BytesIO(geojson_content))

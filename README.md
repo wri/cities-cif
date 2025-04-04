@@ -49,6 +49,7 @@ To run the module,
         1. Note: you do not need to specify any url's in the .cdsapirc file since they are specified in code.
   4. You must create an AWS credentials file in your system as described here: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
      1. The credentials file must have a profile named "cities-data-user" with credentials for the cities-data-user IAM user
+     2. Credentials are stored in AWS Secrets.
      
 ### Interactive development
 
@@ -78,6 +79,13 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/file
       {"city_id": "BRA-Florianopolis", "aoi_id": "city_admin_level"}
       '''
       * Note: the city_id and aoi_id may be determined via the Cities Indicators API at https://dev.cities-data-api.wri.org/docs
+3. Data layer caching:
+   1. Data layers can be cached to S3 buckets or local OS directory using the CIF-portal.
+   2. Once available, the system will read from the cached location.
+   2. The cached data are stored in the following directory structure:
+      1. data/{env}/{layer_name}/{file_format}/{city_id}__{admin_level}__{layer_id} where: env is either development (dev) or production (prd) environment and file_format is the file extension.
+      
+
 
 ## How to contribute
 
