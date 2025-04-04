@@ -8,7 +8,6 @@ import pandas as pd
 
 from city_metrix.constants import WGS_CRS
 from city_metrix.metrics import *
-from city_metrix.metrics.natural_areas import NaturalAreasMetric
 from tests.conftest import create_fishnet_grid_for_testing
 from tests.resources.bbox_constants import BBOX_IDN_JAKARTA, BBOX_USA_OR_PORTLAND, BBOX_USA_OR_PORTLAND_1, \
     BBOX_USA_OR_PORTLAND_2
@@ -38,9 +37,7 @@ def test_write_built_land_with_high_land_surface_temperature(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'built_land_with_high_land_surface_temperature.geojson')
 
-    indicator = built_land_with_high_land_surface_temperature(zones)
-    gdf = pd.concat([zones, indicator], axis=1)
-    gdf.to_file(file_path, driver="GeoJSON")
+    BuiltLandWithHighLandSurfaceTemperatureMetric().write(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -50,9 +47,7 @@ def test_write_built_land_with_low_surface_reflectivity(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'built_land_with_low_surface_reflectivity.geojson')
 
-    indicator = built_land_with_low_surface_reflectivity(zones)
-    gdf = pd.concat([zones, indicator], axis=1)
-    gdf.to_file(file_path, driver="GeoJSON")
+    BuiltLandWithLowSurfaceReflectivity().write(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -62,9 +57,18 @@ def test_write_built_land_without_tree_cover(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'built_land_without_tree_cover.geojson')
 
-    indicator = built_land_without_tree_cover(zones)
-    gdf = pd.concat([zones, indicator], axis=1)
-    gdf.to_file(file_path, driver="GeoJSON")
+    BuiltLandWithoutTreeCover().write(zones, file_path)
+    assert verify_file_is_populated(file_path)
+
+
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_canopy_area_per_resident(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
+    create_target_folder(target_metrics_folder, False)
+    file_path = prep_output_path(target_metrics_folder, 'canopy_area_per_resident.geojson')
+
+    CanopyAreaPerResident().write(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 
@@ -75,24 +79,49 @@ def test_write_canopy_area_per_resident_children(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'canopy_area_per_resident_children.geojson')
 
-    indicator = canopy_area_per_resident_children(zones)
-    indicator.name = 'indicator'
-    gdf = pd.concat([zones, indicator], axis=1)
-    gdf.to_file(file_path, driver="GeoJSON")
+    CanopyAreaPerResidentChildren().write(zones, file_path)
     assert verify_file_is_populated(file_path)
 
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_canopy_area_per_resident_elderly(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
+    create_target_folder(target_metrics_folder, False)
+    file_path = prep_output_path(target_metrics_folder, 'canopy_area_per_resident_elderly.geojson')
+
+    CanopyAreaPerResidentElderly().write(zones, file_path)
+    assert verify_file_is_populated(file_path)
 
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
-# TODO - results in geoseries are a list. Why?
+def test_write_canopy_area_per_resident_female(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
+    create_target_folder(target_metrics_folder, False)
+    file_path = prep_output_path(target_metrics_folder, 'canopy_area_per_resident_female.geojson')
+
+    CanopyAreaPerResidentFemale().write(zones, file_path)
+    assert verify_file_is_populated(file_path)
+
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_canopy_area_per_resident_informal(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
+    create_target_folder(target_metrics_folder, False)
+    file_path = prep_output_path(target_metrics_folder, 'canopy_area_per_resident_informal.geojson')
+
+    CanopyAreaPerResidentInformal().write(zones, file_path)
+    assert verify_file_is_populated(file_path)
+
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+# TODO - results in geoseries as a list. Why?
+# TODO add variants
 def test_write_mean_pm2p5_exposure(target_folder):
     zones = SAMPLE_TILED_ZONES
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure.geojson')
 
-    indicator = mean_pm2p5_exposure(zones)
-    gdf = pd.concat([zones, indicator], axis=1)
-    gdf.to_file(file_path, driver="GeoJSON")
+    MeanPM2P5Exposure().write(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -114,11 +143,6 @@ def test_write_natural_areas(target_folder):
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'natural_areas.geojson')
-
-    # layer_obj = NaturalAreasMetric()
-    # indicator = layer_obj.get_data(zones)
-    # gdf = pd.concat([zones, indicator], axis=1)
-    # gdf.to_file(file_path, driver="GeoJSON")
 
     NaturalAreasMetric().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -199,8 +223,6 @@ def test_write_natural_areas_polygon(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'BRA_Florianopolis_natural_areas_polygon.geojson')
 
-    indicator = natural_areas(BRA_Florianopolis_zone)
-    gdf = pd.concat([BRA_Florianopolis_zone, indicator], axis=1)
-    gdf.to_file(file_path, driver="GeoJSON")
+    NaturalAreasMetric().write(BRA_Florianopolis_zone, file_path)
     assert verify_file_is_populated(file_path)
 

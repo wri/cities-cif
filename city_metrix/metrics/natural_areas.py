@@ -8,8 +8,8 @@ class NaturalAreasMetric(Metric):
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
 
-
-    def get_data(self, zones: GeoDataFrame):
+    def get_data(self,
+                 zones: GeoDataFrame) -> GeoSeries:
         natural_areas = (NaturalAreas()
                          .groupby(zones)
                          .mean())
