@@ -38,7 +38,7 @@ class CanopyAreaPerResidentChildren(Metric):
                  zones: GeoDataFrame,
                  height=3,) -> GeoSeries:
         return CanopyAreaPerResident().get_data(zones,
-                                                [WorldPopClass.CHILDREN],
+                                                WorldPopClass.CHILDREN,
                                                 height,
                                                 False)
 
@@ -51,7 +51,7 @@ class CanopyAreaPerResidentElderly(Metric):
                  zones: GeoDataFrame,
                  height=3,) -> GeoSeries:
         return CanopyAreaPerResident().get_data(zones,
-                                                [WorldPopClass.ELDERLY],
+                                                WorldPopClass.ELDERLY,
                                                 height,
                                                 False)
 
@@ -64,19 +64,20 @@ class CanopyAreaPerResidentFemale(Metric):
                  zones: GeoDataFrame,
                  height=3,) -> GeoSeries:
         return CanopyAreaPerResident().get_data(zones,
-                                                [WorldPopClass.FEMALE],
+                                                WorldPopClass.FEMALE,
                                                 height,
                                                 False)
 
 
 class CanopyAreaPerResidentInformal(Metric):
-    def __init__(self, **kwargs):
+    def __init__(self, height=3, **kwargs):
         super().__init__(**kwargs)
+        self.height =height
 
     def get_data(self,
-                 zones: GeoDataFrame,
-                 height=3,) -> GeoSeries:
+                 zones: GeoDataFrame) -> GeoSeries:
+
         return CanopyAreaPerResident().get_data(zones,
                                                 [],
-                                                height,
+                                                self.height,
                                                 True)

@@ -6,7 +6,7 @@ import ee
 from .layer import Layer, get_image_collection
 from .layer_geometry import GeoExtent
 
-DEFAULT_SPATIAL_RESOLUTION = 1113.1949
+DEFAULT_SPATIAL_RESOLUTION = 1113.1949  # 10 degrees of earth circumference
 
 
 class AcagPM2p5(Layer):

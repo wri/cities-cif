@@ -10,8 +10,7 @@ class NaturalAreasMetric(Metric):
 
     def get_data(self,
                  zones: GeoDataFrame) -> GeoSeries:
-        natural_areas = (NaturalAreas()
-                         .groupby(zones)
-                         .mean())
+
+        natural_areas = NaturalAreas().groupby(zones).mean()
 
         return natural_areas

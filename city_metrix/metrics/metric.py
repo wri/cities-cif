@@ -4,6 +4,7 @@ from abc import abstractmethod
 import geopandas as gpd
 import pandas as pd
 from geopandas import GeoDataFrame
+from pandas import Series, DataFrame
 
 
 class Metric():
@@ -29,9 +30,14 @@ class Metric():
         """
         indicator = self.aggregate.get_data(zones)
 
-        if indicator.name is None:
-            indicator.name = 'indicator'
+        if isinstance(indicator, Series) or isinstance(indicator, DataFrame):
+            if isinstance(indicator, Series) and indicator.name is None:
+                indicator.name = 'indicator'
 
-        gdf = pd.concat([zones, indicator], axis=1)
+            gdf = pd.concat([zones, indicator], axis=1)
 
-        gdf.to_file(output_path, driver="GeoJSON")
+            gdf.to_file(output_path, driver="GeoJSON")
+        else:
+            raise NotImplementedError("Can only write Series or Dataframe Indicator data")
+
+

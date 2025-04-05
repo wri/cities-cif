@@ -4,7 +4,7 @@ from city_metrix.layers import HighLandSurfaceTemperature, EsaWorldCoverClass, E
 from city_metrix.metrics.metric import Metric
 
 
-class BuiltLandWithHighLandSurfaceTemperatureMetric(Metric):
+class BuiltLandWithHighLST(Metric):
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
 
