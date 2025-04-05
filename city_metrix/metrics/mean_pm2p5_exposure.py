@@ -61,9 +61,10 @@ class MeanPM2P5ExposurePopWeightedChildren(Metric):
     def get_data(self,
                  zones: GeoDataFrame
                  ) -> GeoSeries:
-        return MeanPM2P5ExposurePopWeighted().get_data(zones=zones,
-                                                       worldpop_agesex_classes=[WorldPopClass.CHILDREN],
-                                                       informal_only=False)
+        pop_weighted_pm2p5_children = (MeanPM2P5ExposurePopWeighted(worldpop_agesex_classes=WorldPopClass.CHILDREN,
+                                                                    informal_only=False))
+
+        return pop_weighted_pm2p5_children.get_data(zones=zones)
 
 
 class MeanPM2P5ExposurePopWeightedElderly(Metric):
@@ -72,28 +73,31 @@ class MeanPM2P5ExposurePopWeightedElderly(Metric):
 
     def get_data(self,
                  zones: GeoDataFrame) -> GeoSeries:
-        return MeanPM2P5ExposurePopWeighted().get_data(zones=zones,
-                                                       worldpop_agesex_classes=[WorldPopClass.ELDERLY],
-                                                       informal_only=False)
+        pop_weighted_pm2p5_elderly = (MeanPM2P5ExposurePopWeighted(worldpop_agesex_classes=WorldPopClass.ELDERLY,
+                                                                    informal_only=False))
+
+        return pop_weighted_pm2p5_elderly.get_data(zones=zones)
 
 
-class MeanPM2P5ExposurePopWeightedChildrenFemale(Metric):
+class MeanPM2P5ExposurePopWeightedFemale(Metric):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def get_data(self,
                  zones: GeoDataFrame) -> GeoSeries:
-        return MeanPM2P5ExposurePopWeighted().get_data(zones=zones,
-                                                       worldpop_agesex_classes=[WorldPopClass.FEMALE],
-                                                       informal_only=False)
+        pop_weighted_pm2p5_female = (MeanPM2P5ExposurePopWeighted(worldpop_agesex_classes=WorldPopClass.FEMALE,
+                                                                  informal_only=False))
+
+        return pop_weighted_pm2p5_female.get_data(zones=zones)
 
 
-class MeanPM2P5ExposurePopWeightedChildrenInformal(Metric):
+class MeanPM2P5ExposurePopWeightedInformal(Metric):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def get_data(self,
                  zones: GeoDataFrame) -> GeoSeries:
-        return MeanPM2P5ExposurePopWeighted().get_data(zones=zones,
-                                                       worldpop_agesex_classes=[],
-                                                       informal_only=True)
+        pop_weighted_pm2p5_informal = (MeanPM2P5ExposurePopWeighted(worldpop_agesex_classes=[],
+                                                                  informal_only=True))
+
+        return pop_weighted_pm2p5_informal.get_data(zones=zones)

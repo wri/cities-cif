@@ -18,6 +18,9 @@ SAMPLE_TILED_ZONES = (
 SAMPLE_TILED_LARGE_ZONES = (
     create_fishnet_grid_for_testing(BBOX_IDN_JAKARTA_LARGE.coords, 0.5).reset_index())
 
+# TODO - groupby fails for small zones that return null values from AcagPM2p5 layer. How should system handle such nulls
+
+
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_built_land_with_high_land_surface_temperature(target_folder):
     zones = SAMPLE_TILED_ZONES
@@ -46,17 +49,6 @@ def test_write_built_land_without_tree_cover(target_folder):
     file_path = prep_output_path(target_metrics_folder, 'built_land_without_tree_cover.geojson')
 
     BuiltLandWithoutTreeCover().write(zones, file_path)
-    assert verify_file_is_populated(file_path)
-
-
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
-def test_write_canopy_area_per_resident(target_folder):
-    zones = SAMPLE_TILED_ZONES
-    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
-    create_target_folder(target_metrics_folder, False)
-    file_path = prep_output_path(target_metrics_folder, 'canopy_area_per_resident.geojson')
-
-    CanopyAreaPerResident().write(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 
@@ -111,15 +103,40 @@ def test_write_era_5_met_preprocessing(target_folder):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
-# TODO - groupby fails for small zones that return null values from AcagPM2p5 layer. How should system handle such nulls
-# TODO add variants
-def test_write_mean_pm2p5_exposure(target_folder):
+def test_write_mean_pm2p5_exposure_pop_weighted_children(target_folder):
     zones = SAMPLE_TILED_LARGE_ZONES
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure.geojson')
 
-    MeanPM2P5Exposure().write(zones, file_path)
+    MeanPM2P5ExposurePopWeightedChildren().write(zones, file_path)
+    assert verify_file_is_populated(file_path)
+
+def test_write_mean_pm2p5_exposure_pop_weighted_elderly(target_folder):
+    zones = SAMPLE_TILED_LARGE_ZONES
+    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
+    create_target_folder(target_metrics_folder, False)
+    file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure.geojson')
+
+    MeanPM2P5ExposurePopWeightedElderly().write(zones, file_path)
+    assert verify_file_is_populated(file_path)
+
+def test_write_mean_pm2p5_exposure_pop_weighted_female(target_folder):
+    zones = SAMPLE_TILED_LARGE_ZONES
+    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
+    create_target_folder(target_metrics_folder, False)
+    file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure.geojson')
+
+    MeanPM2P5ExposurePopWeightedFemale().write(zones, file_path)
+    assert verify_file_is_populated(file_path)
+
+def test_write_mean_pm2p5_exposure_pop_weighted_informal(target_folder):
+    zones = SAMPLE_TILED_LARGE_ZONES
+    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
+    create_target_folder(target_metrics_folder, False)
+    file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure.geojson')
+
+    MeanPM2P5ExposurePopWeightedInformal().write(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')

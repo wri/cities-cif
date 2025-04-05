@@ -24,13 +24,29 @@ def test_built_land_without_tree_cover():
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
-
-def test_canopy_area_per_resident():
-    indicator = CanopyAreaPerResident().get_data(IDN_JAKARTA_TILED_ZONES)
+def test_canopy_area_per_resident_children():
+    indicator = CanopyAreaPerResidentChildren().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
+def test_canopy_area_per_resident_elderly():
+    indicator = CanopyAreaPerResidentElderly().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
+def test_canopy_area_per_resident_female():
+    indicator = CanopyAreaPerResidentFemale().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
+def test_canopy_area_per_resident_informal():
+    indicator = CanopyAreaPerResidentInformal().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess():
@@ -44,13 +60,11 @@ def test_era_5_met_preprocess():
     assert has_empty_required_cells == False
     assert len(indicator) == 24
 
-
-def test_mean_pm2p5_exposure():
-    indicator = MeanPM2P5Exposure().get_data(IDN_JAKARTA_TILED_ZONES)
+def test_mean_pm2p5_exposure_popweighted_children():
+    indicator = MeanPM2P5ExposurePopWeightedChildren().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
-
 
 def test_mean_pm2p5_exposure_popweighted_elderly():
     indicator = MeanPM2P5ExposurePopWeightedElderly().get_data(IDN_JAKARTA_TILED_ZONES)
@@ -58,6 +72,17 @@ def test_mean_pm2p5_exposure_popweighted_elderly():
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
+def test_mean_pm2p5_exposure_popweighted_female():
+    indicator = MeanPM2P5ExposurePopWeightedFemale().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
+def test_mean_pm2p5_exposure_popweighted_informal():
+    indicator = MeanPM2P5ExposurePopWeightedInformal().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
 
 def test_mean_tree_cover():
     indicator = MeanTreeCover().get_data(IDN_JAKARTA_TILED_ZONES)
