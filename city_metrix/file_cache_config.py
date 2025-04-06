@@ -1,7 +1,7 @@
 from pathlib import Path
 from urllib.parse import urlparse
 
-from city_metrix.constants import production_aws_bucket_uri, testing_aws_bucket_uri
+from city_metrix.constants import cif_production_aws_bucket_uri, testing_aws_bucket_uri
 
 class CifCacheSettings:
     def __init__(self):
@@ -24,7 +24,7 @@ def set_cache_settings(uri, env):
 
     cif_cache_settings.cache_location_uri = uri
     cif_cache_settings.cache_environment = env
-    cif_cache_settings.aws_bucket = production_aws_bucket_uri if env == 'dev' else testing_aws_bucket_uri
+    cif_cache_settings.aws_bucket = cif_production_aws_bucket_uri if env == 'dev' else testing_aws_bucket_uri
 
 
 def get_cache_settings():

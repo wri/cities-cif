@@ -3,9 +3,11 @@ import pystac_client
 from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from .layer import Layer
+from ..constants import GTIFF_FILE_EXTENSION
+
 
 class Sentinel2Level2(Layer):
-    OUTPUT_FILE_FORMAT = 'tif'
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_LAYER_NAMING_ATTS = ["bands"]
     MINOR_LAYER_NAMING_ATTS = None
 

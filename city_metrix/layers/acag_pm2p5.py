@@ -6,12 +6,13 @@ import ee
 from .layer import Layer, get_image_collection
 from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 1113.1949
 
 
 class AcagPM2p5(Layer):
-    OUTPUT_FILE_FORMAT = 'tif'
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_LAYER_NAMING_ATTS = None
     MINOR_LAYER_NAMING_ATTS = ["return_above"]
     """

@@ -162,3 +162,8 @@ def _convert_snake_case_to_pascal_case(attribute_name):
 def _construct_kv_string(key, value):
     return f"__{key}_{value}"
 
+def get_crs_from_data(data):
+    crs_wkt = data.spatial_ref.crs_wkt
+    epsg_code = CRS.from_wkt(crs_wkt).to_epsg()
+    crs = f'EPSG:{epsg_code}'
+    return crs

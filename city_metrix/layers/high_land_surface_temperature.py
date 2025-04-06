@@ -7,11 +7,12 @@ import ee
 
 from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class HighLandSurfaceTemperature(Layer):
-    OUTPUT_FILE_FORMAT = 'tif'
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_LAYER_NAMING_ATTS = None
     MINOR_LAYER_NAMING_ATTS = None
     THRESHOLD_ADD = 3

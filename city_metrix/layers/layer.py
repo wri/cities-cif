@@ -19,15 +19,16 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
-from city_metrix.constants import WGS_CRS
-from city_metrix.layers.layer_dao import get_s3_client, write_dataarray_to_s3, write_tile_grid, write_dataarray, \
-    write_geodataframe
+from city_metrix.constants import WGS_CRS, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION
+from city_metrix.layers.layer_dao import write_tile_grid, write_geodataarray, write_geodataframe, write_dataarray, \
+    write_dataset
 from city_metrix.layers.layer_tools import standardize_y_dimension_direction
 from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, reproject_units
 
 MAX_TILE_SIZE_DEGREES = 0.5 # TODO Why was this value selected?
 
 class Layer():
+    OUTPUT_FILE_FORMAT = None
     def __init__(self, aggregate=None, masks=[]):
         self.aggregate = aggregate
         if aggregate is None:
@@ -81,17 +82,24 @@ class Layer():
         :param resampling_method: interpolation method for continuous raster layers (bilinear, bicubic, nearest)
         :return:
         """
+
+        # Below if logic controls behavior for writes. The underlying assumption is that if the user
+        # is writing to S3 or file uri for a "cache" storage, then it pulls source data from GEE.
+        # Otherwise, if the write is for pulling and writing data to some random local folder, then it
+        # is free to use the cache store.
         if output_path.startswith("s3://") or output_path.startswith("file://"):
             allow_cache_retrieval: bool = False  # always read from source for S3 write
         else:
             allow_cache_retrieval: bool = True  # allow cache hit for writes to OS
+
+        file_format = self.OUTPUT_FILE_FORMAT
 
         if tile_side_length is None:
             utm_geo_extent = bbox.as_utm_bbox() # currently only support output as utm
             clipped_data = self.aggregate.get_data(utm_geo_extent, spatial_resolution=spatial_resolution,
                                                    resampling_method=resampling_method,
                                                    allow_cache_retrieval=allow_cache_retrieval)
-            _write_layer(output_path, clipped_data)
+            _write_layer(clipped_data, output_path, file_format)
         else:
             tile_grid_gdf = create_fishnet_grid(bbox, tile_side_length=tile_side_length, tile_buffer_size=0,
                                             length_units=length_units, spatial_resolution=spatial_resolution)
@@ -120,7 +128,7 @@ class Layer():
                 layer_data = self.aggregate.get_data(bbox=tile_bbox, spatial_resolution=spatial_resolution,
                                                      resampling_method=resampling_method,
                                                      allow_cache_retrieval=allow_cache_retrieval)
-                _write_layer(file_path, layer_data)
+                _write_layer(layer_data, file_path, file_format)
 
 
 def _add_tile_name_column(tile_grid):
@@ -130,20 +138,26 @@ def _add_tile_name_column(tile_grid):
     return tile_grid
 
 
-def _write_layer(path, data):
-    if isinstance(data, xr.DataArray):
+def _write_layer(data, uri, file_format):
+    if data is None:
+        raise Exception(f"Result dataset is empty and not written to: {uri}")
+
+    if isinstance(data, xr.DataArray) and file_format == GTIFF_FILE_EXTENSION:
         was_reversed, standardized_array = standardize_y_dimension_direction(data)
 
         if standardized_array.values.dtype.name == 'bool':
             standardized_array = standardized_array.astype(np.uint8)
 
-        write_dataarray(path, standardized_array)
-    elif isinstance(data, xr.Dataset):
-        raise NotImplementedError("Data as Dataset not currently supported")
-    elif isinstance(data, gpd.GeoDataFrame):
-        write_geodataframe(path, data)
+        write_geodataarray(standardized_array, uri)
+    elif isinstance(data, xr.Dataset) and file_format == GTIFF_FILE_EXTENSION:
+        raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
+        write_dataset(data, uri)
+    elif isinstance(data, xr.DataArray) and file_format == NETCDF_FILE_EXTENSION:
+        write_dataarray(data, uri)
+    elif isinstance(data, gpd.GeoDataFrame) and file_format == GEOJSON_FILE_EXTENSION:
+        write_geodataframe(data, uri)
     else:
-        raise NotImplementedError("Can only write DataArray or GeoDataFrame")
+        raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 
 
 class LayerGroupBy:

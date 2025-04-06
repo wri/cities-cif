@@ -3,7 +3,7 @@ import osmnx as ox
 import geopandas as gpd
 import pandas as pd
 
-from city_metrix.constants import WGS_CRS
+from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION
 from .layer import Layer
 from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
@@ -68,7 +68,7 @@ class OpenStreetMapClass(Enum):
 
 
 class OpenStreetMap(Layer):
-    OUTPUT_FILE_FORMAT = 'geojson'
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_LAYER_NAMING_ATTS = ["osm_class"]
     MINOR_LAYER_NAMING_ATTS = None
 

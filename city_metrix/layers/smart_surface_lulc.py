@@ -12,6 +12,7 @@ from xrspatial.classify import reclassify
 
 from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
@@ -25,7 +26,7 @@ from .overture_buildings import OvertureBuildings
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class SmartSurfaceLULC(Layer):
-    OUTPUT_FILE_FORMAT = 'tif'
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_LAYER_NAMING_ATTS = ["land_cover_class"]
     MINOR_LAYER_NAMING_ATTS = None
 

@@ -5,9 +5,11 @@ from io import StringIO
 from .layer import Layer
 from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
+from ..constants import GEOJSON_FILE_EXTENSION
+
 
 class OvertureBuildings(Layer):
-    OUTPUT_FILE_FORMAT = 'geojson'
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_LAYER_NAMING_ATTS = None
     MINOR_LAYER_NAMING_ATTS = None
 

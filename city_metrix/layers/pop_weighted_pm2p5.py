@@ -9,11 +9,12 @@ from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from .world_pop import WorldPop, WorldPopClass
 from .acag_pm2p5 import AcagPM2p5
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 1113.1949
 
 class PopWeightedPM2p5(Layer):
-    OUTPUT_FILE_FORMAT = 'tif'
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_LAYER_NAMING_ATTS = ["worldpop_agesex_classes"]
     MINOR_LAYER_NAMING_ATTS = ["worldpop_year", "acag_year", "acag_return_above"]
 

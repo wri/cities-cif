@@ -7,9 +7,11 @@ from shapely.geometry import Polygon, MultiPolygon
 from .layer import Layer, WGS_CRS
 from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
+from ..constants import GEOJSON_FILE_EXTENSION
+
 
 class OpenBuildings(Layer):
-    OUTPUT_FILE_FORMAT = 'geojson'
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_LAYER_NAMING_ATTS = ["country"]
     MINOR_LAYER_NAMING_ATTS = None
 
