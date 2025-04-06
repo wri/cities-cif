@@ -86,6 +86,31 @@ def test_write_glad_land_cover(target_folder, sample_aoi):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_glad_land_cover_simplified(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'glad_land_cover_simplified.tif')
+    target_resolution = get_test_resolution(LandCoverGlad())
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    LandCoverSimplifiedGlad().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_glad_land_cover_habitat(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'glad_land_cover_habitat.tif')
+    target_resolution = get_test_resolution(LandCoverGlad())
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    LandCoverHabitatGlad().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_glad_land_cover_habitat_change(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'glad_land_cover_habitat_change.tif')
+    target_resolution = get_test_resolution(LandCoverGlad())
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    LandCoverHabitatChangeGlad().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_height_above_nearest_drainage(target_folder, sample_aoi):
     file_path = prep_output_path(target_folder, 'height_above_nearest_drainage.tif')
     target_resolution = get_test_resolution(HeightAboveNearestDrainage())
