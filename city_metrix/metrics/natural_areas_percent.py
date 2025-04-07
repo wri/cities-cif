@@ -11,6 +11,6 @@ class NaturalAreasPercent(Metric):
     def get_data(self,
                  zones: GeoDataFrame) -> GeoSeries:
 
-        natural_areas = NaturalAreas().groupby(zones).mean()
+        natural_areas = NaturalAreas().groupby(zones).mean()*100
 
         return natural_areas
