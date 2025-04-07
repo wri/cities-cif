@@ -9,8 +9,9 @@ class NaturalAreasPercent(Metric):
         super().__init__(**kwargs)
 
     def get_data(self,
-                 zones: GeoDataFrame) -> GeoSeries:
+                 zones: GeoDataFrame,
+                 spatial_resolution:int = None) -> GeoSeries:
 
-        natural_areas = NaturalAreas().groupby(zones).mean()*100
+        natural_areas = 100 * NaturalAreas().groupby(zones).mean()
 
         return natural_areas

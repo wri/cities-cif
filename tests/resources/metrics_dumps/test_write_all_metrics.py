@@ -26,9 +26,9 @@ def test_write_built_land_with_high_land_surface_temperature(target_folder):
     zones = SAMPLE_TILED_ZONES
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
     create_target_folder(target_metrics_folder, False)
-    file_path = prep_output_path(target_metrics_folder, 'built_land_with_high_land_surface_temperature.geojson')
 
-    BuiltLandWithHighLST().write(zones, file_path)
+    file_path = prep_output_path(target_metrics_folder, 'built_land_with_high_land_surface_temperature.geojson')
+    BuiltLandWithHighLST().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -38,7 +38,7 @@ def test_write_built_land_with_low_surface_reflectivity(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'built_land_with_low_surface_reflectivity.geojson')
 
-    BuiltLandWithLowSurfaceReflectivity().write(zones, file_path)
+    BuiltLandWithLowSurfaceReflectivity().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -48,7 +48,7 @@ def test_write_built_land_without_tree_cover(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'built_land_without_tree_cover.geojson')
 
-    BuiltLandWithoutTreeCover().write(zones, file_path)
+    BuiltLandWithoutTreeCover().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 
@@ -59,7 +59,7 @@ def test_write_canopy_area_per_resident_children(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'canopy_area_per_resident_children.geojson')
 
-    CanopyAreaPerResidentChildren().write(zones, file_path)
+    CanopyAreaPerResidentChildren().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -69,7 +69,7 @@ def test_write_canopy_area_per_resident_elderly(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'canopy_area_per_resident_elderly.geojson')
 
-    CanopyAreaPerResidentElderly().write(zones, file_path)
+    CanopyAreaPerResidentElderly().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -79,7 +79,7 @@ def test_write_canopy_area_per_resident_female(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'canopy_area_per_resident_female.geojson')
 
-    CanopyAreaPerResidentFemale().write(zones, file_path)
+    CanopyAreaPerResidentFemale().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -89,7 +89,7 @@ def test_write_canopy_area_per_resident_informal(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'canopy_area_per_resident_informal.geojson')
 
-    CanopyAreaPerResidentInformal().write(zones, file_path)
+    CanopyAreaPerResidentInformal().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -99,7 +99,7 @@ def test_write_era_5_met_preprocessing(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'era_5_met_preprocessing.geojson')
 
-    Era5MetPreprocessing().write(zones, file_path)
+    Era5MetPreprocessing().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -109,34 +109,34 @@ def test_write_mean_pm2p5_exposure_pop_weighted_children(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure.geojson')
 
-    MeanPM2P5ExposurePopWeightedChildren().write(zones, file_path)
+    MeanPM2P5ExposurePopWeightedChildren().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 def test_write_mean_pm2p5_exposure_pop_weighted_elderly(target_folder):
     zones = SAMPLE_TILED_LARGE_ZONES
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
     create_target_folder(target_metrics_folder, False)
-    file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure.geojson')
+    file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure_pop_weighted_elderly.geojson')
 
-    MeanPM2P5ExposurePopWeightedElderly().write(zones, file_path)
+    MeanPM2P5ExposurePopWeightedElderly().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 def test_write_mean_pm2p5_exposure_pop_weighted_female(target_folder):
     zones = SAMPLE_TILED_LARGE_ZONES
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
     create_target_folder(target_metrics_folder, False)
-    file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure.geojson')
+    file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure_pop_weighted_female.geojson')
 
-    MeanPM2P5ExposurePopWeightedFemale().write(zones, file_path)
+    MeanPM2P5ExposurePopWeightedFemale().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 def test_write_mean_pm2p5_exposure_pop_weighted_informal(target_folder):
     zones = SAMPLE_TILED_LARGE_ZONES
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
     create_target_folder(target_metrics_folder, False)
-    file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure.geojson')
+    file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure_pop_weighted_informal.geojson')
 
-    MeanPM2P5ExposurePopWeightedInformal().write(zones, file_path)
+    MeanPM2P5ExposurePopWeightedInformal().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -146,7 +146,7 @@ def test_write_mean_tree_cover(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'mean_tree_cover.geojson')
 
-    MeanTreeCover().write(zones, file_path)
+    MeanTreeCover().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -156,7 +156,7 @@ def test_write_natural_areas(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'natural_areas.geojson')
 
-    NaturalAreasPercent().write(zones, file_path)
+    NaturalAreasPercent().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -166,7 +166,7 @@ def test_write_percent_area_impervious(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'percent_area_impervious.geojson')
 
-    PercentAreaImpervious().write(zones, file_path)
+    PercentAreaImpervious().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 
@@ -177,7 +177,7 @@ def test_write_percent_protected_area(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'percent_protected_area.geojson')
 
-    PercentProtectedArea().write(zones, file_path)
+    PercentProtectedArea().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 
@@ -188,7 +188,7 @@ def test_write_recreational_space_per_capita(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'recreational_space_per_capita.geojson')
 
-    RecreationalSpacePerCapita().write(zones, file_path)
+    RecreationalSpacePerCapita().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 
@@ -199,7 +199,7 @@ def test_write_urban_open_space(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'urban_open_space.geojson')
 
-    UrbanOpenSpace().write(zones, file_path)
+    UrbanOpenSpace().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 
@@ -210,7 +210,7 @@ def test_write_vegetation_water_change_gain_area(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'vegetation_water_change_gain_area.geojson')
 
-    VegetationWaterChangeGainArea().write(zones, file_path)
+    VegetationWaterChangeGainArea().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -220,7 +220,7 @@ def test_write_vegetation_water_change_loss_area(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'vegetation_water_change_loss_area.geojson')
 
-    VegetationWaterChangeLossArea().write(zones, file_path)
+    VegetationWaterChangeLossArea().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -230,6 +230,6 @@ def test_write_vegetation_water_change_gain_loss_ratio(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'vegetation_water_change_gain_loss_ratio.geojson')
 
-    VegetationWaterChangeGainLossRatio().write(zones, file_path)
+    VegetationWaterChangeGainLossRatio().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
 

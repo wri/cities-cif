@@ -13,7 +13,8 @@ class Era5MetPreprocessing(Metric):
         super().__init__(**kwargs)
 
     def get_data(self,
-                 zones: GeoDataFrame) -> GeoSeries:
+                 zones: GeoDataFrame,
+                 spatial_resolution:int = None) -> GeoSeries:
         """
         Get ERA 5 data for the hottest day
         :param zones: GeoDataFrame with geometries to collect zonal stats on

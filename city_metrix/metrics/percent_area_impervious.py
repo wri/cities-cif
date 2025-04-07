@@ -7,7 +7,8 @@ class PercentAreaImpervious(Metric):
         super().__init__(**kwargs)
 
     def get_data(self,
-                 zones: GeoDataFrame) -> GeoSeries:
+                 zones: GeoDataFrame,
+                 spatial_resolution:int = None) -> GeoSeries:
         imperv = ImperviousSurface()
 
         # monkey‐patch impervious get_data to fill na

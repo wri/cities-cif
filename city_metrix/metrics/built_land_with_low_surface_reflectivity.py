@@ -17,8 +17,8 @@ class BuiltLandWithLowSurfaceReflectivity(Metric):
         self.albedo_threshold = albedo_threshold
 
     def get_data(self,
-                zones: GeoDataFrame,
-) -> GeoSeries:
+                 zones: GeoDataFrame,
+                 spatial_resolution:int = None) -> GeoSeries:
         """
         Get percentage of built up land with low albedo based on Sentinel 2 imagery.
         :param zones: GeoDataFrame with geometries to collect zonal stats over

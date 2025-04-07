@@ -8,7 +8,8 @@ class MeanTreeCover(Metric):
         super().__init__(**kwargs)
 
     def get_data(self,
-                 zones: GeoDataFrame) -> GeoSeries:
+                 zones: GeoDataFrame,
+                 spatial_resolution:int = None) -> GeoSeries:
         """
         Get mean tree cover (WRI tropical tree cover).
         :param zones: GeoDataFrame with geometries to collect zonal stats on

@@ -28,7 +28,7 @@ def test_write_polygonal_zones(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'IDN_Jakarta_natural_areas_polygon.geojson')
 
-    NaturalAreasPercent().write(zone, file_path)
+    NaturalAreasPercent().write_as_geojson(zone, file_path)
     assert verify_file_is_populated(file_path)
 
     indicator = NaturalAreasPercent().get_data(zone)
@@ -36,3 +36,22 @@ def test_write_polygonal_zones(target_folder):
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_data_series_as_geojson(target_folder):
+    zones = IDN_Jakarta_zone
+    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
+    create_target_folder(target_metrics_folder, False)
+
+    csv_file_path = prep_output_path(target_metrics_folder, 'data_series_csv.geojson')
+    BuiltLandWithHighLST().write_as_geojson(zones,csv_file_path)
+    assert verify_file_is_populated(csv_file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_data_series_as_csv(target_folder):
+    zones = IDN_Jakarta_zone
+    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
+    create_target_folder(target_metrics_folder, False)
+
+    csv_file_path = prep_output_path(target_metrics_folder, 'data_series_csv.csv')
+    BuiltLandWithHighLST().write_as_csv(zones,csv_file_path)
+    assert verify_file_is_populated(csv_file_path)

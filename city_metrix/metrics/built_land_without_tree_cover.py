@@ -9,7 +9,8 @@ class BuiltLandWithoutTreeCover(Metric):
         super().__init__(**kwargs)
 
     def get_data(self,
-                 zones: GeoDataFrame) -> GeoSeries:
+                 zones: GeoDataFrame,
+                 spatial_resolution:int = None) -> GeoSeries:
         """
         Get percentage of built up land (using ESA world cover)
         with no tree cover (>0 WRI tropical tree cover).

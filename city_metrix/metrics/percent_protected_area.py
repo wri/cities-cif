@@ -18,8 +18,8 @@ class PercentProtectedArea(Metric):
         self.iucn_cat = iucn_cat
 
     def get_data(self,
-                 zones: GeoDataFrame
-                 ) -> GeoSeries:
+                 zones: GeoDataFrame,
+                 spatial_resolution:int = None) -> GeoSeries:
 
         world_cover = EsaWorldCover(year=2021)
         protect_area = ProtectedAreas(status=self.status, status_year=self.status_year, iucn_cat=self.iucn_cat)

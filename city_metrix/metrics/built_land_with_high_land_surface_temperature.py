@@ -9,7 +9,8 @@ class BuiltLandWithHighLST(Metric):
         super().__init__(**kwargs)
 
     def get_data(self,
-                 zones: GeoDataFrame) -> GeoSeries:
+                 zones: GeoDataFrame,
+                 spatial_resolution:int = None) -> GeoSeries:
         """
         Get percentage of built up land with low albedo based on Sentinel 2 imagery.
         :param zones:

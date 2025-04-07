@@ -9,7 +9,8 @@ class UrbanOpenSpace(Metric):
         super().__init__(**kwargs)
 
     def get_data(self,
-                 zones: GeoDataFrame) -> GeoSeries:
+                 zones: GeoDataFrame,
+                 spatial_resolution:int = None) -> GeoSeries:
 
         built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
         open_space = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE)
