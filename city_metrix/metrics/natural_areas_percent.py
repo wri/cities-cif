@@ -4,7 +4,7 @@ from city_metrix.layers import NaturalAreas
 from city_metrix.metrics.metric import Metric
 
 
-class NaturalAreasMetric(Metric):
+class NaturalAreasPercent(Metric):
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
 

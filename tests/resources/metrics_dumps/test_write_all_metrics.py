@@ -156,7 +156,7 @@ def test_write_natural_areas(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'natural_areas.geojson')
 
-    NaturalAreasMetric().write(zones, file_path)
+    NaturalAreasPercent().write(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')

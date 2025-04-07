@@ -28,10 +28,10 @@ def test_write_polygonal_zones(target_folder):
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'IDN_Jakarta_natural_areas_polygon.geojson')
 
-    NaturalAreasMetric().write(zone, file_path)
+    NaturalAreasPercent().write(zone, file_path)
     assert verify_file_is_populated(file_path)
 
-    indicator = NaturalAreasMetric().get_data(zone)
+    indicator = NaturalAreasPercent().get_data(zone)
     expected_zone_size = IDN_Jakarta_zone.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
