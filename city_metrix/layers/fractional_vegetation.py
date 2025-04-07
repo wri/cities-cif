@@ -98,23 +98,28 @@ class FractionalVegetation(Layer):
             vegNDVI = results.getNumber('vegNDVI')
             soilNDVI = results.getNumber('soilNDVI')
 
-            if vegNDVI is None or soilNDVI is None:
+            if vegNDVI.getInfo() is None or soilNDVI.getInfo() is None:
                 return None
 
             return ndviImage.subtract(soilNDVI).divide(vegNDVI.subtract(soilNDVI)).pow(2).rename('Fr')
 
         Fr = fracVeg(bbox_ee['ee_geometry'], PCTL_FULLVEG, PCTL_NONVEG)
         if Fr is None:
-            data = None
+            data = get_image_collection(
+                    ee.ImageCollection([dw.filterBounds(bbox_ee['ee_geometry']).first().select('label')]),
+                    bbox_ee,
+                    spatial_resolution,
+                    "dummy"
+                ).label * np.nan
+            data.rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
         else:
             data = get_image_collection(
                 ee.ImageCollection([Fr]),
                 bbox_ee,
                 spatial_resolution,
-                "frational vegetation"
+                "fractional vegetation"
             ).Fr
-            data = data.rio.write_crs('EPSG:4326')
             if self.min_threshold is not None:
-                data = xr.where(data >= self.min_threshold, 1, np.nan)
+                data = xr.where(data >= self.min_threshold, 1, np.nan).rio.write_crs(data.crs)
         return data
 
