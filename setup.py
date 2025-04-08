@@ -22,7 +22,7 @@ setup(
         "geopandas",
         "xarray",
         "s3fs",
-        "dask>=2025.2.0",
+        "dask[complete]<=2025.2.0",
         "boto3",
         "overturemaps",
         "cdsapi",
@@ -31,6 +31,8 @@ setup(
         "exactextract>=0.2.0",
         "cfgrib",
         "scipy",
-        "numpy"
+        "numpy",
+        "overturemaps",
+        "ipython"
     ],
 )

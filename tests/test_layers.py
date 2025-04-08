@@ -4,12 +4,10 @@ import numpy as np
 from city_metrix.layers import *
 from city_metrix.layers.layer_tools import get_projection_name
 from tests.conftest import EXECUTE_IGNORED_TESTS
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_2
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_2, EXTENT_SMALL_CITY_WGS84
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC
-# COUNTRY_CODE_FOR_BBOX = 'BRA'
-# BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 COUNTRY_CODE_FOR_BBOX = 'USA'
 BBOX = BBOX_USA_OR_PORTLAND_2
 BBOX_AS_UTM = BBOX.as_utm_bbox()
