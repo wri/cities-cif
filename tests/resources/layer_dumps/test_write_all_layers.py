@@ -202,7 +202,7 @@ def test_write_open_street_map_roads(target_folder, sample_aoi):
 def test_write_overture_buildings_height_raster(target_folder, sample_aoi):
     file_path = prep_output_path(target_folder, 'overture_buildings_height_raster.tif')
     bbox = get_test_bbox(sample_aoi.geo_extent)
-    OvertureBuildingsHeightRaster().write(bbox, file_path, tile_side_length=None)
+    OvertureBuildingsHeightRaster(sample_aoi.city).write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -216,7 +216,7 @@ def test_write_overture_buildings_height(target_folder, sample_aoi):
 def test_write_overture_buildings(target_folder, sample_aoi):
     file_path = prep_output_path(target_folder, 'overture_buildings.geojson')
     bbox = get_test_bbox(sample_aoi.geo_extent)
-    OvertureBuildings(sample_aoi.city).write(bbox, file_path, tile_side_length=None)
+    OvertureBuildings().write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
