@@ -7,12 +7,14 @@ from .ut_globus import UtGlobus
 
 
 class OvertureBuildingsHeight(Layer):
-    def __init__(self, city="portland", **kwargs):
+    def __init__(self, city="", **kwargs):
         super().__init__(**kwargs)
         self.city = city
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         # Note: spatial_resolution and resampling_method arguments are ignored.
+        if self.city == "":
+            raise Exception("'city' can not be empty. Check and select a city id from https://sat-io.earthengine.app/view/ut-globus")
 
         # Load the datasets
         overture_buildings = OvertureBuildings().get_data(bbox)

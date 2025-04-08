@@ -9,7 +9,7 @@ DEFAULT_SPATIAL_RESOLUTION = 1
 
 
 class OvertureBuildingsHeightRaster(Layer):
-    def __init__(self, city="portland", **kwargs):
+    def __init__(self, city="", **kwargs):
         super().__init__(**kwargs)
         self.city = city
 
@@ -18,6 +18,9 @@ class OvertureBuildingsHeightRaster(Layer):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        
+        if self.city == "":
+            raise Exception("'city' can not be empty. Check and select a city id from https://sat-io.earthengine.app/view/ut-globus")
 
         # Load the datasets
         overture_buildings_height = OvertureBuildingsHeight(self.city).get_data(bbox)

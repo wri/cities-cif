@@ -9,12 +9,14 @@ from .layer_geometry import GeoExtent
 
 
 class UtGlobus(Layer):
-    def __init__(self, city="portland", **kwargs):
+    def __init__(self, city="", **kwargs):
         super().__init__(**kwargs)
         self.city = city
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         # Note: spatial_resolution and resampling_method arguments are ignored.
+        if self.city == "":
+            raise Exception("'city' can not be empty. Check and select a city id from https://sat-io.earthengine.app/view/ut-globus")
 
         dataset = ee.FeatureCollection(f"projects/sat-io/open-datasets/UT-GLOBUS/{self.city}")
         ee_rectangle = bbox.to_ee_rectangle()
