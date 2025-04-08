@@ -1,5 +1,10 @@
 # Release Notes
 
+## 2025/04/7
+1. Created a Metric base class with get_data() and two write functions
+2. Converted each existing Metric function into a Metric class with get_data() function
+3. Added tests to write output of each class to a local system file
+
 ## 2025/03/18
 1. Added ability to specify city_id+aoi for GeoExtent.
 2. Bounding coordinates for city_id+aoi are currently read from the cities-data-api.wri.org url since it is stable. Longer term, this url must be replace by the dev.cities-data-api.wri.org url once that API has stabilized.
