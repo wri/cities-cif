@@ -19,13 +19,16 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
-from city_metrix.constants import WGS_CRS
+from city_metrix.constants import WGS_CRS, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION
+from city_metrix.layers.layer_dao import write_tile_grid, write_geodataarray, write_geodataframe, write_dataarray, \
+    write_dataset
 from city_metrix.layers.layer_tools import standardize_y_dimension_direction
 from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, reproject_units
 
 MAX_TILE_SIZE_DEGREES = 0.5 # TODO Why was this value selected?
 
 class Layer():
+    OUTPUT_FILE_FORMAT = None
     def __init__(self, aggregate=None, masks=[]):
         self.aggregate = aggregate
         if aggregate is None:
@@ -33,14 +36,15 @@ class Layer():
 
         self.masks = masks
 
-
     @abstractmethod
-    def get_data(self, bbox: GeoExtent, spatial_resolution:int, resampling_method:str) -> Union[xr.DataArray, gpd.GeoDataFrame]:
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int, resampling_method:str,
+                 allow_cache_retrieval:bool) -> Union[xr.DataArray, gpd.GeoDataFrame]:
         """
         Extract the data from the source and return it in a way we can compare to other layers.
         :param bbox: a tuple of floats representing the bounding box, (min x, min y, max x, max y)
         :param spatial_resolution: resolution of continuous raster data in meters
         :param resampling_method: interpolation method for continuous raster layers (bilinear, bicubic, nearest)
+        :param allow_cache_retrieval: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
         :return: A rioxarray-format DataArray or a GeoPandas DataFrame
         """
         ...
@@ -79,11 +83,23 @@ class Layer():
         :return:
         """
 
+        # Below if logic controls behavior for writes. The underlying assumption is that if the user
+        # is writing to S3 or file uri for a "cache" storage, then it pulls source data from GEE.
+        # Otherwise, if the write is for pulling and writing data to some random local folder, then it
+        # is free to use the cache store.
+        if output_path.startswith("s3://") or output_path.startswith("file://"):
+            allow_cache_retrieval: bool = False  # always read from source for S3 write
+        else:
+            allow_cache_retrieval: bool = True  # allow cache hit for writes to OS
+
+        file_format = self.OUTPUT_FILE_FORMAT
+
         if tile_side_length is None:
-            utm_bbox = bbox.as_utm_bbox() # currently only support output as utm
-            clipped_data = self.aggregate.get_data(utm_bbox, spatial_resolution=spatial_resolution,
-                                                   resampling_method=resampling_method)
-            _write_layer(output_path, clipped_data)
+            utm_geo_extent = bbox.as_utm_bbox() # currently only support output as utm
+            clipped_data = self.aggregate.get_data(utm_geo_extent, spatial_resolution=spatial_resolution,
+                                                   resampling_method=resampling_method,
+                                                   allow_cache_retrieval=allow_cache_retrieval)
+            _write_layer(clipped_data, output_path, file_format)
         else:
             tile_grid_gdf = create_fishnet_grid(bbox, tile_side_length=tile_side_length, tile_buffer_size=0,
                                             length_units=length_units, spatial_resolution=spatial_resolution)
@@ -96,16 +112,12 @@ class Layer():
                                         length_units=length_units, spatial_resolution=spatial_resolution))
                 buffered_tile_grid_gdf = _add_tile_name_column(buffered_tile_grid_gdf)
 
-            # write raster data to files
-            if not os.path.exists(output_path):
-                os.makedirs(output_path)
-
             # write tile grid to geojson file
-            _write_tile_grid(tile_grid_gdf, output_path, 'tile_grid.geojson')
+            write_tile_grid(tile_grid_gdf, output_path, 'tile_grid.geojson')
 
             # if tiles were buffered, also write unbuffered tile grid to geojson file
             if buffered_tile_grid_gdf is not None and len(buffered_tile_grid_gdf) > 0:
-                _write_tile_grid(buffered_tile_grid_gdf, output_path, 'tile_grid_unbuffered.geojson')
+                write_tile_grid(buffered_tile_grid_gdf, output_path, 'tile_grid_unbuffered.geojson')
 
             utm_crs = tile_grid_gdf.crs.srs
             for tile in tile_grid_gdf.itertuples():
@@ -114,8 +126,9 @@ class Layer():
 
                 file_path = os.path.join(output_path, tile_name)
                 layer_data = self.aggregate.get_data(bbox=tile_bbox, spatial_resolution=spatial_resolution,
-                                                     resampling_method=resampling_method)
-                _write_layer(file_path, layer_data)
+                                                     resampling_method=resampling_method,
+                                                     allow_cache_retrieval=allow_cache_retrieval)
+                _write_layer(layer_data, file_path, file_format)
 
 
 def _add_tile_name_column(tile_grid):
@@ -123,6 +136,28 @@ def _add_tile_name_column(tile_grid):
                               .to_series()
                               .apply(lambda x: f'tile_{str(x + 1).zfill(3)}.tif'))
     return tile_grid
+
+
+def _write_layer(data, uri, file_format):
+    if data is None:
+        raise Exception(f"Result dataset is empty and not written to: {uri}")
+
+    if isinstance(data, xr.DataArray) and file_format == GTIFF_FILE_EXTENSION:
+        was_reversed, standardized_array = standardize_y_dimension_direction(data)
+
+        if standardized_array.values.dtype.name == 'bool':
+            standardized_array = standardized_array.astype(np.uint8)
+
+        write_geodataarray(standardized_array, uri)
+    elif isinstance(data, xr.Dataset) and file_format == GTIFF_FILE_EXTENSION:
+        raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
+        write_dataset(data, uri)
+    elif isinstance(data, xr.DataArray) and file_format == NETCDF_FILE_EXTENSION:
+        write_dataarray(data, uri)
+    elif isinstance(data, gpd.GeoDataFrame) and file_format == GEOJSON_FILE_EXTENSION:
+        write_geodataframe(data, uri)
+    else:
+        raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 
 
 class LayerGroupBy:
@@ -364,38 +399,3 @@ def get_image_collection(
     clipped_data = data.sel(x=longitude_range, y=latitude_range)
 
     return clipped_data
-
-def _write_layer(path, data):
-    if isinstance(data, xr.DataArray):
-        was_reversed, standardized_array = standardize_y_dimension_direction(data)
-
-        if standardized_array.values.dtype.name == 'bool':
-            standardized_array = standardized_array.astype(np.uint8)
-
-        _write_dataarray(path, standardized_array)
-    elif isinstance(data, xr.Dataset):
-        raise NotImplementedError("Data as Dataset not currently supported")
-    elif isinstance(data, gpd.GeoDataFrame):
-        data.to_file(path, driver="GeoJSON")
-    else:
-        raise NotImplementedError("Can only write DataArray or GeoDataFrame")
-
-
-def _write_dataarray(path, data):
-    # for rasters, need to write to locally first then copy to cloud storage
-    if path.startswith("s3://"):
-        tmp_path = f"{uuid4()}.tif"
-        data.rio.to_raster(raster_path=tmp_path, driver="COG")
-
-        s3 = boto3.client('s3')
-        s3.upload_file(tmp_path, path.split('/')[2], '/'.join(path.split('/')[3:]))
-
-        os.remove(tmp_path)
-    else:
-        data.rio.to_raster(raster_path=path, driver="COG")
-
-
-def _write_tile_grid(tile_grid, output_path, target_file_name):
-    tile_grid_file_path = str(os.path.join(output_path, target_file_name))
-    tg = tile_grid.drop(columns='fishnet_geometry', axis=1)
-    tg.to_file(tile_grid_file_path)
