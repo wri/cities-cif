@@ -3,19 +3,28 @@ from pandas import Series
 import ee
 from city_metrix.layers import Layer, ProtectedAreas, EsaWorldCover
 from city_metrix.layers.layer import get_image_collection
+from city_metrix.metrics.metric import Metric
 
 
-def percent_protected_area(
-    zones: GeoDataFrame,
-    status=['Inscribed', 'Adopted', 'Designated', 'Established'],
-    status_year=2024,
-    iucn_cat=['Ia', 'Ib', 'II', 'III', 'IV', 'V', 'VI', 'Not Applicable', 'Not Assigned', 'Not Reported']
-) -> GeoSeries:
+class PercentProtectedArea(Metric):
+    def __init__(self,
+                 status=['Inscribed', 'Adopted', 'Designated', 'Established'],
+                 status_year=2024,
+                 iucn_cat=['Ia', 'Ib', 'II', 'III', 'IV', 'V', 'VI', 'Not Applicable', 'Not Assigned', 'Not Reported'],
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.status = status
+        self.status_year = status_year
+        self.iucn_cat = iucn_cat
 
-    world_cover = EsaWorldCover(year=2021)
-    protect_area = ProtectedAreas(status=status, status_year=status_year, iucn_cat=iucn_cat)
+    def get_data(self,
+                 zones: GeoDataFrame,
+                 spatial_resolution:int = None) -> GeoSeries:
 
-    protect_area_in_world_cover = world_cover.mask(protect_area).groupby(zones).count()
-    world_cover_counts = world_cover.groupby(zones).count()
+        world_cover = EsaWorldCover(year=2021)
+        protect_area = ProtectedAreas(status=self.status, status_year=self.status_year, iucn_cat=self.iucn_cat)
 
-    return 100 * protect_area_in_world_cover.fillna(0) / world_cover_counts
+        protect_area_in_world_cover = world_cover.mask(protect_area).groupby(zones).count()
+        world_cover_counts = world_cover.groupby(zones).count()
+
+        return 100 * protect_area_in_world_cover.fillna(0) / world_cover_counts

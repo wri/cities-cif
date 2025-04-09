@@ -8,7 +8,7 @@ from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
-DEFAULT_SPATIAL_RESOLUTION = 1113.1949
+DEFAULT_SPATIAL_RESOLUTION = 1113.1949  # 10 degrees of earth circumference
 
 
 class AcagPM2p5(Layer):

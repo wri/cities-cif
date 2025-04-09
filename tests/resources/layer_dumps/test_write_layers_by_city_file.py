@@ -3,9 +3,9 @@ import pytest
 from city_metrix.file_cache_config import set_cache_settings
 from city_metrix.layers import *
 from city_metrix.layers.layer_dao import get_cache_variables, check_if_cache_file_exists
-from .conftest import EXECUTE_IGNORED_TESTS, prep_output_path, verify_file_is_populated
 from .tools import get_test_bbox, delete_file_on_os
 from ..bbox_constants import EXTENT_SMALL_CITY_WGS84
+from ..conftest import EXECUTE_IGNORED_TESTS, prep_output_path, verify_file_is_populated
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_AcagPM2p5_file(target_folder):

@@ -3,7 +3,7 @@
 import pytest
 
 from city_metrix.layers import *
-from .conftest import EXECUTE_IGNORED_TESTS, prep_output_path, verify_file_is_populated
+from tests.resources.conftest import EXECUTE_IGNORED_TESTS, prep_output_path, verify_file_is_populated
 from .tools import get_test_resolution, get_test_bbox
 
 

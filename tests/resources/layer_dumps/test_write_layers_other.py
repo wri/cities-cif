@@ -4,7 +4,7 @@ import pytest
 import xarray as xr
 
 from city_metrix.layers import *
-from .conftest import EXECUTE_IGNORED_TESTS, prep_output_path, get_file_count_in_folder
+from tests.resources.conftest import EXECUTE_IGNORED_TESTS, prep_output_path, get_file_count_in_folder
 from .tools import get_test_bbox, get_test_resolution
 
 

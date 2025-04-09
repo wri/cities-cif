@@ -1,5 +1,10 @@
 # Release Notes
 
+## 2025/04/7
+1. Created a Metric base class with get_data() and two write functions
+2. Converted each existing Metric function into a Metric class with get_data() function
+3. Added tests to write output of each class to a local system file
+
 ## 2025/04/2
 1. Added download of cached CIF results from S3 or a local directory when available.
    1. Caching is enabled by running the set_cache_settings function prior to getting or writing data.
