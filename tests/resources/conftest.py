@@ -1,4 +1,6 @@
 import tempfile
+from enum import Enum
+
 import pytest
 import os
 import shutil
@@ -8,10 +10,14 @@ from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_NLD
     BBOX_NLD_AMSTERDAM_LARGE, BBOX_USA_OR_PORTLAND, BBOX_USA_OR_PORTLAND_1
 from tests.tools.general_tools import create_target_folder, is_valid_path
 
-# EXECUTE_IGNORED_TESTS is the master control for whether the writes and tests are executed
-# Setting EXECUTE_IGNORED_TESTS to True turns on code execution.
-# Values should normally be set to False in order to avoid unnecessary execution.
-EXECUTE_IGNORED_TESTS = False
+class DumpRunLevel(Enum):
+    RUN_NONE = 0
+    RUN_FAST_ONLY = 1
+    RUN_ALL = 2
+
+# DUMP_RUN_LEVEL is the master control for when  to execute tests decorated with
+# pytest.mark.skipif based on the DumpRunLevel enum class.
+DUMP_RUN_LEVEL = DumpRunLevel.RUN_NONE
 
 # Define a WGS bbox or otherwise a utm bbox
 USE_WGS_BBOX = True
@@ -36,7 +42,7 @@ CUSTOM_DUMP_DIRECTORY = None
 
 def pytest_configure(config):
 
-    if EXECUTE_IGNORED_TESTS is True:
+    if DUMP_RUN_LEVEL is True:
         source_folder = os.path.dirname(__file__)
         target_folder = get_target_folder_path()
         create_target_folder(target_folder, False)

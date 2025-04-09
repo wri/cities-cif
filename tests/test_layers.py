@@ -3,7 +3,7 @@ import numpy as np
 
 from city_metrix.layers import *
 from city_metrix.layers.layer_tools import get_projection_name
-from tests.conftest import EXECUTE_IGNORED_TESTS
+from tests.conftest import TestRunLevel, TEST_RUN_LEVEL
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_2, EXTENT_SMALL_CITY_WGS84
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
@@ -54,14 +54,14 @@ def test_built_up_height():
     utm_bbox_data = BuiltUpHeight().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+@pytest.mark.skipif(TEST_RUN_LEVEL != TestRunLevel.RUN_ALL, reason="CDS API needs personal access token file to run")
 def test_cams():
     data = Cams().get_data(BBOX)
     assert np.size(data) > 0
     utm_bbox_data = Cams().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+@pytest.mark.skipif(TEST_RUN_LEVEL != TestRunLevel.RUN_ALL, reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
     data = Era5HottestDay().get_data(BBOX)
     assert np.size(data) > 0
@@ -207,6 +207,7 @@ def test_riparian_areas():
     utm_bbox_data = RiparianAreas().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
+# TODO is this layer deprecated?
 @pytest.mark.skip(reason="layer is deprecated")
 def test_sentinel_2_level2():
     sentinel_2_bands = ["green"]

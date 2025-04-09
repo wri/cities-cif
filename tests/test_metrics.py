@@ -1,5 +1,6 @@
 from city_metrix.metrics import *
-from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_TILE_GDF, NLD_AMSTERDAM_TILE_GDF
+from .conftest import IDN_JAKARTA_TILED_ZONES, USA_OR_PORTLAND_TILE_GDF, NLD_AMSTERDAM_TILE_GDF, \
+    TestRunLevel, TEST_RUN_LEVEL
 import pytest
 
 
@@ -48,7 +49,7 @@ def test_canopy_area_per_resident_informal():
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+@pytest.mark.skipif(TEST_RUN_LEVEL != TestRunLevel.RUN_ALL, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess():
     # Useful site: https://projects.oregonlive.com/weather/temps/
     indicator = Era5MetPreprocessing().get_data(USA_OR_PORTLAND_TILE_GDF)

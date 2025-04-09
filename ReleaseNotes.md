@@ -1,5 +1,9 @@
 # Release Notes
 
+## 2025/04/9
+1. Merged some Layers and Metrics functions
+2. Increased granularity for controling whether individual tests are run by converting the old EXECUTE_IGNORED_TESTS boolean values into enums.
+
 ## 2025/04/7
 1. Created a Metric base class with get_data() and two write functions
 2. Converted each existing Metric function into a Metric class with get_data() function

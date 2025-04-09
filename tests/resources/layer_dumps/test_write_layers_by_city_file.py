@@ -5,9 +5,9 @@ from city_metrix.layers import *
 from city_metrix.metrix_dao import get_cache_variables, check_if_cache_file_exists
 from .tools import get_test_bbox, delete_file_on_os
 from ..bbox_constants import EXTENT_SMALL_CITY_WGS84
-from ..conftest import EXECUTE_IGNORED_TESTS, prep_output_path, verify_file_is_populated
+from ..conftest import DUMP_RUN_LEVEL, prep_output_path, verify_file_is_populated, DumpRunLevel
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+@pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_AcagPM2p5_file(target_folder):
     set_cache_settings(f"file://{target_folder}", 'dev')
     geo_extent = get_test_bbox(EXTENT_SMALL_CITY_WGS84)

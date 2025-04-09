@@ -6,7 +6,7 @@ import pytest
 
 from city_metrix.constants import WGS_CRS
 from city_metrix.metrics import *
-from tests.resources.conftest import prep_output_path, verify_file_is_populated, EXECUTE_IGNORED_TESTS
+from tests.resources.conftest import prep_output_path, verify_file_is_populated, DUMP_RUN_LEVEL, DumpRunLevel
 from tests.tools.general_tools import create_target_folder
 
 from shapely.geometry import Polygon
@@ -21,7 +21,7 @@ IDN_Jakarta_zone = (gpd.GeoDataFrame([Polygon(jakarta_crude_boundary)], columns=
                     .reset_index())
 
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+@pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_polygonal_zones(target_folder):
     zone = IDN_Jakarta_zone
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
@@ -36,7 +36,7 @@ def test_write_polygonal_zones(target_folder):
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+@pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_data_series_as_geojson(target_folder):
     zones = IDN_Jakarta_zone
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
@@ -46,7 +46,7 @@ def test_write_data_series_as_geojson(target_folder):
     BuiltLandWithHighLST().write_as_geojson(zones,csv_file_path)
     assert verify_file_is_populated(csv_file_path)
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+@pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_data_series_as_csv(target_folder):
     zones = IDN_Jakarta_zone
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))

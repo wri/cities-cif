@@ -1,3 +1,5 @@
+from enum import Enum
+
 from city_metrix.layers import Layer
 from city_metrix.constants import WGS_EPSG_CODE
 from city_metrix.layers.layer import create_fishnet_grid, WGS_CRS
@@ -7,12 +9,15 @@ from city_metrix.layers.layer_geometry import GeoExtent
 from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND, BBOX_NLD_AMSTERDAM, BBOX_IDN_JAKARTA, \
     BBOX_IDN_JAKARTA_LARGE
 
-# EXECUTE_IGNORED_TESTS is the master control for whether to execute tests decorated with
-# pytest.mark.skipif. These tests are temporarily ignored due to some unresolved issue.
-# Setting EXECUTE_IGNORED_TESTS to True turns on code execution. This should be done for local testing.
-# The value must be set to False when pushing to GitHub since the ignored tests would otherwise fail
+class TestRunLevel(Enum):
+    RUN_NONE = 0
+    RUN_FAST_ONLY = 1
+    RUN_ALL = 2
+
+# TEST_RUN_LEVEL is the master control for when  to execute tests decorated with
+# pytest.mark.skipif based on the TestRunLevel enum class.
 # in GitHub Actions.
-EXECUTE_IGNORED_TESTS = False
+TEST_RUN_LEVEL = TestRunLevel.RUN_NONE
 
 def create_fishnet_grid_for_testing(coords, tile_side_length):
     min_x, min_y, max_x, max_y = coords
