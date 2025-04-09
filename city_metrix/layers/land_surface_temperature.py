@@ -1,10 +1,7 @@
-from .landsat_collection_2 import LandsatCollection2
 from .layer import Layer, get_image_collection
-from dask.diagnostics import ProgressBar
 import ee
-import xarray
 
-from .layer_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 

@@ -1,16 +1,14 @@
 import xarray as xr
 import numpy as np
 import pandas as pd
-import geopandas as gpd
 from shapely.geometry import CAP_STYLE, JOIN_STYLE
-from shapely.geometry import box
 from exactextract import exact_extract
 from geocube.api.core import make_geocube
 import warnings
 from rasterio.enums import Resampling
 from xrspatial.classify import reclassify
 
-from .layer_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 

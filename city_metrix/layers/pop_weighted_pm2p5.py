@@ -1,13 +1,7 @@
-from dask.diagnostics import ProgressBar
-import xarray as xr
-import xee
-import ee
-import numpy as np
-
-from .layer import Layer, get_image_collection
-from .layer_dao import retrieve_cached_city_data
+from .layer import Layer
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
-from .world_pop import WorldPop, WorldPopClass
+from .world_pop import WorldPop
 from .acag_pm2p5 import AcagPM2p5
 from ..constants import GTIFF_FILE_EXTENSION
 

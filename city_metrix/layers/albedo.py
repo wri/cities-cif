@@ -1,10 +1,8 @@
 import ee
-import xarray
-from dask.diagnostics import ProgressBar
 
 from .layer import (Layer, get_image_collection, set_resampling_for_continuous_raster,
                     validate_raster_resampling_method)
-from .layer_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 

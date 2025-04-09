@@ -1,9 +1,8 @@
-import ee
 from xrspatial import slope
 
 from .layer import Layer, validate_raster_resampling_method
 from .nasa_dem import NasaDEM
-from .layer_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 

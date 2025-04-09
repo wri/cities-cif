@@ -5,7 +5,7 @@ import pandas as pd
 
 from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION
 from .layer import Layer
-from .layer_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 
 class OpenStreetMapClass(Enum):

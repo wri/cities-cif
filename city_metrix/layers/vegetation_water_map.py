@@ -2,7 +2,7 @@ import ee
 
 from .layer import Layer, get_image_collection
 from .albedo import Albedo
-from .layer_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 

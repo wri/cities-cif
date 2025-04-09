@@ -1,10 +1,9 @@
-from dask.diagnostics import ProgressBar
 import ee
 import geemap
 import geopandas as gpd
 
 from .layer import Layer
-from .layer_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
 

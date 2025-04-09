@@ -10,7 +10,7 @@ import glob
 
 from city_metrix.constants import WGS_CRS, NETCDF_FILE_EXTENSION
 from .layer import Layer
-from .layer_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 
 

@@ -1,14 +1,10 @@
 import os
 from abc import abstractmethod
 from typing import Union
-from uuid import uuid4
 
-import xee
 # This osgeo import is essential for proper functioning. Do not remove.
-from osgeo import gdal
 
 import ee
-import boto3
 from dask.diagnostics import ProgressBar
 from ee import ImageCollection
 from geocube.api.core import make_geocube
@@ -20,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 from city_metrix.constants import WGS_CRS, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION
-from city_metrix.layers.layer_dao import write_tile_grid, write_geodataarray, write_geodataframe, write_dataarray, \
+from city_metrix.metrix_dao import write_tile_grid, write_geotiff, write_geojson, write_netcdf, \
     write_dataset
 from city_metrix.layers.layer_tools import standardize_y_dimension_direction
 from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, reproject_units
@@ -148,14 +144,14 @@ def _write_layer(data, uri, file_format):
         if standardized_array.values.dtype.name == 'bool':
             standardized_array = standardized_array.astype(np.uint8)
 
-        write_geodataarray(standardized_array, uri)
+        write_geotiff(standardized_array, uri)
     elif isinstance(data, xr.Dataset) and file_format == GTIFF_FILE_EXTENSION:
         raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
         write_dataset(data, uri)
     elif isinstance(data, xr.DataArray) and file_format == NETCDF_FILE_EXTENSION:
-        write_dataarray(data, uri)
+        write_netcdf(data, uri)
     elif isinstance(data, gpd.GeoDataFrame) and file_format == GEOJSON_FILE_EXTENSION:
-        write_geodataframe(data, uri)
+        write_geojson(data, uri)
     else:
         raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 

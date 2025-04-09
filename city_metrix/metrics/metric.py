@@ -7,15 +7,17 @@ import pandas as pd
 from geopandas import GeoDataFrame
 from pandas import Series, DataFrame
 
+from city_metrix.metrix_dao import write_geojson, write_csv
+
 
 class Metric():
-    def __init__(self, aggregate=None):
-        self.aggregate = aggregate
-        if aggregate is None:
+    def __init__(self, layer=None):
+        self.aggregate = layer
+        if layer is None:
             self.aggregate = self
 
     @abstractmethod
-    def get_data(self, zones: GeoDataFrame, spatial_resolution:int) -> gpd.GeoSeries:
+    def get_data(self, zones: GeoDataFrame, spatial_resolution:int) -> pd.Series:
         """
         Construct polygonal dataset using baser layers
         :return: A rioxarray-format GeoPandas DataFrame
@@ -38,7 +40,7 @@ class Metric():
 
         if isinstance(indicator, (pd.Series, pd.DataFrame)):
             gdf = pd.concat([zones, indicator], axis=1)
-            gdf.to_file(output_path, driver="GeoJSON")
+            write_geojson(gdf, output_path)
         else:
             raise NotImplementedError("Can only write Series or Dataframe Indicator data")
 
@@ -57,7 +59,7 @@ class Metric():
             indicator.name = 'indicator'
 
         if isinstance(indicator, (pd.Series, pd.DataFrame)):
-            indicator.to_csv(output_path, header=True, index=True, index_label='index')
+            write_csv(indicator, output_path)
         else:
             raise NotImplementedError("Can only write Series or Dataframe Indicator data")
 

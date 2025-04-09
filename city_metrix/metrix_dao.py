@@ -1,43 +1,90 @@
 import os
+import sys
 import tempfile
 import boto3
 import rasterio
 import requests
-import geopandas as gpd
 import xarray as xr
+import pandas as pd
+import geopandas as gpd
+from geopandas import GeoDataFrame
+from pandas.core.interchange.dataframe_protocol import DataFrame
 from pyproj import CRS
 from rioxarray import rioxarray
 from urllib.parse import urlparse
 
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
-    NETCDF_FILE_EXTENSION
-from .layer_tools import build_cache_layer_names, get_crs_from_data
-from ..file_cache_config import get_cached_file_key, cif_cache_settings, get_aws_bucket_name
-from ..constants import aws_s3_profile
-
-def get_city(city_id: str):
-    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
-    city = requests.get(query)
-    if city.status_code in range(200, 206):
-        return city.json()
-    raise Exception("City not found")
+    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION
+from city_metrix.layers.layer_tools import build_cache_layer_names, get_crs_from_data
+from city_metrix.file_cache_config import get_cached_file_key, cif_cache_settings, get_aws_bucket_name
+from city_metrix.constants import aws_s3_profile
 
 
-def get_city_boundary(city_id: str, admin_level: str):
-    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
-    city_boundary = requests.get(query)
-    if city_boundary.status_code in range(200, 206):
-        tuple_str = city_boundary.json()['bounding_box']
-        bounds = _string_to_float_tuple(tuple_str)
-        return bounds
-    raise Exception("City boundary not found")
 
+def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool):
+    cif_cache_location_uri = cif_cache_settings.cache_location_uri
+    if (allow_cache_retrieval == False
+            or geo_extent.geo_extent_type == 'geometry'
+            or cif_cache_location_uri is None
+    ):
+        return None
 
-def _string_to_float_tuple(string_tuple):
-    string_tuple = string_tuple.replace("[", "").replace("]", "")
-    string_values = string_tuple.split(",")
-    float_tuple = tuple(float(value.strip()) for value in string_values)
-    return float_tuple
+    city_id = geo_extent.city_id
+    admin_level = geo_extent.admin_level
+    file_format = class_obj.OUTPUT_FILE_FORMAT
+
+    # Construct layer filename and s3 key
+    layer_folder_name, layer_id = build_cache_layer_names(class_obj)
+    file_key = get_cached_file_key(layer_folder_name, city_id, admin_level, layer_id)
+
+    file_uri = get_cached_file_uri(file_key)
+    if not check_if_cache_file_exists(file_uri):
+        return None
+    else:
+        # Retrieve from cache
+        if file_format == GTIFF_FILE_EXTENSION:
+            data = rioxarray.open_rasterio(file_uri, driver="GTiff")
+
+            result_data = data.squeeze('band', drop=True)
+
+            # Rename band name to long name
+            # See https://github.com/corteva/rioxarray/issues/736
+            if "long_name" in result_data.attrs:
+                da_name = result_data.long_name
+                result_data.rename(da_name)
+                result_data.name = da_name
+
+            # Ensure the CRS is correctly set
+            result_data = result_data.rio.write_crs(result_data.rio.crs, inplace=True)
+            if 'crs' not in result_data.attrs:
+                crs = get_crs_from_data(result_data)
+                result_data = result_data.assign_attrs(crs=crs)
+
+        elif file_format == GEOJSON_FILE_EXTENSION:
+            from io import BytesIO
+            s3_client = get_s3_client()
+            aws_bucket = get_aws_bucket_name()
+            response = s3_client.get_object(Bucket=aws_bucket, Key=file_key)
+            geojson_content  = response['Body'].read()
+            result_data = gpd.read_file(BytesIO(geojson_content))
+
+        elif file_format == NETCDF_FILE_EXTENSION:
+            s3_client = get_s3_client()
+            aws_bucket = get_aws_bucket_name()
+
+            suffix = f".{NETCDF_FILE_EXTENSION}"
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as temp_file:
+                temp_file_path = temp_file.name
+                try:
+                    # Download the file from S3
+                    s3_client.download_file(aws_bucket, file_key, temp_file_path)
+                    result_data = xr.open_dataarray(temp_file_path)
+                except Exception as e:
+                    print(f"Error downloading file: {file_key} with error: {e}")
+        else:
+            raise Exception(f"Unrecognized file_format of '{file_format}'")
+
+        return result_data
 
 
 def _write_file_to_s3(data, uri, file_extension):
@@ -52,13 +99,29 @@ def _write_file_to_s3(data, uri, file_extension):
             data.rio.to_raster(raster_path=temp_file_path, driver="GTiff")
         elif file_extension == NETCDF_FILE_EXTENSION:
             data.to_netcdf(temp_file_path)
+        elif file_extension == CSV_FILE_EXTENSION:
+            data.to_csv(uri, header=True, index=True, index_label='index')
 
         s3_client = get_s3_client()
         s3_client.upload_file(
             temp_file_path, aws_bucket, file_key, ExtraArgs={"ACL": "public-read"}
         )
 
-def write_geodataframe(data, uri):
+def write_csv(data, uri):
+    _verify_datatype('write_csv()', data, [pd.Series, pd.DataFrame], is_spatial=False)
+    if get_uri_identifier(uri) == 's3':
+        _write_file_to_s3(data, uri, GEOJSON_FILE_EXTENSION)
+    else:
+        # write raster data to files
+        output_path = os.path.dirname(uri)
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        data.to_csv(uri, header=True, index=True, index_label='index')
+
+
+def write_geojson(data, uri):
+    _verify_datatype('write_geojson()', data, [gpd.GeoDataFrame], is_spatial=True)
     if get_uri_identifier(uri) == 's3':
         _write_file_to_s3(data, uri, GEOJSON_FILE_EXTENSION)
     else:
@@ -70,7 +133,8 @@ def write_geodataframe(data, uri):
         data.to_file(uri, driver="GeoJSON")
 
 
-def write_geodataarray(data, uri):
+def write_geotiff(data, uri):
+    _verify_datatype('write_geotiff()', data, [xr.DataArray], is_spatial=True)
     if get_uri_identifier(uri) == 's3':
         _write_file_to_s3(data, uri, GTIFF_FILE_EXTENSION)
     else:
@@ -82,7 +146,8 @@ def write_geodataarray(data, uri):
 
         data.rio.to_raster(raster_path=uri_path, driver="GTiff")
 
-def write_dataarray(data, uri):
+def write_netcdf(data, uri):
+    _verify_datatype('write_netcdf()', data, [xr.DataArray], is_spatial=False)
     if get_uri_identifier(uri) == 's3':
         _write_file_to_s3(data, uri, NETCDF_FILE_EXTENSION)
     else:
@@ -95,6 +160,7 @@ def write_dataarray(data, uri):
         data.to_netcdf(uri)
 
 def write_dataset(data, uri):
+    _verify_datatype('write_dataset()', data, [xr.Dataset], is_spatial=True)
     raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 
     if get_uri_identifier(uri) == 's3':
@@ -144,6 +210,21 @@ def write_dataset(data, uri):
         #     for t in range(time_dims):
         #         for b in bands:
         #             dst.write(data.isel(time=t).get(b).values, t * band_count+ b + 1)
+
+def _verify_datatype(function_name:str, data, verification_classes:list, is_spatial:bool = False):
+    data_datatype_name = type(data).__name__
+
+    verification_class_names = [cls.__name__ for cls in verification_classes]
+    if data_datatype_name not in verification_class_names:
+        raise Exception(f"Function {function_name} does support the provided data type.")
+
+    if getattr(data, 'crs', None) is None and getattr(data, 'spatial_ref', None) is None:
+        data_has_spatial_attribute = False
+    else:
+        data_has_spatial_attribute = True
+    if is_spatial and not data_has_spatial_attribute:
+        expected_spatial_type = 'spatial' if is_spatial is True else "aspatial"
+        raise Exception(f"Function {function_name} does not support {expected_spatial_type} data.")
 
 
 def write_tile_grid(tile_grid, output_path, target_file_name):
@@ -215,67 +296,26 @@ def check_if_cache_file_exists(file_uri):
         return os.path.exists(uri_path)
 
 
-def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool):
-    cif_cache_location_uri = cif_cache_settings.cache_location_uri
-    if (allow_cache_retrieval == False
-            or geo_extent.geo_extent_type == 'geometry'
-            or cif_cache_location_uri is None
-    ):
-        return None
+def get_city(city_id: str):
+    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
+    city = requests.get(query)
+    if city.status_code in range(200, 206):
+        return city.json()
+    raise Exception("City not found")
 
-    city_id = geo_extent.city_id
-    admin_level = geo_extent.admin_level
-    file_format = class_obj.OUTPUT_FILE_FORMAT
 
-    # Construct layer filename and s3 key
-    layer_folder_name, layer_id = build_cache_layer_names(class_obj)
-    file_key = get_cached_file_key(layer_folder_name, city_id, admin_level, layer_id)
+def get_city_boundary(city_id: str, admin_level: str):
+    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
+    city_boundary = requests.get(query)
+    if city_boundary.status_code in range(200, 206):
+        tuple_str = city_boundary.json()['bounding_box']
+        bounds = _string_to_float_tuple(tuple_str)
+        return bounds
+    raise Exception("City boundary not found")
 
-    file_uri = get_cached_file_uri(file_key)
-    if not check_if_cache_file_exists(file_uri):
-        return None
-    else:
-        # Retrieve from cache
-        if file_format == GTIFF_FILE_EXTENSION:
-            data = rioxarray.open_rasterio(file_uri, driver="GTiff")
 
-            result_data = data.squeeze('band', drop=True)
-
-            # Rename band name to long name
-            # See https://github.com/corteva/rioxarray/issues/736
-            if "long_name" in result_data.attrs:
-                da_name = result_data.long_name
-                result_data.rename(da_name)
-                result_data.name = da_name
-
-            # Ensure the CRS is correctly set
-            result_data = result_data.rio.write_crs(result_data.rio.crs, inplace=True)
-            if 'crs' not in result_data.attrs:
-                crs = get_crs_from_data(result_data)
-                result_data = result_data.assign_attrs(crs=crs)
-
-        elif file_format == GEOJSON_FILE_EXTENSION:
-            from io import BytesIO
-            s3_client = get_s3_client()
-            aws_bucket = get_aws_bucket_name()
-            response = s3_client.get_object(Bucket=aws_bucket, Key=file_key)
-            geojson_content  = response['Body'].read()
-            result_data = gpd.read_file(BytesIO(geojson_content))
-
-        elif file_format == NETCDF_FILE_EXTENSION:
-            s3_client = get_s3_client()
-            aws_bucket = get_aws_bucket_name()
-
-            suffix = f".{NETCDF_FILE_EXTENSION}"
-            with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as temp_file:
-                temp_file_path = temp_file.name
-                try:
-                    # Download the file from S3
-                    s3_client.download_file(aws_bucket, file_key, temp_file_path)
-                    result_data = xr.open_dataarray(temp_file_path)
-                except Exception as e:
-                    print(f"Error downloading file: {file_key} with error: {e}")
-        else:
-            raise Exception(f"Unrecognized file_format of '{file_format}'")
-
-        return result_data
+def _string_to_float_tuple(string_tuple):
+    string_tuple = string_tuple.replace("[", "").replace("]", "")
+    string_values = string_tuple.split(",")
+    float_tuple = tuple(float(value.strip()) for value in string_values)
+    return float_tuple

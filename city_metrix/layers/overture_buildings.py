@@ -3,7 +3,7 @@ import subprocess
 from io import StringIO
 
 from .layer import Layer
-from .layer_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
 

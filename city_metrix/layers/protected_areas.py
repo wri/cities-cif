@@ -2,8 +2,8 @@ import ee
 import geopandas as gpd
 import geemap
 
-from .layer import Layer, get_image_collection
-from .layer_dao import retrieve_cached_city_data
+from .layer import Layer
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
 

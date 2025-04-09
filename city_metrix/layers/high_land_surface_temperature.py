@@ -1,11 +1,9 @@
-from .landsat_collection_2 import LandsatCollection2
 from .land_surface_temperature import LandSurfaceTemperature
 from .layer import Layer
-from shapely.geometry import box
 import datetime
 import ee
 
-from .layer_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 

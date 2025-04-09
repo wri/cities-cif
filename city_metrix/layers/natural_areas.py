@@ -1,9 +1,8 @@
-import xarray as xr
 from xrspatial.classify import reclassify
 
 from .layer import Layer
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from .layer_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 

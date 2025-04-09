@@ -4,6 +4,7 @@ WGS_EPSG_CODE = 4326
 GTIFF_FILE_EXTENSION = 'tif'
 GEOJSON_FILE_EXTENSION = 'geojson'
 NETCDF_FILE_EXTENSION = 'nc'
+CSV_FILE_EXTENSION = 'csv'
 
 # TODO replace with production value
 cif_production_aws_bucket_uri = 's3://cities-dev-sandbox' # 's3://wri-cities-data-api'

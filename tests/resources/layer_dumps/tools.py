@@ -1,7 +1,7 @@
 import os
 
 from city_metrix.file_cache_config import get_aws_bucket_name
-from city_metrix.layers.layer_dao import get_s3_client
+from city_metrix.metrix_dao import get_s3_client
 from tests.resources.conftest import RESOLUTION_MTHD, FIXED_RESOLUTION, RESOLUTION_MULTIPLIER, USE_WGS_BBOX
 from tests.tools.general_tools import get_class_default_spatial_resolution
 
