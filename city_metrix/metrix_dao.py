@@ -20,7 +20,6 @@ from city_metrix.file_cache_config import get_cached_file_key, cif_cache_setting
 from city_metrix.constants import aws_s3_profile
 
 
-
 def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool):
     cif_cache_location_uri = cif_cache_settings.cache_location_uri
     if (allow_cache_retrieval == False
@@ -72,15 +71,15 @@ def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool
             s3_client = get_s3_client()
             aws_bucket = get_aws_bucket_name()
 
-            suffix = f".{NETCDF_FILE_EXTENSION}"
-            with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as temp_file:
-                temp_file_path = temp_file.name
-                try:
-                    # Download the file from S3
-                    s3_client.download_file(aws_bucket, file_key, temp_file_path)
-                    result_data = xr.open_dataarray(temp_file_path)
-                except Exception as e:
-                    print(f"Error downloading file: {file_key} with error: {e}")
+            with tempfile.TemporaryDirectory() as temp_dir:
+                with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
+                    try:
+                        # Download the file from S3
+                        s3_client.download_file(aws_bucket, file_key, temp_file.name)
+                        result_data = xr.open_dataarray(temp_file.name)
+                    except Exception as e:
+                        print(f"Error downloading file: {file_key} with error: {e}")
+
         else:
             raise Exception(f"Unrecognized file_format of '{file_format}'")
 
@@ -91,21 +90,19 @@ def _write_file_to_s3(data, uri, file_extension):
     aws_bucket = get_aws_bucket_name()
     file_key = _get_file_key_from_s3_url(uri)
     suffix = f".{file_extension}"
-    with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as temp_file:
-        temp_file_path = temp_file.name
-        if file_extension == GEOJSON_FILE_EXTENSION:
-            data.to_file(temp_file_path, driver="GeoJSON")
-        elif file_extension == GTIFF_FILE_EXTENSION:
-            data.rio.to_raster(raster_path=temp_file_path, driver="GTiff")
-        elif file_extension == NETCDF_FILE_EXTENSION:
-            data.to_netcdf(temp_file_path)
-        elif file_extension == CSV_FILE_EXTENSION:
-            data.to_csv(uri, header=True, index=True, index_label='index')
+    with tempfile.TemporaryDirectory() as temp_dir:
+        with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
+            if file_extension == GEOJSON_FILE_EXTENSION:
+                data.to_file(temp_file.name, driver="GeoJSON")
+            elif file_extension == GTIFF_FILE_EXTENSION:
+                data.rio.to_raster(raster_path=temp_file.name, driver="GTiff")
+            elif file_extension == NETCDF_FILE_EXTENSION:
+                data.to_netcdf(temp_file.name)
 
-        s3_client = get_s3_client()
-        s3_client.upload_file(
-            temp_file_path, aws_bucket, file_key, ExtraArgs={"ACL": "public-read"}
-        )
+            s3_client = get_s3_client()
+            s3_client.upload_file(
+                temp_file.name, aws_bucket, file_key, ExtraArgs={"ACL": "public-read"}
+            )
 
 def write_csv(data, uri):
     _verify_datatype('write_csv()', data, [pd.Series, pd.DataFrame], is_spatial=False)
