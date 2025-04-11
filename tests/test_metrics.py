@@ -100,7 +100,7 @@ def test_percent_area_impervious():
 
 
 def test_percent_built_area_without_tree_cover():
-    indicator = percent_built_area_without_tree_cover(IDN_JAKARTA_TILED_ZONES)
+    indicator = PercentBuiltAreaWithoutTreeCover().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
