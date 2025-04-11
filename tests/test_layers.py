@@ -4,13 +4,12 @@ import numpy as np
 from city_metrix.layers import *
 from city_metrix.layers.layer_tools import get_projection_name
 from tests.conftest import EXECUTE_IGNORED_TESTS
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_2
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_2, EXTENT_SMALL_CITY_WGS84
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC
-# COUNTRY_CODE_FOR_BBOX = 'BRA'
-# BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 COUNTRY_CODE_FOR_BBOX = 'USA'
+CITY_CODE_FOR_BBOX = 'portland'
 BBOX = BBOX_USA_OR_PORTLAND_2
 BBOX_AS_UTM = BBOX.as_utm_bbox()
 
@@ -181,6 +180,20 @@ def test_open_street_map():
     utm_bbox_data = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
+def test_overture_buildings_height_raster():
+    data = OvertureBuildingsHeightRaster(CITY_CODE_FOR_BBOX).get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.rio.crs.to_epsg()) == 'utm'
+    utm_bbox_data = OvertureBuildingsHeightRaster(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
+def test_overture_buildings_height():
+    data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.crs.srs) == 'utm'
+    utm_bbox_data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
 def test_overture_buildings():
     data = OvertureBuildings().get_data(BBOX)
     assert np.size(data) > 0
@@ -258,6 +271,13 @@ def test_urban_land_use():
     assert np.size(data) > 0
     assert get_projection_name(data.crs) == 'utm'
     utm_bbox_data = UrbanLandUse().get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
+def test_ut_globus():
+    data = UtGlobus(CITY_CODE_FOR_BBOX).get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_name(data.crs.srs) == 'utm'
+    utm_bbox_data = UtGlobus(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_vegetation_water_map():
