@@ -4,19 +4,19 @@ import os
 import pytest
 
 from city_metrix.metrics import *
-from tests.conftest import create_fishnet_grid_for_testing
+from tests.conftest import create_fishnet_gdf_for_testing
 from tests.resources.bbox_constants import BBOX_IDN_JAKARTA, BBOX_IDN_JAKARTA_LARGE
 from tests.resources.conftest import prep_output_path, verify_file_is_populated, DUMP_RUN_LEVEL, DumpRunLevel
 from tests.tools.general_tools import create_target_folder
 
 SAMPLE_TILED_SINGLE_ZONE = (
-    create_fishnet_grid_for_testing(BBOX_IDN_JAKARTA.coords, 0.1).reset_index())
+    create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA.coords, 0.1).reset_index())
 
 SAMPLE_TILED_ZONES = (
-    create_fishnet_grid_for_testing(BBOX_IDN_JAKARTA.coords, 0.05).reset_index())
+    create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA.coords, 0.05).reset_index())
 
 SAMPLE_TILED_LARGE_ZONES = (
-    create_fishnet_grid_for_testing(BBOX_IDN_JAKARTA_LARGE.coords, 0.5).reset_index())
+    create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA_LARGE.coords, 0.5).reset_index())
 
 # TODO - groupby fails for small zones that return null values from AcagPM2p5 layer. How should system handle such nulls
 

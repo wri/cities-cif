@@ -76,7 +76,7 @@ def test_albedo_metrics_no_resampling():
     assert expected_max_value == actual_max_value
 
 
-def test_alos_dsm_metrics():
+def test_alos_dsm_values():
     data = AlosDSM().get_data(BBOX, resampling_method=None)
 
     # Bounding values
@@ -90,7 +90,7 @@ def test_alos_dsm_metrics():
     assert expected_max_value == actual_max_value
 
     
-def test_ndvi_metrics():
+def test_ndvi_values():
     data = NdviSentinel2(year=2023).get_data(BBOX)
 
     # Bounding values
@@ -104,7 +104,7 @@ def test_ndvi_metrics():
     assert actual_max_value == expected_max_value
 
 
-def test_tree_cover_metrics():
+def test_tree_cover_values():
     expected_mean_value = 54.0
     actual_mean_value = TreeCover().get_data(BBOX).mean()
     tolerance = 0.1

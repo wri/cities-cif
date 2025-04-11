@@ -7,14 +7,15 @@ import pandas as pd
 from geopandas import GeoDataFrame
 from pandas import Series, DataFrame
 
+from city_metrix import AIRTABLE_PERSONAL_API_KEY, AIRTABLE_METRICS_BASE_ID
 from city_metrix.metrix_dao import write_geojson, write_csv
 
 
 class Metric():
     def __init__(self, layer=None):
-        self.aggregate = layer
+        self.layer = layer
         if layer is None:
-            self.aggregate = self
+            self.layer = self
 
     @abstractmethod
     def get_data(self, zones: GeoDataFrame, spatial_resolution:int) -> pd.Series:
@@ -24,6 +25,47 @@ class Metric():
         """
         ...
 
+    def write_to_db(self, zones: GeoDataFrame, output_path:str, spatial_resolution:int = None, **kwargs):
+        """
+        Write the metric to a path. Does not apply masks.
+        :return:
+        """
+        # _verify_extension(output_path, '.geojson')
+
+        indicator = self.layer.get_data(zones, spatial_resolution)
+
+        if isinstance(indicator, Series) and indicator.name is None:
+            # TODO: after CDB-257 is fixed, replace with Exception
+            # raise Exception("Series must have a name.")
+            indicator.name = 'indicator'
+
+        if isinstance(indicator, (pd.Series, pd.DataFrame)):
+            from pyairtable import Table
+            api_key = AIRTABLE_PERSONAL_API_KEY
+            base_id = AIRTABLE_METRICS_BASE_ID
+            table = Table(api_key, base_id, 'metrics')
+
+            gdf = pd.concat([zones, indicator], axis=1)
+            cols = gdf.columns.values.tolist()
+            exclude_values = {'index', 'geometry'}
+            filtered_list = [item for item in cols if item not in exclude_values]
+
+            from shapely.wkt import dumps
+            for index, row in gdf.iterrows():
+                geom = row['geometry'].wkt
+                for col in filtered_list:
+                    id = f"test{index}"
+                    value = row[col]
+                    fields = {"city_metric_id":id, "geometry":geom, "attribute":col, "value": value}
+
+                    table.create(fields=fields)
+
+        else:
+            raise NotImplementedError("Can only write Series or Dataframe Indicator data")
+
+
+
+
     def write_as_geojson(self, zones: GeoDataFrame, output_path:str, spatial_resolution:int = None, **kwargs):
         """
         Write the metric to a path. Does not apply masks.
@@ -31,7 +73,7 @@ class Metric():
         """
         _verify_extension(output_path, '.geojson')
 
-        indicator = self.aggregate.get_data(zones, spatial_resolution)
+        indicator = self.layer.get_data(zones, spatial_resolution)
 
         if isinstance(indicator, Series) and indicator.name is None:
             # TODO: after CDB-257 is fixed, replace with Exception
@@ -51,7 +93,7 @@ class Metric():
         """
         _verify_extension(output_path, '.csv')
 
-        indicator = self.aggregate.get_data(zones, spatial_resolution)
+        indicator = self.layer.get_data(zones, spatial_resolution)
 
         if isinstance(indicator, Series) and indicator.name is None:
             # TODO: after CDB-257 is fixed, replace with Exception
