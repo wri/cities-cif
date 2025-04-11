@@ -3,7 +3,7 @@
 import pytest
 
 from city_metrix.layers import *
-from .conftest import EXECUTE_IGNORED_TESTS, prep_output_path, verify_file_is_populated
+from tests.resources.conftest import EXECUTE_IGNORED_TESTS, prep_output_path, verify_file_is_populated
 from .tools import get_test_resolution, get_test_bbox
 
 
@@ -55,19 +55,19 @@ def test_write_built_up_height(target_folder, sample_aoi):
     BuiltUpHeight().write(bbox, file_path, spatial_resolution=target_resolution)
     assert verify_file_is_populated(file_path)
 
-# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
-# def test_write_cams(target_folder, sample_aoi):
-#     file_path = prep_output_path(target_folder, 'cams.tx')
-#     bbox = get_test_bbox(sample_aoi.geo_extent)
-#     Cams().write(bbox, file_path, tile_side_length=None)
-#     assert verify_file_is_populated(file_path)
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_cams(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'cams.nc')
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    Cams().write(bbox, file_path, tile_side_length=None)
+    assert verify_file_is_populated(file_path)
 
-# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
-# def test_write_era_5_hottest_day(target_folder, sample_aoi):
-#     file_path = prep_output_path(target_folder, 'era_5_hottest_day.txt')
-#     bbox = get_test_bbox(sample_aoi.geo_extent)
-#     Era5HottestDay().write(bbox, file_path)
-#     assert verify_file_is_populated(file_path)
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_era_5_hottest_day(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'era_5_hottest_day.nc')
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    Era5HottestDay().write(bbox, file_path)
+    assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_esa_world_cover(target_folder, sample_aoi):
@@ -75,6 +75,39 @@ def test_write_esa_world_cover(target_folder, sample_aoi):
     target_resolution = get_test_resolution(EsaWorldCover())
     bbox = get_test_bbox(sample_aoi.geo_extent)
     EsaWorldCover().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_glad_land_cover(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'glad_lulc.tif')
+    target_resolution = get_test_resolution(LandCoverGlad())
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    LandCoverGlad().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_glad_land_cover_simplified(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'glad_land_cover_simplified.tif')
+    target_resolution = get_test_resolution(LandCoverGlad())
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    LandCoverSimplifiedGlad().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_glad_land_cover_habitat(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'glad_land_cover_habitat.tif')
+    target_resolution = get_test_resolution(LandCoverGlad())
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    LandCoverHabitatGlad().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_glad_land_cover_habitat_change(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'glad_land_cover_habitat_change.tif')
+    target_resolution = get_test_resolution(LandCoverGlad())
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    LandCoverHabitatChangeGlad().write(bbox, file_path, spatial_resolution=target_resolution)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
@@ -110,14 +143,6 @@ def test_write_impervious_surface(target_folder, sample_aoi):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
-def test_write_land_cover_glad(target_folder, sample_aoi):
-    file_path = prep_output_path(target_folder, 'glad_lulc.tif')
-    target_resolution = get_test_resolution(LandCoverGlad())
-    bbox = get_test_bbox(sample_aoi.geo_extent)
-    LandCoverGlad().write(bbox, file_path, spatial_resolution=target_resolution)
-    assert verify_file_is_populated(file_path)
-
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_land_surface_temperature(target_folder, sample_aoi):
     file_path = prep_output_path(target_folder, 'land_surface_temperature.tif')
     target_resolution = get_test_resolution(LandSurfaceTemperature())
@@ -125,12 +150,12 @@ def test_write_land_surface_temperature(target_folder, sample_aoi):
     LandSurfaceTemperature().write(bbox, file_path, spatial_resolution=target_resolution)
     assert verify_file_is_populated(file_path)
 
-# TODO Determine how to write out file
+# # TODO Determine how to write out file from temporal dataset
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 # def test_write_landsat_collection_2(target_folder, sample_aoi):
 #     file_path = prep_output_path(target_folder, 'landsat_collection2.tif')
 #     bbox = get_test_bbox(sample_aoi.geo_extent)
-#     bands = ['green']
+#     bands = ['red', 'green', 'blue']
 #     LandsatCollection2(bands).write(bbox, file_path, tile_side_length=None)
 #     assert verify_file_is_populated(file_path)
 
@@ -174,6 +199,20 @@ def test_write_open_street_map_roads(target_folder, sample_aoi):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_overture_buildings_height_raster(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'overture_buildings_height_raster.tif')
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    OvertureBuildingsHeightRaster(sample_aoi.city).write(bbox, file_path, tile_side_length=None)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_overture_buildings_height(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'overture_buildings_height.geojson')
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    OvertureBuildingsHeight(sample_aoi.city).write(bbox, file_path, tile_side_length=None)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_overture_buildings(target_folder, sample_aoi):
     file_path = prep_output_path(target_folder, 'overture_buildings.geojson')
     bbox = get_test_bbox(sample_aoi.geo_extent)
@@ -202,7 +241,7 @@ def test_write_riparian_areas(target_folder, sample_aoi):
     RiparianAreas().write(bbox, file_path, spatial_resolution=target_resolution)
     assert verify_file_is_populated(file_path)
 
-# TODO Determine how to write out file
+# # TODO Determine how to write out file from temporal dataset
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 # def test_write_sentinel_2_level2(target_folder, sample_aoi):
 #     file_path = prep_output_path(target_folder, 'sentinel_2_level2.tif')
@@ -248,6 +287,13 @@ def test_write_urban_land_use(target_folder, sample_aoi):
     target_resolution = get_test_resolution(UrbanLandUse())
     bbox = get_test_bbox(sample_aoi.geo_extent)
     UrbanLandUse().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_ut_globus(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'ut_globus.geojson')
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    UtGlobus(sample_aoi.city).write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')

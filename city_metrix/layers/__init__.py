@@ -20,6 +20,8 @@ from .natural_areas import NaturalAreas
 from .ndvi_sentinel2_gee import NdviSentinel2
 from .open_buildings import OpenBuildings
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
+from .overture_buildings_w_height_raster import OvertureBuildingsHeightRaster
+from .overture_buildings_w_height import OvertureBuildingsHeight
 from .overture_buildings import OvertureBuildings
 from .pop_weighted_pm2p5 import PopWeightedPM2p5
 from .protected_areas import ProtectedAreas
@@ -30,5 +32,6 @@ from .tree_canopy_height import TreeCanopyHeight
 from .tree_cover import TreeCover
 from .urban_extents import UrbanExtents
 from .urban_land_use import UrbanLandUse
+from .ut_globus import UtGlobus
 from .vegetation_water_map import VegetationWaterMap
 from .world_pop import WorldPop, WorldPopClass
