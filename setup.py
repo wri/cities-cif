@@ -24,7 +24,6 @@ setup(
         "s3fs",
         "dask[complete]<=2025.2.0",
         "boto3",
-        "overturemaps",
         "cdsapi",
         "timezonefinder",
         "scikit-image>=0.25.2",
