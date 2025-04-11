@@ -4,17 +4,34 @@ import geemap
 import geopandas as gpd
 
 from .layer import Layer
+from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
+from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class UrbanExtents(Layer):
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_LAYER_NAMING_ATTS = None
+    MINOR_LAYER_NAMING_ATTS = None
+
+    """
+    Attributes:
+        year:
+    """
     def __init__(self, year=2020, **kwargs):
         super().__init__(**kwargs)
         if not year in [1980, 1990, 2000, 2005, 2010, 2015, 2020]:
             raise Exception(f'Year {year} not available.')
         self.year = year
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 allow_cache_retrieval=False):
+
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
+
         ue_fc = ee.FeatureCollection(f'projects/wri-datalab/cities/urban_land_use/data/global_cities_Aug2024/urbanextents_unions_{self.year}')
 
         ee_rectangle = bbox.to_ee_rectangle()

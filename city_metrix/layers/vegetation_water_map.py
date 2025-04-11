@@ -2,19 +2,23 @@ import ee
 
 from .layer import Layer, get_image_collection
 from .albedo import Albedo
+from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class VegetationWaterMap(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_LAYER_NAMING_ATTS = ["greenwater_layer"]
+    MINOR_LAYER_NAMING_ATTS = None
+
     """
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
         greenwater_layer: select returned layer from 'startgreenwaterIndex'/'endgreenwaterIndex'/'lossgreenwaterSlope'/'gaingreenwaterSlope'
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
     def __init__(self, start_date="2016-01-01", end_date="2022-12-31", greenwater_layer='startgreenwaterIndex', **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
@@ -22,10 +26,15 @@ class VegetationWaterMap(Layer):
         self.greenwater_layer = greenwater_layer
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+                 resampling_method=None, allow_cache_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         NDVIthreshold = 0.4  # decimal
         NDWIthreshold = 0.3  # decimal
