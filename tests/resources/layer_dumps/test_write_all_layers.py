@@ -259,6 +259,14 @@ def test_write_smart_surface_lulc(target_folder, sample_aoi):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_tree_canopy_cover_mask(target_folder, sample_aoi):
+    file_path = prep_output_path(target_folder, 'tree_canopy_cover_mask.tif')
+    target_resolution = get_test_resolution(TreeCanopyCoverMask())
+    bbox = get_test_bbox(sample_aoi.geo_extent)
+    TreeCanopyCoverMask().write(bbox, file_path, spatial_resolution=target_resolution)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
 def test_write_tree_canopy_height(target_folder, sample_aoi):
     file_path = prep_output_path(target_folder, 'tree_canopy_height.tif')
     target_resolution = get_test_resolution(TreeCanopyHeight())

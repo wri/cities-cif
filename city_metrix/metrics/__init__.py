@@ -7,8 +7,8 @@ from .mean_pm2p5_exposure import *
 from .mean_tree_cover import MeanTreeCover
 from .natural_areas_percent import NaturalAreasPercent
 from .percent_area_impervious import PercentAreaImpervious
+from .percent_canopy_covered_population import *
 from .percent_protected_area import PercentProtectedArea
 from .recreational_space_per_capita import RecreationalSpacePerCapita
 from .urban_open_space import UrbanOpenSpace
 from .vegetation_water_change import *
-
