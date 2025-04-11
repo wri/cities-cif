@@ -10,13 +10,14 @@ from .ut_globus import UtGlobus
 
 class OvertureBuildingsHeight(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ['city']
+    MAJOR_LAYER_NAMING_ATTS = ["city"]
     MINOR_LAYER_NAMING_ATTS = None
 
     """
     Attributes:
         city: city id from https://sat-io.earthengine.app/view/ut-globus
     """
+
     def __init__(self, city="", **kwargs):
         super().__init__(**kwargs)
         self.city = city
@@ -25,7 +26,7 @@ class OvertureBuildingsHeight(Layer):
         # Note: spatial_resolution and resampling_method arguments are ignored.
         if self.city == "":
             raise Exception("'city' can not be empty. Check and select a city id from https://sat-io.earthengine.app/view/ut-globus")
-        
+
         # Attempt to retrieve cached file based on layer_id.
         retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
         if retrieved_cached_data is not None:
@@ -49,7 +50,7 @@ class OvertureBuildingsHeight(Layer):
                 "height_left": "overture_height",
                 "height_right": "utglobus_height",
             },
-            inplace=True
+            inplace=True,
         )
 
         # Remove any index columns potentially misinterpreted

@@ -12,13 +12,14 @@ DEFAULT_SPATIAL_RESOLUTION = 1
 
 class OvertureBuildingsHeightRaster(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ['city']
+    MAJOR_LAYER_NAMING_ATTS = ["city"]
     MINOR_LAYER_NAMING_ATTS = None
 
     """
     Attributes:
         city: city id from https://sat-io.earthengine.app/view/ut-globus
     """
+
     def __init__(self, city="", **kwargs):
         super().__init__(**kwargs)
         self.city = city
