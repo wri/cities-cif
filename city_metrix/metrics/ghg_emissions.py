@@ -1,25 +1,30 @@
 from geopandas import GeoDataFrame, GeoSeries
 
 from city_metrix.layers import CamsGhg
+from city_metrix.metrics.metric import Metric
 
 SUPPORTED_SPECIES = CamsGhg.SUPPORTED_SPECIES
 SUPPORTED_YEARS = CamsGhg.SUPPORTED_YEARS
-# GWP = CamsGhg.GWP
 
 
-def ghg_emissions(
-    zones: GeoDataFrame, 
-    species=None, 
-    sector="sum", 
-    co2e=True, 
-    year=2023
-) -> GeoSeries:
-    # supported years: 2010, 2015, 2020, 2023
-    if not year in SUPPORTED_YEARS:
-        raise Exception(f'Unsupported year: {year}')
-    
-    cams_ghg = CamsGhg(species=species, sector=sector, co2e=co2e, year=year)
+class GhgEmissions(Metric):
+    def __init__(self, species=None, sector="sum", co2e=True, year=2023, **kwargs):
+        super().__init__(**kwargs)
+        self.species = species
+        self.sector = sector
+        self.co2e = co2e
+        self.year = year
 
-    cams_ghg_mean = cams_ghg.groupby(zones).mean()
+    def get_data(self,
+                 zones: GeoDataFrame,
+                 spatial_resolution:int = None) -> GeoSeries:
 
-    return cams_ghg_mean
+        # supported years: 2010, 2015, 2020, 2023
+        if not self.year in SUPPORTED_YEARS:
+            raise Exception(f'Unsupported year: {self.year}')
+        
+        cams_ghg = CamsGhg(species=self.species, sector=self.sector, co2e=self.co2e, year=self.year)
+
+        cams_ghg_mean = cams_ghg.groupby(zones).mean()
+
+        return cams_ghg_mean
