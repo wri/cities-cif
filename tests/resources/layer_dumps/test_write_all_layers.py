@@ -4,7 +4,7 @@ import pytest
 
 from city_metrix.layers import *
 from tests.resources.conftest import DUMP_RUN_LEVEL, prep_output_path, verify_file_is_populated, DumpRunLevel
-from .tools import get_test_resolution, get_test_bbox
+from tests.resources.tools import get_test_resolution, get_test_bbox
 
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")

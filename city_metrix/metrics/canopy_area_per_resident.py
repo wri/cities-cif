@@ -3,6 +3,8 @@ import xarray as xr
 import numpy as np
 from city_metrix.layers import TreeCanopyHeight, WorldPop, WorldPopClass, UrbanLandUse
 from city_metrix.metrics.metric import Metric
+from city_metrix.metrics.metric_geometry import GeoZone
+
 
 class CanopyAreaPerResident(Metric):
     def __init__(self,
@@ -16,7 +18,7 @@ class CanopyAreaPerResident(Metric):
         self.informal_only = informal_only
 
     def get_data(self,
-                 zones: GeoDataFrame,
+                 geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
 
         world_pop = WorldPop(agesex_classes=self.agesex_classes)
@@ -26,11 +28,11 @@ class CanopyAreaPerResident(Metric):
         if self.informal_only:
             # urban land use class 3 for Informal
             urban_land_use = UrbanLandUse(ulu_class=3)
-            world_pop_sum = world_pop.mask(urban_land_use).groupby(zones).sum()
-            tree_canopy_height_count = tree_canopy_height.mask(urban_land_use).groupby(zones).count()
+            world_pop_sum = world_pop.mask(urban_land_use).groupby(geo_zone).sum()
+            tree_canopy_height_count = tree_canopy_height.mask(urban_land_use).groupby(geo_zone).count()
         else:
-            world_pop_sum = world_pop.groupby(zones).sum()
-            tree_canopy_height_count = tree_canopy_height.groupby(zones).count()
+            world_pop_sum = world_pop.groupby(geo_zone).sum()
+            tree_canopy_height_count = tree_canopy_height.groupby(geo_zone).count()
 
         return tree_canopy_height_count.fillna(0) / world_pop_sum
 
@@ -41,12 +43,12 @@ class CanopyAreaPerResidentChildren(Metric):
         self.height = height
 
     def get_data(self,
-                 zones: GeoDataFrame,
+                 geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         return (CanopyAreaPerResident(WorldPopClass.CHILDREN,
                                      self.height,
                                      False)
-                .get_data(zones))
+                .get_data(geo_zone))
 
 
 class CanopyAreaPerResidentElderly(Metric):
@@ -55,12 +57,12 @@ class CanopyAreaPerResidentElderly(Metric):
         self.height = height
 
     def get_data(self,
-                 zones: GeoDataFrame,
+                 geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         return (CanopyAreaPerResident(WorldPopClass.ELDERLY,
                                      self.height,
                                      False)
-                .get_data(zones))
+                .get_data(geo_zone))
 
 
 class CanopyAreaPerResidentFemale(Metric):
@@ -69,12 +71,12 @@ class CanopyAreaPerResidentFemale(Metric):
         self.height = height
 
     def get_data(self,
-                 zones: GeoDataFrame,
+                 geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         return (CanopyAreaPerResident(WorldPopClass.FEMALE,
                                      self.height,
                                      False)
-                .get_data(zones))
+                .get_data(geo_zone))
 
 class CanopyAreaPerResidentInformal(Metric):
     def __init__(self, height=3, **kwargs):
@@ -82,9 +84,9 @@ class CanopyAreaPerResidentInformal(Metric):
         self.height = height
 
     def get_data(self,
-                 zones: GeoDataFrame,
+                 geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         return (CanopyAreaPerResident([],
                                      self.height,
                                      True)
-                .get_data(zones))
+                .get_data(geo_zone))

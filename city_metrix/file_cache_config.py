@@ -1,13 +1,13 @@
 from pathlib import Path
 from urllib.parse import urlparse
 
-from city_metrix.constants import cif_production_aws_bucket_uri, testing_aws_bucket_uri
+from city_metrix.constants import cif_production_s3_bucket_uri, cif_testing_s3_bucket_uri
 
 class CifCacheSettings:
     def __init__(self):
         self.cache_location_uri = None
         self.cache_environment = None
-        self.aws_bucket = None
+        self.s3_bucket = None
 
 cif_cache_settings = CifCacheSettings()
 
@@ -24,7 +24,7 @@ def set_cache_settings(uri, env):
 
     cif_cache_settings.cache_location_uri = uri
     cif_cache_settings.cache_environment = env
-    cif_cache_settings.aws_bucket = cif_production_aws_bucket_uri if env == 'dev' else testing_aws_bucket_uri
+    cif_cache_settings.s3_bucket = cif_production_s3_bucket_uri if env == 'dev' else cif_testing_s3_bucket_uri
 
 
 def get_cache_settings():
@@ -33,7 +33,7 @@ def get_cache_settings():
 def clear_cache_settings():
     cif_cache_settings.cache_location_uri = None
     cif_cache_settings.cache_environment = None
-    cif_cache_settings.aws_bucket = None
+    cif_cache_settings.s3_bucket = None
 
 
 def get_cached_file_key(layer_name, city_id, admin_level, layer_id):
@@ -44,7 +44,7 @@ def get_cached_file_key(layer_name, city_id, admin_level, layer_id):
     return file_key
 
 
-def get_aws_bucket_name():
-    bucket_uri = cif_cache_settings.aws_bucket
-    aws_bucket = Path(bucket_uri).parts[1]
-    return aws_bucket
+def get_cif_s3_bucket_name():
+    bucket_uri = cif_cache_settings.s3_bucket
+    s3_bucket = Path(bucket_uri).parts[1]
+    return s3_bucket

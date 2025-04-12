@@ -1,5 +1,6 @@
 from geopandas import GeoDataFrame, GeoSeries
 
+from city_metrix.metrics.metric_geometry import GeoZone
 from city_metrix.layers import TreeCover, EsaWorldCoverClass, EsaWorldCover
 from city_metrix.metrics.metric import Metric
 
@@ -8,11 +9,11 @@ class MeanTreeCover(Metric):
         super().__init__(**kwargs)
 
     def get_data(self,
-                 zones: GeoDataFrame,
+                 geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         """
         Get mean tree cover (WRI tropical tree cover).
-        :param zones: GeoDataFrame with geometries to collect zonal stats on
+        :param geo_zone: GeoZone with geometries to collect zonal stats on
         :return: Pandas Series of percentages
         """
-        return TreeCover().groupby(zones).mean().divide(100)
+        return TreeCover().groupby(geo_zone).mean().divide(100)

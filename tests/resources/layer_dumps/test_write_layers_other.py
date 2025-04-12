@@ -5,7 +5,7 @@ import xarray as xr
 
 from city_metrix.layers import *
 from tests.resources.conftest import DUMP_RUN_LEVEL, prep_output_path, get_file_count_in_folder, DumpRunLevel
-from .tools import get_test_bbox, get_test_resolution
+from tests.resources.tools import get_test_bbox, get_test_resolution
 
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")

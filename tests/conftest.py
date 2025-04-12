@@ -1,11 +1,12 @@
 from enum import Enum
 
 from city_metrix.layers import Layer
-from city_metrix.constants import WGS_EPSG_CODE
+from city_metrix.constants import WGS_EPSG_CODE, ProjectionType
 from city_metrix.layers.layer import create_fishnet_grid, WGS_CRS
 from geocube.api.core import make_geocube
 
 from city_metrix.layers.layer_geometry import GeoExtent
+from city_metrix.metrics.metric_geometry import GeoZone
 from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND, BBOX_NLD_AMSTERDAM, BBOX_IDN_JAKARTA, \
     BBOX_IDN_JAKARTA_LARGE
 
@@ -24,12 +25,13 @@ def create_fishnet_gdf_for_testing(coords, tile_side_length):
     max_x = (max_x - reduction)
     bbox = (min_x, min_y, max_x, max_y)
     wgs_bbox = GeoExtent(bbox=bbox, crs=WGS_CRS)
-    fishnet_gdf = create_fishnet_grid(wgs_bbox, tile_side_length=tile_side_length, length_units='degrees', output_as='geographic')
+    fishnet_gdf = create_fishnet_grid(wgs_bbox, tile_side_length=tile_side_length, length_units='degrees',
+                                      output_as=ProjectionType.GEOGRAPHIC)
     fishnet_gdf.drop('fishnet_geometry', axis=1, inplace=True)
     fishnet_gdf['geo_id'] = fishnet_gdf.index.map(lambda idx: f"dummy_{idx}")
     return fishnet_gdf
 
-def create_single_zone_for_testing(coords):
+def create_single_bbox_gdf_for_testing(coords):
     min_x, min_y, max_x, max_y = coords
     from shapely import geometry
     import geopandas as gp
@@ -39,15 +41,19 @@ def create_single_zone_for_testing(coords):
     gdf = gp.GeoDataFrame(geom_array, columns=["geometry"]).set_crs(WGS_CRS)
     return gdf
 
+IDN_JAKARTA_TILED_BBOXES = (
+    create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA.coords, 0.01).reset_index())
+IDN_JAKARTA_TILED_LARGE_BBOXES = (
+    create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA_LARGE.coords, 0.1).reset_index())
+USA_OR_PORTLAND_BBOX = create_single_bbox_gdf_for_testing(BBOX_USA_OR_PORTLAND.coords)
+NLD_AMSTERDAM_BBOX = create_single_bbox_gdf_for_testing(BBOX_NLD_AMSTERDAM.coords)
 
 # Test zones of a regular 0.01x0.01 grid over a 0.1x0.1 extent by degrees
-IDN_JAKARTA_TILED_ZONES = (
-    create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA.coords, 0.01).reset_index())
-IDN_JAKARTA_TILED_LARGE_ZONES = (
-    create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA_LARGE.coords, 0.1).reset_index())
+IDN_JAKARTA_TILED_ZONES = GeoZone(IDN_JAKARTA_TILED_BBOXES)
+IDN_JAKARTA_TILED_LARGE_ZONES = GeoZone(IDN_JAKARTA_TILED_LARGE_BBOXES)
 # Test single tiles
-USA_OR_PORTLAND_TILE_GDF = create_single_zone_for_testing(BBOX_USA_OR_PORTLAND.coords)
-NLD_AMSTERDAM_TILE_GDF = create_single_zone_for_testing(BBOX_NLD_AMSTERDAM.coords)
+USA_OR_PORTLAND_ZONE = GeoZone(USA_OR_PORTLAND_BBOX)
+NLD_AMSTERDAM_ZONE = GeoZone(NLD_AMSTERDAM_BBOX)
 
 
 class MockLayer(Layer):
@@ -56,7 +62,7 @@ class MockLayer(Layer):
     """
     def get_data(self, bbox, spatial_resolution=None, resampling_method=None):
         arr = make_geocube(
-            vector_data=IDN_JAKARTA_TILED_ZONES,
+            vector_data=IDN_JAKARTA_TILED_BBOXES,
             measurements=['index'],
             resolution=(0.001, 0.001),
             output_crs=WGS_EPSG_CODE,
@@ -107,7 +113,7 @@ class MockLargeLayer(Layer):
     """
     def get_data(self, bbox, spatial_resolution=None, resampling_method=None):
         arr = make_geocube(
-            vector_data=IDN_JAKARTA_TILED_LARGE_ZONES,
+            vector_data=IDN_JAKARTA_TILED_LARGE_BBOXES,
             measurements=['index'],
             resolution=(0.01, 0.01),
             output_crs=WGS_EPSG_CODE,

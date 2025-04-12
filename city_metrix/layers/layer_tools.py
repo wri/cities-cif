@@ -7,7 +7,7 @@ import geopandas as gpd
 from typing import Union
 from pyproj import CRS
 
-from city_metrix.constants import WGS_EPSG_CODE
+from city_metrix.constants import WGS_EPSG_CODE, ProjectionType
 
 DATE_ATTRIBUTES = ['year', 'start_year', 'start_date', 'end_year', 'end_date']
 
@@ -15,7 +15,7 @@ def get_geojson_geometry_bounds(geojson: str):
     gdf = gpd.GeoDataFrame.from_features(geojson)
     return gdf.total_bounds
 
-def get_projection_name(crs: Union[str|int]):
+def get_projection_type(crs: Union[str | int]):
     if isinstance(crs, str):
         if crs.lower().startswith('epsg:'):
             epsg_code = int(crs.split(':')[1])
@@ -31,13 +31,13 @@ def get_projection_name(crs: Union[str|int]):
         raise ValueError(f"Value of ({crs}) is an invalid crs string or epsg code. ")
 
     if epsg_code == WGS_EPSG_CODE:
-        projection_name = 'geographic'
+        projection_type = ProjectionType.GEOGRAPHIC
     elif 32601 <= epsg_code <= 32660 or 32701 <= epsg_code <= 32760:
-        projection_name = 'utm'
+        projection_type = ProjectionType.UTM
     else:
         raise ValueError(f"CRS ({crs}) not supported.")
 
-    return projection_name
+    return projection_type
 
 
 def standardize_y_dimension_direction(data_array):

@@ -1,12 +1,12 @@
 import os
 
-from city_metrix.file_cache_config import get_aws_bucket_name
+from city_metrix.file_cache_config import get_cif_s3_bucket_name
 from city_metrix.metrix_dao import get_s3_client
 from tests.resources.conftest import RESOLUTION_MTHD, FIXED_RESOLUTION, RESOLUTION_MULTIPLIER, USE_WGS_BBOX
 from tests.tools.general_tools import get_class_default_spatial_resolution
 
 def delete_file_on_s3(s3_client, file_key):
-    aws_bucket = get_aws_bucket_name()
+    aws_bucket = get_cif_s3_bucket_name()
     s3_client.delete_object(Bucket=aws_bucket, Key=file_key)
 
 def delete_file_on_os(file_path):

@@ -15,7 +15,8 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
-from city_metrix.constants import WGS_CRS, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION
+from city_metrix.constants import WGS_CRS, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION, \
+    ProjectionType
 from city_metrix.metrix_dao import write_tile_grid, write_geotiff, write_geojson, write_netcdf, \
     write_dataset
 from city_metrix.layers.layer_tools import standardize_y_dimension_direction
@@ -56,7 +57,7 @@ class Layer():
     def groupby(self, zones, spatial_resolution=None, layer=None):
         """
         Group layers by zones.
-        :param zones: GeoDataFrame containing geometries to group by.
+        :param geo_zone: GeoZone containing geometries to group by.
         :param spatial_resolution: resolution of continuous raster layers in meters
         :param layer: Additional categorical layer to group by
         :return: LayerGroupBy object that can be aggregated.
@@ -157,10 +158,10 @@ def _write_layer(data, uri, file_format):
 
 
 class LayerGroupBy:
-    def __init__(self, aggregate, zones, spatial_resolution=None, layer=None, masks=[]):
+    def __init__(self, aggregate, geo_zone, spatial_resolution=None, layer=None, masks=[]):
         self.aggregate = aggregate
         self.masks = masks
-        self.zones = zones.reset_index(drop=True)
+        self.zones = geo_zone.zones.reset_index(drop=True)
         self.spatial_resolution = spatial_resolution
         self.layer = layer
 
@@ -209,10 +210,10 @@ class LayerGroupBy:
         bounds = self.zones.total_bounds
         if crs == WGS_CRS:
             bbox = GeoExtent(bbox=tuple(bounds), crs=WGS_CRS)
-            output_as = 'geographic'
+            output_as = ProjectionType.GEOGRAPHIC
         else:
             bbox = GeoExtent(bbox=tuple(bounds), crs=crs)
-            output_as = "utm"
+            output_as = ProjectionType.UTM
         fishnet = create_fishnet_grid(bbox, tile_side_length=MAX_TILE_SIZE_DEGREES, length_units="degrees",
                                       spatial_resolution=self.spatial_resolution, output_as=output_as)
 

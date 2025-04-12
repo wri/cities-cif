@@ -1,18 +1,18 @@
 import pytest
 
 from city_metrix.file_cache_config import set_cache_settings, clear_cache_settings
-from city_metrix.constants import testing_aws_bucket_uri
+from city_metrix.constants import cif_testing_s3_bucket_uri
 from city_metrix.layers import *
 from city_metrix.metrix_dao import get_cache_variables, check_if_cache_file_exists
-from .tools import get_test_bbox, cleanup_cache_files
-from ..bbox_constants import EXTENT_MEDIUM_CITY_WGS84
-from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel, prep_output_path, verify_file_is_populated, DumpRunLevel
+from tests.resources.tools import get_test_bbox, cleanup_cache_files
+from ..bbox_constants import GEOEXTENT_MEDIUM_CITY_WGS84
+from ..conftest import DUMP_RUN_LEVEL, prep_output_path, verify_file_is_populated, DumpRunLevel
 
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_AcagPM2p5_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = AcagPM2p5()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -31,8 +31,8 @@ def test_AcagPM2p5_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_Albedo_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = Albedo(start_date='2021-01-01', end_date='2021-12-31')
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -50,8 +50,8 @@ def test_Albedo_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_AlosDSM_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = AlosDSM()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -69,8 +69,8 @@ def test_AlosDSM_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_AqueductFlood_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = AqueductFlood()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -88,8 +88,8 @@ def test_AqueductFlood_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_AverageNetBuildingHeight_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = AverageNetBuildingHeight()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -107,8 +107,8 @@ def test_AverageNetBuildingHeight_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_BuiltUpHeight_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = BuiltUpHeight()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -126,8 +126,8 @@ def test_BuiltUpHeight_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_ALL, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_cams_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = Cams()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -145,8 +145,8 @@ def test_cams_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_ALL, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_era5_hottest_day_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = Era5HottestDay()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -164,8 +164,8 @@ def test_era5_hottest_day_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_EsaWorldCover_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = EsaWorldCover(year=2020)
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -183,8 +183,8 @@ def test_EsaWorldCover_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_EsaWorldCover_built_up_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP,year=2020)
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -203,8 +203,8 @@ def test_EsaWorldCover_built_up_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_HeightAboveNearestDrainage_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = HeightAboveNearestDrainage()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -222,8 +222,8 @@ def test_HeightAboveNearestDrainage_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_HighLandSurfaceTemperature_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = HighLandSurfaceTemperature()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -241,8 +241,8 @@ def test_HighLandSurfaceTemperature_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_HighSlope_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = HighSlope()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -260,8 +260,8 @@ def test_HighSlope_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_ImperviousSurface_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = ImperviousSurface()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -279,8 +279,8 @@ def test_ImperviousSurface_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_LandCoverGlad_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = LandCoverGlad(year=2020)
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -298,8 +298,8 @@ def test_LandCoverGlad_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_LandCoverSimplifiedGlad_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = LandCoverSimplifiedGlad(year=2020)
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -317,8 +317,8 @@ def test_LandCoverSimplifiedGlad_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_LandCoverHabitatGlad_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = LandCoverHabitatGlad(year=2020)
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -336,8 +336,8 @@ def test_LandCoverHabitatGlad_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_LandCoverHabitatChangeGlad_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = LandCoverHabitatChangeGlad(start_year=2000, end_year=2020)
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -355,8 +355,8 @@ def test_LandCoverHabitatChangeGlad_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_LandSurfaceTemperature_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = LandSurfaceTemperature(start_date='2022-01-01', end_date='2022-12-31')
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -394,8 +394,8 @@ def test_LandSurfaceTemperature_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_NasaDEM_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = NasaDEM()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -413,8 +413,8 @@ def test_NasaDEM_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_NaturalAreas_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = NaturalAreas()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -432,8 +432,8 @@ def test_NaturalAreas_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_NdviSentinel2_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = NdviSentinel2(year=2020)
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -451,8 +451,8 @@ def test_NdviSentinel2_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_OpenBuildings_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = OpenBuildings()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -470,8 +470,8 @@ def test_OpenBuildings_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_OpenStreetMap_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE)
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -489,8 +489,8 @@ def test_OpenStreetMap_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_OvertureBuildings_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = OvertureBuildings()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -508,8 +508,8 @@ def test_OvertureBuildings_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_PopWeightedPM2p5_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = PopWeightedPM2p5()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -527,8 +527,8 @@ def test_PopWeightedPM2p5_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_ProtectedAreas_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = ProtectedAreas()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -546,8 +546,8 @@ def test_ProtectedAreas_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_RiparianAreas_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = RiparianAreas()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -626,8 +626,8 @@ def test_RiparianAreas_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_TreeCover_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = TreeCover()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -645,8 +645,8 @@ def test_TreeCover_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_UrbanExtents_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = UrbanExtents(year=2020)
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -664,8 +664,8 @@ def test_UrbanExtents_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_UrbanLandUse_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = UrbanLandUse()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -684,8 +684,8 @@ def test_UrbanLandUse_s3(target_folder):
 # TODO Fails for:  # layer_obj = VegetationWaterMap(start_date='2020-01-01', end_date='2020-12-31')
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_VegetationWaterMap_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = VegetationWaterMap()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)
@@ -703,8 +703,8 @@ def test_VegetationWaterMap_s3(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_WorldPop_s3(target_folder):
-    set_cache_settings(testing_aws_bucket_uri, 'dev')
-    geo_extent = get_test_bbox(EXTENT_MEDIUM_CITY_WGS84)
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    geo_extent = get_test_bbox(GEOEXTENT_MEDIUM_CITY_WGS84)
     layer_obj = WorldPop()
     file_key, file_uri, layer_id = get_cache_variables(layer_obj, geo_extent)
     file_path = prep_output_path(target_folder, layer_id)

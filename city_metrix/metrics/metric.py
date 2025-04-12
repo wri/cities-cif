@@ -8,6 +8,7 @@ from geopandas import GeoDataFrame
 from pandas import Series, DataFrame
 
 from city_metrix import AIRTABLE_PERSONAL_API_KEY, AIRTABLE_METRICS_BASE_ID
+from city_metrix.metrics.metric_geometry import GeoZone
 from city_metrix.metrix_dao import write_geojson, write_csv
 
 
@@ -18,21 +19,21 @@ class Metric():
             self.layer = self
 
     @abstractmethod
-    def get_data(self, zones: GeoDataFrame, spatial_resolution:int) -> pd.Series:
+    def get_data(self, geo_zone: GeoZone, spatial_resolution:int) -> pd.Series:
         """
         Construct polygonal dataset using baser layers
         :return: A rioxarray-format GeoPandas DataFrame
         """
         ...
 
-    def write_to_db(self, zones: GeoDataFrame, output_path:str, spatial_resolution:int = None, **kwargs):
+    def write_to_db(self, geo_zone: GeoZone, output_path:str, spatial_resolution:int = None, **kwargs):
         """
         Write the metric to a path. Does not apply masks.
         :return:
         """
         # _verify_extension(output_path, '.geojson')
 
-        indicator = self.layer.get_data(zones, spatial_resolution)
+        indicator = self.layer.get_data(geo_zone, spatial_resolution)
 
         if isinstance(indicator, Series) and indicator.name is None:
             # TODO: after CDB-257 is fixed, replace with Exception
@@ -45,7 +46,7 @@ class Metric():
             base_id = AIRTABLE_METRICS_BASE_ID
             table = Table(api_key, base_id, 'metrics')
 
-            gdf = pd.concat([zones, indicator], axis=1)
+            gdf = pd.concat([geo_zone, indicator], axis=1)
             cols = gdf.columns.values.tolist()
             exclude_values = {'index', 'geometry'}
             filtered_list = [item for item in cols if item not in exclude_values]
@@ -64,16 +65,14 @@ class Metric():
             raise NotImplementedError("Can only write Series or Dataframe Indicator data")
 
 
-
-
-    def write_as_geojson(self, zones: GeoDataFrame, output_path:str, spatial_resolution:int = None, **kwargs):
+    def write_as_geojson(self, geo_zones: GeoZone, output_path:str, spatial_resolution:int = None, **kwargs):
         """
         Write the metric to a path. Does not apply masks.
         :return:
         """
         _verify_extension(output_path, '.geojson')
 
-        indicator = self.layer.get_data(zones, spatial_resolution)
+        indicator = self.layer.get_data(geo_zones, spatial_resolution)
 
         if isinstance(indicator, Series) and indicator.name is None:
             # TODO: after CDB-257 is fixed, replace with Exception
@@ -81,19 +80,19 @@ class Metric():
             indicator.name = 'indicator'
 
         if isinstance(indicator, (pd.Series, pd.DataFrame)):
-            gdf = pd.concat([zones, indicator], axis=1)
+            gdf = pd.concat([geo_zones.zones, indicator], axis=1)
             write_geojson(gdf, output_path)
         else:
             raise NotImplementedError("Can only write Series or Dataframe Indicator data")
 
-    def write_as_csv(self, zones: GeoDataFrame, output_path: str, spatial_resolution:int = None, **kwargs):
+    def write_as_csv(self, geo_zone: GeoZone, output_path: str, spatial_resolution:int = None, **kwargs):
         """
         Write the metric to a path. Does not apply masks.
         :return:
         """
         _verify_extension(output_path, '.csv')
 
-        indicator = self.layer.get_data(zones, spatial_resolution)
+        indicator = self.layer.get_data(geo_zone, spatial_resolution)
 
         if isinstance(indicator, Series) and indicator.name is None:
             # TODO: after CDB-257 is fixed, replace with Exception

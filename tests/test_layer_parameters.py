@@ -238,11 +238,11 @@ class TestOtherParameters:
 
     def test_tree_cover_min_max_cover(self):
         data = TreeCover(min_tree_cover = 150).get_data(BBOX)
-        non_null_cells = data.values[~np.isnan(data)].size
+        non_null_cells = len(data.values[~np.isnan(data)])
         assert non_null_cells == 0
 
         data = TreeCover(max_tree_cover = -1).get_data(BBOX)
-        non_null_cells = data.values[~np.isnan(data)].size
+        non_null_cells = len(data.values[~np.isnan(data)])
         assert non_null_cells == 0
 
 

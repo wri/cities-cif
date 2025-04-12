@@ -6,6 +6,7 @@ from geopandas import GeoDataFrame, GeoSeries
 from city_metrix.layers import Era5HottestDay
 from city_metrix.layers.layer_geometry import GeoExtent
 from city_metrix.metrics.metric import Metric
+from city_metrix.metrics.metric_geometry import GeoZone
 
 
 class Era5MetPreprocessing(Metric):
@@ -13,14 +14,14 @@ class Era5MetPreprocessing(Metric):
         super().__init__(**kwargs)
 
     def get_data(self,
-                 zones: GeoDataFrame,
+                 geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         """
         Get ERA 5 data for the hottest day
-        :param zones: GeoDataFrame with geometries to collect zonal stats on
+        :param geo_zone: GeoZone with geometries to collect zonal stats on
         :return: Pandas Dataframe of data
         """
-        bbox = GeoExtent(zones.total_bounds, zones.crs.srs)
+        bbox = GeoExtent(geo_zone.bounds, geo_zone.crs)
         era_5_data = Era5HottestDay().get_data(bbox)
 
         t2m_var = era_5_data.sel(variable='t2m').values

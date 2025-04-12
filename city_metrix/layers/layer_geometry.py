@@ -9,27 +9,35 @@ import geopandas as gpd
 from typing import Union
 from shapely.geometry import point
 
-from city_metrix.constants import WGS_CRS
+from city_metrix.metrics.metric_geometry import GeoZone
+from city_metrix.constants import WGS_CRS, GeoType, ProjectionType
+from city_metrix.file_cache_config import cif_cache_settings
 from city_metrix.metrix_dao import get_city, get_city_boundary
-from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance
+from city_metrix.layers.layer_tools import get_projection_type, get_haversine_distance
 
 MAX_SIDE_LENGTH_METERS = 50000 # This values should cover most situations
 MAX_SIDE_LENGTH_DEGREES = 0.5 # Given that for latitude, 50000m * (1deg/111000m)
 
 class GeoExtent():
-    def __init__(self, bbox:Union[tuple[float, float, float, float]|str], crs=WGS_CRS):
-        if isinstance(bbox, str):
-            self.geo_extent_type = 'city_id'
+    def __init__(self, bbox:Union[tuple[float, float, float, float]|GeoZone|str], crs=WGS_CRS):
+        if isinstance(bbox, str) or (isinstance(bbox, GeoZone) and bbox.geo_type == GeoType.CITY):
+            self.geo_type = GeoType.CITY
         else:
-            self.geo_extent_type = 'geometry'
+            self.geo_type = GeoType.GEOMETRY
 
-        if self.geo_extent_type == 'geometry':
+        if self.geo_type == GeoType.GEOMETRY:
             self.city_id = None
             self.aoi_id = None
             self.admin_level = None
-            self.bbox = bbox
+            if isinstance(bbox, GeoZone):
+                self.bbox = bbox.bbox
+            else:
+                self.bbox = bbox
         else:
-            city_json = bbox
+            if isinstance(bbox, GeoZone):
+                city_json = construct_city_aoi_json(bbox.city_id, "city_admin_level")
+            else:
+                city_json = bbox
             city_id, aoi_id = _parse_city_aoi_json(city_json)
             city = get_city(city_id)
             admin_level = city.get(aoi_id, None)
@@ -40,7 +48,7 @@ class GeoExtent():
             self.city_id = city_id
             self.aoi_id = aoi_id
             self.admin_level = admin_level
-            if get_projection_name(crs) == 'geographic':
+            if get_projection_type(crs) == ProjectionType.GEOGRAPHIC:
                 self.bbox = bbox
             else:
                 reproj_bbox = reproject_units(bbox[1], bbox[0], bbox[3], bbox[2], WGS_CRS, crs)
@@ -49,8 +57,8 @@ class GeoExtent():
         self.crs = crs
         self.bounds = self.bbox
         self.epsg_code = int(self.crs.split(':')[1])
-        self.projection_name = get_projection_name(crs)
-        self.units = "degrees" if self.projection_name == 'geographic' else "meters"
+        self.projection_type = get_projection_type(crs)
+        self.units = "degrees" if self.projection_type == ProjectionType.GEOGRAPHIC else "meters"
 
         self.min_x = self.bbox[0]
         self.min_y = self.bbox[1]
@@ -68,11 +76,11 @@ class GeoExtent():
         """
         Converts bbox to an Earth Engine geometry rectangle
         """
-        if self.projection_name == 'geographic':
+        if self.projection_type == ProjectionType.GEOGRAPHIC:
             utm_bbox = self.as_utm_bbox()
             minx, miny, maxx, maxy = utm_bbox.bounds
             ee_rectangle = _build_ee_rectangle(minx, miny, maxx, maxy, utm_bbox.crs)
-        elif self.projection_name == 'utm':
+        elif self.projection_type == ProjectionType.UTM:
             ee_rectangle = _build_ee_rectangle(self.min_x, self.min_y, self.max_x, self.max_y, self.crs)
         else:
             raise Exception("invalid request to to_ee_rectangle")
@@ -85,9 +93,9 @@ class GeoExtent():
         Converts bbox to UTM projection
         :return:
         """
-        if self.projection_name == 'geographic':
+        if self.projection_type == ProjectionType.GEOGRAPHIC:
             utm_crs = get_utm_zone_from_latlon_point(self.centroid)
-            if self.geo_extent_type == 'city_id':
+            if self.geo_type == GeoType.CITY:
                 geo_extent = construct_city_aoi_json(self.city_id, self.aoi_id)
                 bbox = GeoExtent(bbox=geo_extent, crs=utm_crs)
             else:
@@ -104,10 +112,10 @@ class GeoExtent():
         Converts bbox to lat-lon bbox
         :return:
         """
-        if self.projection_name == 'geographic':
+        if self.projection_type == ProjectionType.GEOGRAPHIC:
             return self
         else:
-            if self.geo_extent_type == 'city_id':
+            if self.geo_type == GeoType.CITY:
                 geo_extent = construct_city_aoi_json(self.city_id, self.aoi_id)
                 bbox = GeoExtent(bbox=geo_extent, crs=WGS_CRS)
             else:
@@ -196,7 +204,7 @@ def get_utm_zone_from_latlon_point(sample_point: point) -> str:
 
 def create_fishnet_grid(bbox:GeoExtent,
                         tile_side_length:float=0, tile_buffer_size:float=0, length_units:str="meters",
-                        spatial_resolution:int=1, output_as:str="utm") -> gpd.GeoDataFrame:
+                        spatial_resolution:int=1, output_as:ProjectionType=ProjectionType.UTM) -> gpd.GeoDataFrame:
     """
     Constructs a grid of tiled areas in either geographic or utm space.
     :param bbox: bounding dimensions of the enclosing box around the grid.
@@ -204,7 +212,7 @@ def create_fishnet_grid(bbox:GeoExtent,
     :param tile_buffer_size: buffer size in specified units.
     :param length_units: units for tile_side_length and tile_buffer_size in either "meters" or "degrees".
     :param spatial_resolution: distance in meters for incremental spacing of the tile size.
-    :param output_as: reference system in which the grid is constructed. either "utm" or "geographic".
+    :param output_as: reference system in which the grid is constructed as a ProjectionType.
     :return: GeoDataFrame
     """
     # NOTE: the AOI can be specified in either WGS or UTM, but the generated tile grid is always in UTM
@@ -219,17 +227,11 @@ def create_fishnet_grid(bbox:GeoExtent,
             length_units = "meters" # a placeholder value
 
     length_units = length_units.lower()
-    output_as = 'utm' if output_as is None else output_as.lower()
 
     valid_length_units = ['degrees', 'meters']
     if length_units not in valid_length_units:
         raise ValueError(f"Invalid length_units ('{length_units}'). "
                          f"Valid methods: [{valid_length_units}]")
-
-    valid_output = ['utm', 'geographic']
-    if output_as not in valid_output:
-        raise ValueError(f"Invalid grid_units ('{output_as}'). "
-                         f"Valid methods: [{valid_output}]")
 
     if length_units == "degrees":
         if tile_side_length > MAX_SIDE_LENGTH_DEGREES:
@@ -263,9 +265,9 @@ def create_fishnet_grid(bbox:GeoExtent,
 
         y_coord += y_tile_side_units
 
-    if bbox.projection_name == 'geographic' and output_as == 'geographic':
+    if bbox.projection_type == ProjectionType.GEOGRAPHIC and output_as == ProjectionType.GEOGRAPHIC:
         grid_crs = WGS_CRS
-    elif bbox.projection_name == 'geographic' and output_as== "utm":
+    elif bbox.projection_type == ProjectionType.GEOGRAPHIC and output_as== ProjectionType.UTM:
         grid_crs = get_utm_zone_from_latlon_point(bbox.centroid)
     else:
         grid_crs = bbox.crs
@@ -286,7 +288,7 @@ def _truncate_to_nearest_interval(tile_side_meters, spatial_resolution):
     return nearest_increment
 
 def _get_offsets(bbox, tile_side_length, tile_buffer_size, length_units, spatial_resolution, output_as):
-    if output_as=='geographic':
+    if output_as==ProjectionType.GEOGRAPHIC:
         if length_units == "degrees":
             x_tile_side_units = y_tile_side_units = tile_side_length
 
@@ -311,14 +313,14 @@ def _get_offsets(bbox, tile_side_length, tile_buffer_size, length_units, spatial
 
 
 def _get_bounding_coords(bbox, output_as):
-    if output_as == 'geographic':
-        if bbox.projection_name == 'geographic':
+    if output_as == ProjectionType.GEOGRAPHIC:
+        if bbox.projection_type == ProjectionType.GEOGRAPHIC:
             start_x_coord, start_y_coord = (bbox.min_x, bbox.min_y)
             end_x_coord, end_y_coord = (bbox.max_x, bbox.max_y)
         else: #meters
             raise Exception("Currently does not support length_units in meters and output_as latlon")
     else: # projected
-        if bbox.projection_name == 'geographic':
+        if bbox.projection_type == ProjectionType.GEOGRAPHIC:
             project_bbox = bbox.as_utm_bbox()
             start_x_coord, start_y_coord = (project_bbox.min_x, project_bbox.min_y)
             end_x_coord, end_y_coord = (project_bbox.max_x, project_bbox.max_y)
@@ -348,7 +350,7 @@ def _build_tile_geometry(x_coord, y_coord, x_tile_side_units, y_tile_side_units,
 
 
 def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
-    if bbox.projection_name != 'geographic':
+    if bbox.projection_type != ProjectionType.GEOGRAPHIC:
         raise ValueError(f"Bbox must have CRS set to {WGS_CRS}")
 
     mid_x = (bbox.min_x + bbox.max_x) / 2

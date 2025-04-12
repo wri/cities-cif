@@ -1,6 +1,8 @@
 import os
 import sys
 import tempfile
+from pathlib import Path
+
 import boto3
 import rasterio
 import requests
@@ -14,16 +16,16 @@ from rioxarray import rioxarray
 from urllib.parse import urlparse
 
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
-    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION
+    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, cif_dashboard_s3_bucket_uri, GeoType
 from city_metrix.layers.layer_tools import build_cache_layer_names, get_crs_from_data
-from city_metrix.file_cache_config import get_cached_file_key, cif_cache_settings, get_aws_bucket_name
+from city_metrix.file_cache_config import get_cached_file_key, cif_cache_settings, get_cif_s3_bucket_name
 from city_metrix.constants import aws_s3_profile
 
 
 def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool):
     cif_cache_location_uri = cif_cache_settings.cache_location_uri
     if (allow_cache_retrieval == False
-            or geo_extent.geo_extent_type == 'geometry'
+            or geo_extent.geo_type == GeoType.GEOMETRY
             or cif_cache_location_uri is None
     ):
         return None
@@ -60,16 +62,12 @@ def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool
                 result_data = result_data.assign_attrs(crs=crs)
 
         elif file_format == GEOJSON_FILE_EXTENSION:
-            from io import BytesIO
-            s3_client = get_s3_client()
-            aws_bucket = get_aws_bucket_name()
-            response = s3_client.get_object(Bucket=aws_bucket, Key=file_key)
-            geojson_content  = response['Body'].read()
-            result_data = gpd.read_file(BytesIO(geojson_content))
+            s3_bucket = get_cif_s3_bucket_name()
+            result_data = _read_geojson_from_s3(s3_bucket, file_key)
 
         elif file_format == NETCDF_FILE_EXTENSION:
             s3_client = get_s3_client()
-            aws_bucket = get_aws_bucket_name()
+            aws_bucket = get_cif_s3_bucket_name()
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
@@ -85,10 +83,21 @@ def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool
 
         return result_data
 
+def _read_geojson_from_s3(s3_bucket, file_key):
+    from io import BytesIO
+    s3_client = get_s3_client()
+    try:
+        response = s3_client.get_object(Bucket=s3_bucket, Key=file_key)
+    except Exception as e_msg:
+        print(e_msg)
+    geojson_content = response['Body'].read()
+    result_data = gpd.read_file(BytesIO(geojson_content))
+    return result_data
+
 
 def _write_file_to_s3(data, uri, file_extension):
-    aws_bucket = get_aws_bucket_name()
-    file_key = _get_file_key_from_s3_url(uri)
+    aws_bucket = get_cif_s3_bucket_name()
+    file_key = _get_file_key_from_url(uri)
     suffix = f".{file_extension}"
     with tempfile.TemporaryDirectory() as temp_dir:
         with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
@@ -263,7 +272,7 @@ def get_cached_file_uri(file_key):
         file_uri = None
     return file_uri
 
-def _get_file_key_from_s3_url(s3_url):
+def _get_file_key_from_url(s3_url):
     file_key = '/'.join(s3_url.split('/')[3:])
     return file_key
 
@@ -282,7 +291,7 @@ def check_if_cache_file_exists(file_uri):
     file_key = get_file_path_from_uri(file_uri)
     if identifier == "s3":
         s3_client = get_s3_client()
-        aws_bucket = get_aws_bucket_name()
+        aws_bucket = get_cif_s3_bucket_name()
         response = s3_client.list_objects_v2(Bucket=aws_bucket, Prefix=file_key)
         for obj in response.get('Contents', []):
             if obj['Key'] == file_key:
@@ -310,6 +319,20 @@ def get_city_boundary(city_id: str, admin_level: str):
         return bounds
     raise Exception("City boundary not found")
 
+def get_city_admin_boundaries(city_id: str, admin_level: str) -> GeoDataFrame:
+    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
+    city_boundary = requests.get(query)
+    if city_boundary.status_code in range(200, 206):
+        s3_bucket = Path(cif_dashboard_s3_bucket_uri).parts[1]
+        boundaries = city_boundary.json()['layers_url_v2']['geojson']
+        file_key = _get_file_key_from_url(boundaries)
+        boundaries_geojson = _read_geojson_from_s3(s3_bucket, file_key)
+
+        geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
+        boundaries = boundaries_geojson[geom_columns]
+        boundaries_with_index = boundaries.reset_index()
+        return boundaries_with_index
+    raise Exception("City boundary not found")
 
 def _string_to_float_tuple(string_tuple):
     string_tuple = string_tuple.replace("[", "").replace("]", "")
