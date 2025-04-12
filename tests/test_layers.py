@@ -62,7 +62,7 @@ def assert_vector_stats(data, attribute, sig_digits:int, min_notnull_val, max_no
     # assert_vector_stats(data, 'attribute', None, 'minval', 'maxval', 1, 0)
 
 
-def assert_raster_stats(data, sig_digits:int, min_notnull_val:float, max_notnull_val:float, notnull_count:int, null_count:int):
+def assert_raster_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, notnull_count:int, null_count:int):
     data_min_notnull_val = np.nanmin(data)
     data_max_notnull_val = np.nanmax(data)
     data_notnull_count = data.count().item()
@@ -73,7 +73,7 @@ def assert_raster_stats(data, sig_digits:int, min_notnull_val:float, max_notnull
     assert is_matched, f"expected ({expected}), but got ({actual})"
 
     # template
-    # assert_raster_stats(data, 1, 0, 0, 1, 0)
+    # assert_raster_stats(data, 2, 0, 0, 1, 0)
 
 
 def test_acag_pm2p5():
