@@ -36,7 +36,7 @@ class FractionalVegetation(Layer):
         # using the first image, in some cases a city may span two zones but for now this is
         # good enough
 
-        PCTL_FULLVEG = 5
+        PCTL_FULLVEG = 75
         PCTL_NONVEG = 5
 
         def calcFr(aoi, vegpctl, soilpctl):
