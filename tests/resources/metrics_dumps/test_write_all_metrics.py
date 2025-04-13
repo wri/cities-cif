@@ -103,11 +103,21 @@ def test_write_era_5_met_preprocessing(target_folder):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
-def test_write_mean_pm2p5_exposure_pop_weighted_children(target_folder):
+def test_write_mean_pm2p5_exposure(target_folder):
     zones = SAMPLE_TILED_LARGE_ZONES
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
     create_target_folder(target_metrics_folder, False)
     file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure.geojson')
+
+    MeanPM2P5Exposure().write_as_geojson(zones, file_path)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason='Skipping since EXECUTE_IGNORED_TESTS set to False')
+def test_write_mean_pm2p5_exposure_pop_weighted_children(target_folder):
+    zones = SAMPLE_TILED_LARGE_ZONES
+    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
+    create_target_folder(target_metrics_folder, False)
+    file_path = prep_output_path(target_metrics_folder, 'mean_pm2p5_exposure_pop_weighted_children.geojson')
 
     MeanPM2P5ExposurePopWeightedChildren().write_as_geojson(zones, file_path)
     assert verify_file_is_populated(file_path)
