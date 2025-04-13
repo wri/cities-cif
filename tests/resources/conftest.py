@@ -7,7 +7,7 @@ import shutil
 from collections import namedtuple
 
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_NLD_AMSTERDAM, \
-    BBOX_NLD_AMSTERDAM_LARGE, BBOX_USA_OR_PORTLAND, BBOX_USA_OR_PORTLAND_1
+    BBOX_NLD_AMSTERDAM_LARGE, BBOX_USA_OR_PORTLAND, BBOX_USA_OR_PORTLAND_1, BBOX_USA_OR_PORTLAND_2
 from tests.tools.general_tools import create_target_folder, is_valid_path
 
 class DumpRunLevel(Enum):
@@ -33,7 +33,8 @@ FIXED_RESOLUTION = 30 # Note: Some layers do not support less than resolution of
 # COUNTRY_CODE_FOR_BBOX = 'BRA'
 # BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 COUNTRY_CODE_FOR_BBOX = 'USA'
-BBOX = BBOX_USA_OR_PORTLAND_1
+CITY_CODE_FOR_BBOX = 'portland'
+BBOX = BBOX_USA_OR_PORTLAND_2
 # BBOX = BBOX_NLD_AMSTERDAM_TEST
 # BBOX = BBOX_NLD_AMSTERDAM_LARGE_TEST
 
@@ -55,8 +56,8 @@ def target_folder():
 
 @pytest.fixture
 def sample_aoi():
-    sample_box = namedtuple('sample_bbox', ['geo_extent', 'country'])
-    sample_bbox_instance = sample_box(geo_extent=BBOX, country=COUNTRY_CODE_FOR_BBOX)
+    sample_box = namedtuple('sample_bbox', ['geo_extent', 'country', 'city'])
+    sample_bbox_instance = sample_box(geo_extent=BBOX, country=COUNTRY_CODE_FOR_BBOX, city=CITY_CODE_FOR_BBOX)
     return sample_bbox_instance
 
 def get_target_folder_path():

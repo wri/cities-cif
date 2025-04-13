@@ -39,7 +39,7 @@ class OpenBuildings(Layer):
         openbuilds = geemap.ee_to_gdf(open_buildings).reset_index()
 
         # filter out geom_type GeometryCollection
-        gc_openbuilds = openbuilds[openbuilds.geom_type == 'GeometryCollection']
+        gc_openbuilds = openbuilds[openbuilds.geom_type == 'GeometryCollection'].copy()
         if len(gc_openbuilds) > 0:
             # select Polygons and Multipolygons from GeometryCollection
             gc_openbuilds['geometries'] = gc_openbuilds.apply(lambda x: [g for g in x.geometry.geoms], axis=1)

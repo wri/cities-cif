@@ -47,7 +47,7 @@ def test_write_nasa_dem_tiled_unbuffered(target_folder, sample_aoi):
             spatial_resolution=target_resolution, resampling_method='bilinear'))
 
     file_count = get_file_count_in_folder(file_path)
-    expected_file_count = 3 # includes 2 tiles and 1 json files
+    expected_file_count = 5 # includes 4 tiles and 1 json files
     assert file_count == expected_file_count
 
 
