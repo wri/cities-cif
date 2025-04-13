@@ -66,12 +66,9 @@ class CamsGhg(Layer):
         if self.species is not None:
             data_ic = ee.ImageCollection(f'projects/wri-datalab/cams-glob-ant/{self.species}')
             data_im = data_ic.filter(ee.Filter.eq('year', self.year)).filter(ee.Filter.eq('sector', self.sector)).first()
-            # scale = data_im.projection().getInfo()['transform'][0]
-            data_im = data_im.multiply(self.SUPPORTED_SPECIES[self.species]['GWP'])
-            # data_im = data_im.multiply(self.GWP[self.species])
             if self.co2e:
-                data_im = data_im.multiply(1000000)  # Tg to tonne
-            
+                data_im = data_im.multiply(self.SUPPORTED_SPECIES[self.species]['GWP'])
+            data_im = data_im.multiply(1000000)  # Tg to tonne
             cams_ghg_ic = ee.ImageCollection(data_im)
 
             data = get_image_collection(
