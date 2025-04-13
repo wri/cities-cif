@@ -3,9 +3,11 @@ from geopandas import GeoDataFrame, GeoSeries
 from city_metrix.layers import TreeCanopyHeight, UrbanLandUse
 from city_metrix.metrics.metric import Metric
 
+MIN_TREE_HEIGHT = 3
+ULU_INFORMAL_CLASS = 3
 
 class PercentBuiltAreaWithoutTreeCover(Metric):
-    def __init__(self, height=3, **kwargs):
+    def __init__(self, height=MIN_TREE_HEIGHT, **kwargs):
         super().__init__(**kwargs)
         self.height = height
 
@@ -22,7 +24,7 @@ class PercentBuiltAreaWithoutTreeCover(Metric):
         tree_canopy_height = TreeCanopyHeight(height=self.height)
 
         # informal_only: urban land use class 3 for Informal
-        urban_land_use = UrbanLandUse(ulu_class=3)
+        urban_land_use = UrbanLandUse(ulu_class=ULU_INFORMAL_CLASS)
 
         built_land = urban_land_use.groupby(zones).count()
         built_land_with_tree_cover = urban_land_use.mask(tree_canopy_height).groupby(zones).count()
