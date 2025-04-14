@@ -8,18 +8,35 @@ import os
 import xarray as xr
 import glob
 
+from city_metrix.constants import WGS_CRS, NETCDF_FILE_EXTENSION
 from .layer import Layer
+from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
 
 
 class Era5HottestDay(Layer):
+    OUTPUT_FILE_FORMAT = NETCDF_FILE_EXTENSION
+    MAJOR_LAYER_NAMING_ATTS = None
+    MINOR_LAYER_NAMING_ATTS = None
+
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+    """
     def __init__(self, start_date="2023-01-01", end_date="2024-01-01", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 allow_cache_retrieval=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
+
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         geographic_bbox = bbox.as_geographic_bbox()
 
@@ -33,7 +50,7 @@ class Era5HottestDay(Layer):
 
         # Function to find the city mean temperature of each hour
         def hourly_mean_temperature(image):
-            point_crs = 'EPSG:4326'
+            point_crs = WGS_CRS
             hourly_mean = image.select('temperature_2m').reduceRegion(
                 reducer=ee.Reducer.mean(),
                 geometry=ee.Geometry.Point([center_lon, center_lat], point_crs),

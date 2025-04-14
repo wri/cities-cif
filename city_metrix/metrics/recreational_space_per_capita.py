@@ -1,19 +1,27 @@
 from geopandas import GeoDataFrame, GeoSeries
 
 from city_metrix.layers import WorldPop, OpenStreetMap, OpenStreetMapClass
+from city_metrix.metrics.metric import Metric
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
-def recreational_space_per_capita(zones: GeoDataFrame, spatial_resolution=DEFAULT_SPATIAL_RESOLUTION) -> GeoSeries:
-    spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+class RecreationalSpacePerCapita(Metric):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-    world_pop = WorldPop()
-    open_space = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE)
+    def get_data(self,
+                 zones: GeoDataFrame,
+                 spatial_resolution=DEFAULT_SPATIAL_RESOLUTION
+                 ) -> GeoSeries:
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-    # per 1000 people
-    world_pop_sum = world_pop.groupby(zones, spatial_resolution).sum() / 1000
-    # convert square meter to hectare
-    open_space_counts = open_space.mask(world_pop).groupby(zones, spatial_resolution).count()
-    open_space_area = open_space_counts.fillna(0) * spatial_resolution ** 2 / 10000
+        world_pop = WorldPop()
+        open_space = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE)
 
-    return open_space_area / world_pop_sum
+        # per 1000 people
+        world_pop_sum = world_pop.groupby(zones, spatial_resolution).sum() / 1000
+        # convert square meter to hectare
+        open_space_counts = open_space.mask(world_pop).groupby(zones, spatial_resolution).count()
+        open_space_area = open_space_counts.fillna(0) * spatial_resolution ** 2 / 10000
+
+        return open_space_area / world_pop_sum
