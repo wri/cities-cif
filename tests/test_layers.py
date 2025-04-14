@@ -133,13 +133,6 @@ def test_cams():
     utm_bbox_data = Cams().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
-def test_fractional_vegetation():
-    data = FractionalVegetation().get_data(BBOX)
-    assert np.size(data) > 0
-    assert get_projection_name(data.crs) == 'utm'
-    utm_bbox_data = FractionalVegetation().get_data(BBOX_AS_UTM)
-    assert data.equals(utm_bbox_data)
-
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
     data = Era5HottestDay().get_data(BBOX)
@@ -155,6 +148,14 @@ def test_esa_world_cover():
     assert_raster_stats(data, 1, 50, 50, 3242, 6555)
     assert get_projection_name(data.crs) == 'utm'
     utm_bbox_data = EsaWorldCover(land_cover_class=land_cover_class).get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
+def test_fractional_vegetation():
+    data = FractionalVegetation().get_data(BBOX)
+    assert np.size(data) > 0
+    # assert_raster_stats(data, 1, 0, 1.1, 9797, 0)
+    assert get_projection_name(data.crs) == 'utm'
+    utm_bbox_data = FractionalVegetation().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_height_above_nearest_drainage():

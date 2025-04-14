@@ -6,7 +6,7 @@ from .era_5_met_preprocessing import Era5MetPreprocessing
 from .mean_pm2p5_exposure import *
 from .mean_tree_cover import MeanTreeCover
 from .natural_areas_percent import NaturalAreasPercent
-from .percent_area_fracveg_exceeds_threshold import percent_area_fracveg_exceeds_threshold
+from .percent_area_fracveg_exceeds_threshold import PercentAreaFracvegExceedsThreshold
 from .percent_area_impervious import PercentAreaImpervious
 from .percent_canopy_covered_population import *
 from .percent_protected_area import PercentProtectedArea
