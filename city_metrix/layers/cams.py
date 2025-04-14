@@ -137,9 +137,7 @@ class Cams(Layer):
         #                 method="nearest")
 
         # Rename and set x, y as spatial dims
-        data = data.expand_dims(x=[data.longitude.item()],
-                                y=[data.latitude.item()])
-        data = data.drop_vars(['longitude', 'latitude']).squeeze(['longitude', 'latitude'])
+        data = data.rename({'longitude': 'x', 'latitude': 'y'})
         wgs_crs = bbox.as_geographic_bbox().crs
         data = data.rio.write_crs(wgs_crs)
         data.rio.set_spatial_dims(x_dim='x', y_dim='y', inplace=True)
