@@ -3,13 +3,13 @@ import geopandas as gpd
 from .layer import Layer
 from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
-from ..constants import GTIFF_FILE_EXTENSION
+from ..constants import GEOJSON_FILE_EXTENSION
 from .overture_buildings import OvertureBuildings
 from .ut_globus import UtGlobus
 
 
 class OvertureBuildingsHeight(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_LAYER_NAMING_ATTS = ["city"]
     MINOR_LAYER_NAMING_ATTS = None
 

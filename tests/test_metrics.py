@@ -3,7 +3,7 @@ import math
 import pandas as pd
 
 from city_metrix.metrics import *
-from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_TILE_GDF, NLD_AMSTERDAM_TILE_GDF
+from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, NLD_AMSTERDAM_ZONE
 import pytest
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
@@ -105,7 +105,7 @@ def test_canopy_area_per_resident_informal():
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess():
     # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = Era5MetPreprocessing().get_data(USA_OR_PORTLAND_TILE_GDF)
+    indicator = Era5MetPreprocessing().get_data(USA_OR_PORTLAND_ZONE)
     non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
     has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
     # p1= indicator[non_nullable_variables].isnull().any()
