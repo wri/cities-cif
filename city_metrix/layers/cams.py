@@ -36,11 +36,6 @@ class CamsSpecies(Enum):
         'who_threshold': 15.0,
         'eac4_varname': 'pm2p5'
     }
-    PM2P5 = {
-        'name': 'fine particulate matter',
-        'who_threshold': 15.0,
-        'eac4_varname': 'pm2p5'
-    }
     PM10 = {
         'name': 'coarse particulate matter',
         'who_threshold': 45.0,
@@ -55,23 +50,20 @@ class CamsSpecies(Enum):
 
 
 class Cams(Layer):
-    def __init__(self, start_date="2023-01-01", end_date="2023-12-31", species=[], **kwargs):
-
     OUTPUT_FILE_FORMAT = NETCDF_FILE_EXTENSION
     MAJOR_LAYER_NAMING_ATTS = None
     MINOR_LAYER_NAMING_ATTS = None
 
-    """
-    Attributes:
-        start_date: starting date for data retrieval
-        end_date: ending date for data retrieval
-    """
-    def __init__(self, start_date="2023-01-01", end_date="2023-12-31", **kwargs):
+    def __init__(self, start_date="2023-01-01", end_date="2023-12-31", species=[], **kwargs):
+        """
+        Attributes:
+            start_date: starting date for data retrieval
+            end_date: ending date for data retrieval
+        """
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.species = species
-
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  allow_cache_retrieval=False):
