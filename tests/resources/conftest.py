@@ -13,7 +13,7 @@ class DumpRunLevel(Enum):
 
 # DUMP_RUN_LEVEL is the master control for when  to execute tests decorated with
 # pytest.mark.skipif based on the DumpRunLevel enum class.
-DUMP_RUN_LEVEL = DumpRunLevel.RUN_FAST_ONLY
+DUMP_RUN_LEVEL = DumpRunLevel.RUN_NONE
 
 # Define a WGS bbox or otherwise a utm bbox
 USE_WGS_BBOX = True
