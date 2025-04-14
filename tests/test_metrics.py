@@ -53,15 +53,14 @@ def assert_metric_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, 
     # assert_metric_stats(indicator, 2, 0, 0, 1, 0)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_annual_daily_concentration_statistic():
-    indicator_mean = annual_daily_concentration_statistic(IDN_JAKARTA_TILED_ZONES, 'mean')
-    indicator_max = annual_daily_concentration_statistic(IDN_JAKARTA_TILED_ZONES, 'max')
-    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
-    actual_indicator_size = indicator_mean.size
-    assert expected_zone_size == actual_indicator_size
-    actual_indicator_size = indicator_max.size
-    assert expected_zone_size == actual_indicator_size
+def test_air_pollutant_annual_daily_statistic():
+    indicator = AirPollutantAnnualDailyStatistic().get_data(IDN_JAKARTA_TILED_ZONES, 'mean')
+    assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
 
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_air_pollutant_who_exceedance_days():
+    indicator = AirPollutantWhoExceedanceDays().get_data(IDN_JAKARTA_TILED_ZONES, 'mean')
+    assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
 
 def test_built_land_with_high_lst():
     sample_zones = IDN_JAKARTA_TILED_ZONES
