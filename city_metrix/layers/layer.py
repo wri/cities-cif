@@ -145,9 +145,6 @@ def _write_layer(data, uri, file_format):
     if isinstance(data, xr.DataArray) and file_format == GTIFF_FILE_EXTENSION:
         was_reversed, standardized_array = standardize_y_dimension_direction(data)
 
-        if standardized_array.values.dtype.name == 'bool':
-            standardized_array = standardized_array.astype(np.uint8)
-
         write_geodataarray(standardized_array, uri)
     elif isinstance(data, xr.Dataset) and file_format == GTIFF_FILE_EXTENSION:
         raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")

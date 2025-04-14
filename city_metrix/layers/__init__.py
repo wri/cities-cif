@@ -29,6 +29,7 @@ from .protected_areas import ProtectedAreas
 from .riparian_areas import RiparianAreas
 from .sentinel_2_level_2 import Sentinel2Level2
 from .smart_surface_lulc import SmartSurfaceLULC
+from .tree_canopy_cover_mask import TreeCanopyCoverMask
 from .tree_canopy_height import TreeCanopyHeight
 from .tree_cover import TreeCover
 from .urban_extents import UrbanExtents
