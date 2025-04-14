@@ -3,10 +3,11 @@ import math
 import pandas as pd
 
 from city_metrix.metrics import *
-from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_TILE_GDF, NLD_AMSTERDAM_TILE_GDF
+from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, NLD_AMSTERDAM_ZONE
 import pytest
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
+
 
 def _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_notnull_count, data_null_count,
                   min_notnull_val, max_notnull_val, notnull_count, null_count):
@@ -113,10 +114,34 @@ def test_canopy_area_per_resident_informal():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.00, 2.81, 18, 82)
 
+def test_percent_canopy_covered_population_children():
+    indicator = PercentCanopyCoveredPopulationChildren().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
+def test_percent_canopy_covered_population_elderly():
+    indicator = PercentCanopyCoveredPopulationElderly().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
+def test_percent_canopy_covered_population_female():
+    indicator = PercentCanopyCoveredPopulationFemale().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
+def test_percent_canopy_covered_population_informal():
+    indicator = PercentCanopyCoveredPopulationInformal().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess():
     # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = Era5MetPreprocessing().get_data(USA_OR_PORTLAND_TILE_GDF)
+    indicator = Era5MetPreprocessing().get_data(USA_OR_PORTLAND_ZONE)
     non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
     has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
     # p1= indicator[non_nullable_variables].isnull().any()
@@ -229,3 +254,48 @@ def test_who_air_pollutant_exceedance_days():
     assert indicator <= 365
 
     assert_metric_stats(indicator, 2, -0.0134, 0.2426, 100, 0)
+
+
+def _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_notnull_count, data_null_count,
+                  min_notnull_val, max_notnull_val, notnull_count, null_count):
+    if sig_digits is not None:
+        float_tol = (10 ** -sig_digits)
+        is_matched = (math.isclose(data_min_notnull_val, min_notnull_val, rel_tol=float_tol)
+                      and math.isclose(data_max_notnull_val, max_notnull_val, rel_tol=float_tol)
+                      and data_notnull_count == notnull_count
+                      and data_null_count == null_count
+                      )
+
+        expected = (f"{min_notnull_val:.{sig_digits}f}, {max_notnull_val:.{sig_digits}f}, {notnull_count}, {null_count}")
+        actual = (f"{data_min_notnull_val:.{sig_digits}f}, {data_max_notnull_val:.{sig_digits}f}, {data_notnull_count}, {data_null_count}")
+    else:
+        is_matched = (compare_nullable_numbers(data_min_notnull_val, min_notnull_val)
+                      and compare_nullable_numbers(data_max_notnull_val, max_notnull_val)
+                      and data_notnull_count == notnull_count
+                      and data_null_count == null_count
+                      )
+
+        expected = (f"{min_notnull_val}, {max_notnull_val}, {notnull_count}, {null_count}")
+        actual = (f"{data_min_notnull_val}, {data_max_notnull_val}, {data_notnull_count}, {data_null_count}")
+
+    return is_matched, expected, actual
+
+def compare_nullable_numbers(a, b):
+    if a is None and b is None:
+        return True
+    return a == b
+
+def assert_metric_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, notnull_count:int, null_count:int):
+    min_val = data.dropna().min()
+    data_min_notnull_val = None if pd.isna(min_val) else min_val
+    max_val = data.dropna().max()
+    data_max_notnull_val = None if pd.isna(max_val) else max_val
+    data_notnull_count = data.count()
+    data_null_count = data.isnull().sum()
+
+    is_matched, expected, actual = _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val,
+                  data_notnull_count, data_null_count, min_notnull_val, max_notnull_val, notnull_count, null_count)
+    assert is_matched, f"expected ({expected}), but got ({actual})"
+
+    # template
+    # assert_metric_stats(indicator, 2, 0, 0, 1, 0)
