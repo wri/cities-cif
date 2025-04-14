@@ -29,4 +29,4 @@ class PercentBuiltAreaWithoutTreeCover(Metric):
         built_land = urban_land_use.groupby(zones).count()
         built_land_with_tree_cover = urban_land_use.mask(tree_canopy_height).groupby(zones).count()
 
-        return 100 * (1 - (built_land_with_tree_cover / built_land))
+        return 100 * (1 - (built_land_with_tree_cover.fillna(0) / built_land))
