@@ -2,9 +2,12 @@ import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries
 import pandas as pd
 import numpy as np
-from city_metrix.layers import Layer, Cams
+from city_metrix.layers import Layer, Cams, CamsSpecies
 from city_metrix.metrics.metric import Metric
 from city_metrix.layers.layer_geometry import GeoExtent
+
+SUPPORTED_SPECIES = [CamsSpecies.CO, CamsSpecies.NO2, CamsSpecies.O3, CamsSpecies.PM10, CamsSpecies.PM25, CamsSpecies.SO2]
+
 
 SPECIES_INFO = {
     'no2': {
@@ -51,10 +54,10 @@ SPECIES_INFO = {
 
 def max_n_hr(arr, n):
     # Returns highest mean concentration over an n-hr period for a given array
-    resampled_1hr = arr.resample({'valid_time': '1H'}).interpolate('linear')
+    resampled_1hr = arr.resample({'time': '1H'}).interpolate('linear')
     max_by_offset = None
     for offs in range(n):
-        resampled_n_hr = resampled_1hr.resample({'valid_time': f'{n}H'}, offset=offs).mean().data
+        resampled_n_hr = resampled_1hr.resample({'time': f'{n}H'}, offset=offs).mean().data
         candidate = resampled_n_hr.max()
         if max_by_offset is None:
             max_by_offset = candidate
@@ -65,7 +68,7 @@ def max_n_hr(arr, n):
 class AirPollutantWhoExceedanceDays(Metric):
     def __init__(self,
                  species=None,
-                 year=2024,
+                 year=2023,
                   **kwargs):
         super().__init__(**kwargs)
         self.species = species
@@ -77,29 +80,27 @@ class AirPollutantWhoExceedanceDays(Metric):
     # species is list including these elements: 'co', 'no2', 'o3', 'so2', 'pm2p5', 'pm10'
     # returns GeoSeries with column with number of days any species exceeds WHO guideline
         if self.species is not None:
-            if not isinstance(self.species, (list, tuple, set)) or len(self.species) == 0 or sum([not i in ['co', 'no2', 'o3', 'so2', 'pm2p5', 'pm10'] for i in self.species]) > 0:
-                raise Except('Argument species must be list-like containing any non-empty subset of \'co\', \'no2\', \'o3\', \'so2\', \'pm2p5\', \'pm10\'')
-        result = []
-        for rownum in range(len(zones)):
-            zone = zones.iloc[[rownum]]
-            cams_layer = Cams(start_date=f'{self.year}-01-01', end_date=f'{self.year}-12-31', species=self.species)
-            cams_data = cams_layer.get_data(GeoExtent(zone.total_bounds))
-            if self.species is None:
-                species = ['co', 'no2', 'o3', 'so2', 'pm25', 'pm10']
+            if not isinstance(self.species, (list, tuple, set)) or len(self.species) == 0 or sum([not i in SUPPORTED_SPECIES for i in self.species]) > 0:
+                raise Except('Argument species must be list-like containing any non-empty subset of CamsSpecies enums {0}'.format(', '.join([i.__str__().split('.')[1] for i in SUPPORTED_SPECIES])))
+        bbox = GeoExtent(zones.total_bounds)
+        cams_layer = Cams(start_date=f'{self.year}-01-01', end_date=f'{self.year}-12-31', species=self.species)
+        cams_data = cams_layer.get_data(bbox)
+        if self.species is None:
+            species = SUPPORTED_SPECIES
+        else:
+            species = self.species
+        excdays = []
+        for s in species:
+            if s == CamsSpecies.O3:
+                n = 8
+                ds = np.mean(np.mean(cams_data.sel(variable=s.value['eac4_varname']), axis=1), axis=1)
+                day_data = [ds[i * n: (i + 1)* n] for i in range(365)]
+                maxconc_by_day = [max_n_hr(arr, n) for arr in day_data]
+                excdays.append([conc > s.value['who_threshold'] for conc in maxconc_by_day])
             else:
-                species = self.species
-            excdays = []
-            for s in species:
-                if s == 'o3':
-                    n = 8
-                    ds = d.sel(variable=SPECIES_INFO['o3']['eac4_varname'])
-                    day_data = [ds[i * n: (i + 1)* n] for i in range(365)]
-                    maxconc_by_day = [max_n_hr(arr, n) for arr in day_data]
-                    excdays.append([conc > SPECIES_INFO['o3']['who_threshold'] for conc in maxconc_by_day])
-                else:
-                    ds = d.sel(variable=SPECIES_INFO[s]['eac4_varname'])
-                    maxconc_by_day = ds.resample({'valid_time': '1D'}).mean().data
-                    excdays.append([conc > SPECIES_INFO[s]['who_threshold'] for conc in maxconc_by_day])
-            excdays_np = np.vstack(excdays)
-            result.append(excdays_np.any(axis=0).sum())
-        return pd.Series(result)
+                ds = np.mean(np.mean(cams_data.sel(variable=s.value['eac4_varname']), axis=1), axis=1)
+                maxconc_by_day = ds.resample({'time': '1D'}).mean().data
+                excdays.append([conc > s.value['who_threshold'] for conc in maxconc_by_day])
+        excdays_np = np.vstack(excdays)
+        return np.any(excdays_np, axis=0).sum()
+

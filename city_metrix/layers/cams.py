@@ -1,6 +1,7 @@
 import cdsapi
 import os
 import datetime
+import numpy as np
 import xarray as xr
 import glob
 from enum import Enum
@@ -16,35 +17,40 @@ class CamsSpecies(Enum):
         'name': 'nitrogen dioxide',
         'molar_mass': 46.0055,
         'who_threshold': 25.0,
+        'cost_per_tonne': 67000,
         'eac4_varname': 'no2'
     }
     SO2 = {
         'name': 'sulfur dioxide',
         'molar_mass': 64.066,
         'who_threshold': 40.0,
+        'cost_per_tonne': 33000,
         'eac4_varname': 'so2'
     }
-    O3 = {
+    O3 = {    # Ozone thresholds are based on 8-hour average, not 24-hour.
         'name': 'ozone',
         'molar_mass': 48.0,
-        # Ozone thresholds are based on 8-hour average, not 24-hour.
         'who_threshold': 100.0,
+        'cost_per_tonne': np.nan,
         'eac4_varname': 'go3'
     }
     PM25 = {
         'name': 'fine particulate matter',
         'who_threshold': 15.0,
+        'cost_per_tonne': np.nan,
         'eac4_varname': 'pm2p5'
     }
     PM10 = {
         'name': 'coarse particulate matter',
         'who_threshold': 45.0,
+        'cost_per_tonne': np.nan,
         'eac4_varname': 'pm10'
     },
     CO = {
         'name': 'carbon monoxide',
         'molar_mass': 28.01,
         'who_threshold': 4000.0,
+        'cost_per_tonne': 250,
         'eac4_varname': 'co'
     }
 
