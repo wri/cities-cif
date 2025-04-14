@@ -43,8 +43,8 @@ IDN_JAKARTA_TILED_ZONES = (
 IDN_JAKARTA_TILED_LARGE_ZONES = (
     create_fishnet_grid_for_testing(BBOX_IDN_JAKARTA_LARGE.coords, 0.1).reset_index())
 # Test single tiles
-USA_OR_PORTLAND_TILE_GDF = create_single_bbox_for_testing(BBOX_USA_OR_PORTLAND.coords)
-NLD_AMSTERDAM_TILE_GDF = create_single_bbox_for_testing(BBOX_NLD_AMSTERDAM.coords)
+USA_OR_PORTLAND_ZONE = create_single_bbox_for_testing(BBOX_USA_OR_PORTLAND.coords)
+NLD_AMSTERDAM_ZONE = create_single_bbox_for_testing(BBOX_NLD_AMSTERDAM.coords)
 
 
 class MockLayer(Layer):
