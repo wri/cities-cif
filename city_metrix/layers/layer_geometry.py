@@ -297,7 +297,7 @@ def _get_offsets(bbox, tile_side_length, tile_buffer_size, length_units, spatial
             raise Exception("Currently does not support length_units in meters and output_as latlon")
     else: # projected
         if length_units=="degrees":
-            x_tile_side_meters, y_tile_side_meters = _get_degree_offsets_for_meter_units(bbox, tile_side_length)
+            x_tile_side_meters, y_tile_side_meters = get_degree_offsets_for_meter_units(bbox, tile_side_length)
             x_tile_side_units = _truncate_to_nearest_interval(x_tile_side_meters, spatial_resolution)
             y_tile_side_units = _truncate_to_nearest_interval(y_tile_side_meters, spatial_resolution)
 
@@ -349,7 +349,7 @@ def _build_tile_geometry(x_coord, y_coord, x_tile_side_units, y_tile_side_units,
     return geom
 
 
-def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
+def get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
     if bbox.projection_type != ProjectionType.GEOGRAPHIC:
         raise ValueError(f"Bbox must have CRS set to {WGS_CRS}")
 

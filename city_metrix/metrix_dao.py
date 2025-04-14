@@ -276,7 +276,7 @@ def _get_file_key_from_url(s3_url):
     file_key = '/'.join(s3_url.split('/')[3:])
     return file_key
 
-def get_cache_variables(layer_obj, geo_extent):
+def get_layer_cache_variables(layer_obj, geo_extent):
     layer_folder_name, layer_id = build_cache_layer_names(layer_obj)
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level

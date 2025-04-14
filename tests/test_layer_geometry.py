@@ -1,32 +1,30 @@
-import math
-
 import numpy as np
 import pytest
 
 from city_metrix.constants import ProjectionType
 from city_metrix.layers import NasaDEM
 from city_metrix.layers.layer import WGS_CRS
-from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, _get_degree_offsets_for_meter_units, \
+from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, get_degree_offsets_for_meter_units, \
     get_haversine_distance
 from tests.conftest import USA_OR_PORTLAND_BBOX
-from tests.resources.bbox_constants import GEOEXTENT_SMALL_CITY_WGS84, GEOEXTENT_SMALL_CITY_UTM
+from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84, GEOEXTENT_TERESINA_UTM
 from tests.tools.spatial_tools import get_rounded_geometry
 
 USA_OR_PORTLAND_LATLON_BBOX = GeoExtent(USA_OR_PORTLAND_BBOX.total_bounds, USA_OR_PORTLAND_BBOX.crs.srs)
 
 def test_city_extent():
-    city_geo_extent = GEOEXTENT_SMALL_CITY_WGS84
+    city_geo_extent = GEOEXTENT_TERESINA_WGS84
     geom = city_geo_extent.centroid
     rounded_boundary_centroid = get_rounded_geometry(geom, 1)
     assert city_geo_extent.projection_type == ProjectionType.GEOGRAPHIC
     assert rounded_boundary_centroid == 'POINT (-42.8 -5.1)'
 
 def test_nasa_dem_city_id_wgs84():
-    data = NasaDEM().get_data(GEOEXTENT_SMALL_CITY_WGS84)
+    data = NasaDEM().get_data(GEOEXTENT_TERESINA_WGS84)
     assert np.size(data) > 0
 
 def test_nasa_dem_city_id_utm():
-    data = NasaDEM().get_data(GEOEXTENT_SMALL_CITY_UTM)
+    data = NasaDEM().get_data(GEOEXTENT_TERESINA_UTM)
     assert np.size(data) > 0
 
 def test_centroid_property():
@@ -93,7 +91,7 @@ def test_degree_offsets_for_meter_units():
     approx_y_offset = 111195
     x_haversine = get_haversine_distance(45, 45, 46, 45)
     y_haversine = get_haversine_distance(45, 45, 45, 46)
-    x_offset, y_offset = _get_degree_offsets_for_meter_units(ll_bbox, 1)
+    x_offset, y_offset = get_degree_offsets_for_meter_units(ll_bbox, 1)
 
     tolerance = 0.2
     assert x_haversine == pytest.approx(approx_x_offset, abs=tolerance)

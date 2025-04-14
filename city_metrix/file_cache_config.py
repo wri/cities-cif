@@ -26,7 +26,6 @@ def set_cache_settings(uri, env):
     cif_cache_settings.cache_environment = env
     cif_cache_settings.s3_bucket = cif_production_s3_bucket_uri if env == 'dev' else cif_testing_s3_bucket_uri
 
-
 def get_cache_settings():
     return cif_cache_settings.cache_location_uri, cif_cache_settings.cache_environment
 

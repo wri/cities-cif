@@ -1,5 +1,11 @@
 # Release Notes
 
+## 2025/04/14
+1. Added timeout_decorator to environment.yml
+2. Warning: Some tests in tests/resources folder write intermediate results to a shared S3 bucket, so there is some potential for collision between concurrent runs.
+3. Simplified tests and renamed some tests
+4. Refocused layer-write tests on query by city name instead of by bbox.
+
 ## 2025/04/9
 1. Merged some Layers and Metrics functions
 2. Increased granularity for controling whether individual tests are run by converting the old EXECUTE_IGNORED_TESTS boolean values into enums.
@@ -8,6 +14,7 @@
 1. Created a Metric base class with get_data() and two write functions
 2. Converted each existing Metric function into a Metric class with get_data() function
 3. Added tests to write output of each class to a local system file
+4. Modified skip-if decorator for write tests to use DumpRunLevel enum
 
 ## 2025/04/2
 1. Added download of cached CIF results from S3 or a local directory when available.

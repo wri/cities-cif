@@ -15,7 +15,6 @@ cif_dashboard_s3_bucket_uri = 's3://wri-cities-data-api'
 cif_testing_s3_bucket_uri = 's3://cities-dev-sandbox'
 ctcm_development_s3_bucket_uri = 's3://cities-tcm-dev-sandbox'
 
-
 aws_s3_profile = 'cities-data-user'
 
 #TODO In near-term, the cities-dat-api must be replaced by dev.cities-data-api after the dev.. API stabilizes.

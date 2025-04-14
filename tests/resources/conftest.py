@@ -3,17 +3,13 @@ from enum import Enum
 
 import pytest
 import os
-import shutil
-from collections import namedtuple
 
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_NLD_AMSTERDAM, \
-    BBOX_NLD_AMSTERDAM_LARGE, BBOX_USA_OR_PORTLAND, BBOX_USA_OR_PORTLAND_1, BBOX_USA_OR_PORTLAND_2
 from tests.tools.general_tools import create_target_folder, is_valid_path
 
 class DumpRunLevel(Enum):
     RUN_NONE = 0
     RUN_FAST_ONLY = 1
-    RUN_ALL = 2
+    RUN_SLOW_ONLY = 2
 
 # DUMP_RUN_LEVEL is the master control for when  to execute tests decorated with
 # pytest.mark.skipif based on the DumpRunLevel enum class.
@@ -21,22 +17,6 @@ DUMP_RUN_LEVEL = DumpRunLevel.RUN_NONE
 
 # Define a WGS bbox or otherwise a utm bbox
 USE_WGS_BBOX = True
-
-# Multiplier applied to the default spatial_resolution of the layer
-# Use value of 1 for default resolution.
-RESOLUTION_MTHD = 'multipler'
-# RESOLUTION_MTHD = 'fixed'
-RESOLUTION_MULTIPLIER = 1
-FIXED_RESOLUTION = 30 # Note: Some layers do not support less than resolution of 30m
-
-# Both the tests and QGIS file are implemented for the same bounding box in Brazil.
-# COUNTRY_CODE_FOR_BBOX = 'BRA'
-# BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
-COUNTRY_CODE_FOR_BBOX = 'USA'
-CITY_CODE_FOR_BBOX = 'portland'
-BBOX = BBOX_USA_OR_PORTLAND_2
-# BBOX = BBOX_NLD_AMSTERDAM_TEST
-# BBOX = BBOX_NLD_AMSTERDAM_LARGE_TEST
 
 # Specify None to write to a temporary default folder otherwise specify a valid custom target path.
 CUSTOM_DUMP_DIRECTORY = None
@@ -54,12 +34,6 @@ def pytest_configure(config):
 def target_folder():
     return get_target_folder_path()
 
-@pytest.fixture
-def sample_aoi():
-    sample_box = namedtuple('sample_bbox', ['geo_extent', 'country', 'city'])
-    sample_bbox_instance = sample_box(geo_extent=BBOX, country=COUNTRY_CODE_FOR_BBOX, city=CITY_CODE_FOR_BBOX)
-    return sample_bbox_instance
-
 def get_target_folder_path():
     if CUSTOM_DUMP_DIRECTORY is not None:
         if is_valid_path(CUSTOM_DUMP_DIRECTORY) is False:
@@ -74,19 +48,3 @@ def get_target_folder_path():
 
     return output_dir
 
-def prep_output_path(output_folder, file_name):
-    file_path = os.path.join(output_folder, file_name)
-    if os.path.isfile(file_path):
-        os.remove(file_path)
-    return file_path
-
-def verify_file_is_populated(file_path):
-    is_populated = True if os.path.getsize(file_path) > 0 else False
-    return is_populated
-
-def get_file_count_in_folder(dir_path):
-    count = 0
-    for path in os.scandir(dir_path):
-        if path.is_file():
-            count += 1
-    return count

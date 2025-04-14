@@ -4,7 +4,8 @@ import pytest
 
 from city_metrix.constants import WGS_CRS
 from city_metrix.metrics import *
-from tests.resources.conftest import prep_output_path, verify_file_is_populated, DUMP_RUN_LEVEL, DumpRunLevel
+from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
+from tests.resources.tools import prep_output_path, verify_file_is_populated
 from tests.tools.general_tools import create_target_folder
 from city_metrix.metrics.metric import *
 
@@ -20,7 +21,7 @@ IDN_Jakarta_zone = GeoZone(gpd.GeoDataFrame([Polygon(jakarta_crude_boundary)], c
                     .reset_index())
 
 
-@pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_polygonal_zones(target_folder):
     zone = IDN_Jakarta_zone
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
@@ -35,7 +36,7 @@ def test_write_polygonal_zones(target_folder):
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
-# @pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE,reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY,reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 # def test_write_to_airtable(target_folder):
 #     zones = SAMPLE_TILED_ZONES
 #
@@ -50,7 +51,7 @@ def test_write_polygonal_zones(target_folder):
     # assert expected_zone_size == actual_indicator_size
 
 
-@pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_data_series_as_geojson(target_folder):
     zones = IDN_Jakarta_zone
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
@@ -60,7 +61,7 @@ def test_write_data_series_as_geojson(target_folder):
     BuiltLandWithHighLST().write_as_geojson(zones,csv_file_path)
     assert verify_file_is_populated(csv_file_path)
 
-@pytest.mark.skipif(DUMP_RUN_LEVEL == DumpRunLevel.RUN_NONE, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_data_series_as_csv(target_folder):
     zones = IDN_Jakarta_zone
     target_metrics_folder = str(os.path.join(target_folder, 'metrics'))

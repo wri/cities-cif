@@ -1,3 +1,4 @@
+import math
 import pytest
 import numpy as np
 
@@ -6,7 +7,6 @@ from city_metrix.layers import *
 from city_metrix.layers.layer_tools import get_projection_type
 from tests.conftest import EXECUTE_IGNORED_TESTS
 from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_2
-from tests.tools.general_tools import assert_raster_stats, assert_vector_stats
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC and is a stable region
@@ -208,12 +208,12 @@ def test_open_street_map():
     utm_bbox_data = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
-def test_overture_buildings_height_raster():
-    data = OvertureBuildingsHeightRaster(CITY_CODE_FOR_BBOX).get_data(BBOX)
+def test_overture_buildings():
+    data = OvertureBuildings().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, -999.0, 12.5, 978604, 0)
-    assert get_projection_type(data.spatial_ref.crs_wkt) == ProjectionType.UTM
-    utm_bbox_data = OvertureBuildingsHeightRaster(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
+    assert_vector_stats(data, 'height', 1, 2.0, 12.5, 1079, 145)
+    assert get_projection_type(data.crs.srs) == ProjectionType.UTM
+    utm_bbox_data = OvertureBuildings().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_overture_buildings_height():
@@ -224,12 +224,12 @@ def test_overture_buildings_height():
     utm_bbox_data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
-def test_overture_buildings():
-    data = OvertureBuildings().get_data(BBOX)
+def test_overture_buildings_height_raster():
+    data = OvertureBuildingsHeightRaster(CITY_CODE_FOR_BBOX).get_data(BBOX)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'height', 1, 2.0, 12.5, 1079, 145)
-    assert get_projection_type(data.crs.srs) == ProjectionType.UTM
-    utm_bbox_data = OvertureBuildings().get_data(BBOX_AS_UTM)
+    assert_raster_stats(data, 1, -999.0, 12.5, 978604, 0)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+    utm_bbox_data = OvertureBuildingsHeightRaster(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_protected_areas():
@@ -273,6 +273,13 @@ def test_smart_surface_lulc():
     assert_raster_stats(data, 1, 1.0, 50.0, 979700, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
     utm_bbox_data = SmartSurfaceLULC().get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
+def test_tree_canopy_cover_mask():
+    data = TreeCanopyCoverMask().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+    utm_bbox_data = TreeCanopyCoverMask().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_tree_canopy_height():
@@ -330,3 +337,64 @@ def test_world_pop():
     assert get_projection_type(data.crs) == ProjectionType.UTM
     utm_bbox_data = WorldPop().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
+
+def _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_notnull_count, data_null_count,
+                  min_notnull_val, max_notnull_val, notnull_count, null_count):
+    float_tol = (10 ** -sig_digits)
+    is_matched = (math.isclose(data_min_notnull_val, min_notnull_val, rel_tol=float_tol)
+                  and math.isclose(data_max_notnull_val, max_notnull_val, rel_tol=float_tol)
+                  and data_notnull_count == notnull_count
+                  and data_null_count == null_count
+                  )
+
+    expected = (f"{min_notnull_val:.{sig_digits}f}, {max_notnull_val:.{sig_digits}f}, {notnull_count}, {null_count}")
+    actual = (f"{data_min_notnull_val:.{sig_digits}f}, {data_max_notnull_val:.{sig_digits}f}, {data_notnull_count}, {data_null_count}")
+
+    return is_matched, expected, actual
+
+def _eval_string(data_min_notnull_val, data_max_notnull_val, data_notnull_count, data_null_count,
+                  min_notnull_val, max_notnull_val, notnull_count, null_count):
+
+    is_matched = (data_min_notnull_val == min_notnull_val
+                  and data_max_notnull_val == max_notnull_val
+                  and data_notnull_count == notnull_count
+                  and data_null_count == null_count
+                  )
+
+    expected = (f"{min_notnull_val}, {max_notnull_val}, {notnull_count}, {null_count}")
+    actual = (f"{data_min_notnull_val}, {data_max_notnull_val}, {data_notnull_count}, {data_null_count}")
+    return is_matched, expected, actual
+
+def assert_vector_stats(data, attribute, sig_digits:int, min_notnull_val, max_notnull_val, notnull_count, null_count):
+    data_min_notnull_val = data[attribute].dropna().min()
+    data_max_notnull_val = data[attribute].dropna().max()
+    data_notnull_count = data[attribute].notnull().sum()
+    data_null_count = data[attribute].isnull().sum()
+
+    if sig_digits is None:
+        is_matched, expected, actual = _eval_string(data_min_notnull_val, data_max_notnull_val, data_notnull_count, data_null_count,
+                         min_notnull_val, max_notnull_val, notnull_count, null_count)
+    else:
+        is_matched, expected, actual = _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_notnull_count, data_null_count,
+                                                     min_notnull_val, max_notnull_val, notnull_count, null_count)
+
+    assert is_matched, f"expected ({expected}), but got ({actual})"
+
+    # template
+    # assert_vector_stats(data, 'attribute', None, 'minval', 'maxval', 1, 0)
+
+
+def assert_raster_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, notnull_count:int, null_count:int):
+    data_min_notnull_val = np.nanmin(data)
+    data_max_notnull_val = np.nanmax(data)
+    data_notnull_count = data.count().item()
+    data_null_count = data.isnull().sum().item()
+
+    is_matched, expected, actual = _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val,
+                                                 data_notnull_count, data_null_count, min_notnull_val,
+                                                 max_notnull_val, notnull_count, null_count)
+    assert is_matched, f"expected ({expected}), but got ({actual})"
+
+    # template
+    # assert_raster_stats(data, 2, 0, 0, 1, 0)
