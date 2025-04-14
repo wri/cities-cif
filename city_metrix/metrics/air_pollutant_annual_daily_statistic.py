@@ -49,13 +49,14 @@ SPECIES_INFO = {
     }
 }
 
-class CamsAnnual(Cams):
-    def __init__(self, start_date="2023-01-01", end_date="2023-12-31", species=[], statistic='mean', **kwargs):
-        super().__init__(start_date=start_date, end_date=end_date, species=species, **kwargs)
+class CamsAnnual():
+    def __init__(self, species=[], statistic='mean', year=2024):
         self.statistic = statistic
+        self.species = species
+        self.year = year
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
-        cams = super().get_data(bbox)
+    def get_data(self, bbox: GeoExtent):
+        cams = Cams(start_date=f'{self.year}-01-01', end_date=f'{self.year}-12-31', species=self.species).get_data(bbox)
         cams_daily = cams.resample({'valid_time': '1D'}).mean()
 
         if self.statistic == 'mean':
@@ -81,24 +82,29 @@ class CamsAnnual(Cams):
 
 class AirPollutantAnnualDailyStatistic(Metric):
     def __init__(self,
-                 species,
+                 species=[],
+                 year=2024,
                  statistic='mean', # options are mean, max, cost
                   **kwargs):
         super().__init__(**kwargs)
         self.species = species
         self.statistic = statistic
+        self.year = year
 
     def get_data(self,
                  zones: GeoDataFrame,
                  spatial_resolution:int = None) -> GeoSeries:
         bbox = GeoExtent(zones.total_bounds)
-        cams_annual = CamsAnnual(species=self.species, statistic=[self.statistic, 'mean'][int(self.statistic=='cost')]).get_data(bbox)
-
+        cams_annual = CamsAnnual(species=self.species, statistic=[self.statistic, 'mean'][int(self.statistic=='cost')], year=self.year).get_data(bbox)
 
         if self.statistic == 'mean':
             return np.mean(np.mean(cams_annual, axis=1), axis=1)
         elif self.statistic == 'max':
             return np.max(np.max(cams_annual, axis=1), axis=1)
         else: # statname = 'cost'
-            return np.mean(np.mean(cams_annual, axis=1), axis=1) * [SPECIES_INFO[sp]['cost_per_tonne'] for sp in self.species]
+            if self.species:
+                species = self.species
+            else:
+                species = list(SPECIES_INFO.keys())
+            return np.mean(np.mean(cams_annual, axis=1), axis=1) * [SPECIES_INFO[sp]['cost_per_tonne'] for sp in species]
 

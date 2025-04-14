@@ -1,7 +1,10 @@
 import geopandas as gpd
+from geopandas import GeoDataFrame, GeoSeries
 import pandas as pd
 import numpy as np
 from city_metrix.layers import Layer, Cams
+from city_metrix.metrics.metric import Metric
+from city_metrix.layers.layer_geometry import GeoExtent
 
 SPECIES_INFO = {
     'no2': {
@@ -33,7 +36,7 @@ SPECIES_INFO = {
     },
     'pm10': {
         'name': 'coarse particulate matter',
-        'who_threshold': 45.0
+        'who_threshold': 45.0,
         'cost_per_tonne': None,
         'eac4_varname': 'pm10'
     },
@@ -62,9 +65,11 @@ def max_n_hr(arr, n):
 class AirPollutantWhoExceedanceDays(Metric):
     def __init__(self,
                  species=None,
+                 year=2024,
                   **kwargs):
         super().__init__(**kwargs)
         self.species = species
+        self.year = year
 
     def get_data(self,
                  zones: GeoDataFrame,
@@ -73,13 +78,14 @@ class AirPollutantWhoExceedanceDays(Metric):
     # returns GeoSeries with column with number of days any species exceeds WHO guideline
         if self.species is not None:
             if not isinstance(self.species, (list, tuple, set)) or len(self.species) == 0 or sum([not i in ['co', 'no2', 'o3', 'so2', 'pm2p5', 'pm10'] for i in self.species]) > 0:
-                raise Except('Argument species must be list-like containing any non-empty subset of \'co\', \'no2\', \'o3\', \'so2\', \'pm2p5\', \'pm10\')
-       result = []
+                raise Except('Argument species must be list-like containing any non-empty subset of \'co\', \'no2\', \'o3\', \'so2\', \'pm2p5\', \'pm10\'')
+        result = []
         for rownum in range(len(zones)):
             zone = zones.iloc[[rownum]]
-            cams_data = cams_layer.get_data(zone.total_bounds)
+            cams_layer = Cams(start_date=f'{self.year}-01-01', end_date=f'{self.year}-12-31', species=self.species)
+            cams_data = cams_layer.get_data(GeoExtent(zone.total_bounds))
             if self.species is None:
-                species = ['co', 'no2', 'o3', 'so2', 'pm2p5', 'pm10']
+                species = ['co', 'no2', 'o3', 'so2', 'pm25', 'pm10']
             else:
                 species = self.species
             excdays = []

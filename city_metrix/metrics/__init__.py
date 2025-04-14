@@ -1,8 +1,6 @@
 
-from .annual_daily_concentration_statistic import annual_daily_concentration_statistic
-from .natural_areas import natural_areas
-from .who_air_pollutant_exceedance_days import who_air_pollutant_exceedance_days
-
+from .air_pollutant_annual_daily_statistic import AirPollutantAnnualDailyStatistic
+from .air_pollutant_who_exceedance_days import AirPollutantWhoExceedanceDays
 from .built_land_with_high_land_surface_temperature import BuiltLandWithHighLST
 from .built_land_with_low_surface_reflectivity import BuiltLandWithLowSurfaceReflectivity
 from .built_land_without_tree_cover import BuiltLandWithoutTreeCover
