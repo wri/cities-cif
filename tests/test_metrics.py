@@ -154,6 +154,13 @@ def test_ghg_emissions():
     assert expected_zone_size == actual_indicator_size
 
 
+def test_ghg_time_series():
+    indicator = GhgTimeSeries().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.index.size
+    assert expected_zone_size == actual_indicator_size
+
+
 def test_mean_pm2p5_exposure_popweighted_children():
     indicator = MeanPM2P5ExposurePopWeightedChildren().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
