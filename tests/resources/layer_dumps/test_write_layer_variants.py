@@ -25,7 +25,8 @@ def test_geotiff_layer_caching(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_geojson_layer_caching(target_folder):
-    layer_obj = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD)
+    # layer_obj = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD)
+    layer_obj = ProtectedAreas()
     _cache_write_read(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")

@@ -60,26 +60,26 @@ def test_canopy_area_per_resident_informal():
 
 def test_percent_canopy_covered_population_children():
     indicator = PercentCanopyCoveredPopulationChildren().get_data(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
-    actual_indicator_size = indicator.size
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
 
 def test_percent_canopy_covered_population_elderly():
     indicator = PercentCanopyCoveredPopulationElderly().get_data(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
-    actual_indicator_size = indicator.size
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
 
 def test_percent_canopy_covered_population_female():
     indicator = PercentCanopyCoveredPopulationFemale().get_data(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
-    actual_indicator_size = indicator.size
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
 
 def test_percent_canopy_covered_population_informal():
     indicator = PercentCanopyCoveredPopulationInformal().get_data(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
-    actual_indicator_size = indicator.size
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
