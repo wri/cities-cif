@@ -119,7 +119,7 @@ class FractionalVegetation(Layer):
 
             return ee.Dictionary({"vegNDVI": vegNDVI, "soilNDVI": soilNDVI, "ndviImage": ndvi})
 
-        calcFr(bbox_ee["ee_geometry"], 5, 5)
+        calcFr(bbox_ee["ee_geometry"], PCTL_FULLVEG, PCTL_NONVEG)
 
         def fracVeg(geom, vegpctl, soilpctl):
             results = calcFr(geom, vegpctl, soilpctl)
@@ -134,6 +134,7 @@ class FractionalVegetation(Layer):
                 ndviImage.subtract(soilNDVI)
                 .divide(vegNDVI.subtract(soilNDVI))
                 .pow(2)
+                .min(1)
                 .rename("Fr")
             )
 
