@@ -85,7 +85,8 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/file
    2. The cached data are stored in the following directory structure:
       1. data/{env}/{layer_name}/{file_format}/{city_id}__{admin_level}__{layer_id} where: env is either development (dev) or production (prd) environment and file_format is the file extension.
       
-
+### Testing
+Warning: Some tests in tests/resources folder write intermediate results to a shared S3 bucket, so there is some potential for collision between concurrent runs.
 
 ## How to contribute
 

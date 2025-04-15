@@ -28,13 +28,12 @@ BBOX_USA_OR_PORTLAND_2 = GeoExtent(bbox=(-122.75020, 45.58043, -122.73720, 45.58
 BBOX_IDN_JAKARTA = GeoExtent(bbox=(106.7, -6.3, 106.8, -6.2), crs=WGS_CRS)
 BBOX_IDN_JAKARTA_LARGE = GeoExtent(bbox=(106, -7, 107, -6), crs=WGS_CRS)
 
-BBOX_IND_BHOPAL = GeoExtent(bbox=(77.41791, 23.20914, 77.42856, 23.21651), crs=WGS_CRS)
-
-# Saif recommended Teresina since it's small and has all layers available
-geo_extent = construct_city_aoi_json("BRA-Teresina", "city_admin_level")
-EXTENT_MEDIUM_CITY_WGS84 = GeoExtent(bbox=geo_extent)
-EXTENT_MEDIUM_CITY_UTM = GeoExtent(bbox=geo_extent, crs='EPSG:32722')
-
+# A medium city
 geo_extent = construct_city_aoi_json("BRA-Florianopolis", "city_admin_level")
-EXTENT_SMALL_CITY_WGS84 = GeoExtent(bbox=geo_extent)
-EXTENT_SMALL_CITY_UTM = GeoExtent(bbox=geo_extent, crs='EPSG:32722')
+GEOEXTENT_FLORIANOPOLIS_WGS84 = GeoExtent(bbox=geo_extent)
+GEOEXTENT_FLORIANOPOLIS_UTM = GeoExtent(bbox=geo_extent, crs='EPSG:32722')
+
+# A small city. Saif recommended Teresina since it's small and has all layers available
+geo_extent = construct_city_aoi_json("BRA-Teresina", "city_admin_level")
+GEOEXTENT_TERESINA_WGS84 = GeoExtent(bbox=geo_extent)
+GEOEXTENT_TERESINA_UTM = GeoExtent(bbox=geo_extent, crs='EPSG:32722')
