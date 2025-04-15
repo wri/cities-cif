@@ -8,7 +8,7 @@ NETCDF_FILE_EXTENSION = 'nc'
 # TODO replace with production value
 cif_production_aws_bucket_uri = 's3://cities-dev-sandbox' # 's3://wri-cities-data-api'
 ctcm_development_aws_bucket_uri = 's3://cities-tcm-dev-sandbox'
-testing_aws_bucket_uri = 's3://cities-dev-sandbox'
+cif_testing_s3_bucket_uri = 's3://cities-dev-sandbox'
 
 aws_s3_profile = 'cities-data-user'
 
