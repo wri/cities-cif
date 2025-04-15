@@ -9,58 +9,14 @@ import pytest
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
 
 
-def _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_notnull_count, data_null_count,
-                  min_notnull_val, max_notnull_val, notnull_count, null_count):
-    if sig_digits is not None:
-        float_tol = (10 ** -sig_digits)
-        is_matched = (math.isclose(data_min_notnull_val, min_notnull_val, rel_tol=float_tol)
-                      and math.isclose(data_max_notnull_val, max_notnull_val, rel_tol=float_tol)
-                      and data_notnull_count == notnull_count
-                      and data_null_count == null_count
-                      )
-
-        expected = (f"{min_notnull_val:.{sig_digits}f}, {max_notnull_val:.{sig_digits}f}, {notnull_count}, {null_count}")
-        actual = (f"{data_min_notnull_val:.{sig_digits}f}, {data_max_notnull_val:.{sig_digits}f}, {data_notnull_count}, {data_null_count}")
-    else:
-        is_matched = (compare_nullable_numbers(data_min_notnull_val, min_notnull_val)
-                      and compare_nullable_numbers(data_max_notnull_val, max_notnull_val)
-                      and data_notnull_count == notnull_count
-                      and data_null_count == null_count
-                      )
-
-        expected = (f"{min_notnull_val}, {max_notnull_val}, {notnull_count}, {null_count}")
-        actual = (f"{data_min_notnull_val}, {data_max_notnull_val}, {data_notnull_count}, {data_null_count}")
-
-    return is_matched, expected, actual
-
-def compare_nullable_numbers(a, b):
-    if a is None and b is None:
-        return True
-    return a == b
-
-def assert_metric_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, notnull_count:int, null_count:int):
-    min_val = data.dropna().min()
-    data_min_notnull_val = None if pd.isna(min_val) else min_val
-    max_val = data.dropna().max()
-    data_max_notnull_val = None if pd.isna(max_val) else max_val
-    data_notnull_count = data.count()
-    data_null_count = data.isnull().sum()
-
-    is_matched, expected, actual = _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val,
-                  data_notnull_count, data_null_count, min_notnull_val, max_notnull_val, notnull_count, null_count)
-    assert is_matched, f"expected ({expected}), but got ({actual})"
-
-    # template
-    # assert_metric_stats(indicator, 2, 0, 0, 1, 0)
-
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_air_pollutant_annual_daily_statistic():
-    indicator = AirPollutantAnnualDailyStatistic().get_data(IDN_JAKARTA_TILED_ZONES, 'mean')
+    indicator = AirPollutantAnnualDailyStatistic().get_data(IDN_JAKARTA_TILED_ZONES)
     assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_air_pollutant_who_exceedance_days():
-    indicator = AirPollutantWhoExceedanceDays().get_data(IDN_JAKARTA_TILED_ZONES, 'mean')
+    indicator = AirPollutantWhoExceedanceDays().get_data(IDN_JAKARTA_TILED_ZONES)
     assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
 
 def test_built_land_with_high_lst():
@@ -213,9 +169,7 @@ def test_recreational_space_per_capita():
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
-
     assert_metric_stats(indicator, 2, 0, 0.455, 100, 0)
-
 
 def test_urban_open_space():
     indicator = UrbanOpenSpace().get_data(IDN_JAKARTA_TILED_ZONES)
@@ -243,16 +197,6 @@ def test_vegetation_water_change_gain_loss_ratio():
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
-
-
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_who_air_pollutant_exceedance_days():
-    indicator = who_air_pollutant_exceedance_days(IDN_JAKARTA_TILED_ZONES, ['so2'])
-    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
-    actual_indicator_size = indicator.size
-    assert indicator <= 365
-
-    assert_metric_stats(indicator, 2, -0.0134, 0.2426, 100, 0)
 
 
 def _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_notnull_count, data_null_count,

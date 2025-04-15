@@ -8,7 +8,6 @@ from .cams import Cams, CamsSpecies
 from .era_5_hottest_day import Era5HottestDay
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .glad_lulc import LandCoverGlad, LandCoverSimplifiedGlad, LandCoverHabitatGlad, LandCoverHabitatChangeGlad
-from .cams import Cams, CamsSpecies
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
 from .high_land_surface_temperature import HighLandSurfaceTemperature
 from .high_slope import HighSlope
