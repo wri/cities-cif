@@ -30,14 +30,12 @@ def test_built_land_without_tree_cover():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.65, 0.93, 100, 0)
 
-
 def test_canopy_area_per_resident_children():
     indicator = CanopyAreaPerResidentChildren().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 5.24, 115.12, 100, 0)
-
 
 def test_canopy_area_per_resident_elderly():
     indicator = CanopyAreaPerResidentElderly().get_data(IDN_JAKARTA_TILED_ZONES)
@@ -46,14 +44,12 @@ def test_canopy_area_per_resident_elderly():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 17.09, 375.27, 100, 0)
 
-
 def test_canopy_area_per_resident_female():
     indicator = CanopyAreaPerResidentFemale().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 2.33, 51.13, 100, 0)
-
 
 def test_canopy_area_per_resident_informal():
     indicator = CanopyAreaPerResidentInformal().get_data(IDN_JAKARTA_TILED_ZONES)
@@ -99,20 +95,19 @@ def test_era_5_met_preprocess():
     assert len(indicator) == 24
     # TODO Add value testing
 
-
 def test_ghg_emissions():
     indicator = GhgEmissions().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
-
+    assert_metric_stats(indicator, 2, 3093990.50, 3093990.50, 100, 0)
 
 def test_ghg_time_series():
     indicator = GhgTimeSeries().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.index.size
     assert expected_zone_size == actual_indicator_size
-
+    # TODO Add value testing
 
 def test_mean_pm2p5_exposure_popweighted_children():
     indicator = MeanPM2P5ExposurePopWeightedChildren().get_data(IDN_JAKARTA_TILED_ZONES)
@@ -121,14 +116,12 @@ def test_mean_pm2p5_exposure_popweighted_children():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 20.64, 51.63, 100, 0)
 
-
 def test_mean_pm2p5_exposure_popweighted_elderly():
     indicator = MeanPM2P5ExposurePopWeightedElderly().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 20.64, 51.63, 100, 0)
-
 
 def test_mean_pm2p5_exposure_popweighted_female():
     indicator = MeanPM2P5ExposurePopWeightedFemale().get_data(IDN_JAKARTA_TILED_ZONES)
@@ -137,14 +130,12 @@ def test_mean_pm2p5_exposure_popweighted_female():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 20.64, 51.63, 100, 0)
 
-
 def test_mean_pm2p5_exposure_popweighted_informal():
     indicator = MeanPM2P5ExposurePopWeightedInformal().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, None, None, None, 0, 100)
-
 
 def test_mean_tree_cover():
     indicator = MeanTreeCover().get_data(IDN_JAKARTA_TILED_ZONES)
