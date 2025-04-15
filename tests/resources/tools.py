@@ -13,11 +13,6 @@ def delete_file_on_os(file_path):
     if os.path.exists(file_path):
         os.remove(file_path)
 
-def cleanup_cache_files(file_key, file_path):
-    s3_client = get_s3_client()
-    delete_file_on_s3(s3_client, file_key)
-    delete_file_on_os(file_path)
-
 def prep_output_path(output_folder, file_name):
     file_path = os.path.join(output_folder, file_name)
     if os.path.isfile(file_path):
@@ -36,13 +31,14 @@ def get_file_count_in_folder(dir_path):
     return count
 
 def cleanup_cache_files(cache_scheme, key_file, file_path):
-    if cache_scheme == 's3':
-        s3_client = get_s3_client()
-        delete_file_on_s3(s3_client, key_file)
-    else:
-        target_folder = get_target_folder_path()
-        cache_file_path = os.path.join(target_folder, key_file)
-        delete_file_on_os(cache_file_path)
+    if key_file is not None:
+        if cache_scheme == 's3':
+            s3_client = get_s3_client()
+            delete_file_on_s3(s3_client, key_file)
+        else:
+            target_folder = get_target_folder_path()
+            cache_file_path = os.path.join(target_folder, key_file)
+            delete_file_on_os(cache_file_path)
     if file_path is not None:
         delete_file_on_os(file_path)
 

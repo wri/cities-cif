@@ -20,7 +20,11 @@ class BuiltLandWithHighLST(Metric):
         built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
         high_lst = HighLandSurfaceTemperature()
 
-        built_land_counts = built_up_land.groupby(geo_zone).count()
-        built_high_lst_counts = high_lst.mask(built_up_land).groupby(geo_zone).count()
+        built_land_counts = (built_up_land
+                             .groupby(geo_zone, allow_cache_retrieval = True)
+                             .count())
+        built_high_lst_counts = (high_lst.mask(built_up_land)
+                                 .groupby(geo_zone, allow_cache_retrieval = True)
+                                 .count())
 
         return built_high_lst_counts.fillna(0) / built_land_counts

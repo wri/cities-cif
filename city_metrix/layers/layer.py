@@ -54,7 +54,7 @@ class Layer():
         """
         return Layer(aggregate=self, masks=self.masks + list(layers))
 
-    def groupby(self, zones, spatial_resolution=None, layer=None):
+    def groupby(self, geo_zone, spatial_resolution=None, layer=None, allow_cache_retrieval=False):
         """
         Group layers by zones.
         :param geo_zone: GeoZone containing geometries to group by.
@@ -62,7 +62,7 @@ class Layer():
         :param layer: Additional categorical layer to group by
         :return: LayerGroupBy object that can be aggregated.
         """
-        return LayerGroupBy(self.aggregate, zones, spatial_resolution, layer, self.masks)
+        return LayerGroupBy(self.aggregate, geo_zone, spatial_resolution, layer, allow_cache_retrieval, self.masks)
 
 
     def write(self, bbox: GeoExtent, output_path:str,
@@ -155,12 +155,14 @@ def _write_layer(data, uri, file_format):
 
 
 class LayerGroupBy:
-    def __init__(self, aggregate, geo_zone, spatial_resolution=None, layer=None, masks=[]):
+    def __init__(self, aggregate, geo_zone, spatial_resolution=None, layer=None, allow_cache_retrieval=False, masks=[]):
         self.aggregate = aggregate
         self.masks = masks
+        self.geo_zone = geo_zone
         self.zones = geo_zone.zones.reset_index(drop=True)
         self.spatial_resolution = spatial_resolution
         self.layer = layer
+        self.allow_cache_retrieval = allow_cache_retrieval
 
     def mean(self):
         return self._zonal_stats("mean")
@@ -172,6 +174,7 @@ class LayerGroupBy:
         return self._zonal_stats("sum")
 
     def _zonal_stats(self, stats_func):
+        # Get area of zone in square degrees
         if self.zones.crs == WGS_CRS:
             box_area = box(*self.zones.total_bounds).area
         else:
@@ -179,8 +182,9 @@ class LayerGroupBy:
             minx, miny, maxx, maxy = reproject_units(bounds[0], bounds[1], bounds[2], bounds[3], self.zones.crs, WGS_CRS)
             box_area = box(minx, miny, maxx, maxy).area
 
+        # if area of zone is within tolerance, then query as a single tile, otherwise sub-tile
         if box_area <= MAX_TILE_SIZE_DEGREES**2:
-            stats = self._zonal_stats_tile(self.zones, [stats_func])
+            stats = self._zonal_stats_tile(self.geo_zone, [stats_func])
         else:
             stats = self._zonal_stats_fishnet(stats_func)
 
@@ -228,7 +232,7 @@ class LayerGroupBy:
         ]
         tile_funcs = get_stats_funcs(stats_func)
 
-        # run zonal stats per data frame
+        # run zonal stats per tiled data frame
         print(f"Input covers too much area, splitting into {len(tile_gdfs)} tiles")
         tile_stats = pd.concat([
             self._zonal_stats_tile(tile_gdf, tile_funcs)
@@ -240,16 +244,22 @@ class LayerGroupBy:
 
         return aggregated.reset_index()
 
-    def _zonal_stats_tile(self, tile_gdf, stats_func):
-        crs = tile_gdf.crs.srs
-        raw_bbox = tile_gdf.total_bounds
-        if crs == WGS_CRS:
-            bbox = GeoExtent(bbox=tuple(raw_bbox), crs=WGS_CRS)
-        else:
-            bbox = GeoExtent(bbox=tuple(raw_bbox), crs=crs)
-        aggregate_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution)
-        mask_datum = [mask.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution) for mask in self.masks]
-        layer_data = self.layer.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution) if self.layer is not None else None
+    def _zonal_stats_tile(self, geo_zone, stats_func):
+        # crs = geo_zone.crs.srs
+        # raw_bbox = geo_zone.total_bounds
+        # if crs == WGS_CRS:
+        #     bbox = GeoExtent(bbox=tuple(raw_bbox), crs=WGS_CRS)
+        # else:
+        #     bbox = GeoExtent(bbox=tuple(raw_bbox), crs=crs)
+
+        bbox = GeoExtent(geo_zone)
+
+        aggregate_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution,
+                                                 allow_cache_retrieval= self.allow_cache_retrieval)
+        mask_datum = [mask.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution,
+                                    allow_cache_retrieval= self.allow_cache_retrieval) for mask in self.masks]
+        layer_data = self.layer.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution,
+                                         allow_cache_retrieval= self.allow_cache_retrieval) if self.layer is not None else None
 
         # align to highest resolution raster, which should be the largest raster
         # since all are clipped to the extent
@@ -264,7 +274,7 @@ class LayerGroupBy:
         for mask in mask_datum:
             aggregate_data = aggregate_data.where(~np.isnan(mask))
 
-        zones = self._rasterize(tile_gdf, align_to)
+        zones = self._rasterize(geo_zone.zones, align_to)
 
         if self.layer is not None:
             # encode layer into zones by bitshifting

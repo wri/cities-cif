@@ -9,7 +9,8 @@ from tests.resources.tools import get_test_bbox, cleanup_cache_files, prep_outpu
 from ..bbox_constants import GEOEXTENT_TERESINA_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 
-PRESERVE_RESULTS_ON_OS = True
+PRESERVE_RESULTS_ON_S3 = True
+PRESERVE_RESULTS_ON_OS = False
 SLOW_TEST_TIMEOUT_SECONDS = 300 # 300 seconds = 5 minutes
 
 PROCESSING_CITY = GEOEXTENT_TERESINA_WGS84
@@ -250,5 +251,6 @@ def _run_write_layers_by_city_test(layer_obj, target_folder):
             layer_obj.write(bbox=geo_extent, output_path=os_file_path)
     finally:
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
+        file_key = None if PRESERVE_RESULTS_ON_S3 else file_key
         cleanup_cache_files(cache_scheme, file_key, cleanup_os_file_path)
         clear_cache_settings()
