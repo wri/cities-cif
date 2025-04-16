@@ -131,6 +131,13 @@ def test_natural_areas():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
 
+def test_percent_area_fracveg_exceeds_threshold():
+    indicator = PercentAreaFracvegExceedsThreshold().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0101, 0.334, 100, 0)
+
 def test_percent_area_impervious():
     indicator = PercentAreaImpervious().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
