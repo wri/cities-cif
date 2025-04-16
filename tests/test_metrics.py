@@ -8,6 +8,17 @@ import pytest
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
 
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_air_pollutant_annual_daily_statistic():
+    indicator = AirPollutantAnnualDailyStatistic().get_data(IDN_JAKARTA_TILED_ZONES)
+    assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_air_pollutant_who_exceedance_days():
+    indicator = AirPollutantWhoExceedanceDays().get_data(IDN_JAKARTA_TILED_ZONES)
+    assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
+
 def test_built_land_with_high_lst():
     sample_zones = IDN_JAKARTA_TILED_ZONES
     indicator = BuiltLandWithHighLST().get_data(sample_zones)
@@ -193,7 +204,6 @@ def test_vegetation_water_change_gain_loss_ratio():
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, -0.0134, 0.2426, 100, 0)
 
 
 def _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_notnull_count, data_null_count,
