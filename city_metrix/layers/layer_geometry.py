@@ -1,17 +1,21 @@
 import math
+import os
+from pathlib import Path
 
 import ee
+import rioxarray
 import shapely
 import utm
 import shapely.geometry as geometry
 import geopandas as gpd
-from typing import Union
 
+from typing import Union
+from pyproj import CRS
 from shapely.geometry import point
 
-from city_metrix.constants import WGS_CRS, WGS_EPSG_CODE
-from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance, get_city, get_city_boundary, \
-    get_geojson_geometry_bounds
+from city_metrix.constants import WGS_CRS
+from city_metrix.layers.layer_dao import get_city, get_city_boundary, get_s3_client
+from city_metrix.layers.layer_tools import get_projection_name, get_haversine_distance, build_cache_layer_names
 
 MAX_SIDE_LENGTH_METERS = 50000 # This values should cover most situations
 MAX_SIDE_LENGTH_DEGREES = 0.5 # Given that for latitude, 50000m * (1deg/111000m)
@@ -25,6 +29,7 @@ class GeoExtent():
 
         if self.geo_extent_type == 'geometry':
             self.city_id = None
+            self.aoi_id = None
             self.admin_level = None
             self.bbox = bbox
         else:
@@ -34,9 +39,10 @@ class GeoExtent():
             admin_level = city.get(aoi_id, None)
             if not admin_level:
                 raise ValueError(f"City metadata for {self.city_id} does not have geometry for admin_level: 'city_admin_level'")
-            city_boundary = get_city_boundary(city_id, admin_level)
-            bbox = get_geojson_geometry_bounds(city_boundary)
+            bbox = get_city_boundary(city_id, admin_level)
+            # bbox = get_geojson_geometry_bounds(city_boundary)
             self.city_id = city_id
+            self.aoi_id = aoi_id
             self.admin_level = admin_level
             if get_projection_name(crs) == 'geographic':
                 self.bbox = bbox
@@ -85,10 +91,14 @@ class GeoExtent():
         """
         if self.projection_name == 'geographic':
             utm_crs = get_utm_zone_from_latlon_point(self.centroid)
-            reproj_bbox = reproject_units(self.min_y, self.min_x, self.max_y, self.max_x, WGS_CRS, utm_crs)
-            # round to minimize drift
-            utm_box = (reproj_bbox[1], reproj_bbox[0], reproj_bbox[3], reproj_bbox[2])
-            bbox = GeoExtent(bbox=utm_box, crs=utm_crs)
+            if self.geo_extent_type == 'city_id':
+                geo_extent = construct_city_aoi_json(self.city_id, self.aoi_id)
+                bbox = GeoExtent(bbox=geo_extent, crs=utm_crs)
+            else:
+                reproj_bbox = reproject_units(self.min_y, self.min_x, self.max_y, self.max_x, WGS_CRS, utm_crs)
+                # round to minimize drift
+                utm_box = (reproj_bbox[1], reproj_bbox[0], reproj_bbox[3], reproj_bbox[2])
+                bbox = GeoExtent(bbox=utm_box, crs=utm_crs)
             return bbox
         else:
             return self
@@ -101,10 +111,14 @@ class GeoExtent():
         if self.projection_name == 'geographic':
             return self
         else:
-            reproj_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, self.crs, WGS_CRS)
-            # round to minimize drift
-            box = (reproj_bbox[0], reproj_bbox[1], reproj_bbox[2], reproj_bbox[3])
-            bbox = GeoExtent(bbox=box, crs=WGS_CRS)
+            if self.geo_extent_type == 'city_id':
+                geo_extent = construct_city_aoi_json(self.city_id, self.aoi_id)
+                bbox = GeoExtent(bbox=geo_extent, crs=WGS_CRS)
+            else:
+                reproj_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, self.crs, WGS_CRS)
+                # round to minimize drift
+                box = (reproj_bbox[0], reproj_bbox[1], reproj_bbox[2], reproj_bbox[3])
+                bbox = GeoExtent(bbox=box, crs=WGS_CRS)
             return bbox
 
 def _parse_city_aoi_json(json_str):
@@ -113,6 +127,10 @@ def _parse_city_aoi_json(json_str):
     city_id = data['city_id']
     aoi_id = data['aoi_id']
     return city_id, aoi_id
+
+def construct_city_aoi_json(city_id, aoi_id):
+    json_str = f'{{"city_id": "{city_id}", "aoi_id": "{aoi_id}"}}'
+    return json_str
 
 def _buffer_coordinates(minx, miny, maxx, maxy):
     buffer_distance_m = 10
@@ -281,7 +299,7 @@ def _get_offsets(bbox, tile_side_length, tile_buffer_size, length_units, spatial
             raise Exception("Currently does not support length_units in meters and output_as latlon")
     else: # projected
         if length_units=="degrees":
-            x_tile_side_meters, y_tile_side_meters = _get_degree_offsets_for_meter_units(bbox, tile_side_length)
+            x_tile_side_meters, y_tile_side_meters = get_degree_offsets_for_meter_units(bbox, tile_side_length)
             x_tile_side_units = _truncate_to_nearest_interval(x_tile_side_meters, spatial_resolution)
             y_tile_side_units = _truncate_to_nearest_interval(y_tile_side_meters, spatial_resolution)
 
@@ -333,7 +351,7 @@ def _build_tile_geometry(x_coord, y_coord, x_tile_side_units, y_tile_side_units,
     return geom
 
 
-def _get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
+def get_degree_offsets_for_meter_units(bbox: GeoExtent, tile_side_degrees):
     if bbox.projection_name != 'geographic':
         raise ValueError(f"Bbox must have CRS set to {WGS_CRS}")
 

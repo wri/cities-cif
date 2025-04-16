@@ -47,17 +47,19 @@ To run the module,
      1. you need to install the [Climate Data Store (CDS) Application Program Interface (API)](https://cds.climate.copernicus.eu/how-to-api)
      2. create a .cdsapirc file in your home directory and save the key you acquired from https://cds.climate.copernicus.eu/how-to-api
         1. Note: you do not need to specify any url's in the .cdsapirc file since they are specified in code.
+  4. You must create an AWS credentials file in your system as described here: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
+     1. The credentials file must have a profile named "cities-data-user" with credentials for the cities-data-user IAM user
+     2. Credentials are stored in AWS Secrets.
      
 ### Interactive development
 
 For most people working in a notebook or IDE the script should walk you through an interactive authentication process. You will just need to be logged in to your Google account that has access to GEE in your browser.
 
-### Programatic access
+### Programmatic access
 
 If you have issues with this or need to run the script as part of an automated workflow we have a GEE-enabled GCP service account that can be used. Get in touch with Saif or Chris to ask about getting the credetials.
 
 Set the following environment variables:
-
 * GOOGLE_APPLICATION_CREDENTIALS: The path of GCP credentials JSON file containing your private key.
 * GOOGLE_APPLICATION_USER: The email for your GCP user.
 
@@ -77,6 +79,14 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/file
       {"city_id": "BRA-Florianopolis", "aoi_id": "city_admin_level"}
       '''
       * Note: the city_id and aoi_id may be determined via the Cities Indicators API at https://dev.cities-data-api.wri.org/docs
+3. Data layer caching:
+   1. Data layers can be cached to S3 buckets or local OS directory using the CIF-portal.
+   2. Once available, the system will read from the cached location.
+   2. The cached data are stored in the following directory structure:
+      1. data/{env}/{layer_name}/{file_format}/{city_id}__{admin_level}__{layer_id} where: env is either development (dev) or production (prd) environment and file_format is the file extension.
+      
+### Testing
+Warning: Some tests in tests/resources folder write intermediate results to a shared S3 bucket, so there is some potential for collision between concurrent runs.
 
 ## How to contribute
 
