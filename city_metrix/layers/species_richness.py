@@ -7,7 +7,9 @@ import random, scipy
 from shapely.geometry import Point
 
 from .layer import Layer
+from .layer_dao import retrieve_cached_city_data
 from .layer_geometry import GeoExtent
+from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class GBIFTaxonClass(Enum):
@@ -17,6 +19,10 @@ class GBIFTaxonClass(Enum):
 
 
 class SpeciesRichness(Layer):
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_LAYER_NAMING_ATTS = ["taxon"]
+    MINOR_LAYER_NAMING_ATTS = ["start_year", "end_year"]
+
     """
     Attributes:
         taxon: Enum value from GBIFTaxonClass
@@ -35,8 +41,14 @@ class SpeciesRichness(Layer):
         self.start_year = start_year
         self.end_year = end_year
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
-        # Note: spatial_resolution and resampling_method arguments are ignored.
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 allow_cache_retrieval=False):
+        #Note: spatial_resolution and resampling_method arguments are ignored.
+
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         poly = bbox.as_geographic_bbox().polygon
         print(

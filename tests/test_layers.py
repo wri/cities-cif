@@ -288,9 +288,11 @@ def test_species_richness():
     random.seed(42)
     data = SpeciesRichness(taxon=taxon).get_data(BBOX)
     assert np.size(data) > 0
+    assert_vector_stats(data, "species_count", 1, 59, 59, 1, 0)
     assert get_projection_name(data.crs.srs) == 'utm'
     random.seed(42)
     utm_bbox_data = SpeciesRichness(taxon=taxon).get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_tree_canopy_cover_mask():
     data = TreeCanopyCoverMask().get_data(BBOX)

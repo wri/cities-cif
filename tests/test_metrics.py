@@ -137,11 +137,26 @@ def test_natural_areas():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
 
-def test_num_species_birds():
-    indicator = num_species_birds(USA_OR_PORTLAND_ZONE)
+def test_number_species_birds():
+    indicator = NumberSpeciesBirds().get_data(USA_OR_PORTLAND_ZONE)
     expected_zone_size = USA_OR_PORTLAND_ZONE.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 15, 15, 1, 0)
+
+def test_number_species_arthropods():
+    indicator = NumberSpeciesArthropods().get_data(USA_OR_PORTLAND_ZONE)
+    expected_zone_size = USA_OR_PORTLAND_ZONE.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 53, 53, 1, 0)
+
+def test_number_species_vascular_plants():
+    indicator = NumberSpeciesVascularPlants().get_data(USA_OR_PORTLAND_ZONE)
+    expected_zone_size = USA_OR_PORTLAND_ZONE.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 82, 82, 1, 0)
 
 def test_percent_area_fracveg_exceeds_threshold():
     indicator = PercentAreaFracvegExceedsThreshold().get_data(IDN_JAKARTA_TILED_ZONES)
