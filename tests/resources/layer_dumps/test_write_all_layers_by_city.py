@@ -63,6 +63,11 @@ def test_EsaWorldCover_write_by_city(target_folder):
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_FractionalVegetation_write_by_city(target_folder):
+    layer_obj = FractionalVegetation()
+    _run_write_layers_by_city_test(layer_obj, target_folder)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_HeightAboveNearestDrainage_write_by_city(target_folder):
     layer_obj = HeightAboveNearestDrainage()
     _run_write_layers_by_city_test(layer_obj, target_folder)
