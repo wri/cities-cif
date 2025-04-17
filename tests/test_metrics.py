@@ -95,6 +95,20 @@ def test_era_5_met_preprocess():
     assert len(indicator) == 24
     # TODO Add value testing
 
+def test_ghg_emissions():
+    indicator = GhgEmissions().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.size
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 3093990.50, 3093990.50, 100, 0)
+
+def test_ghg_time_series():
+    indicator = GhgTimeSeries().get_data(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
+    actual_indicator_size = indicator.index.size
+    assert expected_zone_size == actual_indicator_size
+    # TODO Add value testing
+
 def test_mean_pm2p5_exposure_popweighted_children():
     indicator = MeanPM2P5ExposurePopWeightedChildren().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
@@ -159,7 +173,7 @@ def test_percent_protected_area():
     assert_metric_stats(indicator, 2, 0.00, 0.00, 100, 0)
 
 def test_recreational_space_per_capita():
-    spatial_resolution=100
+    spatial_resolution = 100
     indicator = (RecreationalSpacePerCapita()
                  .get_data(IDN_JAKARTA_TILED_ZONES, spatial_resolution=spatial_resolution))
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
