@@ -36,6 +36,9 @@ geo_extent = construct_city_aoi_json("BRA-Florianopolis", "city_admin_level")
 GEOEXTENT_FLORIANOPOLIS_WGS84 = GeoExtent(bbox=geo_extent)
 GEOEXTENT_FLORIANOPOLIS_UTM = GeoExtent(bbox=geo_extent, crs='EPSG:32722')
 
+geo_zone = construct_city_aoi_json("BRA-Florianopolis", "city_admin_level")
+GEOZONE_FLORIANOPOLIS_WGS84 = GeoZone(geo_zone=geo_zone)
+
 # A small city. Saif recommended Teresina since it's small and has all layers available
 geo_extent = construct_city_aoi_json("BRA-Teresina", "city_admin_level")
 GEOEXTENT_TERESINA_WGS84 = GeoExtent(bbox=geo_extent)

@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 from city_metrix.metrics import *
-from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, NLD_AMSTERDAM_ZONE
+from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE
 
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted

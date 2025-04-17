@@ -73,11 +73,8 @@ class Metric():
         _verify_extension(output_path, '.geojson')
 
         indicator = self.layer.get_data(geo_zones, spatial_resolution)
-
-        if isinstance(indicator, Series) and indicator.name is None:
-            # TODO: after CDB-257 is fixed, replace with Exception
-            # raise Exception("Series must have a name.")
-            indicator.name = 'indicator'
+        # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
+        indicator.name = 'indicator'
 
         if isinstance(indicator, (pd.Series, pd.DataFrame)):
             gdf = pd.concat([geo_zones.zones, indicator], axis=1)
@@ -93,11 +90,8 @@ class Metric():
         _verify_extension(output_path, '.csv')
 
         indicator = self.layer.get_data(geo_zone, spatial_resolution)
-
-        if isinstance(indicator, Series) and indicator.name is None:
-            # TODO: after CDB-257 is fixed, replace with Exception
-            # raise Exception("Series must have a name.")
-            indicator.name = 'indicator'
+        # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
+        indicator.name = 'indicator'
 
         if isinstance(indicator, (pd.Series, pd.DataFrame)):
             write_csv(indicator, output_path)

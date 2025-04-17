@@ -7,6 +7,8 @@ import shapely.geometry as geometry
 import geopandas as gpd
 
 from typing import Union
+
+from geopandas import GeoDataFrame
 from shapely.geometry import point
 
 from city_metrix.metrics.metric_geometry import GeoZone
@@ -31,6 +33,8 @@ class GeoExtent():
             self.admin_level = None
             if isinstance(bbox, GeoZone):
                 self.bbox = bbox.bbox
+            elif isinstance(bbox, GeoDataFrame):
+                self.bbox = bbox.total_bounds
             else:
                 self.bbox = bbox
         else:

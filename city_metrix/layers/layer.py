@@ -8,6 +8,7 @@ import ee
 from dask.diagnostics import ProgressBar
 from ee import ImageCollection
 from geocube.api.core import make_geocube
+from geopandas import GeoDataFrame
 from shapely.geometry import box
 from xrspatial import zonal_stats
 import geopandas as gpd
@@ -203,7 +204,9 @@ class LayerGroupBy:
 
             return stats
 
-        return stats[stats_func]
+        result_series = stats[stats_func]
+
+        return result_series
 
     def _zonal_stats_fishnet(self, stats_func):
         # fishnet GeoDataFrame into smaller tiles
@@ -245,17 +248,13 @@ class LayerGroupBy:
         return aggregated.reset_index()
 
     def _zonal_stats_tile(self, geo_zone, stats_func):
-        # crs = geo_zone.crs.srs
-        # raw_bbox = geo_zone.total_bounds
-        # if crs == WGS_CRS:
-        #     bbox = GeoExtent(bbox=tuple(raw_bbox), crs=WGS_CRS)
-        # else:
-        #     bbox = GeoExtent(bbox=tuple(raw_bbox), crs=crs)
+        # According to Ted Wong, metrics only support one stats_function, so pulling first from list
+        first_stats_func = stats_func[0]
 
         bbox = GeoExtent(geo_zone)
 
-        aggregate_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution,
-                                                 allow_cache_retrieval= self.allow_cache_retrieval)
+        aggregate_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution)
+                                                 # allow_cache_retrieval= self.allow_cache_retrieval)
         mask_datum = [mask.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution,
                                     allow_cache_retrieval= self.allow_cache_retrieval) for mask in self.masks]
         layer_data = self.layer.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution,
@@ -274,7 +273,38 @@ class LayerGroupBy:
         for mask in mask_datum:
             aggregate_data = aggregate_data.where(~np.isnan(mask))
 
-        zones = self._rasterize(geo_zone.zones, align_to)
+        # Get zones differently for single or multiple tiles
+        if isinstance(geo_zone, GeoDataFrame):
+            tile_gdf = geo_zone
+        else:
+            tile_gdf = geo_zone.zones
+
+        result_stats = None
+        if 'geo_level' not in self.zones.columns:
+            result_stats = self._compute_zonal_stats(tile_gdf, align_to, layer_data, aggregate_data, [first_stats_func])
+        else:
+            geo_levels = self.zones['geo_level'].unique()
+            for index, level in enumerate(geo_levels):
+                level_gdf = tile_gdf[tile_gdf['geo_level'] == level]
+
+                stats = self._compute_zonal_stats(level_gdf, align_to, layer_data, aggregate_data, [first_stats_func])
+
+                # combine stats from each geo_level
+                if result_stats is None:
+                    result_stats = stats
+                else:
+                    merged_df = pd.merge(result_stats, stats, on='zone', how='outer')
+
+                    func_x_col = f"{first_stats_func}_x"
+                    func_y_col = f"{first_stats_func}_y"
+                    merged_df[first_stats_func] = merged_df[func_x_col].combine_first(merged_df[func_y_col])
+
+                    result_stats = merged_df.drop(columns=[func_x_col, func_y_col])
+
+        return result_stats
+
+    def _compute_zonal_stats(self, tile_gdf, align_to, layer_data, aggregate_data, stats_func):
+        zones = self._rasterize(tile_gdf, align_to)
 
         if self.layer is not None:
             # encode layer into zones by bitshifting
@@ -283,6 +313,7 @@ class LayerGroupBy:
         stats = zonal_stats(zones, aggregate_data, stats_funcs=stats_func)
 
         return stats
+
 
     def _align(self, layer, align_to):
         if isinstance(layer, xr.DataArray):
