@@ -248,9 +248,6 @@ class LayerGroupBy:
         return aggregated.reset_index()
 
     def _zonal_stats_tile(self, geo_zone, stats_func):
-        # According to Ted Wong, metrics only support one stats_function, so pulling first from list
-        first_stats_func = stats_func[0]
-
         bbox = GeoExtent(geo_zone)
 
         aggregate_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=self.spatial_resolution)
@@ -281,19 +278,22 @@ class LayerGroupBy:
 
         result_stats = None
         if 'geo_level' not in self.zones.columns:
-            result_stats = self._compute_zonal_stats(tile_gdf, align_to, layer_data, aggregate_data, [first_stats_func])
+            result_stats = self._compute_zonal_stats(tile_gdf, align_to, layer_data, aggregate_data, stats_func)
         else:
             geo_levels = self.zones['geo_level'].unique()
             for index, level in enumerate(geo_levels):
                 level_gdf = tile_gdf[tile_gdf['geo_level'] == level]
 
-                stats = self._compute_zonal_stats(level_gdf, align_to, layer_data, aggregate_data, [first_stats_func])
+                stats = self._compute_zonal_stats(level_gdf, align_to, layer_data, aggregate_data, stats_func)
 
                 # combine stats from each geo_level
                 if result_stats is None:
                     result_stats = stats
                 else:
                     merged_df = pd.merge(result_stats, stats, on='zone', how='outer')
+
+                    # According to Ted Wong, metrics only support one stats_function, so pulling first from list
+                    first_stats_func = stats_func[0]
 
                     func_x_col = f"{first_stats_func}_x"
                     func_y_col = f"{first_stats_func}_y"

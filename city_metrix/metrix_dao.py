@@ -324,7 +324,7 @@ def get_city_admin_boundaries(city_id: str, admin_level: str) -> GeoDataFrame:
     city_boundary = requests.get(query)
     if city_boundary.status_code in range(200, 206):
         s3_bucket = Path(cif_dashboard_s3_bucket_uri).parts[1]
-        boundaries = city_boundary.json()['layers_url_v2']['geojson']
+        boundaries = city_boundary.json()['layers_url']['geojson']
         file_key = _get_file_key_from_url(boundaries)
         boundaries_geojson = _read_geojson_from_s3(s3_bucket, file_key)
 

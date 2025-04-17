@@ -10,6 +10,13 @@ CITY_UT_NAME = 'portland'
 BBOX = BBOX_USA_OR_PORTLAND_2
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_FractionalVegetation_write_small_bbox(target_folder):
+    file_path = prep_output_path(target_folder, 'FractionalVegetation_small_bbox.geojson')
+    bbox = get_test_bbox(BBOX)
+    FractionalVegetation().write(bbox, file_path, tile_side_length=None)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_OvertureBuildingsHeight_write_small_bbox(target_folder):
     file_path = prep_output_path(target_folder, 'OvertureBuildingsHeight_small_bbox.geojson')
     bbox = get_test_bbox(BBOX)
