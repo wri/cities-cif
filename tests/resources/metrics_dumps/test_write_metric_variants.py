@@ -1,6 +1,5 @@
 # This code is mostly intended for manual execution
 # Execution configuration is specified in the conftest file
-import os
 import geopandas as gpd
 import pytest
 
@@ -10,7 +9,6 @@ from city_metrix.metrics import *
 from tests.resources.bbox_constants import GEOZONE_FLORIANOPOLIS_WGS84
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.tools import prep_output_path, verify_file_is_populated
-from tests.tools.general_tools import create_target_folder
 
 from shapely.geometry import Polygon
 jakarta_crude_boundary = \
@@ -30,7 +28,7 @@ def test_write_large_city(target_folder):
     set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
 
     file_path = prep_output_path(target_folder, 'metric', 'natural_areas_percent.geojson')
-    NaturalAreasPercent().write_as_geojson(ZONE, file_path)
+    NaturalAreasPercent().write(ZONE, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -38,7 +36,7 @@ def test_write_polygonal_zones(target_folder):
     zone = IDN_Jakarta_zone
     file_path = prep_output_path(target_folder, 'metric', 'IDN_Jakarta_natural_areas_polygon.geojson')
 
-    NaturalAreasPercent().write_as_geojson(zone, file_path)
+    NaturalAreasPercent().write(zone, file_path)
     assert verify_file_is_populated(file_path)
 
     indicator = NaturalAreasPercent().get_data(zone)
@@ -46,27 +44,12 @@ def test_write_polygonal_zones(target_folder):
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
 
-# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY,reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-# def test_write_to_airtable(target_folder):
-#     zones = SAMPLE_TILED_ZONES
-#
-#     BuiltLandWithHighLST().write_to_db(zones, None)
-
-
-    # assert verify_file_is_populated(file_path)
-
-    # indicator = NaturalAreasPercent().get_data(zone)
-    # expected_zone_size = IDN_Jakarta_zone.geometry.size
-    # actual_indicator_size = indicator.size
-    # assert expected_zone_size == actual_indicator_size
-
-
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_data_series_as_geojson(target_folder):
     zones = IDN_Jakarta_zone
 
     csv_file_path = prep_output_path(target_folder, 'metric', 'data_series_csv.geojson')
-    BuiltLandWithHighLST().write_as_geojson(zones,csv_file_path)
+    BuiltLandWithHighLST().write(zones,csv_file_path)
     assert verify_file_is_populated(csv_file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")

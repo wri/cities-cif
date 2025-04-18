@@ -4,7 +4,7 @@ import ee
 
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
-from ..metrix_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 

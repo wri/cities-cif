@@ -1,19 +1,18 @@
 import os
 import tempfile
-from pathlib import Path
-
 import boto3
 import requests
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
+from pathlib import Path
 from geopandas import GeoDataFrame
 from rioxarray import rioxarray
 from urllib.parse import urlparse
 
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
     NETCDF_FILE_EXTENSION, cif_dashboard_s3_bucket_uri, GeoType
-from city_metrix.metrix_tools import build_cache_layer_names, get_crs_from_data
+from city_metrix.metrix_tools import build_cache_layer_names, get_crs_from_data, standardize_y_dimension_direction
 from city_metrix.file_cache_config import get_cached_file_key, cif_cache_settings, get_cif_s3_bucket_name
 from city_metrix.constants import aws_s3_profile
 
@@ -35,6 +34,7 @@ def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool
     file_key = get_cached_file_key(layer_folder_name, city_id, admin_level, layer_id)
 
     file_uri = get_cached_file_uri(file_key)
+    result_data = None
     if not check_if_cache_file_exists(file_uri):
         return None
     else:
@@ -82,14 +82,33 @@ def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool
 def _read_geojson_from_s3(s3_bucket, file_key):
     from io import BytesIO
     s3_client = get_s3_client()
+    result_data = None
     try:
         response = s3_client.get_object(Bucket=s3_bucket, Key=file_key)
+        geojson_content = response['Body'].read()
+        result_data = gpd.read_file(BytesIO(geojson_content))
     except Exception as e_msg:
         print(e_msg)
-    geojson_content = response['Body'].read()
-    result_data = gpd.read_file(BytesIO(geojson_content))
     return result_data
 
+
+def write_layer(data, uri, file_format):
+    if data is None:
+        raise Exception(f"Result dataset is empty and not written to: {uri}")
+
+    if isinstance(data, xr.DataArray) and file_format == GTIFF_FILE_EXTENSION:
+        was_reversed, standardized_array = standardize_y_dimension_direction(data)
+
+        _write_geotiff(standardized_array, uri)
+    elif isinstance(data, xr.Dataset) and file_format == GTIFF_FILE_EXTENSION:
+        raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
+        _write_dataset(data, uri)
+    elif isinstance(data, xr.DataArray) and file_format == NETCDF_FILE_EXTENSION:
+        _write_netcdf(data, uri)
+    elif isinstance(data, gpd.GeoDataFrame) and file_format == GEOJSON_FILE_EXTENSION:
+        write_geojson(data, uri)
+    else:
+        raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 
 def _write_file_to_s3(data, uri, file_extension):
     aws_bucket = get_cif_s3_bucket_name()
@@ -135,7 +154,7 @@ def write_geojson(data, uri):
         data.to_file(uri, driver="GeoJSON")
 
 
-def write_geotiff(data, uri):
+def _write_geotiff(data, uri):
     _verify_datatype('write_geotiff()', data, [xr.DataArray], is_spatial=True)
     if get_uri_identifier(uri) == 's3':
         _write_file_to_s3(data, uri, GTIFF_FILE_EXTENSION)
@@ -148,7 +167,7 @@ def write_geotiff(data, uri):
 
         data.rio.to_raster(raster_path=uri_path, driver="GTiff")
 
-def write_netcdf(data, uri):
+def _write_netcdf(data, uri):
     _verify_datatype('write_netcdf()', data, [xr.DataArray], is_spatial=False)
     if get_uri_identifier(uri) == 's3':
         _write_file_to_s3(data, uri, NETCDF_FILE_EXTENSION)
@@ -161,7 +180,7 @@ def write_netcdf(data, uri):
 
         data.to_netcdf(uri)
 
-def write_dataset(data, uri):
+def _write_dataset(data, uri):
     _verify_datatype('write_dataset()', data, [xr.Dataset], is_spatial=True)
     raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 

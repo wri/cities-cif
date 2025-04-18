@@ -1,7 +1,7 @@
 import geopandas as gpd
 
 from city_metrix.metrix_model import Layer, GeoExtent
-from ..metrix_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from ..constants import GEOJSON_FILE_EXTENSION
 from .overture_buildings import OvertureBuildings
 from .ut_globus import UtGlobus

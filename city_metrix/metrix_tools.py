@@ -1,19 +1,68 @@
 import math
-import os
-from datetime import datetime
+import utm
+from typing import Union
 from enum import Enum
 
-import geopandas as gpd
-from typing import Union
+from dask.diagnostics import ProgressBar
+from ee import ImageCollection
 from pyproj import CRS
+from shapely.geometry import point
 
-from city_metrix.constants import WGS_EPSG_CODE, ProjectionType
+from city_metrix.constants import WGS_EPSG_CODE, ProjectionType, WGS_CRS
 
-DATE_ATTRIBUTES = ['year', 'start_year', 'start_date', 'end_year', 'end_date']
 
-def get_geojson_geometry_bounds(geojson: str):
-    gdf = gpd.GeoDataFrame.from_features(geojson)
-    return gdf.total_bounds
+def parse_city_aoi_json(json_str):
+    import json
+    data = json.loads(json_str)
+    city_id = data['city_id']
+    aoi_id = data['aoi_id']
+    return city_id, aoi_id
+
+def construct_city_aoi_json(city_id, aoi_id):
+    json_str = f'{{"city_id": "{city_id}", "aoi_id": "{aoi_id}"}}'
+    return json_str
+
+# ================= Projection related =====================
+def get_crs_from_data(data):
+    crs_wkt = data.spatial_ref.crs_wkt
+    epsg_code = CRS.from_wkt(crs_wkt).to_epsg()
+    crs = f'EPSG:{epsg_code}'
+    return crs
+
+def reproject_units(min_x, min_y, max_x, max_y, from_crs, to_crs):
+    """
+    Project coordinates from one map EPSG projection to another
+    """
+    from pyproj import Transformer
+    transformer = Transformer.from_crs(from_crs, to_crs)
+
+    # Note: order of coordinates must be lat/lon
+    sw_coord = transformer.transform(min_x, min_y)
+    ne_coord = transformer.transform(max_x, max_y)
+
+    reproj_min_x = float(sw_coord[0])
+    reproj_min_y = float(sw_coord[1])
+    reproj_max_x = float(ne_coord[0])
+    reproj_max_y = float(ne_coord[1])
+
+    reproj_bbox = (reproj_min_y, reproj_min_x, reproj_max_y, reproj_max_x)
+    return reproj_bbox
+
+def get_utm_zone_from_latlon_point(sample_point: point) -> str:
+    """
+    Get the UTM zone projection for given geographic point.
+    :param sample_point: a shapely point specified in geographic coordinates
+    :return: the crs (EPSG code) for the UTM zone of the point
+    """
+
+    utm_x, utm_y, band, zone = utm.from_latlon(sample_point.y, sample_point.x)
+
+    if sample_point.y > 0:  # Northern zone
+        epsg = 32600 + band
+    else:
+        epsg = 32700 + band
+
+    return f"EPSG:{epsg}"
 
 def get_projection_type(crs: Union[str | int]):
     if isinstance(crs, str):
@@ -39,38 +88,8 @@ def get_projection_type(crs: Union[str | int]):
 
     return projection_type
 
-
-def standardize_y_dimension_direction(data_array):
-    """
-    Function resets y-values so they comply with the standard GDAL top-down increasing order, as needed.
-    """
-    was_reversed= False
-    y_dimensions = data_array.shape[0]
-    if data_array.y.data[0] < data_array.y.data[y_dimensions - 1]:
-        data_array = data_array.isel({data_array.rio.y_dim: slice(None, None, -1)})
-        was_reversed = True
-    return was_reversed, data_array
-
-def get_haversine_distance(lon1, lat1, lon2, lat2):
-    # Global-average radius of the Earth in meters
-    R = 6371000
-
-    # Convert degrees to radians
-    phi1 = math.radians(lat1)
-    phi2 = math.radians(lat2)
-    delta_phi = math.radians(lat2 - lat1)
-    delta_lambda = math.radians(lon2 - lon1)
-
-    # Haversine formula
-    a = math.sin(delta_phi / 2.0) ** 2 + \
-        math.cos(phi1) * math.cos(phi2) * \
-        math.sin(delta_lambda / 2.0) ** 2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-    # Distance in meters
-    distance = R * c
-
-    return distance
+# ============ Object naming ================================
+DATE_ATTRIBUTES = ['year', 'start_year', 'start_date', 'end_year', 'end_date']
 
 def build_cache_layer_names(layer_obj):
     """
@@ -162,8 +181,37 @@ def _convert_snake_case_to_pascal_case(attribute_name):
 def _construct_kv_string(key, value):
     return f"__{key}_{value}"
 
-def get_crs_from_data(data):
-    crs_wkt = data.spatial_ref.crs_wkt
-    epsg_code = CRS.from_wkt(crs_wkt).to_epsg()
-    crs = f'EPSG:{epsg_code}'
-    return crs
+
+#  ================ Misc ======================
+def standardize_y_dimension_direction(data_array):
+    """
+    Function resets y-values so they comply with the standard GDAL top-down increasing order, as needed.
+    """
+    was_reversed= False
+    y_dimensions = data_array.shape[0]
+    if data_array.y.data[0] < data_array.y.data[y_dimensions - 1]:
+        data_array = data_array.isel({data_array.rio.y_dim: slice(None, None, -1)})
+        was_reversed = True
+    return was_reversed, data_array
+
+def get_haversine_distance(lon1, lat1, lon2, lat2):
+    # Global-average radius of the Earth in meters
+    R = 6371000
+
+    # Convert degrees to radians
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    # Haversine formula
+    a = math.sin(delta_phi / 2.0) ** 2 + \
+        math.cos(phi1) * math.cos(phi2) * \
+        math.sin(delta_lambda / 2.0) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    # Distance in meters
+    distance = R * c
+
+    return distance
+

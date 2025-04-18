@@ -356,8 +356,8 @@ def _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_n
                   and data_null_count == null_count
                   )
 
-    expected = (f"{min_notnull_val:.{sig_digits}f}, {max_notnull_val:.{sig_digits}f}, {notnull_count}, {null_count}")
-    actual = (f"{data_min_notnull_val:.{sig_digits}f}, {data_max_notnull_val:.{sig_digits}f}, {data_notnull_count}, {data_null_count}")
+    expected = f"{min_notnull_val:.{sig_digits}f}, {max_notnull_val:.{sig_digits}f}, {notnull_count}, {null_count}"
+    actual = f"{data_min_notnull_val:.{sig_digits}f}, {data_max_notnull_val:.{sig_digits}f}, {data_notnull_count}, {data_null_count}"
 
     return is_matched, expected, actual
 
@@ -370,8 +370,8 @@ def _eval_string(data_min_notnull_val, data_max_notnull_val, data_notnull_count,
                   and data_null_count == null_count
                   )
 
-    expected = (f"{min_notnull_val}, {max_notnull_val}, {notnull_count}, {null_count}")
-    actual = (f"{data_min_notnull_val}, {data_max_notnull_val}, {data_notnull_count}, {data_null_count}")
+    expected = f"{min_notnull_val}, {max_notnull_val}, {notnull_count}, {null_count}"
+    actual = f"{data_min_notnull_val}, {data_max_notnull_val}, {data_notnull_count}, {data_null_count}"
     return is_matched, expected, actual
 
 def assert_vector_stats(data, attribute, sig_digits:int, min_notnull_val, max_notnull_val, notnull_count, null_count):

@@ -6,7 +6,7 @@ from city_metrix.constants import cif_testing_s3_bucket_uri
 from city_metrix.metrix_dao import get_layer_cache_variables, check_if_cache_file_exists
 from ..bbox_constants import GEOZONE_TERESINA_WGS84, GEOEXTENT_TERESINA_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
-from ..tools import prep_output_path, verify_file_is_populated, cleanup_cache_files
+from ..tools import prep_output_path, cleanup_cache_files
 
 PRESERVE_RESULTS_ON_S3 = True
 PRESERVE_RESULTS_ON_OS = True
@@ -51,10 +51,10 @@ def test_write_CanopyAreaPerResidentInformal(target_folder):
     metric_obj = CanopyAreaPerResidentInformal()
     _run_write_metrics_by_city_test(metric_obj, target_folder)
 
-# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-# def test_write_Era5MetPreprocessing(target_folder):
-#     metric_obj = Era5MetPreprocessing()
-#     _run_write_metrics_by_city_test(metric_obj, target_folder)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_Era5MetPreprocessing(target_folder):
+    metric_obj = Era5MetPreprocessing()
+    _run_write_metrics_by_city_test(metric_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_MeanPM2P5Exposure(target_folder):
@@ -136,11 +136,11 @@ def _run_write_metrics_by_city_test(metric_obj, target_folder):
     os_file_path = prep_output_path(target_folder, 'metric', metric_id)
     cleanup_cache_files(cache_scheme, file_key, os_file_path)
     try:
-        metric_obj.write_as_geojson(geo_zone=geo_zone, output_path=file_uri)
+        metric_obj.write(geo_zone=geo_zone, output_path=file_uri)
         cache_file_exists = check_if_cache_file_exists(file_uri)
         assert cache_file_exists, "Test failed since file did not upload to s3"
         if cache_file_exists and PRESERVE_RESULTS_ON_OS:
-            metric_obj.write_as_geojson(geo_zone=geo_zone, output_path=os_file_path)
+            metric_obj.write(geo_zone=geo_zone, output_path=os_file_path)
     finally:
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         file_key = None if PRESERVE_RESULTS_ON_S3 else file_key

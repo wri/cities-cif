@@ -206,8 +206,8 @@ def _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_n
                       and data_null_count == null_count
                       )
 
-        expected = (f"{min_notnull_val:.{sig_digits}f}, {max_notnull_val:.{sig_digits}f}, {notnull_count}, {null_count}")
-        actual = (f"{data_min_notnull_val:.{sig_digits}f}, {data_max_notnull_val:.{sig_digits}f}, {data_notnull_count}, {data_null_count}")
+        expected = f"{min_notnull_val:.{sig_digits}f}, {max_notnull_val:.{sig_digits}f}, {notnull_count}, {null_count}"
+        actual = f"{data_min_notnull_val:.{sig_digits}f}, {data_max_notnull_val:.{sig_digits}f}, {data_notnull_count}, {data_null_count}"
     else:
         is_matched = (compare_nullable_numbers(data_min_notnull_val, min_notnull_val)
                       and compare_nullable_numbers(data_max_notnull_val, max_notnull_val)
@@ -215,8 +215,8 @@ def _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_n
                       and data_null_count == null_count
                       )
 
-        expected = (f"{min_notnull_val}, {max_notnull_val}, {notnull_count}, {null_count}")
-        actual = (f"{data_min_notnull_val}, {data_max_notnull_val}, {data_notnull_count}, {data_null_count}")
+        expected = f"{min_notnull_val}, {max_notnull_val}, {notnull_count}, {null_count}"
+        actual = f"{data_min_notnull_val}, {data_max_notnull_val}, {data_notnull_count}, {data_null_count}"
 
     return is_matched, expected, actual
 

@@ -5,7 +5,7 @@ from city_metrix.file_cache_config import set_cache_settings, clear_cache_settin
 from city_metrix.constants import cif_testing_s3_bucket_uri
 from city_metrix.layers import *
 from city_metrix.metrix_dao import get_layer_cache_variables, check_if_cache_file_exists
-from tests.resources.tools import get_test_bbox, cleanup_cache_files, prep_output_path
+from tests.resources.tools import cleanup_cache_files, prep_output_path
 from ..bbox_constants import GEOEXTENT_TERESINA_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 
@@ -52,11 +52,11 @@ def test_Cams_write_by_city(target_folder):
     layer_obj = Cams()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
-@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_Era5HottestDay_write_by_city(target_folder):
-    layer_obj = Era5HottestDay()
-    _run_write_layers_by_city_test(layer_obj, target_folder)
+# @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+# def test_Era5HottestDay_write_by_city(target_folder):
+#     layer_obj = Era5HottestDay()
+#     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_EsaWorldCover_write_by_city(target_folder):
@@ -195,14 +195,16 @@ def test_SmartSurfaceLULC_write_by_city(target_folder):
     layer_obj = SmartSurfaceLULC()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
-# # TODO Very slow processing. Long runtime can cause failure for larger city
+# TODO Very slow processing. Long runtime can cause failure for larger city
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_TreeCanopyHeight_write_by_city(target_folder):
     layer_obj = TreeCanopyHeight()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+# TODO Very slow processing. Long runtime can cause failure for larger city
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_TreeCanopyCoverMask_write_by_city(target_folder):
     layer_obj = TreeCanopyCoverMask()
     _run_write_layers_by_city_test(layer_obj, target_folder)

@@ -45,6 +45,13 @@ def test_TreeCanopyHeight_write_small_bbox(target_folder):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_TreeCanopyCoverMask_write_small_bbox(target_folder):
+    file_path = prep_output_path(target_folder, 'layer','TreeCanopyHeight_small_bbox.tif')
+    bbox = get_test_bbox(BBOX)
+    TreeCanopyCoverMask().write(bbox, file_path, tile_side_length=None)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_UtGlobus_write_small_bbox(target_folder):
     file_path = prep_output_path(target_folder, 'layer','UtGlobus_small_bbox.geojson')
     bbox = get_test_bbox(BBOX)

@@ -32,7 +32,6 @@ setup(
         "scipy",
         "numpy",
         "overturemaps",
-        "ipython",
-        "pyairtable"
+        "ipython"
     ],
 )

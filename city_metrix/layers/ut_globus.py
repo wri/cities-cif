@@ -5,7 +5,7 @@ import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
 from city_metrix.metrix_model import Layer, WGS_CRS, GeoExtent
-from ..metrix_dao  import retrieve_cached_city_data
+from city_metrix.metrix_dao import retrieve_cached_city_data
 from ..constants import GEOJSON_FILE_EXTENSION
 
 

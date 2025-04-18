@@ -117,5 +117,5 @@ def _convert_fraction_to_rounded_percent(fraction):
 
 
 def _convert_to_rounded_integer(value):
-    return int(round((value)))
+    return int(round(value))
 
