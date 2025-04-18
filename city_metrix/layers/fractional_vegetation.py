@@ -1,12 +1,8 @@
-import geopandas as gpd
 import xarray as xr
 import numpy as np
-import pandas as pd
-import shapely
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 from ..metrix_dao import retrieve_cached_city_data
 
@@ -14,9 +10,9 @@ DEFAULT_SPATIAL_RESOLUTION = 10
 
 
 class FractionalVegetation(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["min_threshold"]
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["min_threshold"]
+    MINOR_NAMING_ATTS = None
 
     def __init__(self, min_threshold=None, year=2024, **kwargs):
         super().__init__(**kwargs)

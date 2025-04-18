@@ -3,8 +3,7 @@ import pytest
 
 from city_metrix.constants import ProjectionType
 from city_metrix.layers import NasaDEM
-from city_metrix.layers.layer import WGS_CRS
-from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, get_degree_offsets_for_meter_units, \
+from city_metrix.metrix_model import WGS_CRS, GeoExtent, create_fishnet_grid, get_degree_offsets_for_meter_units, \
     get_haversine_distance
 from tests.conftest import USA_OR_PORTLAND_BBOX
 from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84, GEOEXTENT_TERESINA_UTM

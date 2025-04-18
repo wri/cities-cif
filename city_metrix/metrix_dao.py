@@ -1,23 +1,19 @@
 import os
-import sys
 import tempfile
 from pathlib import Path
 
 import boto3
-import rasterio
 import requests
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
 from geopandas import GeoDataFrame
-from pandas.core.interchange.dataframe_protocol import DataFrame
-from pyproj import CRS
 from rioxarray import rioxarray
 from urllib.parse import urlparse
 
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
-    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, cif_dashboard_s3_bucket_uri, GeoType
-from city_metrix.layers.layer_tools import build_cache_layer_names, get_crs_from_data
+    NETCDF_FILE_EXTENSION, cif_dashboard_s3_bucket_uri, GeoType
+from city_metrix.metrix_tools import build_cache_layer_names, get_crs_from_data
 from city_metrix.file_cache_config import get_cached_file_key, cif_cache_settings, get_cif_s3_bucket_name
 from city_metrix.constants import aws_s3_profile
 
@@ -32,7 +28,7 @@ def retrieve_cached_city_data(class_obj, geo_extent, allow_cache_retrieval: bool
 
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
-    file_format = class_obj.OUTPUT_FILE_FORMAT
+    file_format = class_obj.GEOSPATIAL_FILE_FORMAT
 
     # Construct layer filename and s3 key
     layer_folder_name, layer_id = build_cache_layer_names(class_obj)

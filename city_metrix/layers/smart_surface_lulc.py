@@ -9,12 +9,11 @@ from rasterio.enums import Resampling
 from xrspatial.classify import reclassify
 
 from city_metrix.metrix_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
-from .layer import Layer
+from city_metrix.metrix_model import Layer, GeoExtent
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .average_net_building_height import AverageNetBuildingHeight
@@ -24,9 +23,9 @@ from .overture_buildings import OvertureBuildings
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class SmartSurfaceLULC(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["land_cover_class"]
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["land_cover_class"]
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:

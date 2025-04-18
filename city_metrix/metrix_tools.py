@@ -77,12 +77,12 @@ def build_cache_layer_names(layer_obj):
     Function uses the sequence of layer-class parameters specified in two class constants, plus standard date
     parameters in many of the layer classes to construct names for cache folders and cached layer files.
     """
-    primary_qualifiers = _build_naming_string_from_attribute_list(layer_obj, layer_obj.MAJOR_LAYER_NAMING_ATTS)
-    secondary_qualifiers = _build_naming_string_from_attribute_list(layer_obj, layer_obj.MINOR_LAYER_NAMING_ATTS)
+    primary_qualifiers = _build_naming_string_from_attribute_list(layer_obj, layer_obj.MAJOR_NAMING_ATTS)
+    secondary_qualifiers = _build_naming_string_from_attribute_list(layer_obj, layer_obj.MINOR_NAMING_ATTS)
 
     class_name = layer_obj.__class__.__name__
     date_kv_string = _build_naming_string_from_standard_parameters(layer_obj)
-    file_format = layer_obj.OUTPUT_FILE_FORMAT
+    file_format = layer_obj.GEOSPATIAL_FILE_FORMAT
 
     layer_folder_name = f"{class_name}{primary_qualifiers}"
     layer_id = f"{layer_folder_name}{secondary_qualifiers}{date_kv_string}.{file_format}"

@@ -11,42 +11,42 @@ BBOX = BBOX_USA_OR_PORTLAND_2
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_FractionalVegetation_write_small_bbox(target_folder):
-    file_path = prep_output_path(target_folder, 'FractionalVegetation_small_bbox.geojson')
+    file_path = prep_output_path(target_folder, 'layer','FractionalVegetation_small_bbox.geojson')
     bbox = get_test_bbox(BBOX)
     FractionalVegetation().write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_OvertureBuildingsHeight_write_small_bbox(target_folder):
-    file_path = prep_output_path(target_folder, 'OvertureBuildingsHeight_small_bbox.geojson')
+    file_path = prep_output_path(target_folder, 'layer','OvertureBuildingsHeight_small_bbox.geojson')
     bbox = get_test_bbox(BBOX)
     OvertureBuildingsHeight(CITY_UT_NAME).write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_OvertureBuildingsHeightRaster_write_small_bbox(target_folder):
-    file_path = prep_output_path(target_folder, 'OvertureBuildingsHeightRaster_small_bbox.tif')
+    file_path = prep_output_path(target_folder, 'layer','OvertureBuildingsHeightRaster_small_bbox.tif')
     bbox = get_test_bbox(BBOX)
     OvertureBuildingsHeightRaster(CITY_UT_NAME).write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_SmartSurfaceLULC_write_small_bbox(target_folder):
-    file_path = prep_output_path(target_folder, 'SmartSurfaceLULC_small_bbox.tif')
+    file_path = prep_output_path(target_folder, 'layer','SmartSurfaceLULC_small_bbox.tif')
     bbox = get_test_bbox(BBOX)
     SmartSurfaceLULC().write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_TreeCanopyHeight_write_small_bbox(target_folder):
-    file_path = prep_output_path(target_folder, 'TreeCanopyHeight_small_bbox.tif')
+    file_path = prep_output_path(target_folder, 'layer','TreeCanopyHeight_small_bbox.tif')
     bbox = get_test_bbox(BBOX)
     TreeCanopyHeight().write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_UtGlobus_write_small_bbox(target_folder):
-    file_path = prep_output_path(target_folder, 'UtGlobus_small_bbox.geojson')
+    file_path = prep_output_path(target_folder, 'layer','UtGlobus_small_bbox.geojson')
     bbox = get_test_bbox(BBOX)
     UtGlobus(CITY_UT_NAME).write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)

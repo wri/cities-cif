@@ -2,16 +2,15 @@ import ee
 import geopandas as gpd
 import geemap
 
-from .layer import Layer
+from city_metrix.metrix_model import Layer, GeoExtent
 from city_metrix.metrix_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class ProtectedAreas(Layer):
-    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["status"]
-    MINOR_LAYER_NAMING_ATTS = ["status_year", "iucn_cat"]
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["status"]
+    MINOR_NAMING_ATTS = ["status_year", "iucn_cat"]
 
     """
     Attributes:

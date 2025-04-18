@@ -1,19 +1,20 @@
 from geopandas import GeoDataFrame, GeoSeries
-import xarray as xr
-import numpy as np
-import ee
 
+from city_metrix.constants import GEOJSON_FILE_EXTENSION
+from city_metrix.metrix_model import Metric
 from city_metrix.layers import (
-    Layer,
     WorldPop,
     WorldPopClass,
     UrbanLandUse,
     TreeCanopyCoverMask,
 )
-from city_metrix.metrics.metric import Metric
 
 
 class PercentCanopyCoveredPopulation(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(
         self, worldpop_agesex_classes=[], height=3, percentage=30, informal_only=False, **kwargs
     ):
@@ -44,6 +45,10 @@ class PercentCanopyCoveredPopulation(Metric):
 
 
 class PercentCanopyCoveredPopulationChildren(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, height=3, percentage=30, informal_only=False, **kwargs):
         super().__init__(**kwargs)
         self.height = height
@@ -63,6 +68,10 @@ class PercentCanopyCoveredPopulationChildren(Metric):
         return percent_canopy_covered_children.get_data(zones=zones)
 
 class PercentCanopyCoveredPopulationElderly(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, height=3, percentage=30, informal_only=False, **kwargs):
         super().__init__(**kwargs)
         self.height = height
@@ -82,6 +91,10 @@ class PercentCanopyCoveredPopulationElderly(Metric):
         return percent_canopy_covered_elderly.get_data(zones=zones)
 
 class PercentCanopyCoveredPopulationFemale(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, height=3, percentage=30, informal_only=False, **kwargs):
         super().__init__(**kwargs)
         self.height = height
@@ -101,6 +114,10 @@ class PercentCanopyCoveredPopulationFemale(Metric):
         return percent_canopy_covered_female.get_data(zones=zones)
 
 class PercentCanopyCoveredPopulationInformal(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, worldpop_agesex_classes=[], height=3, percentage=30, **kwargs):
         super().__init__(**kwargs)
         self.worldpop_agesex_classes = worldpop_agesex_classes

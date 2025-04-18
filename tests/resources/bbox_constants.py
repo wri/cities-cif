@@ -1,7 +1,5 @@
 # File defines bboxes using in the test code
-from city_metrix.layers.layer import WGS_CRS
-from city_metrix.layers.layer_geometry import GeoExtent, construct_city_aoi_json
-from city_metrix.metrics.metric_geometry import GeoZone
+from city_metrix.metrix_model import WGS_CRS, GeoZone, GeoExtent, construct_city_aoi_json
 
 BBOX_BRA_LAURO_DE_FREITAS_1 = GeoExtent(
     bbox=(-38.35530428121955, -12.821710300686393, -38.33813814352424, -12.80363249765361), crs=WGS_CRS

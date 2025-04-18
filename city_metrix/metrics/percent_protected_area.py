@@ -1,13 +1,15 @@
-from geopandas import GeoDataFrame, GeoSeries
-from pandas import Series
-import ee
-from city_metrix.layers import Layer, ProtectedAreas, EsaWorldCover
-from city_metrix.layers.layer import get_image_collection
-from city_metrix.metrics import GeoZone
-from city_metrix.metrics.metric import Metric
+from geopandas import GeoSeries
+
+from city_metrix.constants import GEOJSON_FILE_EXTENSION
+from city_metrix.layers import ProtectedAreas, EsaWorldCover
+from city_metrix.metrix_model import Metric, GeoZone
 
 
 class PercentProtectedArea(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self,
                  status=['Inscribed', 'Adopted', 'Designated', 'Established'],
                  status_year=2024,

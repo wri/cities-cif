@@ -1,13 +1,16 @@
 # This code is mostly intended for manual execution
 # Execution configuration is specified in the conftest file
+import os
+import geopandas as gpd
 import pytest
 
-from city_metrix.constants import WGS_CRS
+from city_metrix.constants import WGS_CRS, cif_testing_s3_bucket_uri
+from city_metrix.file_cache_config import set_cache_settings
 from city_metrix.metrics import *
+from tests.resources.bbox_constants import GEOZONE_FLORIANOPOLIS_WGS84
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.tools import prep_output_path, verify_file_is_populated
 from tests.tools.general_tools import create_target_folder
-from city_metrix.metrics.metric import *
 
 from shapely.geometry import Polygon
 jakarta_crude_boundary = \
@@ -20,13 +23,20 @@ IDN_Jakarta_zone = GeoZone(gpd.GeoDataFrame([Polygon(jakarta_crude_boundary)], c
                     .set_crs(WGS_CRS)
                     .reset_index())
 
+ZONE = GEOZONE_FLORIANOPOLIS_WGS84
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_large_city(target_folder):
+    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+
+    file_path = prep_output_path(target_folder, 'metric', 'natural_areas_percent.geojson')
+    NaturalAreasPercent().write_as_geojson(ZONE, file_path)
+    assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_polygonal_zones(target_folder):
     zone = IDN_Jakarta_zone
-    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
-    create_target_folder(target_metrics_folder, False)
-    file_path = prep_output_path(target_metrics_folder, 'IDN_Jakarta_natural_areas_polygon.geojson')
+    file_path = prep_output_path(target_folder, 'metric', 'IDN_Jakarta_natural_areas_polygon.geojson')
 
     NaturalAreasPercent().write_as_geojson(zone, file_path)
     assert verify_file_is_populated(file_path)
@@ -54,19 +64,15 @@ def test_write_polygonal_zones(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_data_series_as_geojson(target_folder):
     zones = IDN_Jakarta_zone
-    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
-    create_target_folder(target_metrics_folder, False)
 
-    csv_file_path = prep_output_path(target_metrics_folder, 'data_series_csv.geojson')
+    csv_file_path = prep_output_path(target_folder, 'metric', 'data_series_csv.geojson')
     BuiltLandWithHighLST().write_as_geojson(zones,csv_file_path)
     assert verify_file_is_populated(csv_file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_data_series_as_csv(target_folder):
     zones = IDN_Jakarta_zone
-    target_metrics_folder = str(os.path.join(target_folder, 'metrics'))
-    create_target_folder(target_metrics_folder, False)
 
-    csv_file_path = prep_output_path(target_metrics_folder, 'data_series_csv.csv')
+    csv_file_path = prep_output_path(target_folder, 'metric', 'data_series_csv.csv')
     BuiltLandWithHighLST().write_as_csv(zones,csv_file_path)
     assert verify_file_is_populated(csv_file_path)

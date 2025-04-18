@@ -4,7 +4,7 @@ import numpy as np
 
 from city_metrix.constants import ProjectionType
 from city_metrix.layers import *
-from city_metrix.layers.layer_tools import get_projection_type
+from city_metrix.metrix_tools import get_projection_type
 from tests.conftest import EXECUTE_IGNORED_TESTS
 from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_2
 from tests.tools.spatial_tools import get_rounded_gdf_geometry

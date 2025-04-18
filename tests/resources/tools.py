@@ -3,6 +3,7 @@ import os
 from city_metrix.file_cache_config import get_cif_s3_bucket_name
 from city_metrix.metrix_dao import get_s3_client
 from tests.resources.conftest import get_target_folder_path, USE_WGS_BBOX
+from tests.tools.general_tools import create_target_folder
 
 
 def delete_file_on_s3(s3_client, file_key):
@@ -13,8 +14,11 @@ def delete_file_on_os(file_path):
     if os.path.exists(file_path):
         os.remove(file_path)
 
-def prep_output_path(output_folder, file_name):
-    file_path = os.path.join(output_folder, file_name)
+def prep_output_path(output_folder, model_name, file_name):
+    folder_path = os.path.join(output_folder, model_name)
+    create_target_folder(folder_path, False)
+
+    file_path = os.path.join(folder_path, file_name)
     if os.path.isfile(file_path):
         os.remove(file_path)
     return file_path

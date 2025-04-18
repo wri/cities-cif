@@ -1,17 +1,16 @@
 from xrspatial.classify import reclassify
 
-from .layer import Layer
+from city_metrix.metrix_model import Layer, GeoExtent
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from city_metrix.metrix_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class NaturalAreas(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

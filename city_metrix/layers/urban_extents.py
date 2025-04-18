@@ -2,16 +2,15 @@ import ee
 import geemap
 import geopandas as gpd
 
-from .layer import Layer
+from city_metrix.metrix_model import Layer, GeoExtent
 from city_metrix.metrix_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class UrbanExtents(Layer):
-    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:

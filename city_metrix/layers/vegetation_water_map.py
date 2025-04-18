@@ -1,17 +1,16 @@
 import ee
 
-from .layer import Layer, get_image_collection
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from .albedo import Albedo
 from city_metrix.metrix_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class VegetationWaterMap(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["greenwater_layer"]
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["greenwater_layer"]
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:

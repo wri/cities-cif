@@ -1,10 +1,14 @@
-from geopandas import GeoDataFrame, GeoSeries
+from geopandas import GeoSeries
 
-from city_metrix.metrics.metric_geometry import GeoZone
-from city_metrix.layers import TreeCover, EsaWorldCoverClass, EsaWorldCover
-from city_metrix.metrics.metric import Metric
+from city_metrix.constants import GEOJSON_FILE_EXTENSION
+from city_metrix.layers import TreeCover
+from city_metrix.metrix_model import Metric, GeoZone
 
 class MeanTreeCover(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

@@ -4,16 +4,15 @@ import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
-from .layer import Layer, WGS_CRS
+from city_metrix.metrix_model import Layer, WGS_CRS, GeoExtent
 from ..metrix_dao  import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class UtGlobus(Layer):
-    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["city"]
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["city"]
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:

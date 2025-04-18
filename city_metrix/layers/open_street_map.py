@@ -4,9 +4,8 @@ import geopandas as gpd
 import pandas as pd
 
 from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION
-from .layer import Layer
+from city_metrix.metrix_model import Layer, GeoExtent
 from city_metrix.metrix_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 
 class OpenStreetMapClass(Enum):
     # ALL includes all 29 primary features https://wiki.openstreetmap.org/wiki/Map_features
@@ -68,9 +67,9 @@ class OpenStreetMapClass(Enum):
 
 
 class OpenStreetMap(Layer):
-    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["osm_class"]
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["osm_class"]
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:

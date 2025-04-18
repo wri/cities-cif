@@ -1,8 +1,6 @@
-from dask.diagnostics import ProgressBar
 import xarray as xr
 
-from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 from .tree_canopy_height import TreeCanopyHeight
 from ..metrix_dao import retrieve_cached_city_data
@@ -11,9 +9,9 @@ DEFAULT_SPATIAL_RESOLUTION = 1
 
 
 class TreeCanopyCoverMask(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["height"]
-    MINOR_LAYER_NAMING_ATTS = ["percentage"]
+    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["height"]
+    MINOR_NAMING_ATTS = ["percentage"]
 
     """
     Attributes:

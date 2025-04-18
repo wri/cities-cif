@@ -46,7 +46,7 @@ BBOX = BBOX_USA_OR_PORTLAND_2
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_alos_dsm(target_folder):
-    file_path = prep_output_path(target_folder, 'AlosDSM_targeted_resolution.tif')
+    file_path = prep_output_path(target_folder, 'layer','AlosDSM_targeted_resolution.tif')
     target_resolution = get_test_resolution(AlosDSM())
     bbox = get_test_bbox(BBOX)
     AlosDSM().write(bbox, file_path, spatial_resolution=target_resolution)
@@ -54,7 +54,7 @@ def test_write_alos_dsm(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_nasa_dem(target_folder):
-    file_path = prep_output_path(target_folder, 'NasaDEM_targeted_resolution.tif')
+    file_path = prep_output_path(target_folder, 'layer','NasaDEM_targeted_resolution.tif')
     target_resolution = get_test_resolution(NasaDEM())
     bbox = get_test_bbox(BBOX)
     NasaDEM().write(bbox, file_path, spatial_resolution=target_resolution)
@@ -64,7 +64,7 @@ def test_write_nasa_dem(target_folder):
 # ==================== Other tests ===========================
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_albedo_tiled_unbuffered(target_folder):
-    file_path = prep_output_path(target_folder, 'Albedo_tiled_unbuffered.tif')
+    file_path = prep_output_path(target_folder, 'layer','Albedo_tiled_unbuffered.tif')
     target_resolution = get_test_resolution(Albedo())
     bbox = get_test_bbox(BBOX)
     (Albedo()
@@ -78,7 +78,7 @@ def test_write_albedo_tiled_unbuffered(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_albedo_tiled_buffered(target_folder):
     buffer_degrees = 0.001
-    file_path = prep_output_path(target_folder, 'Albedo_tiled_buffered.tif')
+    file_path = prep_output_path(target_folder, 'layer','Albedo_tiled_buffered.tif')
     target_resolution = get_test_resolution(Albedo())
     bbox = get_test_bbox(BBOX)
     (Albedo()
@@ -92,7 +92,7 @@ def test_write_albedo_tiled_buffered(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_nasa_dem_tiled_unbuffered(target_folder):
-    file_path = prep_output_path(target_folder, 'NasaDEM_tiled_unbuffered.tif')
+    file_path = prep_output_path(target_folder, 'layer','NasaDEM_tiled_unbuffered.tif')
     target_resolution = get_test_resolution(NasaDEM())
     bbox = get_test_bbox(BBOX)
     (NasaDEM()
@@ -116,7 +116,7 @@ def test_get_nasa_dem_bicubic(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_nasa_dem(target_folder):
     set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
-    file_path = prep_output_path(target_folder, 'NasaDEM_small_city_wgs84.tif')
+    file_path = prep_output_path(target_folder, 'layer','NasaDEM_small_city_wgs84.tif')
     bbox = get_test_bbox(GEOEXTENT_TERESINA_WGS84)
     NasaDEM().write(bbox, file_path)
     assert verify_file_is_populated(file_path)
@@ -124,7 +124,7 @@ def test_write_nasa_dem(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_nasa_dem_utm(target_folder):
     set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
-    file_path = prep_output_path(target_folder, 'NasaDEM_small_city_utm.tif')
+    file_path = prep_output_path(target_folder, 'layer','NasaDEM_small_city_utm.tif')
     bbox = get_test_bbox(GEOEXTENT_TERESINA_UTM)
     NasaDEM().write(bbox, file_path)
     assert verify_file_is_populated(file_path)
@@ -139,7 +139,7 @@ def _cache_write_read(layer_obj, target_folder):
     geo_extent = get_test_bbox(GEOEXTENT_TERESINA_WGS84)
     file_key, file_uri, layer_id = get_layer_cache_variables(layer_obj, geo_extent)
 
-    os_file_path = prep_output_path(target_folder, layer_id)
+    os_file_path = prep_output_path(target_folder, 'layer',layer_id)
     cleanup_cache_files(cache_scheme, file_key, os_file_path)
     try:
         start_time = datetime.now()

@@ -1,18 +1,17 @@
 from xrspatial import slope
 
-from .layer import Layer, validate_raster_resampling_method
+from city_metrix.metrix_model import Layer, validate_raster_resampling_method, GeoExtent
 from .nasa_dem import NasaDEM
 from city_metrix.metrix_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
 class HighSlope(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["slope_threshold"]
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["slope_threshold"]
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:

@@ -1,16 +1,15 @@
 import ee
 
-from .layer import Layer, get_image_collection
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from city_metrix.metrix_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class HeightAboveNearestDrainage(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["river_head"]
-    MINOR_LAYER_NAMING_ATTS = ["thresh"]
+    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["river_head"]
+    MINOR_NAMING_ATTS = ["thresh"]
 
     """
     Attributes:

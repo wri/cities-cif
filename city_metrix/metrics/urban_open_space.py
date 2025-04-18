@@ -1,11 +1,15 @@
-from geopandas import GeoDataFrame, GeoSeries
+from geopandas import GeoSeries
 
+from city_metrix.constants import GEOJSON_FILE_EXTENSION
 from city_metrix.layers import EsaWorldCover, EsaWorldCoverClass, OpenStreetMap, OpenStreetMapClass
-from city_metrix.metrics import GeoZone
-from city_metrix.metrics.metric import Metric
+from city_metrix.metrix_model import Metric, GeoZone
 
 
 class UrbanOpenSpace(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

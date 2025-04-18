@@ -1,9 +1,8 @@
 from enum import Enum
 import ee
 
-from .layer import Layer, get_image_collection
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from city_metrix.metrix_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 
@@ -23,9 +22,9 @@ class EsaWorldCoverClass(Enum):
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class EsaWorldCover(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["land_cover_class"]
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["land_cover_class"]
+    MINOR_NAMING_ATTS = None
     STAC_CATALOG_URI = "https://services.terrascope.be/stac/"
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"

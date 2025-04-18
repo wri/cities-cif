@@ -241,14 +241,13 @@ def test_WorldPop_write_by_city(target_folder):
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 
-
 def _run_write_layers_by_city_test(layer_obj, target_folder):
     set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
     cache_scheme = 's3'
-    geo_extent = get_test_bbox(PROCESSING_CITY)
+    geo_extent = PROCESSING_CITY
     file_key, file_uri, layer_id = get_layer_cache_variables(layer_obj, geo_extent)
 
-    os_file_path = prep_output_path(target_folder, layer_id)
+    os_file_path = prep_output_path(target_folder, 'layer', layer_id)
     cleanup_cache_files(cache_scheme, file_key, os_file_path)
     try:
         layer_obj.write(bbox=geo_extent, output_path=file_uri)

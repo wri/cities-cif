@@ -2,16 +2,15 @@ import geopandas as gpd
 import subprocess
 from io import StringIO
 
-from .layer import Layer
+from city_metrix.metrix_model import Layer, GeoExtent
 from city_metrix.metrix_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class OvertureBuildings(Layer):
-    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

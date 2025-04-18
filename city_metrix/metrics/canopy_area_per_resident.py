@@ -1,12 +1,15 @@
-from geopandas import GeoDataFrame, GeoSeries
-import xarray as xr
-import numpy as np
+from geopandas import GeoSeries
+
+from city_metrix.constants import GEOJSON_FILE_EXTENSION
 from city_metrix.layers import TreeCanopyHeight, WorldPop, WorldPopClass, UrbanLandUse
-from city_metrix.metrics.metric import Metric
-from city_metrix.metrics.metric_geometry import GeoZone
+from city_metrix.metrix_model import GeoZone, Metric
 
 
 class CanopyAreaPerResident(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self,
                  agesex_classes=[],
                  height=3,
@@ -38,6 +41,10 @@ class CanopyAreaPerResident(Metric):
 
 
 class CanopyAreaPerResidentChildren(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, height=3, **kwargs):
         super().__init__(**kwargs)
         self.height = height
@@ -52,6 +59,10 @@ class CanopyAreaPerResidentChildren(Metric):
 
 
 class CanopyAreaPerResidentElderly(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, height=3, **kwargs):
         super().__init__(**kwargs)
         self.height = height
@@ -66,6 +77,10 @@ class CanopyAreaPerResidentElderly(Metric):
 
 
 class CanopyAreaPerResidentFemale(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, height=3, **kwargs):
         super().__init__(**kwargs)
         self.height = height
@@ -79,6 +94,10 @@ class CanopyAreaPerResidentFemale(Metric):
                 .get_data(geo_zone))
 
 class CanopyAreaPerResidentInformal(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, height=3, **kwargs):
         super().__init__(**kwargs)
         self.height = height

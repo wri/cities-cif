@@ -1,12 +1,8 @@
-from enum import Enum
 
-from city_metrix.layers import Layer
 from city_metrix.constants import WGS_EPSG_CODE, ProjectionType
-from city_metrix.layers.layer import create_fishnet_grid, WGS_CRS
+from city_metrix.metrix_model import create_fishnet_grid, WGS_CRS, GeoExtent, GeoZone, Layer
 from geocube.api.core import make_geocube
 
-from city_metrix.layers.layer_geometry import GeoExtent
-from city_metrix.metrics.metric_geometry import GeoZone
 from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND, BBOX_NLD_AMSTERDAM, BBOX_IDN_JAKARTA, \
     BBOX_IDN_JAKARTA_LARGE
 

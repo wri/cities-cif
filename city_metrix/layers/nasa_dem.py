@@ -1,17 +1,17 @@
 import ee
 
-from .layer import Layer, get_image_collection, set_resampling_for_continuous_raster, validate_raster_resampling_method
+from city_metrix.metrix_model import Layer, get_image_collection, set_resampling_for_continuous_raster, validate_raster_resampling_method, \
+    GeoExtent
 from city_metrix.metrix_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
 class NasaDEM(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)

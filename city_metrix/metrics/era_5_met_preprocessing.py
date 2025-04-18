@@ -1,15 +1,18 @@
 from datetime import datetime
 import pandas as pd
 import numpy as np
-from geopandas import GeoDataFrame, GeoSeries
+from geopandas import GeoSeries
 
+from city_metrix.constants import NETCDF_FILE_EXTENSION
 from city_metrix.layers import Era5HottestDay
-from city_metrix.layers.layer_geometry import GeoExtent
-from city_metrix.metrics.metric import Metric
-from city_metrix.metrics.metric_geometry import GeoZone
+from city_metrix.metrix_model import GeoExtent, Metric, GeoZone
 
 
 class Era5MetPreprocessing(Metric):
+    GEOSPATIAL_FILE_FORMAT = NETCDF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

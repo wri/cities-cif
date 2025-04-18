@@ -1,14 +1,15 @@
-from geopandas import GeoDataFrame, GeoSeries
-import ee
-import xarray as xr
-import numpy as np
+from geopandas import GeoSeries
 
-from city_metrix.metrics.metric_geometry import GeoZone
-from city_metrix.layers import Layer, AcagPM2p5, WorldPop, WorldPopClass, UrbanLandUse, PopWeightedPM2p5
-from city_metrix.metrics.metric import Metric
+from city_metrix.constants import GEOJSON_FILE_EXTENSION
+from city_metrix.layers import AcagPM2p5, PopWeightedPM2p5, UrbanLandUse, WorldPopClass
+from city_metrix.metrix_model import GeoZone, Metric
 
 
 class MeanPM2P5Exposure(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self,
                  informal_only=False,
                  **kwargs):
@@ -31,6 +32,10 @@ class MeanPM2P5Exposure(Metric):
 
 
 class MeanPM2P5ExposurePopWeighted(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self,
                  worldpop_agesex_classes=[],
                  informal_only=False,
@@ -55,6 +60,10 @@ class MeanPM2P5ExposurePopWeighted(Metric):
 
 
 class MeanPM2P5ExposurePopWeightedChildren(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -68,6 +77,10 @@ class MeanPM2P5ExposurePopWeightedChildren(Metric):
 
 
 class MeanPM2P5ExposurePopWeightedElderly(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -81,6 +94,10 @@ class MeanPM2P5ExposurePopWeightedElderly(Metric):
 
 
 class MeanPM2P5ExposurePopWeightedFemale(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -94,6 +111,10 @@ class MeanPM2P5ExposurePopWeightedFemale(Metric):
 
 
 class MeanPM2P5ExposurePopWeightedInformal(Metric):
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
