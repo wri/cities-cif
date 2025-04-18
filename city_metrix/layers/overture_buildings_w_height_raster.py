@@ -1,19 +1,18 @@
 from geocube.api.core import make_geocube
 from shapely.geometry import mapping
 
-from .layer import Layer
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 from .overture_buildings_w_height import OvertureBuildingsHeight
+from city_metrix.metrix_dao import retrieve_cached_city_data
 
 DEFAULT_SPATIAL_RESOLUTION = 1
 
 
 class OvertureBuildingsHeightRaster(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["city"]
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["city"]
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:

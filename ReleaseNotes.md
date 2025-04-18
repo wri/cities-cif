@@ -1,10 +1,22 @@
 # Release Notes
 
+## 2025/04/18
+1. Combined all bases classes into one file
+2. Updated zonal statistics to handle large, tiled retrievals
+3. Added test_write_all_metrics_by_city.py to write metrics by city
+4. Metrics file names for S3 currently only use the class name
+5. Layers file name for S3 are outdated
+6. Converted some functions to static class methods to improve performance
+
 ## 2025/04/14
 1. Added timeout_decorator to environment.yml
 2. Warning: Some tests in tests/resources folder write intermediate results to a shared S3 bucket, so there is some potential for collision between concurrent runs.
 3. Simplified tests and renamed some tests
 4. Refocused layer-write tests on query by city name instead of by bbox.
+
+## 2025/04/9
+1. Merged some Layers and Metrics functions
+2. Increased granularity for controling whether individual tests are run by converting the old EXECUTE_IGNORED_TESTS boolean values into enums.
 
 ## 2025/04/7
 1. Created a Metric base class with get_data() and two write functions

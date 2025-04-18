@@ -3,8 +3,6 @@ import warnings
 
 import ee
 
-from .metrics import *
-
 # initialize ee
 if (
     "GOOGLE_APPLICATION_CREDENTIALS" in os.environ
@@ -35,3 +33,5 @@ os.environ["AWS_REQUEST_PAYER"] = "requester"
 warnings.filterwarnings("ignore", module="xee")
 warnings.filterwarnings("ignore", module="dask")
 warnings.filterwarnings("ignore", module="xarray")
+
+from .metrics import *

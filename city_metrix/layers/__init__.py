@@ -15,7 +15,6 @@ from .high_slope import HighSlope
 from .impervious_surface import ImperviousSurface
 from .land_surface_temperature import LandSurfaceTemperature
 from .landsat_collection_2 import LandsatCollection2
-from .layer import Layer, LayerGroupBy
 from .nasa_dem import NasaDEM
 from .natural_areas import NaturalAreas
 from .ndvi_sentinel2_gee import NdviSentinel2
