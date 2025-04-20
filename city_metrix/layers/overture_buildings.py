@@ -3,8 +3,9 @@ import subprocess
 from io import StringIO
 
 from city_metrix.metrix_model import Layer, GeoExtent
-from city_metrix.metrix_dao import retrieve_cached_city_data
-from ..constants import GEOJSON_FILE_EXTENSION
+from ..constants import GEOJSON_FILE_EXTENSION, GeoType
+from ..metrix_dao import write_layer
+from ..repo_manager import retrieve_cached_city_data2
 
 
 class OvertureBuildings(Layer):
@@ -16,11 +17,11 @@ class OvertureBuildings(Layer):
         super().__init__(**kwargs)
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_cache_retrieval=False):
+                 force_data_refresh=False):
         #Note: spatial_resolution and resampling_method arguments are ignored.
 
         # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
@@ -44,5 +45,8 @@ class OvertureBuildings(Layer):
             overture_buildings = overture_buildings.to_crs(utm_crs)
         else:
             print("Error occurred:", result.stderr)
+
+        if bbox.geo_type == GeoType.CITY:
+            write_layer(overture_buildings, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return overture_buildings

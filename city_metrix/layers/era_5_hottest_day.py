@@ -8,9 +8,10 @@ import os
 import xarray as xr
 import glob
 
-from city_metrix.constants import WGS_CRS, NETCDF_FILE_EXTENSION
+from city_metrix.constants import WGS_CRS, NETCDF_FILE_EXTENSION, GeoType
+from city_metrix.metrix_dao import write_layer
 from city_metrix.metrix_model import Layer, GeoExtent
-from city_metrix.metrix_dao import retrieve_cached_city_data
+from city_metrix.repo_manager import retrieve_cached_city_data2
 
 
 class Era5HottestDay(Layer):
@@ -29,11 +30,11 @@ class Era5HottestDay(Layer):
         self.end_date = end_date
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_cache_retrieval=False):
+                 force_data_refresh=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
 
         # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
@@ -171,5 +172,8 @@ class Era5HottestDay(Layer):
 
         # xarray.Dataset to xarray.DataArray
         data = data.to_array()
+
+        if bbox.geo_type == GeoType.CITY:
+            write_layer(data, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return data

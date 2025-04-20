@@ -2,7 +2,7 @@ import pytest
 
 from city_metrix.metrics import *
 from city_metrix.file_cache_config import set_cache_settings, clear_cache_settings
-from city_metrix.constants import cif_testing_s3_bucket_uri
+from city_metrix.constants import RW_testing_s3_bucket_uri
 from city_metrix.metrix_dao import get_layer_cache_variables, check_if_cache_file_exists
 from ..bbox_constants import GEOZONE_TERESINA_WGS84, GEOEXTENT_TERESINA_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
@@ -128,7 +128,7 @@ def test_write_VegetationWaterChangeGainLossRatio(target_folder):
 
 
 def _run_write_metrics_by_city_test(metric_obj, target_folder):
-    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
     cache_scheme = 's3'
     geo_zone = PROCESSING_CITY_GEOZONE
     file_key, file_uri, metric_id = get_layer_cache_variables(metric_obj, PROCESSING_CITY)

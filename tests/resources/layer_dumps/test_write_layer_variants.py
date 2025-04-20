@@ -5,7 +5,7 @@ from datetime import datetime
 import pytest
 import xarray as xr
 
-from city_metrix.constants import cif_testing_s3_bucket_uri
+from city_metrix.constants import RW_testing_s3_bucket_uri
 from city_metrix.file_cache_config import set_cache_settings, clear_cache_settings
 from city_metrix.layers import *
 from city_metrix.metrix_dao import get_layer_cache_variables, check_if_cache_file_exists
@@ -115,7 +115,7 @@ def test_get_nasa_dem_bicubic(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_nasa_dem(target_folder):
-    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
     file_path = prep_output_path(target_folder, 'layer','NasaDEM_small_city_wgs84.tif')
     bbox = get_test_bbox(GEOEXTENT_TERESINA_WGS84)
     NasaDEM().write(bbox, file_path)
@@ -123,7 +123,7 @@ def test_write_nasa_dem(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_nasa_dem_utm(target_folder):
-    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
     file_path = prep_output_path(target_folder, 'layer','NasaDEM_small_city_utm.tif')
     bbox = get_test_bbox(GEOEXTENT_TERESINA_UTM)
     NasaDEM().write(bbox, file_path)
@@ -131,7 +131,7 @@ def test_write_nasa_dem_utm(target_folder):
 
 def _cache_write_read(layer_obj, target_folder):
     if CACHE_TO_S3:
-        set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+        set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
         cache_scheme = 's3'
     else:
         set_cache_settings(f"file://{target_folder}", 'dev')

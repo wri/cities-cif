@@ -1,7 +1,7 @@
 from pathlib import Path
 from urllib.parse import urlparse
 
-from city_metrix.constants import cif_production_s3_bucket_uri, cif_testing_s3_bucket_uri
+from city_metrix.constants import RW_dashboard_layer_s3_bucket_uri, RW_testing_s3_bucket_uri
 
 class CifCacheSettings:
     def __init__(self):
@@ -24,7 +24,7 @@ def set_cache_settings(uri, env):
 
     cif_cache_settings.cache_location_uri = uri
     cif_cache_settings.cache_environment = env
-    cif_cache_settings.s3_bucket = cif_production_s3_bucket_uri if env == 'dev' else cif_testing_s3_bucket_uri
+    cif_cache_settings.s3_bucket = RW_dashboard_layer_s3_bucket_uri if env == 'dev' else RW_testing_s3_bucket_uri
 
 def get_cache_settings():
     return cif_cache_settings.cache_location_uri, cif_cache_settings.cache_environment

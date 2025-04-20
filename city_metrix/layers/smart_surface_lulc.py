@@ -8,8 +8,9 @@ import warnings
 from rasterio.enums import Resampling
 from xrspatial.classify import reclassify
 
-from city_metrix.metrix_dao import retrieve_cached_city_data
-from ..constants import GTIFF_FILE_EXTENSION
+from ..constants import GTIFF_FILE_EXTENSION, GeoType
+from ..metrix_dao import write_layer
+from ..repo_manager import retrieve_cached_city_data2
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
@@ -36,13 +37,13 @@ class SmartSurfaceLULC(Layer):
         self.land_cover_class = land_cover_class
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_cache_retrieval=False):
+                 resampling_method=None, force_data_refresh=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
         # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
@@ -243,5 +244,8 @@ class SmartSurfaceLULC(Layer):
         # use chunk 512x512
         aligned_datasets = [ds.chunk({'x': 512, 'y': 512}) for ds in aligned_datasets]
         lulc = xr.concat(aligned_datasets, dim='Value').max(dim='Value').compute()
+
+        if bbox.geo_type == GeoType.CITY:
+            write_layer(lulc, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return lulc

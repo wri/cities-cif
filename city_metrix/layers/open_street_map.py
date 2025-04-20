@@ -3,9 +3,11 @@ import osmnx as ox
 import geopandas as gpd
 import pandas as pd
 
-from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION
+from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GeoType
 from city_metrix.metrix_model import Layer, GeoExtent
-from city_metrix.metrix_dao import retrieve_cached_city_data
+from city_metrix.metrix_dao import write_layer
+from city_metrix.repo_manager import retrieve_cached_city_data2
+
 
 class OpenStreetMapClass(Enum):
     # ALL includes all 29 primary features https://wiki.openstreetmap.org/wiki/Map_features
@@ -80,11 +82,11 @@ class OpenStreetMap(Layer):
         self.osm_class = osm_class
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_cache_retrieval=False):
+                 force_data_refresh=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
 
         # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
@@ -122,5 +124,8 @@ class OpenStreetMap(Layer):
         osm_feature = osm_feature.reset_index()[keep_col]
 
         osm_feature = osm_feature.to_crs(utm_crs)
+
+        if bbox.geo_type == GeoType.CITY:
+            write_layer(osm_feature, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return osm_feature

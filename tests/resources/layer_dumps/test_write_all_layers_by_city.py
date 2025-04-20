@@ -2,7 +2,7 @@ import pytest
 import timeout_decorator
 
 from city_metrix.file_cache_config import set_cache_settings, clear_cache_settings
-from city_metrix.constants import cif_testing_s3_bucket_uri
+from city_metrix.constants import RW_testing_s3_bucket_uri
 from city_metrix.layers import *
 from city_metrix.metrix_dao import get_layer_cache_variables, check_if_cache_file_exists
 from tests.resources.tools import cleanup_cache_files, prep_output_path
@@ -244,7 +244,7 @@ def test_WorldPop_write_by_city(target_folder):
 
 
 def _run_write_layers_by_city_test(layer_obj, target_folder):
-    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
     cache_scheme = 's3'
     geo_extent = PROCESSING_CITY
     file_key, file_uri, layer_id = get_layer_cache_variables(layer_obj, geo_extent)

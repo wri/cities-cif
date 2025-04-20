@@ -378,29 +378,30 @@ def create_fishnet_grid(bbox:GeoExtent,
 MAX_TILE_SIZE_DEGREES = 0.5 # TODO How was this value selected?
 
 class LayerGroupBy:
-    def __init__(self, aggregate, geo_zone, spatial_resolution=None, layer=None, allow_cache_retrieval=False, masks=[]):
+    def __init__(self, aggregate, geo_zone, spatial_resolution=None, layer=None, force_data_refresh=True, masks=[]):
         self.aggregate = aggregate
         self.masks = masks
         self.geo_zone = geo_zone
         self.zones = geo_zone.zones.reset_index(drop=True)
         self.spatial_resolution = spatial_resolution
         self.layer = layer
-        self.allow_cache_retrieval = allow_cache_retrieval
+        self.force_data_refresh = force_data_refresh
 
     def mean(self):
-        return self._zonal_stats("mean", self.geo_zone, self.zones, self.aggregate, self.layer, self.masks,
-                                 self.spatial_resolution, self.allow_cache_retrieval)
+        return self._compute_statistic("mean")
 
     def count(self):
-        return self._zonal_stats("count", self.geo_zone, self.zones, self.aggregate, self.layer, self.masks,
-                                 self.spatial_resolution, self.allow_cache_retrieval)
+        return self._compute_statistic("count")
 
     def sum(self):
-        return self._zonal_stats("sum", self.geo_zone, self.zones, self.aggregate, self.layer, self.masks,
-                                 self.spatial_resolution, self.allow_cache_retrieval)
+        return self._compute_statistic("sum")
+
+    def _compute_statistic(self, stats_func):
+        return self._zonal_stats(stats_func, self.geo_zone, self.zones, self.aggregate, self.layer, self.masks,
+                                 self.spatial_resolution, self.force_data_refresh)
 
     @staticmethod
-    def _zonal_stats(stats_func, geo_zone, zones, aggregate, layer, masks, spatial_resolution, allow_cache_retrieval):
+    def _zonal_stats(stats_func, geo_zone, zones, aggregate, layer, masks, spatial_resolution, force_data_refresh):
         # Get area of zone in square degrees
         if zones.crs == WGS_CRS:
             box_area = box(*zones.total_bounds).area
@@ -412,7 +413,7 @@ class LayerGroupBy:
         # if area of zone is within tolerance, then query as a single tile, otherwise sub-tile
         if box_area <= MAX_TILE_SIZE_DEGREES**2:
             stats = LayerGroupBy._zonal_stats_tile([stats_func], geo_zone, zones, aggregate,
-                                                   layer, masks, spatial_resolution, allow_cache_retrieval)
+                                                   layer, masks, spatial_resolution, force_data_refresh)
         else:
             stats = LayerGroupBy._zonal_stats_fishnet(stats_func, zones, aggregate, layer,
                                                       masks, spatial_resolution)
@@ -504,14 +505,14 @@ class LayerGroupBy:
         return adjusted_gdf
 
     @staticmethod
-    def _zonal_stats_tile(stats_func, geo_zone, zones, aggregate, layer, masks, spatial_resolution, allow_cache_retrieval):
+    def _zonal_stats_tile(stats_func, geo_zone, zones, aggregate, layer, masks, spatial_resolution, force_data_refresh):
         bbox = GeoExtent(geo_zone)
 
         aggregate_data = aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
         mask_datum = [mask.get_data(bbox=bbox, spatial_resolution=spatial_resolution,
-                                    allow_cache_retrieval= allow_cache_retrieval) for mask in masks]
+                                    force_data_refresh= force_data_refresh) for mask in masks]
         layer_data = layer.get_data(bbox=bbox, spatial_resolution=spatial_resolution,
-                                         allow_cache_retrieval= allow_cache_retrieval) if layer is not None else None
+                                         force_data_refresh= force_data_refresh) if layer is not None else None
 
         # align to highest resolution raster, which should be the largest raster
         # since all are clipped to the extent
@@ -609,13 +610,13 @@ class Layer():
 
     @abstractmethod
     def get_data(self, bbox: GeoExtent, spatial_resolution:int, resampling_method:str,
-                 allow_cache_retrieval:bool) -> Union[xr.DataArray, gpd.GeoDataFrame]:
+                 force_data_refresh:bool) -> Union[xr.DataArray, gpd.GeoDataFrame]:
         """
         Extract the data from the source and return it in a way we can compare to other layers.
         :param bbox: a tuple of floats representing the bounding box, (min x, min y, max x, max y)
         :param spatial_resolution: resolution of continuous raster data in meters
         :param resampling_method: interpolation method for continuous raster layers (bilinear, bicubic, nearest)
-        :param allow_cache_retrieval: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
+        :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
         :return: A rioxarray-format DataArray or a GeoPandas DataFrame
         """
         ...
@@ -628,7 +629,7 @@ class Layer():
         """
         return Layer(aggregate=self, masks=self.masks + list(layers))
 
-    def groupby(self, geo_zone, spatial_resolution=None, layer=None, allow_cache_retrieval=False):
+    def groupby(self, geo_zone, spatial_resolution=None, layer=None, force_data_refresh=False):
         """
         Group layers by zones.
         :param geo_zone: GeoZone containing geometries to group by.
@@ -636,7 +637,7 @@ class Layer():
         :param layer: Additional categorical layer to group by
         :return: LayerGroupBy object that can be aggregated.
         """
-        return LayerGroupBy(self.aggregate, geo_zone, spatial_resolution, layer, allow_cache_retrieval, self.masks)
+        return LayerGroupBy(self.aggregate, geo_zone, spatial_resolution, layer, force_data_refresh, self.masks)
 
 
     def write(self, bbox: GeoExtent, output_path:str,
@@ -659,9 +660,9 @@ class Layer():
         # Otherwise, if the write is for pulling and writing data to some random local folder, then it
         # is free to use the cache store.
         if output_path.startswith("s3://") or output_path.startswith("file://"):
-            allow_cache_retrieval: bool = False  # always read from source for S3 write
+            force_data_refresh: bool = False  # always read from source for S3 write
         else:
-            allow_cache_retrieval: bool = True  # allow cache hit for writes to OS
+            force_data_refresh: bool = True  # allow cache hit for writes to OS
 
         file_format = self.GEOSPATIAL_FILE_FORMAT
 
@@ -669,7 +670,7 @@ class Layer():
             utm_geo_extent = bbox.as_utm_bbox() # currently only support output as utm
             clipped_data = self.aggregate.get_data(utm_geo_extent, spatial_resolution=spatial_resolution,
                                                    resampling_method=resampling_method,
-                                                   allow_cache_retrieval=allow_cache_retrieval)
+                                                   force_data_refresh=force_data_refresh)
             write_layer(clipped_data, output_path, file_format)
         else:
             tile_grid_gdf = create_fishnet_grid(bbox, tile_side_length=tile_side_length, tile_buffer_size=0,
@@ -698,7 +699,7 @@ class Layer():
                 file_path = os.path.join(output_path, tile_name)
                 layer_data = self.aggregate.get_data(bbox=tile_bbox, spatial_resolution=spatial_resolution,
                                                      resampling_method=resampling_method,
-                                                     allow_cache_retrieval=allow_cache_retrieval)
+                                                     force_data_refresh=force_data_refresh)
                 write_layer(layer_data, file_path, file_format)
 
     @staticmethod

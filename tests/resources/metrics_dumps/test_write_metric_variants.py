@@ -3,7 +3,7 @@
 import geopandas as gpd
 import pytest
 
-from city_metrix.constants import WGS_CRS, cif_testing_s3_bucket_uri
+from city_metrix.constants import WGS_CRS, RW_testing_s3_bucket_uri
 from city_metrix.file_cache_config import set_cache_settings
 from city_metrix.metrics import *
 from tests.resources.bbox_constants import GEOZONE_FLORIANOPOLIS_WGS84
@@ -25,7 +25,7 @@ ZONE = GEOZONE_FLORIANOPOLIS_WGS84
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_large_city(target_folder):
-    set_cache_settings(cif_testing_s3_bucket_uri, 'dev')
+    set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
 
     file_path = prep_output_path(target_folder, 'metric', 'natural_areas_percent.geojson')
     NaturalAreasPercent().write(ZONE, file_path)

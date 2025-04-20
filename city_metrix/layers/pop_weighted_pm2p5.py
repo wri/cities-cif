@@ -1,8 +1,9 @@
 from city_metrix.metrix_model import Layer, GeoExtent
-from city_metrix.metrix_dao import retrieve_cached_city_data
 from .world_pop import WorldPop
 from .acag_pm2p5 import AcagPM2p5
-from ..constants import GTIFF_FILE_EXTENSION
+from ..constants import GTIFF_FILE_EXTENSION, GeoType
+from ..metrix_dao import write_layer
+from ..repo_manager import retrieve_cached_city_data2
 
 DEFAULT_SPATIAL_RESOLUTION = 1113.1949
 
@@ -28,13 +29,13 @@ class PopWeightedPM2p5(Layer):
         self.acag_return_above = acag_return_above
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_cache_retrieval=False):
+                 resampling_method=None, force_data_refresh=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
         # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
@@ -44,5 +45,8 @@ class PopWeightedPM2p5(Layer):
         utm_crs = bbox.as_utm_bbox().crs
 
         data = pm2p5 * (world_pop / world_pop.mean()).rio.write_crs(utm_crs)
+
+        if bbox.geo_type == GeoType.CITY:
+            write_layer(data, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return data

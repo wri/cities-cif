@@ -25,10 +25,10 @@ class BuiltLandWithHighLST(Metric):
         high_lst = HighLandSurfaceTemperature()
 
         built_land_counts = (built_up_land
-                             .groupby(geo_zone, allow_cache_retrieval = True)
+                             .groupby(geo_zone, force_data_refresh = False)
                              .count())
         built_high_lst_counts = (high_lst.mask(built_up_land)
-                                 .groupby(geo_zone, allow_cache_retrieval = True)
+                                 .groupby(geo_zone, force_data_refresh = False)
                                  .count())
 
         return built_high_lst_counts.fillna(0) / built_land_counts

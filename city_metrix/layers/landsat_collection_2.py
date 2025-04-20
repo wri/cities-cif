@@ -2,8 +2,9 @@ import odc.stac
 import pystac_client
 
 from city_metrix.metrix_model import Layer, GeoExtent
-from city_metrix.metrix_dao import retrieve_cached_city_data
-from ..constants import GTIFF_FILE_EXTENSION
+from ..constants import GTIFF_FILE_EXTENSION, GeoType
+from ..metrix_dao import write_layer
+from ..repo_manager import retrieve_cached_city_data2
 
 
 class LandsatCollection2(Layer):
@@ -24,14 +25,14 @@ class LandsatCollection2(Layer):
         self.bands = bands
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_cache_retrieval=False):
+                 force_data_refresh=False):
         if spatial_resolution is not None:
             raise Exception('spatial_resolution can not be specified.')
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
 
         # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
         if retrieved_cached_data is not None:
             return retrieved_cached_data
 
@@ -55,6 +56,9 @@ class LandsatCollection2(Layer):
 
         qa_lst = lc2.where((lc2.qa_pixel & 24) == 0)
         data = qa_lst.drop_vars("qa_pixel")
+
+        if bbox.geo_type == GeoType.CITY:
+            write_layer(data, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return data
 
