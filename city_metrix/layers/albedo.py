@@ -2,28 +2,32 @@ import ee
 import xarray
 from dask.diagnostics import ProgressBar
 
-from .layer import Layer, get_utm_zone_epsg, get_image_collection, set_resampling_for_continuous_raster
+from .layer import (Layer, get_image_collection, set_resampling_for_continuous_raster,
+                    validate_raster_resampling_method)
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
+DEFAULT_SPATIAL_RESOLUTION = 10
+DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
 class Albedo(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_LAYER_NAMING_ATTS = None
+    MINOR_LAYER_NAMING_ATTS = ["threshold"]
+    MAX_CLOUD_PROB = 30
+    S2_ALBEDO_EQN = '((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))'
+
     """
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
-        resampling_method: interpolation method used by Google Earth Engine. Default is 'bilinear'. All options are: ('bilinear', 'bicubic', None).
         threshold: threshold value for filtering the retrieval
     """
-    MAX_CLOUD_PROB = 30
-    S2_ALBEDO_EQN = '((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))'
-
-    def __init__(self, start_date="2021-01-01", end_date="2022-01-01", spatial_resolution:int=10,
-                 resampling_method:str='bilinear', threshold=None, **kwargs):
+    def __init__(self, start_date="2021-01-01", end_date="2022-01-01", threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
-        self.spatial_resolution = spatial_resolution
-        self.resampling_method = resampling_method
         self.threshold = threshold
     
     ## METHODS
@@ -88,7 +92,17 @@ class Albedo(Layer):
 
         return s2_with_clouds_ic
 
-    def get_data(self, bbox):
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method:str=DEFAULT_RESAMPLING_METHOD, allow_cache_retrieval=False):
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
+        validate_raster_resampling_method(resampling_method)
+
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
+
         # calculate albedo for images
         # weights derived from
         # S. Bonafoni and A. Sekertekin, "Albedo Retrieval From Sentinel-2 by New Narrow-to-Broadband Conversion Coefficients," in IEEE Geoscience and Remote Sensing Letters, vol. 17, no. 9, pp. 1618-1622, Sept. 2020, doi: 10.1109/LGRS.2020.2967085.
@@ -113,15 +127,16 @@ class Albedo(Layer):
             return albedo
 
         # S2 MOSAIC AND ALBEDO
-        dataset = self.get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
+        ee_rectangle = bbox.to_ee_rectangle()
+        dataset = self.get_masked_s2_collection(ee_rectangle['ee_geometry'], self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
 
         albedo_mean = (s2_albedo
                        .map(lambda x:
                                     set_resampling_for_continuous_raster(x,
-                                                                         self.resampling_method,
-                                                                         self.spatial_resolution,
-                                                                         bbox
+                                                                         resampling_method,
+                                                                         spatial_resolution,
+                                                                         ee_rectangle['crs']
                                                                          )
                             )
                        .reduce(ee.Reducer.mean())
@@ -130,8 +145,8 @@ class Albedo(Layer):
         albedo_mean_ic = ee.ImageCollection(albedo_mean)
         data = get_image_collection(
             albedo_mean_ic,
-            bbox,
-            self.spatial_resolution,
+            ee_rectangle,
+            spatial_resolution,
             "albedo"
         ).albedo_mean
 

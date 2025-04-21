@@ -3,20 +3,32 @@ import xarray as xr
 import xee
 import ee
 
-from .layer import Layer, get_utm_zone_epsg, get_image_collection
+from .layer import Layer, get_image_collection
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
+DEFAULT_SPATIAL_RESOLUTION = 100
 
 class BuiltUpHeight(Layer):
-    """
-    Attributes:
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
-    """
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_LAYER_NAMING_ATTS = None
+    MINOR_LAYER_NAMING_ATTS = None
 
-    def __init__(self, spatial_resolution=100, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.spatial_resolution = spatial_resolution
 
-    def get_data(self, bbox):
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None, allow_cache_retrieval=False):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
+
         # Notes for Heat project:
         # https://ghsl.jrc.ec.europa.eu/ghs_buH2023.php
         # ANBH is the average height of the built surfaces, USE THIS
@@ -26,10 +38,11 @@ class BuiltUpHeight(Layer):
         built_height = ee.Image("JRC/GHSL/P2023A/GHS_BUILT_H/2018")
 
         built_height_ic = ee.ImageCollection(built_height)
+        ee_rectangle = bbox.to_ee_rectangle()
         data = get_image_collection(
             built_height_ic,
-            bbox,
-            self.spatial_resolution,
+            ee_rectangle,
+            spatial_resolution,
             "built up height"
         ).built_height
 

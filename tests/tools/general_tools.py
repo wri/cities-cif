@@ -1,6 +1,5 @@
 import os
 import shutil
-import tempfile
 import numpy as np
 
 def is_valid_path(path: str):
@@ -43,9 +42,19 @@ def convert_ratio_to_percentage(data):
     return values_as_percent
 
 def get_class_default_spatial_resolution(obj):
-    cls = get_class_from_instance(obj)
-    default_spatial_resolution = cls.spatial_resolution
-    return default_spatial_resolution
+    obj_param_info = get_param_info(obj.get_data)
+    obj_spatial_resolution = obj_param_info.get('spatial_resolution')
+    return obj_spatial_resolution
+
+def get_param_info(func):
+    import inspect
+    signature = inspect.signature(func)
+    default_values = {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
+    return default_values
 
 def get_class_from_instance(obj):
     cls = obj.__class__()

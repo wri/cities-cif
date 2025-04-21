@@ -1,26 +1,45 @@
 import ee
 
 from .layer import Layer, get_image_collection
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
+
+DEFAULT_SPATIAL_RESOLUTION = 10
 
 class NdviSentinel2(Layer):
     """"
     NDVI = Sentinel-2 Normalized Difference Vegetation Index
-    Attributes:
-        year: The satellite imaging year.
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     return: a rioxarray-format DataArray
     Author of associated Jupyter notebook: Ted.Wong@wri.org
     Notebook: https://github.com/wri/cities-cities4forests-indicators/blob/dev-eric/scripts/extract-VegetationCover.ipynb
     Reference: https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index
     """
-    def __init__(self, year=2021, spatial_resolution=10, **kwargs):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_LAYER_NAMING_ATTS = None
+    MINOR_LAYER_NAMING_ATTS = None
+
+    """
+    Attributes:
+        year: The satellite imaging year.
+    """
+    def __init__(self, year=2021, **kwargs):
         super().__init__(**kwargs)
         self.year = year
-        self.spatial_resolution = spatial_resolution
 
-    def get_data(self, bbox):
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None, allow_cache_retrieval=False):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
         if self.year is None:
             raise Exception('NdviSentinel2.get_data() requires a year value')
+
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
 
         start_date = "%s-01-01" % self.year
         end_date = "%s-12-31" % self.year
@@ -34,8 +53,9 @@ class NdviSentinel2(Layer):
 
         s2 = ee.ImageCollection("COPERNICUS/S2_HARMONIZED")
 
+        ee_rectangle  = bbox.to_ee_rectangle()
         ndvi = (s2
-                .filterBounds(ee.Geometry.BBox(*bbox))
+                .filterBounds(ee_rectangle['ee_geometry'])
                 .filterDate(start_date, end_date)
                 .map(calculate_ndvi)
                 .select('NDVI')
@@ -46,8 +66,9 @@ class NdviSentinel2(Layer):
         ndvi_mosaic_ic = ee.ImageCollection(ndvi_mosaic)
         ndvi_data = get_image_collection(
             ndvi_mosaic_ic,
-            bbox,
-            self.spatial_resolution, "NDVI"
+            ee_rectangle,
+            spatial_resolution,
+            "NDVI"
         ).NDVI
 
         return ndvi_data

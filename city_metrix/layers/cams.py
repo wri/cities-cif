@@ -1,69 +1,82 @@
 import cdsapi
 import os
 import xarray as xr
-import zipfile
+import glob
 
 from .layer import Layer
+from .layer_dao import retrieve_cached_city_data
+from .layer_geometry import GeoExtent
+from ..constants import NETCDF_FILE_EXTENSION
 
 
 class Cams(Layer):
+    OUTPUT_FILE_FORMAT = NETCDF_FILE_EXTENSION
+    MAJOR_LAYER_NAMING_ATTS = None
+    MINOR_LAYER_NAMING_ATTS = None
+
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+    """
     def __init__(self, start_date="2023-01-01", end_date="2023-12-31", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
 
-    def get_data(self, bbox):
-        min_lon, min_lat, max_lon, max_lat = bbox
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 allow_cache_retrieval=False):
+        #Note: spatial_resolution and resampling_method arguments are ignored.
 
-        c = cdsapi.Client()
+        # Attempt to retrieve cached file based on layer_id.
+        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
+        if retrieved_cached_data is not None:
+            return retrieved_cached_data
+
+        min_lon, min_lat, max_lon, max_lat = bbox.as_geographic_bbox().bounds
+
+        c = cdsapi.Client(url='https://ads.atmosphere.copernicus.eu/api')
+        target_file = 'cams_download.grib'
         c.retrieve(
             'cams-global-reanalysis-eac4',
             {
                 'variable': [
-                    "2m_temperature", "mean_sea_level_pressure",
-                    "particulate_matter_2.5um", "particulate_matter_10um",
-                    "carbon_monoxide", "nitrogen_dioxide", "ozone", "sulphur_dioxide"
+                    "2m_temperature",
+                    "mean_sea_level_pressure",
+                    "particulate_matter_2.5um",
+                    "particulate_matter_10um",
+                    "carbon_monoxide",
+                    "nitrogen_dioxide",
+                    "ozone",
+                    "sulphur_dioxide"
                 ],
                 "model_level": ["60"],
                 "date": [f"{self.start_date}/{self.end_date}"],
-                'time': ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
+                'time': ['00:00', '03:00', '06:00', '09:00', 
+                         '12:00', '15:00', '18:00', '21:00'],
                 'area': [max_lat, min_lon, min_lat, max_lon],
-                'data_format': 'netcdf_zip',
+                'data_format': 'grib',
             },
-            'cams_download.zip')
+            target_file)
 
-        # If data files from earlier runs not deleted, save new files with postpended numbers
-        existing_cams_downloads = [fname for fname in os.listdir('.') if fname.startswith('cams_download') and not fname.endswith('.zip')]
-        num_id = len(existing_cams_downloads)
-        while f'cams_download_{num_id}' in existing_cams_downloads:
-            num_id += 1
-        fname = f'cams_download{"" if num_id == 0 else f"_{num_id}"}'
-        os.makedirs(fname, exist_ok=True)
+        # GRIB_edition: 1/2
+        edition_1 = xr.open_dataset(
+            target_file, 
+            engine="cfgrib", 
+            backend_kwargs={"filter_by_keys": {"edition": 1}}).drop_vars(["number", "surface"], 
+            errors="ignore"
+            )
+        edition_2 = xr.open_dataset(
+            target_file, 
+            engine="cfgrib", 
+            backend_kwargs={"filter_by_keys": {"edition": 2}}).drop_vars(["hybrid"], 
+            errors="ignore"
+            )
 
-        # extract the ZIP file
-        with zipfile.ZipFile('cams_download.zip', 'r') as zip_ref:
-            # Extract all the contents of the ZIP file to the specified directory
-            zip_ref.extractall(fname)
+        # assign coordinate with first dataarray to fix 1) use 360 degree system issue 2) slightly different lat lons
+        edition_2 = edition_2.assign_coords(edition_1.coords)
 
-        # load netcdf files
-        dataarray_list = []
-        for nc_file in os.listdir(fname):
-            with xr.open_dataset(f'{fname}/{nc_file}') as dataarray:
-                dataarray_list.append(dataarray)
-
-        # not all variables have 'model_level', concatenate without 'model_level' dimension
-        dataarray_list = [
-            dataarray.squeeze(dim='model_level').drop_vars(['model_level'])
-            if 'model_level' in dataarray.dims
-            else dataarray
-            for dataarray in dataarray_list
-        ]
-        # assign coordinate with last dataarray to fix 1) use 360 degree system issue 2) slightly different lat lons
-        dataarray_list = [
-            dataarray.assign_coords(dataarray_list[-1].coords)
-            for dataarray in dataarray_list
-        ]
-        data = xr.merge(dataarray_list)
+        data = xr.merge([edition_1, edition_2])
 
         # unit conversion
         # particulate matter: concentration * 10^9
@@ -81,18 +94,14 @@ class Cams(Layer):
         data = data.to_array()
 
         # Remove local files
-        os.remove('cams_download.zip')
-        # Workaround for elusive permission error
-        try:  
-            for nc_file in os.listdir(fname):
-                os.remove(f'{fname}/{nc_file}')
-            os.rmdir(fname)
-        except:
-            pass
+        for file in glob.glob(f'cams_download.grib*'):
+            os.remove(file)
 
         # Select the nearest data point based on latitude and longitude
         center_lon = (min_lon + max_lon) / 2
         center_lat = (min_lat + max_lat) / 2
-        data = data.sel(latitude=center_lat, longitude=center_lon, method="nearest")
+        data = data.sel(latitude=center_lat,
+                        longitude=center_lon, 
+                        method="nearest")
 
         return data
