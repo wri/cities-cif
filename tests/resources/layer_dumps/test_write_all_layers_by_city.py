@@ -11,6 +11,7 @@ from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 PRESERVE_RESULTS_ON_S3 = True # True - Default for check-in
 PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
 FORCE_DATA_REFRESH = True # True - Default for check-in
+
 SLOW_TEST_TIMEOUT_SECONDS = 300 # 300 seconds = 5 minutes
 
 PROCESSING_CITY = GEOEXTENT_TERESINA_WGS84

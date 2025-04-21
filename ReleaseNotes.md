@@ -9,6 +9,7 @@
 1. Updated zonal statistics to handle multi-level city and admin polygons
 1. Added test_write_all_metrics_by_city.py to write metrics by city
 1. Converted some functions to static class methods to improve performance
+1. Changed AWS profile for credentials file to "cities-data-dev"
 
 ## 2025/04/14
 1. Added timeout_decorator to environment.yml
