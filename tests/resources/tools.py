@@ -1,11 +1,12 @@
 import os
 
+from city_metrix import s3_client
 from city_metrix.constants import RW_DASHBOARD_LAYER_S3_BUCKET_URI
-from city_metrix.metrix_dao import get_s3_client, remove_scheme_from_uri
+from city_metrix.metrix_dao import remove_scheme_from_uri
 from tests.resources.conftest import get_target_folder_path, USE_WGS_BBOX
 from tests.tools.general_tools import create_target_folder
 
-def delete_file_on_s3(s3_client, file_key):
+def delete_file_on_s3(file_key):
     s3_bucket = remove_scheme_from_uri(RW_DASHBOARD_LAYER_S3_BUCKET_URI)
     s3_client.delete_object(Bucket=s3_bucket, Key=file_key)
 
@@ -36,8 +37,7 @@ def get_file_count_in_folder(dir_path):
 def cleanup_cache_files(cache_scheme, key_file, file_path):
     if key_file is not None:
         if cache_scheme == 's3':
-            s3_client = get_s3_client()
-            delete_file_on_s3(s3_client, key_file)
+            delete_file_on_s3(key_file)
         else:
             target_folder = get_target_folder_path()
             cache_file_path = os.path.join(target_folder, key_file)

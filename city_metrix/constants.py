@@ -10,7 +10,6 @@ GEOJSON_FILE_EXTENSION = 'geojson'
 NETCDF_FILE_EXTENSION = 'nc'
 CSV_FILE_EXTENSION = 'csv'
 
-AWS_S3_PROFILE = 'cities-data-user'
 DEFAULT_PUBLISHING_ENV = 'dev'
 
 # TODO replace with production value

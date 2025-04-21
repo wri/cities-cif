@@ -2,10 +2,11 @@ import os
 from datetime import datetime
 from enum import Enum
 
+from city_metrix import s3_client
 from city_metrix.constants import GeoType, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION, \
     LOCAL_REPO_URI, DEFAULT_PUBLISHING_ENV, RW_DASHBOARD_LAYER_S3_BUCKET_URI, RW_DASHBOARD_METRIC_S3_BUCKET_URI
 from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_cache, \
-    read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_s3_client, get_bucket_name_from_s3_uri
+    read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_bucket_name_from_s3_uri
 from city_metrix.metrix_tools import get_class_from_instance
 
 def build_file_key(class_obj, geo_extent):
@@ -188,7 +189,6 @@ def check_if_cache_file_exists(file_uri):
     uri_scheme = get_uri_scheme(file_uri)
     file_key = get_file_path_from_uri(file_uri)
     if uri_scheme == "s3":
-        s3_client = get_s3_client()
         s3_bucket = get_bucket_name_from_s3_uri(file_uri)
         response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=file_key)
         for obj in response.get('Contents', []):

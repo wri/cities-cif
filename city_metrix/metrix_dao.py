@@ -1,6 +1,5 @@
 import os
 import tempfile
-import boto3
 import requests
 import xarray as xr
 import pandas as pd
@@ -10,19 +9,13 @@ from geopandas import GeoDataFrame
 from rioxarray import rioxarray
 from urllib.parse import urlparse
 
+from city_metrix import s3_client
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
     NETCDF_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI, RW_DASHBOARD_LAYER_S3_BUCKET_URI
-from city_metrix.constants import AWS_S3_PROFILE
 from city_metrix.metrix_tools import get_crs_from_data
 
 
-def get_s3_client():
-    session = boto3.Session(profile_name=AWS_S3_PROFILE)
-    s3_client = session.client('s3')
-    return s3_client
-
 def _read_geojson_from_s3(s3_bucket, file_key):
-    s3_client = get_s3_client()
     result_data = None
     with tempfile.TemporaryDirectory() as temp_dir:
         with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
@@ -73,7 +66,6 @@ def read_geotiff_from_cache(file_uri):
 def read_netcdf_from_cache(file_uri):
     result_data = None
     if get_uri_scheme(file_uri) == 's3':
-        s3_client = get_s3_client()
         s3_bucket = remove_scheme_from_uri(RW_DASHBOARD_LAYER_S3_BUCKET_URI)
         file_key = _get_file_key_from_url(file_uri)
 
@@ -122,7 +114,6 @@ def _write_file_to_s3(data, uri, file_extension):
             elif file_extension == NETCDF_FILE_EXTENSION:
                 data.to_netcdf(temp_file.name)
 
-            s3_client = get_s3_client()
             s3_client.upload_file(
                 temp_file.name, s3_bucket, file_key, ExtraArgs={"ACL": "public-read"}
             )

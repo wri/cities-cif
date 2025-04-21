@@ -1,6 +1,7 @@
 import os
 import warnings
 
+import boto3
 import ee
 
 # initialize ee
@@ -24,6 +25,16 @@ else:
     print("Could not find GEE credentials file, so prompting authentication.")
     ee.Authenticate()
     ee.Initialize(opt_url="https://earthengine-highvolume.googleapis.com")
+
+# initialize aws
+if (
+    "AWS_ACCESS_KEY_ID" in os.environ
+    and "AWS_SECRET_ACCESS_KEY" in os.environ
+):
+    s3_client = boto3.client('s3')
+else:
+    session = boto3.Session(profile_name='cities-data-dev')
+    s3_client = session.client('s3')
 
 
 # set for AWS requests
