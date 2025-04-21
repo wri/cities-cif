@@ -5,9 +5,7 @@ import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
 from city_metrix.metrix_model import Layer, WGS_CRS, GeoExtent
-from ..constants import GEOJSON_FILE_EXTENSION, GeoType
-from ..metrix_dao import write_layer
-from ..repo_manager import retrieve_cached_city_data2
+from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class UtGlobus(Layer):
@@ -24,16 +22,11 @@ class UtGlobus(Layer):
         super().__init__(**kwargs)
         self.city = city
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None, 
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  force_data_refresh=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
         if self.city == "":
             raise Exception("'city' can not be empty. Check and select a city id from https://sat-io.earthengine.app/view/ut-globus")
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         dataset = ee.FeatureCollection(f"projects/sat-io/open-datasets/UT-GLOBUS/{self.city}")
         ee_rectangle = bbox.to_ee_rectangle()
@@ -74,8 +67,5 @@ class UtGlobus(Layer):
         utm_crs = ee_rectangle["crs"]
         if building.crs.srs == WGS_CRS:
             building = building.to_crs(utm_crs)
-
-        if bbox.geo_type == GeoType.CITY:
-            write_layer(building, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return building

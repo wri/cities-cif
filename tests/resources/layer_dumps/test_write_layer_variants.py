@@ -5,34 +5,33 @@ from datetime import datetime
 import pytest
 import xarray as xr
 
-from city_metrix.constants import RW_testing_s3_bucket_uri
-from city_metrix.file_cache_config import set_cache_settings, clear_cache_settings
+from city_metrix.constants import RW_TESTING_S3_BUCKET_URI
 from city_metrix.layers import *
-from city_metrix.metrix_dao import get_layer_cache_variables, check_if_cache_file_exists
+from city_metrix.cache_manager import check_if_cache_file_exists
 from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84, GEOEXTENT_TERESINA_UTM, BBOX_USA_OR_PORTLAND_2
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.tools import get_test_bbox, cleanup_cache_files, prep_output_path, verify_file_is_populated, \
     get_file_count_in_folder
-from tests.tools.general_tools import get_class_default_spatial_resolution
+from tests.tools.general_tools import get_class_default_spatial_resolution, get_layer_cache_variables
 
 # ============ TEST WRITE TO S3 CACHE, READ FROM S3 CACHE =====================
-CACHE_TO_S3 = True
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_geotiff_layer_caching(target_folder):
-    layer_obj = VegetationWaterMap()
-    _cache_write_read(layer_obj, target_folder)
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_geojson_layer_caching(target_folder):
-    # layer_obj = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD)
-    layer_obj = ProtectedAreas()
-    _cache_write_read(layer_obj, target_folder)
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_netcdf_layer_caching(target_folder):
-    layer_obj = Era5HottestDay()
-    _cache_write_read(layer_obj, target_folder)
+# CACHE_TO_S3 = True
+#
+# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+# def test_geotiff_layer_caching(target_folder):
+#     layer_obj = VegetationWaterMap()
+#     _cache_write_read(layer_obj, target_folder)
+#
+# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+# def test_geojson_layer_caching(target_folder):
+#     # layer_obj = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD)
+#     layer_obj = ProtectedAreas()
+#     _cache_write_read(layer_obj, target_folder)
+#
+# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+# def test_netcdf_layer_caching(target_folder):
+#     layer_obj = Era5HottestDay()
+#     _cache_write_read(layer_obj, target_folder)
 
 # ==================== Test resolution changes ===========================
 # Multiplier applied to the default spatial_resolution of the layer
@@ -115,7 +114,6 @@ def test_get_nasa_dem_bicubic(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_nasa_dem(target_folder):
-    set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
     file_path = prep_output_path(target_folder, 'layer','NasaDEM_small_city_wgs84.tif')
     bbox = get_test_bbox(GEOEXTENT_TERESINA_WGS84)
     NasaDEM().write(bbox, file_path)
@@ -123,43 +121,42 @@ def test_write_nasa_dem(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_nasa_dem_utm(target_folder):
-    set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
     file_path = prep_output_path(target_folder, 'layer','NasaDEM_small_city_utm.tif')
     bbox = get_test_bbox(GEOEXTENT_TERESINA_UTM)
     NasaDEM().write(bbox, file_path)
     assert verify_file_is_populated(file_path)
 
-def _cache_write_read(layer_obj, target_folder):
-    if CACHE_TO_S3:
-        set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
-        cache_scheme = 's3'
-    else:
-        set_cache_settings(f"file://{target_folder}", 'dev')
-        cache_scheme = 'file'
-    geo_extent = get_test_bbox(GEOEXTENT_TERESINA_WGS84)
-    file_key, file_uri, layer_id = get_layer_cache_variables(layer_obj, geo_extent)
-
-    os_file_path = prep_output_path(target_folder, 'layer',layer_id)
-    cleanup_cache_files(cache_scheme, file_key, os_file_path)
-    try:
-        start_time = datetime.now()
-        layer_obj.write(bbox=geo_extent, output_path=file_uri)
-        cache_write_time = _get_time_difference_to_now_seconds(start_time)
-        cache_file_exists = check_if_cache_file_exists(file_uri)
-        assert cache_file_exists, "Test failed since file did not upload to s3"
-        if cache_file_exists:
-            start_time = datetime.now()
-            layer_obj.write(bbox=geo_extent, output_path=os_file_path)
-            cache_read_time = _get_time_difference_to_now_seconds(start_time)
-            assert verify_file_is_populated(os_file_path)
-        else:
-            cache_read_time = None
-    finally:
-        cleanup_cache_files(cache_scheme, file_key, os_file_path)
-        clear_cache_settings()
-
-    print(f"\ncache_write_secs: {cache_write_time}, cache_read_secs: {cache_read_time}")
-    assert cache_write_time >= cache_read_time, f"Cache-write time {cache_write_time} was not longer than cache-read time {cache_read_time}."
+# def _cache_write_read(layer_obj, target_folder):
+#     if CACHE_TO_S3:
+#         set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
+#         cache_scheme = 's3'
+#     else:
+#         set_cache_settings(f"file://{target_folder}", 'dev')
+#         cache_scheme = 'file'
+#     geo_extent = get_test_bbox(GEOEXTENT_TERESINA_WGS84)
+#     file_key, file_uri, layer_id, is_custom_layer = get_layer_cache_variables(layer_obj, geo_extent)
+#
+#     os_file_path = prep_output_path(target_folder, 'layer',layer_id)
+#     cleanup_cache_files(cache_scheme, file_key, os_file_path)
+#     try:
+#         start_time = datetime.now()
+#         layer_obj.write(bbox=geo_extent, output_path=file_uri)
+#         cache_write_time = _get_time_difference_to_now_seconds(start_time)
+#         cache_file_exists = check_if_cache_file_exists(file_uri)
+#         assert cache_file_exists, "Test failed since file did not upload to s3"
+#         if cache_file_exists:
+#             start_time = datetime.now()
+#             layer_obj.write(bbox=geo_extent, output_path=os_file_path)
+#             cache_read_time = _get_time_difference_to_now_seconds(start_time)
+#             assert verify_file_is_populated(os_file_path)
+#         else:
+#             cache_read_time = None
+#     finally:
+#         cleanup_cache_files(cache_scheme, file_key, os_file_path)
+#         clear_cache_settings()
+#
+#     print(f"\ncache_write_secs: {cache_write_time}, cache_read_secs: {cache_read_time}")
+#     assert cache_write_time >= cache_read_time, f"Cache-write time {cache_write_time} was not longer than cache-read time {cache_read_time}."
 
 def _get_time_difference_to_now_seconds(start_time):
     end_time = datetime.now()

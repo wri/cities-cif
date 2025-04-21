@@ -1,9 +1,7 @@
 import odc.stac
 import pystac_client
 from city_metrix.metrix_model import Layer, GeoExtent
-from ..constants import GTIFF_FILE_EXTENSION, GeoType
-from ..metrix_dao import write_layer
-from ..repo_manager import retrieve_cached_city_data2
+from ..constants import GTIFF_FILE_EXTENSION
 
 
 class Sentinel2Level2(Layer):
@@ -29,11 +27,6 @@ class Sentinel2Level2(Layer):
             raise Exception('spatial_resolution can not be specified.')
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         geographic_bounds = bbox.as_geographic_bbox().bounds
         catalog = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")
@@ -75,8 +68,5 @@ class Sentinel2Level2(Layer):
             s2.scl != 10)
 
         data =  cloud_masked.drop_vars("scl")
-
-        if bbox.geo_type == GeoType.CITY:
-            write_layer(data, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return data

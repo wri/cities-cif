@@ -1,9 +1,7 @@
 import ee
 
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
-from ..constants import GTIFF_FILE_EXTENSION, GeoType
-from ..metrix_dao import write_layer
-from ..repo_manager import retrieve_cached_city_data2
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
@@ -24,17 +22,12 @@ class HeightAboveNearestDrainage(Layer):
         self.thresh = thresh
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, force_data_refresh=False):
+                 resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         if spatial_resolution not in [30,90]:
             raise Exception(f'spatial_resolution of {spatial_resolution} is currently not supported.')
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         if spatial_resolution == 30 and self.river_head == 100:
             hand = ee.ImageCollection('users/gena/global-hand/hand-100')
@@ -64,8 +57,5 @@ class HeightAboveNearestDrainage(Layer):
             spatial_resolution,
             "height above nearest drainage"
         ).b1
-
-        if bbox.geo_type == GeoType.CITY:
-            write_layer(data, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return data

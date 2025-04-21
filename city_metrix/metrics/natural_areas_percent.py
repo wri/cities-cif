@@ -13,7 +13,7 @@ class NaturalAreasPercent(Metric):
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
 
-    def get_data(self,
+    def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
 

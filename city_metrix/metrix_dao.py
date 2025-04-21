@@ -5,54 +5,52 @@ import requests
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
-from io import BytesIO
 from pathlib import Path
 from geopandas import GeoDataFrame
 from rioxarray import rioxarray
 from urllib.parse import urlparse
 
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
-    NETCDF_FILE_EXTENSION, RO_dashboard_layer_s3_bucket_uri, GeoType, local_repo_uri
-from city_metrix.metrix_tools import build_cache_layer_names, get_crs_from_data, standardize_y_dimension_direction
-from city_metrix.file_cache_config import get_cached_file_key, cif_cache_settings, get_cif_s3_bucket_name
-from city_metrix.constants import aws_s3_profile
+    NETCDF_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI, RW_DASHBOARD_LAYER_S3_BUCKET_URI
+from city_metrix.constants import AWS_S3_PROFILE
+from city_metrix.metrix_tools import get_crs_from_data
+
 
 def get_s3_client():
-    session = boto3.Session(profile_name=aws_s3_profile)
+    session = boto3.Session(profile_name=AWS_S3_PROFILE)
     s3_client = session.client('s3')
     return s3_client
 
-# == Reads ==
-def _read_geojson_from_cache(s3_bucket, file_key):
-    from io import BytesIO
+def _read_geojson_from_s3(s3_bucket, file_key):
     s3_client = get_s3_client()
     result_data = None
-    try:
-        response = s3_client.get_object(Bucket=s3_bucket, Key=file_key)
-        geojson_content = response['Body'].read()
-        result_data = gpd.read_file(BytesIO(geojson_content))
-    except Exception as e_msg:
-        print(e_msg)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
+            try:
+                # Download the file from S3
+                s3_client.download_file(s3_bucket, file_key, temp_file.name)
+                result_data = gpd.read_file(temp_file.name)
+            except Exception as e:
+                print(f"Error downloading file: {file_key} with error: {e}")
     return result_data
 
-def _read_geojson_from_cache2(file_uri):
-    if get_uri_scheme(file_uri) == 's3':
-        s3_bucket = get_cif_s3_bucket_name()
-        s3_client = get_s3_client()
-        result_data = None
-        try:
-            response = s3_client.get_object(Bucket=s3_bucket, Key=file_uri)
-            geojson_content = response['Body'].read()
-            result_data = gpd.read_file(BytesIO(geojson_content))
-        except Exception as e_msg:
-            print(e_msg)
+def read_geojson_from_cache(uri):
+    if get_uri_scheme(uri) == 's3':
+        s3_bucket = get_bucket_name_from_s3_uri(uri)
+        file_key = _get_file_key_from_url(uri)
+        result_data = _read_geojson_from_s3(s3_bucket, file_key)
+    elif get_uri_scheme(uri) == 'https':
+        # Hard-coded to pull data from RO_dashboard_layer_s3_bucket_uri
+        s3_bucket = Path(RO_DASHBOARD_LAYER_S3_BUCKET_URI).parts[1]
+        file_key = _get_file_key_from_url(uri)
+        result_data = _read_geojson_from_s3(s3_bucket, file_key)
     else:
-        file_path = os.path.normpath(get_file_path_from_uri(file_uri))
+        file_path = os.path.normpath(get_file_path_from_uri(uri))
         result_data = gpd.read_file(file_path)
 
     return result_data
 
-def _read_geotiff_from_cache2(file_uri):
+def read_geotiff_from_cache(file_uri):
     data = rioxarray.open_rasterio(file_uri, driver="GTiff")
 
     result_data = data.squeeze('band', drop=True)
@@ -72,18 +70,18 @@ def _read_geotiff_from_cache2(file_uri):
 
     return result_data
 
-def _read_netcdf_from_cache2(file_uri):
+def read_netcdf_from_cache(file_uri):
     result_data = None
     if get_uri_scheme(file_uri) == 's3':
         s3_client = get_s3_client()
-        aws_bucket = get_cif_s3_bucket_name()
+        s3_bucket = remove_scheme_from_uri(RW_DASHBOARD_LAYER_S3_BUCKET_URI)
         file_key = _get_file_key_from_url(file_uri)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
                 try:
                     # Download the file from S3
-                    s3_client.download_file(aws_bucket, file_key, temp_file.name)
+                    s3_client.download_file(s3_bucket, file_key, temp_file.name)
                     result_data = xr.open_dataarray(temp_file.name)
                 except Exception as e:
                     print(f"Error downloading file: {file_uri} with error: {e}")
@@ -100,9 +98,7 @@ def write_layer(data, uri, file_format):
         raise Exception(f"Result dataset is empty and not written to: {uri}")
 
     if isinstance(data, xr.DataArray) and file_format == GTIFF_FILE_EXTENSION:
-        was_reversed, standardized_array = standardize_y_dimension_direction(data)
-
-        _write_geotiff(standardized_array, uri)
+        _write_geotiff(data, uri)
     elif isinstance(data, xr.Dataset) and file_format == GTIFF_FILE_EXTENSION:
         raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
         _write_dataset(data, uri)
@@ -114,7 +110,7 @@ def write_layer(data, uri, file_format):
         raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 
 def _write_file_to_s3(data, uri, file_extension):
-    aws_bucket = get_cif_s3_bucket_name()
+    s3_bucket = get_bucket_name_from_s3_uri(uri)
     file_key = _get_file_key_from_url(uri)
     suffix = f".{file_extension}"
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -128,7 +124,7 @@ def _write_file_to_s3(data, uri, file_extension):
 
             s3_client = get_s3_client()
             s3_client.upload_file(
-                temp_file.name, aws_bucket, file_key, ExtraArgs={"ACL": "public-read"}
+                temp_file.name, s3_bucket, file_key, ExtraArgs={"ACL": "public-read"}
             )
 
 def write_csv(data, uri):
@@ -176,53 +172,6 @@ def _write_dataset(data, uri):
     _verify_datatype('write_dataset()', data, [xr.Dataset], is_spatial=True)
     raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 
-    if get_uri_scheme(uri) == 's3':
-        _write_file_to_s3(data, uri, GTIFF_FILE_EXTENSION)
-    else:
-        # write raster data to files
-        uri_path = os.path.normpath(get_file_path_from_uri(uri))
-        output_path = os.path.dirname(uri_path)
-        if not os.path.exists(output_path):
-            os.makedirs(output_path)
-
-
-        # # write one file per time
-        # crs = get_crs_from_data(data)
-        # data.rio.write_crs(crs)
-        # for time in data.time:
-        #     single_day_data = data.sel(time=time)
-        #     output_filename = f"sat_{time.dt.strftime('%Y%m%d%H:%M').item()}.tif"
-        #     path = os.path.join('/','tmp','test_result_tif_files',output_filename)
-        #
-        #     # Write to GeoTIFF
-        #     single_day_data.rio.to_raster(path)
-
-
-        # # combine all times into one geotiff
-        # crs = get_crs_from_data(data)
-        # data.rio.write_crs(crs)
-        # transform = data.rio.transform()
-        # datavariables = data.data_vars
-        # first_attr = next(iter(datavariables))
-        # dtype = datavariables[first_attr].dtype
-        # band_count = len(data.data_vars)
-        # bands = list(data.data_vars.keys())
-        # time_dims = data.dims['time']
-        # # Write the dataset to a GeoTIFF file
-        # with rasterio.open(
-        #         uri,
-        #         'w',
-        #         driver='GTiff',
-        #         height=data.dims['y'],
-        #         width=data.dims['y'],
-        #         count=time_dims * band_count,
-        #         dtype=dtype,
-        #         crs=crs,
-        #         transform=transform
-        # ) as dst:
-        #     for t in range(time_dims):
-        #         for b in bands:
-        #             dst.write(data.isel(time=t).get(b).values, t * band_count+ b + 1)
 
 def _verify_datatype(function_name:str, data, verification_classes:list, is_spatial:bool = False):
     data_datatype_name = type(data).__name__
@@ -248,64 +197,9 @@ def write_tile_grid(tile_grid, output_path, target_file_name):
     tg = tile_grid.drop(columns='fishnet_geometry', axis=1)
     tg.to_file(tile_grid_file_path)
 
-
-# == URI handling ==
-def get_uri_scheme(uri):
-    parsed_uri = urlparse(uri)
-    if parsed_uri.scheme == 's3':
-        uri_scheme = 's3'
-    elif parsed_uri.scheme == 'file':
-        uri_scheme = 'file'
-    else:
-        uri_scheme = 'os_path'
-    return uri_scheme
-
-def get_file_path_from_uri(uri):
-    url_path = urlparse(uri).path
-    if get_uri_scheme(uri) == "s3":
-        file_path = url_path[1:]
-    else:
-        os_repo_path = urlparse(local_repo_uri).path
-        file_path = os.path.normpath(os.path.join(os_repo_path, url_path))
-    return file_path
-
-def get_cached_file_uri(file_key):
-    uri = cif_cache_settings.cache_location_uri
-    if get_uri_scheme(uri) in ('s3', 'file'):
-        file_uri = f"{uri}/{file_key}"
-    else:
-        file_uri = None
-    return file_uri
-
 def _get_file_key_from_url(s3_url):
     file_key = '/'.join(s3_url.split('/')[3:])
     return file_key
-
-def get_layer_cache_variables(layer_obj, geo_extent):
-    layer_folder_name, layer_id = build_cache_layer_names(layer_obj)
-    city_id = geo_extent.city_id
-    admin_level = geo_extent.admin_level
-    file_key = get_cached_file_key(layer_folder_name, city_id, admin_level, layer_id)
-    file_uri = get_cached_file_uri(file_key)
-
-    return file_key, file_uri, layer_id
-
-def check_if_cache_file_exists(file_uri):
-    uri_scheme = get_uri_scheme(file_uri)
-    file_key = get_file_path_from_uri(file_uri)
-    if uri_scheme == "s3":
-        s3_client = get_s3_client()
-        aws_bucket = get_cif_s3_bucket_name()
-        response = s3_client.list_objects_v2(Bucket=aws_bucket, Prefix=file_key)
-        for obj in response.get('Contents', []):
-            if obj['Key'] == file_key:
-                return True
-        return False
-    else:
-        uri_path = os.path.normpath(get_file_path_from_uri(file_key))
-        return os.path.exists(uri_path)
-
-
 
 def get_city(city_id: str):
     query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
@@ -329,10 +223,8 @@ def get_city_admin_boundaries(city_id: str, admin_level: str) -> GeoDataFrame:
     query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
     city_boundary = requests.get(query)
     if city_boundary.status_code in range(200, 206):
-        s3_bucket = Path(RO_dashboard_layer_s3_bucket_uri).parts[1]
-        boundaries = city_boundary.json()['layers_url']['geojson']
-        file_key = _get_file_key_from_url(boundaries)
-        boundaries_geojson = _read_geojson_from_cache(s3_bucket, file_key)
+        boundaries_uri = city_boundary.json()['layers_url']['geojson']
+        boundaries_geojson = read_geojson_from_cache(boundaries_uri)
 
         geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
         boundaries = boundaries_geojson[geom_columns]
@@ -345,3 +237,42 @@ def _string_to_float_tuple(string_tuple):
     string_values = string_tuple.split(",")
     float_tuple = tuple(float(value.strip()) for value in string_values)
     return float_tuple
+
+
+def get_uri_scheme(uri):
+    parsed_uri = urlparse(uri)
+    if parsed_uri.scheme == 's3':
+        uri_scheme = 's3'
+    elif parsed_uri.scheme == 'file':
+        uri_scheme = 'file'
+    elif parsed_uri.scheme == 'https':
+        uri_scheme = 'https'
+    else:
+        uri_scheme = 'os_path'
+    return uri_scheme
+
+
+def get_file_path_from_uri(uri):
+  parsed_url = urlparse(uri)
+  file_path = parsed_url.path
+  uri_scheme = get_uri_scheme(uri)
+  if uri_scheme == "s3":
+      file_path = file_path[1:]
+  return file_path
+
+def get_bucket_name_from_s3_uri(uri):
+    # Ensure the URI starts with 's3://'
+    if uri.startswith('s3://'):
+        # Split the URI by '/' and return the second element
+        return uri.split('/')[2]
+    else:
+        raise ValueError("Invalid S3 URI")
+
+def remove_scheme_from_uri(uri):
+    parsed_uri = urlparse(uri)
+    # Reconstruct the URI without the scheme
+    uri_without_scheme = parsed_uri._replace(scheme='').geturl()
+    # Remove the leading '//' if present
+    if uri_without_scheme.startswith('//'):
+        uri_without_scheme = uri_without_scheme[2:]
+    return uri_without_scheme

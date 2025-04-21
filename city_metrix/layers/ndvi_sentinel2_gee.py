@@ -1,9 +1,7 @@
 import ee
 
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
-from ..constants import GTIFF_FILE_EXTENSION, GeoType
-from ..metrix_dao import write_layer
-from ..repo_manager import retrieve_cached_city_data2
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
@@ -28,18 +26,13 @@ class NdviSentinel2(Layer):
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, force_data_refresh=False):
+                 resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
         if self.year is None:
             raise Exception('NdviSentinel2.get_data() requires a year value')
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         start_date = "%s-01-01" % self.year
         end_date = "%s-12-31" % self.year
@@ -70,8 +63,5 @@ class NdviSentinel2(Layer):
             spatial_resolution,
             "NDVI"
         ).NDVI
-
-        if bbox.geo_type == GeoType.CITY:
-            write_layer(ndvi_data, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return ndvi_data

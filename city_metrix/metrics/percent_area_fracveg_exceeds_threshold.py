@@ -14,7 +14,7 @@ class PercentAreaFracvegExceedsThreshold(Metric):
         self.min_threshold = min_threshold
         self.year = year
 
-    def get_data(self,
+    def get_metric(self,
                  zones: GeoDataFrame,
                  spatial_resolution:int = None) -> GeoSeries:
         fracveg_all_layer = FractionalVegetation(min_threshold=None, year=self.year)

@@ -1,14 +1,13 @@
 import os
 
-from city_metrix.file_cache_config import get_cif_s3_bucket_name
-from city_metrix.metrix_dao import get_s3_client
+from city_metrix.constants import RW_DASHBOARD_LAYER_S3_BUCKET_URI
+from city_metrix.metrix_dao import get_s3_client, remove_scheme_from_uri
 from tests.resources.conftest import get_target_folder_path, USE_WGS_BBOX
 from tests.tools.general_tools import create_target_folder
 
-
 def delete_file_on_s3(s3_client, file_key):
-    aws_bucket = get_cif_s3_bucket_name()
-    s3_client.delete_object(Bucket=aws_bucket, Key=file_key)
+    s3_bucket = remove_scheme_from_uri(RW_DASHBOARD_LAYER_S3_BUCKET_URI)
+    s3_client.delete_object(Bucket=s3_bucket, Key=file_key)
 
 def delete_file_on_os(file_path):
     if os.path.exists(file_path):

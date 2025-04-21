@@ -24,7 +24,7 @@ class PercentCanopyCoveredPopulation(Metric):
         self.percentage = percentage
         self.informal_only = informal_only
 
-    def get_data(
+    def get_metric(
         self, zones: GeoDataFrame, spatial_resolution: int = None
     ) -> GeoSeries:
 
@@ -55,7 +55,7 @@ class PercentCanopyCoveredPopulationChildren(Metric):
         self.percentage = percentage
         self.informal_only = informal_only
 
-    def get_data(
+    def get_metric(
         self, zones: GeoDataFrame, spatial_resolution: int = None
     ) -> GeoSeries:
         percent_canopy_covered_children = PercentCanopyCoveredPopulation(
@@ -65,7 +65,7 @@ class PercentCanopyCoveredPopulationChildren(Metric):
             informal_only=self.informal_only,
         )
 
-        return percent_canopy_covered_children.get_data(zones=zones)
+        return percent_canopy_covered_children.get_metric(zones=zones)
 
 class PercentCanopyCoveredPopulationElderly(Metric):
     GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
@@ -78,7 +78,7 @@ class PercentCanopyCoveredPopulationElderly(Metric):
         self.percentage = percentage
         self.informal_only = informal_only
 
-    def get_data(
+    def get_metric(
         self, zones: GeoDataFrame, spatial_resolution: int = None
     ) -> GeoSeries:
         percent_canopy_covered_elderly = PercentCanopyCoveredPopulation(
@@ -88,7 +88,7 @@ class PercentCanopyCoveredPopulationElderly(Metric):
             informal_only=self.informal_only,
         )
 
-        return percent_canopy_covered_elderly.get_data(zones=zones)
+        return percent_canopy_covered_elderly.get_metric(zones=zones)
 
 class PercentCanopyCoveredPopulationFemale(Metric):
     GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
@@ -101,7 +101,7 @@ class PercentCanopyCoveredPopulationFemale(Metric):
         self.percentage = percentage
         self.informal_only = informal_only
 
-    def get_data(
+    def get_metric(
         self, zones: GeoDataFrame, spatial_resolution: int = None
     ) -> GeoSeries:
         percent_canopy_covered_female = PercentCanopyCoveredPopulation(
@@ -111,7 +111,7 @@ class PercentCanopyCoveredPopulationFemale(Metric):
             informal_only=self.informal_only,
         )
 
-        return percent_canopy_covered_female.get_data(zones=zones)
+        return percent_canopy_covered_female.get_metric(zones=zones)
 
 class PercentCanopyCoveredPopulationInformal(Metric):
     GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
@@ -124,7 +124,7 @@ class PercentCanopyCoveredPopulationInformal(Metric):
         self.height = height
         self.percentage = percentage
 
-    def get_data(
+    def get_metric(
         self, zones: GeoDataFrame, spatial_resolution: int = None
     ) -> GeoSeries:
         percent_canopy_covered_informal = PercentCanopyCoveredPopulation(
@@ -134,4 +134,4 @@ class PercentCanopyCoveredPopulationInformal(Metric):
             informal_only=True,
         )
 
-        return percent_canopy_covered_informal.get_data(zones=zones)
+        return percent_canopy_covered_informal.get_metric(zones=zones)

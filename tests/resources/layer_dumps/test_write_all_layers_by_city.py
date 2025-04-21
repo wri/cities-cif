@@ -1,16 +1,16 @@
 import pytest
 import timeout_decorator
 
-from city_metrix.file_cache_config import set_cache_settings, clear_cache_settings
-from city_metrix.constants import RW_testing_s3_bucket_uri
 from city_metrix.layers import *
-from city_metrix.metrix_dao import get_layer_cache_variables, check_if_cache_file_exists
+from city_metrix.cache_manager import check_if_cache_file_exists
+from ...tools.general_tools import get_layer_cache_variables
 from tests.resources.tools import cleanup_cache_files, prep_output_path
 from ..bbox_constants import GEOEXTENT_TERESINA_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 
-PRESERVE_RESULTS_ON_S3 = True
-PRESERVE_RESULTS_ON_OS = False
+PRESERVE_RESULTS_ON_S3 = True # True - Default for check-in
+PRESERVE_RESULTS_ON_OS = True # False - Default for check-in
+FORCE_DATA_REFRESH = True # True - Default for check-in
 SLOW_TEST_TIMEOUT_SECONDS = 300 # 300 seconds = 5 minutes
 
 PROCESSING_CITY = GEOEXTENT_TERESINA_WGS84
@@ -23,7 +23,7 @@ def test_AcagPM2p5_write_by_city(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_Albedo_write_by_city(target_folder):
-    layer_obj = Albedo(start_date='2021-01-01', end_date='2021-12-31')
+    layer_obj = Albedo()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -60,7 +60,7 @@ def test_Cams_write_by_city(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_EsaWorldCover_write_by_city(target_folder):
-    layer_obj = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP,year=2020)
+    layer_obj = EsaWorldCover()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 # TODO Very slow processing
@@ -92,27 +92,27 @@ def test_ImperviousSurface_write_by_city(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_LandCoverGlad_write_by_city(target_folder):
-    layer_obj = LandCoverGlad(year=2020)
+    layer_obj = LandCoverGlad()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_LandCoverSimplifiedGlad_write_by_city(target_folder):
-    layer_obj = LandCoverSimplifiedGlad(year=2020)
+    layer_obj = LandCoverSimplifiedGlad()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_LandCoverHabitatGlad_write_by_city(target_folder):
-    layer_obj = LandCoverHabitatGlad(year=2020)
+    layer_obj = LandCoverHabitatGlad()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_LandCoverHabitatChangeGlad_write_by_city(target_folder):
-    layer_obj = LandCoverHabitatChangeGlad(start_year=2000, end_year=2020)
+    layer_obj = LandCoverHabitatChangeGlad()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_LandSurfaceTemperature_write_by_city(target_folder):
-    layer_obj = LandSurfaceTemperature(start_date='2022-01-01', end_date='2022-12-31')
+    layer_obj = LandSurfaceTemperature()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 # # TODO Determine how to write out file from temporal dataset
@@ -133,7 +133,7 @@ def test_NaturalAreas_write_by_city(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_NdviSentinel2_write_by_city(target_folder):
-    layer_obj = NdviSentinel2(year=2020)
+    layer_obj = NdviSentinel2()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -146,6 +146,7 @@ def test_OpenStreetMap_write_by_city(target_folder):
     layer_obj = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE)
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
+# TODO not using cache
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_OvertureBuildings_write_by_city(target_folder):
     layer_obj = OvertureBuildings()
@@ -216,7 +217,7 @@ def test_TreeCover_write_by_city(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_UrbanExtents_write_by_city(target_folder):
-    layer_obj = UrbanExtents(year=2020)
+    layer_obj = UrbanExtents()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -244,15 +245,13 @@ def test_WorldPop_write_by_city(target_folder):
 
 
 def _run_write_layers_by_city_test(layer_obj, target_folder):
-    set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
     cache_scheme = 's3'
     geo_extent = PROCESSING_CITY
-    file_key, file_uri, layer_id = get_layer_cache_variables(layer_obj, geo_extent)
+    file_key, file_uri, layer_id, is_custom_layer = get_layer_cache_variables(layer_obj, geo_extent)
 
     os_file_path = prep_output_path(target_folder, 'layer', layer_id)
-    cleanup_cache_files(cache_scheme, file_key, os_file_path)
     try:
-        layer_obj.write(bbox=geo_extent, output_path=file_uri)
+        layer_obj.write(bbox=geo_extent, output_path=file_uri, force_data_refresh=FORCE_DATA_REFRESH)
         cache_file_exists = check_if_cache_file_exists(file_uri)
         assert cache_file_exists, "Test failed since file did not upload to s3"
         if cache_file_exists and PRESERVE_RESULTS_ON_OS:
@@ -261,4 +260,3 @@ def _run_write_layers_by_city_test(layer_obj, target_folder):
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         file_key = None if PRESERVE_RESULTS_ON_S3 else file_key
         cleanup_cache_files(cache_scheme, file_key, cleanup_os_file_path)
-        clear_cache_settings()

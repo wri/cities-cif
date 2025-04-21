@@ -1,11 +1,9 @@
 import geopandas as gpd
 
 from city_metrix.metrix_model import Layer, GeoExtent
-from ..constants import GEOJSON_FILE_EXTENSION, GeoType
+from ..constants import GEOJSON_FILE_EXTENSION
 from .overture_buildings import OvertureBuildings
 from .ut_globus import UtGlobus
-from ..metrix_dao import write_layer
-from ..repo_manager import retrieve_cached_city_data2
 
 
 class OvertureBuildingsHeight(Layer):
@@ -22,19 +20,14 @@ class OvertureBuildingsHeight(Layer):
         super().__init__(**kwargs)
         self.city = city
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None, force_data_refresh=False):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         # Note: spatial_resolution and resampling_method arguments are ignored.
         if self.city == "":
             raise Exception("'city' can not be empty. Check and select a city id from https://sat-io.earthengine.app/view/ut-globus")
 
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
-
         # Load the datasets
-        overture_buildings = OvertureBuildings().get_data(bbox)
-        ut_globus = UtGlobus(self.city).get_data(bbox)
+        overture_buildings = OvertureBuildings().get_data_with_caching(bbox)
+        ut_globus = UtGlobus(self.city).get_data_with_caching(bbox)
 
         # Ensure both GeoDataFrames are using the same coordinate reference system
         ut_globus = ut_globus.to_crs(overture_buildings.crs)
@@ -64,8 +57,5 @@ class OvertureBuildingsHeight(Layer):
 
         utm_crs = bbox.as_utm_bbox().crs
         joined_data = joined_data.to_crs(utm_crs)
-
-        if bbox.geo_type == GeoType.CITY:
-            write_layer(joined_data, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return joined_data

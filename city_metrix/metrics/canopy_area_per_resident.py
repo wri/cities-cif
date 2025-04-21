@@ -20,7 +20,7 @@ class CanopyAreaPerResident(Metric):
         self.height = height
         self.informal_only = informal_only
 
-    def get_data(self,
+    def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
 
@@ -49,13 +49,13 @@ class CanopyAreaPerResidentChildren(Metric):
         super().__init__(**kwargs)
         self.height = height
 
-    def get_data(self,
+    def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         return (CanopyAreaPerResident(WorldPopClass.CHILDREN,
                                      self.height,
                                      False)
-                .get_data(geo_zone))
+                .get_metric(geo_zone))
 
 
 class CanopyAreaPerResidentElderly(Metric):
@@ -67,13 +67,13 @@ class CanopyAreaPerResidentElderly(Metric):
         super().__init__(**kwargs)
         self.height = height
 
-    def get_data(self,
+    def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         return (CanopyAreaPerResident(WorldPopClass.ELDERLY,
                                      self.height,
                                      False)
-                .get_data(geo_zone))
+                .get_metric(geo_zone))
 
 
 class CanopyAreaPerResidentFemale(Metric):
@@ -85,13 +85,13 @@ class CanopyAreaPerResidentFemale(Metric):
         super().__init__(**kwargs)
         self.height = height
 
-    def get_data(self,
+    def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         return (CanopyAreaPerResident(WorldPopClass.FEMALE,
                                      self.height,
                                      False)
-                .get_data(geo_zone))
+                .get_metric(geo_zone))
 
 class CanopyAreaPerResidentInformal(Metric):
     GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
@@ -102,10 +102,10 @@ class CanopyAreaPerResidentInformal(Metric):
         super().__init__(**kwargs)
         self.height = height
 
-    def get_data(self,
+    def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         return (CanopyAreaPerResident([],
                                      self.height,
                                      True)
-                .get_data(geo_zone))
+                .get_metric(geo_zone))

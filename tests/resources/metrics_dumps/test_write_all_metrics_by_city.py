@@ -1,22 +1,22 @@
 import pytest
 
 from city_metrix.metrics import *
-from city_metrix.file_cache_config import set_cache_settings, clear_cache_settings
-from city_metrix.constants import RW_testing_s3_bucket_uri
-from city_metrix.metrix_dao import get_layer_cache_variables, check_if_cache_file_exists
+from city_metrix.cache_manager import check_if_cache_file_exists
+from ...tools.general_tools import get_layer_cache_variables
 from ..bbox_constants import GEOZONE_TERESINA_WGS84, GEOEXTENT_TERESINA_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from ..tools import prep_output_path, cleanup_cache_files
 
-PRESERVE_RESULTS_ON_S3 = True
-PRESERVE_RESULTS_ON_OS = True
+PRESERVE_RESULTS_ON_S3 = True # True - Default for check-in
+PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
+FORCE_DATA_REFRESH = False # False - Default for check-in
 SLOW_TEST_TIMEOUT_SECONDS = 300 # 300 seconds = 5 minutes
 
 PROCESSING_CITY = GEOEXTENT_TERESINA_WGS84
 PROCESSING_CITY_GEOZONE = GEOZONE_TERESINA_WGS84
 CITY_UT_NAME = 'teresina'
 
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_BuiltLandWithHighLST(target_folder):
     metric_obj = BuiltLandWithHighLST()
     _run_write_metrics_by_city_test(metric_obj, target_folder)
@@ -128,15 +128,12 @@ def test_write_VegetationWaterChangeGainLossRatio(target_folder):
 
 
 def _run_write_metrics_by_city_test(metric_obj, target_folder):
-    set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
-    cache_scheme = 's3'
     geo_zone = PROCESSING_CITY_GEOZONE
-    file_key, file_uri, metric_id = get_layer_cache_variables(metric_obj, PROCESSING_CITY)
+    file_key, file_uri, metric_id, _ = get_layer_cache_variables(metric_obj, PROCESSING_CITY)
 
     os_file_path = prep_output_path(target_folder, 'metric', metric_id)
-    cleanup_cache_files(cache_scheme, file_key, os_file_path)
     try:
-        metric_obj.write(geo_zone=geo_zone, output_path=file_uri)
+        metric_obj.write(geo_zone=geo_zone, output_path=file_uri, force_data_refresh=FORCE_DATA_REFRESH)
         cache_file_exists = check_if_cache_file_exists(file_uri)
         assert cache_file_exists, "Test failed since file did not upload to s3"
         if cache_file_exists and PRESERVE_RESULTS_ON_OS:
@@ -144,6 +141,5 @@ def _run_write_metrics_by_city_test(metric_obj, target_folder):
     finally:
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         file_key = None if PRESERVE_RESULTS_ON_S3 else file_key
-        cleanup_cache_files(cache_scheme, file_key, cleanup_os_file_path)
-        clear_cache_settings()
+        cleanup_cache_files('s3', file_key, cleanup_os_file_path)
     

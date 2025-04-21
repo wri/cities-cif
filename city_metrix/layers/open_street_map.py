@@ -5,8 +5,6 @@ import pandas as pd
 
 from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GeoType
 from city_metrix.metrix_model import Layer, GeoExtent
-from city_metrix.metrix_dao import write_layer
-from city_metrix.repo_manager import retrieve_cached_city_data2
 
 
 class OpenStreetMapClass(Enum):
@@ -85,11 +83,6 @@ class OpenStreetMap(Layer):
                  force_data_refresh=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
 
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
-
         min_lon, min_lat, max_lon, max_lat = bbox.as_geographic_bbox().bounds
         utm_crs = bbox.as_utm_bbox().crs
 
@@ -124,8 +117,5 @@ class OpenStreetMap(Layer):
         osm_feature = osm_feature.reset_index()[keep_col]
 
         osm_feature = osm_feature.to_crs(utm_crs)
-
-        if bbox.geo_type == GeoType.CITY:
-            write_layer(osm_feature, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return osm_feature

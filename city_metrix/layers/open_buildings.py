@@ -5,9 +5,7 @@ import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
 from city_metrix.metrix_model import Layer, WGS_CRS, GeoExtent
-from ..constants import GEOJSON_FILE_EXTENSION, GeoType
-from ..metrix_dao import write_layer
-from ..repo_manager import retrieve_cached_city_data2
+from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class OpenBuildings(Layer):
@@ -23,13 +21,8 @@ class OpenBuildings(Layer):
         super().__init__(**kwargs)
         self.country = country
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None, force_data_refresh=False):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         #Note: spatial_resolution and resampling_method arguments are ignored.
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         dataset = ee.FeatureCollection(f"projects/sat-io/open-datasets/VIDA_COMBINED/{self.country}")
         ee_rectangle = bbox.to_ee_rectangle()
@@ -65,8 +58,5 @@ class OpenBuildings(Layer):
         utm_crs = ee_rectangle['crs']
         if openbuilds.crs.srs == WGS_CRS:
             openbuilds = openbuilds.to_crs(utm_crs)
-
-        if bbox.geo_type == GeoType.CITY:
-            write_layer(openbuilds, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return openbuilds

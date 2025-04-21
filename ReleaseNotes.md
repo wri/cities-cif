@@ -1,12 +1,14 @@
 # Release Notes
 
-## 2025/04/18
+## 2025/04/21
 1. Combined all bases classes into one file
-2. Updated zonal statistics to handle large, tiled retrievals
-3. Added test_write_all_metrics_by_city.py to write metrics by city
-4. Metrics file names for S3 currently only use the class name
-5. Layers file name for S3 are outdated
-6. Converted some functions to static class methods to improve performance
+1. Removed retrieve_cached_city_data function call from derived classes
+1. Removed allow_cache_retrieval argument from get_data() method in layers 
+1. Removed CifCacheSettings
+1. Updated zonal statistics to handle large, tiled retrievals
+1. Updated zonal statistics to handle multi-level city and admin polygons
+1. Added test_write_all_metrics_by_city.py to write metrics by city
+1. Converted some functions to static class methods to improve performance
 
 ## 2025/04/14
 1. Added timeout_decorator to environment.yml

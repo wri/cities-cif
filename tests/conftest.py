@@ -53,10 +53,12 @@ NLD_AMSTERDAM_ZONE = GeoZone(NLD_AMSTERDAM_BBOX)
 
 
 class MockLayer(Layer):
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
     """
     Simple mock layer that just rasterizes the zones
     """
-    def get_data(self, bbox, spatial_resolution=None, resampling_method=None, allow_cache_retrieval=False):
+    def get_data(self, bbox, spatial_resolution=None, resampling_method=None, force_data_refresh=False):
         arr = make_geocube(
             vector_data=IDN_JAKARTA_TILED_BBOXES,
             measurements=['index'],
@@ -67,10 +69,12 @@ class MockLayer(Layer):
 
 
 class MockMaskLayer(Layer):
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
     """
     Simple layer where even indices are masked
     """
-    def get_data(self, bbox, spatial_resolution=None, resampling_method=None, allow_cache_retrieval=False):
+    def get_data(self, bbox, spatial_resolution=None, resampling_method=None, force_data_refresh=False):
         tile_side_length = 0.01
         mask_gdf = create_fishnet_gdf_for_testing(bbox.bounds, tile_side_length).reset_index()
         mask_gdf['index'] = mask_gdf['index'] % 2
@@ -86,10 +90,12 @@ class MockMaskLayer(Layer):
 
 
 class MockGroupByLayer(Layer):
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
     """
     Simple categorical layer with alternating 1s and 2s
     """
-    def get_data(self, bbox, spatial_resolution=None, resampling_method=None, allow_cache_retrieval=False):
+    def get_data(self, bbox, spatial_resolution=None, resampling_method=None, force_data_refresh=False):
         tile_side_length = 0.001
         group_by_gdf = create_fishnet_gdf_for_testing(bbox.bounds, tile_side_length).reset_index()
         group_by_gdf['index'] = (group_by_gdf['index'] % 2) + 1
@@ -104,10 +110,12 @@ class MockGroupByLayer(Layer):
 
 
 class MockLargeLayer(Layer):
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
     """
     Simple mock layer that just rasterizes the zones
     """
-    def get_data(self, bbox, spatial_resolution=None, resampling_method=None, allow_cache_retrieval=False):
+    def get_data(self, bbox, spatial_resolution=None, resampling_method=None, force_data_refresh=False):
         arr = make_geocube(
             vector_data=IDN_JAKARTA_TILED_LARGE_BBOXES,
             measurements=['index'],
@@ -118,11 +126,13 @@ class MockLargeLayer(Layer):
 
 
 class MockLargeGroupByLayer(Layer):
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
     """
     Large categorical layer with alternating 1s and 2s
     """
 
-    def get_data(self, bbox, spatial_resolution=None, resampling_method=None, allow_cache_retrieval=False):
+    def get_data(self, bbox, spatial_resolution=None, resampling_method=None, force_data_refresh=False):
         tile_side_length =  0.01
         group_by_gdf = create_fishnet_gdf_for_testing(bbox.bounds, tile_side_length).reset_index()
         group_by_gdf['index'] = (group_by_gdf['index'] % 2) + 1

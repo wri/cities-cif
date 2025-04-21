@@ -3,9 +3,7 @@ import geopandas as gpd
 import geemap
 
 from city_metrix.metrix_model import Layer, GeoExtent
-from ..metrix_dao import write_layer
-from ..repo_manager import retrieve_cached_city_data2
-from ..constants import GEOJSON_FILE_EXTENSION, GeoType
+from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class ProtectedAreas(Layer):
@@ -28,11 +26,6 @@ class ProtectedAreas(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  force_data_refresh=False):
 
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
-
         dataset = ee.FeatureCollection('WCMC/WDPA/current/polygons')
         dataset = dataset.filter(ee.Filter.inList('STATUS', self.status)).filter(ee.Filter.lessThanOrEquals('STATUS_YR', self.status_year)).filter(ee.Filter.inList('IUCN_CAT', self.iucn_cat))
 
@@ -49,8 +42,5 @@ class ProtectedAreas(Layer):
             data_gdf = data_gdf.clip(wgs_bbox).reset_index()
 
             data = gpd.GeoDataFrame({'protected': 1, 'geometry': data_gdf.geometry}).to_crs(utm_crs)
-
-        if bbox.geo_type == GeoType.CITY:
-            write_layer(data, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return data

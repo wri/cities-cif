@@ -3,9 +3,7 @@ import ee
 
 from .land_surface_temperature import LandSurfaceTemperature
 from city_metrix.metrix_model import Layer, GeoExtent
-from ..constants import GTIFF_FILE_EXTENSION, GeoType
-from ..metrix_dao import write_layer
-from ..repo_manager import retrieve_cached_city_data2
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
@@ -26,15 +24,10 @@ class HighLandSurfaceTemperature(Layer):
         self.end_date = end_date
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, force_data_refresh=False):
+                 resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         hottest_date = self.get_hottest_date(bbox)
         start_date = (hottest_date - datetime.timedelta(days=45)).strftime("%Y-%m-%d")
@@ -42,13 +35,10 @@ class HighLandSurfaceTemperature(Layer):
 
         ee_rectangle = bbox.to_ee_rectangle()
         lst = (LandSurfaceTemperature(start_date, end_date)
-               .get_data(bbox, spatial_resolution))
+               .get_data_with_caching(bbox, spatial_resolution))
 
         lst_mean = lst.mean(dim=['x', 'y'])
         high_lst = lst.where(lst >= (lst_mean + self.THRESHOLD_ADD))
-
-        if bbox.geo_type == GeoType.CITY:
-            write_layer(high_lst, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return high_lst
 

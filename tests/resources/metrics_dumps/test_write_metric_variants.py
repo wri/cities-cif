@@ -3,8 +3,7 @@
 import geopandas as gpd
 import pytest
 
-from city_metrix.constants import WGS_CRS, RW_testing_s3_bucket_uri
-from city_metrix.file_cache_config import set_cache_settings
+from city_metrix.constants import WGS_CRS, RW_TESTING_S3_BUCKET_URI
 from city_metrix.metrics import *
 from tests.resources.bbox_constants import GEOZONE_FLORIANOPOLIS_WGS84
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
@@ -25,8 +24,6 @@ ZONE = GEOZONE_FLORIANOPOLIS_WGS84
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_large_city(target_folder):
-    set_cache_settings(RW_testing_s3_bucket_uri, 'dev')
-
     file_path = prep_output_path(target_folder, 'metric', 'natural_areas_percent.geojson')
     NaturalAreasPercent().write(ZONE, file_path)
     assert verify_file_is_populated(file_path)
@@ -39,7 +36,7 @@ def test_write_polygonal_zones(target_folder):
     NaturalAreasPercent().write(zone, file_path)
     assert verify_file_is_populated(file_path)
 
-    indicator = NaturalAreasPercent().get_data(zone)
+    indicator = NaturalAreasPercent().get_metric(zone)
     expected_zone_size = IDN_Jakarta_zone.zones.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size

@@ -2,9 +2,7 @@ from xrspatial.classify import reclassify
 
 from city_metrix.metrix_model import Layer, GeoExtent
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from ..constants import GTIFF_FILE_EXTENSION, GeoType
-from ..metrix_dao import write_layer
-from ..repo_manager import retrieve_cached_city_data2
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
@@ -17,17 +15,12 @@ class NaturalAreas(Layer):
         super().__init__(**kwargs)
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, force_data_refresh=False):
+                 resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data, file_uri = retrieve_cached_city_data2(self, bbox, force_data_refresh)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
-
-        esa_world_cover = EsaWorldCover().get_data(bbox, spatial_resolution=spatial_resolution)
+        esa_world_cover = EsaWorldCover().get_data_with_caching(bbox, spatial_resolution=spatial_resolution)
         reclass_map = {
             EsaWorldCoverClass.TREE_COVER.value: 1,
             EsaWorldCoverClass.SHRUBLAND.value: 1,
@@ -52,8 +45,5 @@ class NaturalAreas(Layer):
 
         # Apply the original CRS (Coordinate Reference System)
         reclassified_data = reclassified_data.rio.write_crs(esa_world_cover.rio.crs, inplace=True)
-
-        if bbox.geo_type == GeoType.CITY:
-            write_layer(reclassified_data, file_uri, self.GEOSPATIAL_FILE_FORMAT)
 
         return reclassified_data

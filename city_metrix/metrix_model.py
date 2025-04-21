@@ -24,6 +24,8 @@ from city_metrix.metrix_dao import (write_tile_grid, write_geojson, write_csv, w
                                     get_city, get_city_admin_boundaries, get_city_boundary)
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
                                       reproject_units, parse_city_aoi_json, construct_city_aoi_json)
+from city_metrix.cache_manager import retrieve_cached_city_data, build_file_key
+
 
 # ============= GeoZone ======================================
 class GeoZone():
@@ -508,10 +510,11 @@ class LayerGroupBy:
     def _zonal_stats_tile(stats_func, geo_zone, zones, aggregate, layer, masks, spatial_resolution, force_data_refresh):
         bbox = GeoExtent(geo_zone)
 
-        aggregate_data = aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
-        mask_datum = [mask.get_data(bbox=bbox, spatial_resolution=spatial_resolution,
+        aggregate_data = aggregate.get_data_with_caching(bbox=bbox, spatial_resolution=spatial_resolution,
+                                                         force_data_refresh = force_data_refresh)
+        mask_datum = [mask.get_data_with_caching(bbox=bbox, spatial_resolution=spatial_resolution,
                                     force_data_refresh= force_data_refresh) for mask in masks]
-        layer_data = layer.get_data(bbox=bbox, spatial_resolution=spatial_resolution,
+        layer_data = layer.get_data_with_caching(bbox=bbox, spatial_resolution=spatial_resolution,
                                          force_data_refresh= force_data_refresh) if layer is not None else None
 
         # align to highest resolution raster, which should be the largest raster
@@ -609,8 +612,8 @@ class Layer():
         self.masks = masks
 
     @abstractmethod
-    def get_data(self, bbox: GeoExtent, spatial_resolution:int, resampling_method:str,
-                 force_data_refresh:bool) -> Union[xr.DataArray, gpd.GeoDataFrame]:
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=None, resampling_method:str=None) ->\
+            Union[xr.DataArray, gpd.GeoDataFrame]:
         """
         Extract the data from the source and return it in a way we can compare to other layers.
         :param bbox: a tuple of floats representing the bounding box, (min x, min y, max x, max y)
@@ -620,6 +623,21 @@ class Layer():
         :return: A rioxarray-format DataArray or a GeoPandas DataFrame
         """
         ...
+
+    def get_data_with_caching(self, bbox: GeoExtent, spatial_resolution:int=None,
+                 force_data_refresh:bool=False) -> Union[xr.DataArray, gpd.GeoDataFrame]:
+
+        retrieved_cached_data, file_uri = retrieve_cached_city_data(self.aggregate, bbox, force_data_refresh)
+        result_data = None
+        if retrieved_cached_data is None:
+            result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
+
+            if bbox.geo_type == GeoType.CITY:
+                write_layer(result_data, file_uri, self.GEOSPATIAL_FILE_FORMAT)
+        else:
+            result_data = retrieved_cached_data
+
+        return result_data
 
     def mask(self, *layers):
         """
@@ -642,7 +660,8 @@ class Layer():
 
     def write(self, bbox: GeoExtent, output_path:str,
               tile_side_length:int=None, buffer_size:int=None, length_units:str=None,
-              spatial_resolution:int=None, resampling_method:int=None, **kwargs):
+              spatial_resolution:int=None, resampling_method:int=None,
+              force_data_refresh:bool=False, **kwargs):
         """
         Write the layer to a path. Does not apply masks.
         :param bbox: (min x, min y, max x, max y)
@@ -652,26 +671,27 @@ class Layer():
         :param length_units: units for tile_side_length and buffer_size (degrees, meters)
         :param spatial_resolution: resolution of continuous raster data in meters
         :param resampling_method: interpolation method for continuous raster layers (bilinear, bicubic, nearest)
+        :param force_data_refresh: forces layer data to be pulled from source instead of cache
         :return:
         """
 
-        # Below if logic controls behavior for writes. The underlying assumption is that if the user
-        # is writing to S3 or file uri for a "cache" storage, then it pulls source data from GEE.
-        # Otherwise, if the write is for pulling and writing data to some random local folder, then it
-        # is free to use the cache store.
-        if output_path.startswith("s3://") or output_path.startswith("file://"):
-            force_data_refresh: bool = False  # always read from source for S3 write
-        else:
-            force_data_refresh: bool = True  # allow cache hit for writes to OS
-
         file_format = self.GEOSPATIAL_FILE_FORMAT
+
+        # Determine if write can be skipped
+        if bbox.geo_type == GeoType.CITY:
+            file_uri, _, _ = build_file_key(self.aggregate, bbox)
+            skip_write = True if file_uri == output_path else False
+        elif output_path is None:
+            skip_write = True
+        else:
+            skip_write = False
 
         if tile_side_length is None:
             utm_geo_extent = bbox.as_utm_bbox() # currently only support output as utm
-            clipped_data = self.aggregate.get_data(utm_geo_extent, spatial_resolution=spatial_resolution,
-                                                   resampling_method=resampling_method,
+            clipped_data = self.aggregate.get_data_with_caching(utm_geo_extent, spatial_resolution=spatial_resolution,
                                                    force_data_refresh=force_data_refresh)
-            write_layer(clipped_data, output_path, file_format)
+            if skip_write is False:
+                write_layer(clipped_data, output_path, file_format)
         else:
             tile_grid_gdf = create_fishnet_grid(bbox, tile_side_length=tile_side_length, tile_buffer_size=0,
                                             length_units=length_units, spatial_resolution=spatial_resolution)
@@ -698,8 +718,7 @@ class Layer():
 
                 file_path = os.path.join(output_path, tile_name)
                 layer_data = self.aggregate.get_data(bbox=tile_bbox, spatial_resolution=spatial_resolution,
-                                                     resampling_method=resampling_method,
-                                                     force_data_refresh=force_data_refresh)
+                                                     resampling_method=resampling_method)
                 write_layer(layer_data, file_path, file_format)
 
     @staticmethod
@@ -794,7 +813,7 @@ class Metric():
             self.layer = self
 
     @abstractmethod
-    def get_data(self, geo_zone: GeoZone, spatial_resolution:int) -> pd.Series:
+    def get_metric(self, geo_zone: GeoZone, spatial_resolution:int) -> pd.Series:
         """
         Construct polygonal dataset using baser layers
         :return: A rioxarray-format GeoPandas DataFrame
@@ -808,7 +827,7 @@ class Metric():
         """
         Metric._verify_extension(output_path, '.geojson')
 
-        indicator = self.layer.get_data(geo_zone, spatial_resolution)
+        indicator = self.layer.get_metric(geo_zone, spatial_resolution)
         # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
         indicator.name = 'indicator'
 
@@ -825,7 +844,7 @@ class Metric():
         """
         Metric._verify_extension(output_path, '.csv')
 
-        indicator = self.layer.get_data(geo_zone, spatial_resolution)
+        indicator = self.layer.get_metric(geo_zone, spatial_resolution)
         # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
         indicator.name = 'indicator'
 

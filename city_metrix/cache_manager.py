@@ -1,58 +1,45 @@
-import inspect
 import os
-import tempfile
 from datetime import datetime
-from urllib.parse import urlparse
-
-import boto3
-import xarray as xr
 from enum import Enum
-import geopandas as gpd
-from pyproj import CRS
 
 from city_metrix.constants import GeoType, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION, \
-    aws_s3_profile, local_repo_uri, default_publishing_env
-from city_metrix.file_cache_config import cif_cache_settings, get_cached_file_key, get_cif_s3_bucket_name, \
-    set_cache_settings
-from rioxarray import rioxarray
+    LOCAL_REPO_URI, DEFAULT_PUBLISHING_ENV, RW_DASHBOARD_LAYER_S3_BUCKET_URI, RW_DASHBOARD_METRIC_S3_BUCKET_URI
+from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_cache, \
+    read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_s3_client, get_bucket_name_from_s3_uri
+from city_metrix.metrix_tools import get_class_from_instance
 
-from city_metrix.metrix_dao import get_uri_scheme, _read_geojson_from_cache2, _read_geotiff_from_cache2, \
-    _read_netcdf_from_cache2
-from tests.tools.general_tools import get_class_from_instance
-
-
-def retrieve_cached_city_data2(class_obj, geo_extent, force_data_refresh: bool):
+def build_file_key(class_obj, geo_extent):
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
-    file_format = class_obj.GEOSPATIAL_FILE_FORMAT
 
     # Construct layer filename and s3 key
-    layer_folder_name, layer_id, is_custom_layer = build_cache_layer_names2(class_obj)
-    file_key = get_cached_file_key(layer_folder_name, city_id, admin_level, layer_id)
+    cache_folder_name, feature_id, is_custom_layer = build_cache_layer_names(class_obj)
 
-    if is_custom_layer:
-        set_cache_settings(local_repo_uri, default_publishing_env)
+    # Determine if object is a layer or metric
+    feature_base_class_name = class_obj.__class__.__bases__[0].__name__
 
-    cif_cache_location_uri = cif_cache_settings.cache_location_uri
-    file_uri = get_cached_file_uri2(file_key)
+    file_key = get_cached_file_key(feature_base_class_name, cache_folder_name, city_id,
+                                   admin_level, feature_id)
 
-    if (force_data_refresh == True
-        or geo_extent.geo_type == GeoType.GEOMETRY
-        or cif_cache_location_uri is None
-    ):
-        return None, file_uri
+    file_uri = get_cached_file_uri(feature_base_class_name, file_key, is_custom_layer)
 
-    if not check_if_cache_file_exists2(file_uri):
+    return file_uri, file_key, is_custom_layer
+
+def retrieve_cached_city_data(class_obj, geo_extent, force_data_refresh: bool):
+    file_uri, file_key, is_custom_layer = build_file_key(class_obj, geo_extent)
+
+    if force_data_refresh == True or geo_extent.geo_type == GeoType.GEOMETRY or not check_if_cache_file_exists(file_uri):
         return None, file_uri
 
     # Retrieve from cache
     result_data = None
+    file_format = class_obj.GEOSPATIAL_FILE_FORMAT
     if file_format == GTIFF_FILE_EXTENSION:
-        result_data = _read_geotiff_from_cache2(file_uri)
+        result_data = read_geotiff_from_cache(file_uri)
     elif file_format == GEOJSON_FILE_EXTENSION:
-        result_data = _read_geojson_from_cache2(file_key)
+        result_data = read_geojson_from_cache(file_uri)
     elif file_format == NETCDF_FILE_EXTENSION:
-        result_data = _read_netcdf_from_cache2(file_uri)
+        result_data = read_netcdf_from_cache(file_uri)
     else:
         raise Exception(f"Unrecognized file_format of '{file_format}'")
 
@@ -77,7 +64,7 @@ def has_default_attribute_values(layer_obj):
     return has_matched_cls_obj_atts, unmatched_atts
 
 
-def build_cache_layer_names2(layer_obj):
+def build_cache_layer_names(layer_obj):
     """
     Function uses the sequence of layer-class parameters specified in two class constants, plus standard date
     parameters in many of the layer classes to construct names for cache folders and cached layer files.
@@ -149,7 +136,9 @@ def _build_naming_string_from_standard_parameters(layer_obj, is_custom_layer):
 def _standardize_date_kv(date_key, date_value, is_custom_layer):
     if not is_custom_layer:
         # For default parameters, collapse dates into just the year
-        date_value = datetime.strptime(date_value, "%Y-%m-%d").year
+        if isinstance(date_value, str):
+            date_value = datetime.strptime(date_value, "%Y-%m-%d").year
+
         if date_key == 'start_date':
             date_key = 'start_year'
         elif date_key == 'end_date':
@@ -195,59 +184,40 @@ def _convert_snake_case_to_pascal_case(attribute_name):
 def _construct_kv_string(key, value):
     return f"__{key}_{value}"
 
-# ===================================
-def check_if_cache_file_exists2(file_uri):
-    uri_scheme = get_uri_scheme2(file_uri)
-    file_key = get_file_path_from_uri2(file_uri)
+def check_if_cache_file_exists(file_uri):
+    uri_scheme = get_uri_scheme(file_uri)
+    file_key = get_file_path_from_uri(file_uri)
     if uri_scheme == "s3":
-        s3_client = get_s3_client2()
-        aws_bucket = get_cif_s3_bucket_name()
-        response = s3_client.list_objects_v2(Bucket=aws_bucket, Prefix=file_key)
+        s3_client = get_s3_client()
+        s3_bucket = get_bucket_name_from_s3_uri(file_uri)
+        response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=file_key)
         for obj in response.get('Contents', []):
             if obj['Key'] == file_key:
                 return True
         return False
     else:
-        uri_path = os.path.normpath(get_file_path_from_uri2(file_key))
+        uri_path = os.path.normpath(get_file_path_from_uri(file_key))
         return os.path.exists(uri_path)
 
-def get_layer_cache_variables2(layer_obj, geo_extent):
-    layer_folder_name, layer_id, has_matched_cls_obj_atts = build_cache_layer_names2(layer_obj)
-    city_id = geo_extent.city_id
-    admin_level = geo_extent.admin_level
-    file_key = get_cached_file_key(layer_folder_name, city_id, admin_level, layer_id)
-    file_uri = get_cached_file_uri2(file_key)
+def get_cached_file_uri(feature_base_class_name, file_key, is_custom_layer):
+    if feature_base_class_name.lower() == 'layer':
+        uri = LOCAL_REPO_URI if is_custom_layer else RW_DASHBOARD_LAYER_S3_BUCKET_URI
+    else:
+        uri = RW_DASHBOARD_METRIC_S3_BUCKET_URI
 
-    return file_key, file_uri, layer_id
-
-def get_cached_file_uri2(file_key):
-    uri = cif_cache_settings.cache_location_uri
-    if get_uri_scheme2(uri) in ('s3', 'file'):
+    if get_uri_scheme(uri) in ('s3', 'file'):
         file_uri = f"{uri}/{file_key}"
     else:
         file_uri = None
     return file_uri
 
-def get_uri_scheme2(uri):
-    parsed_uri = urlparse(uri)
-    if parsed_uri.scheme == 's3':
-        uri_scheme = 's3'
-    elif parsed_uri.scheme == 'file':
-        uri_scheme = 'file'
+
+def get_cached_file_key(feature_based_class_name, feature_name, city_id, admin_level, feature_id):
+    from pathlib import Path
+    file_format = Path(feature_id).suffix.lstrip('.')
+    env = DEFAULT_PUBLISHING_ENV
+    if feature_based_class_name.lower() == 'layer':
+        file_key = f"data/{env}/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}"
     else:
-        uri_scheme = 'os_path'
-    return uri_scheme
-
-def get_file_path_from_uri2(uri):
-  parsed_url = urlparse(uri)
-  file_path = parsed_url.path
-  uri_scheme = get_uri_scheme2(uri)
-  if uri_scheme == "s3":
-      file_path = file_path[1:]
-  return file_path
-
-def get_s3_client2():
-    session = boto3.Session(profile_name=aws_s3_profile)
-    s3_client = session.client('s3')
-    return s3_client
-
+        file_key = f"metrics/{env}/{city_id}/{city_id}__{feature_id}"
+    return file_key

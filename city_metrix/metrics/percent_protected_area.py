@@ -20,7 +20,7 @@ class PercentProtectedArea(Metric):
         self.status_year = status_year
         self.iucn_cat = iucn_cat
 
-    def get_data(self,
+    def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
 

@@ -20,7 +20,7 @@ class BuiltLandWithLowSurfaceReflectivity(Metric):
         self.end_date = end_date
         self.albedo_threshold = albedo_threshold
 
-    def get_data(self,
+    def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         """

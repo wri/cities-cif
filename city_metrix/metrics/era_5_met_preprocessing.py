@@ -16,7 +16,7 @@ class Era5MetPreprocessing(Metric):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_data(self,
+    def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         """
@@ -25,7 +25,7 @@ class Era5MetPreprocessing(Metric):
         :return: Pandas Dataframe of data
         """
         bbox = GeoExtent(geo_zone.bounds, geo_zone.crs)
-        era_5_data = Era5HottestDay().get_data(bbox)
+        era_5_data = Era5HottestDay().get_data_with_caching(bbox)
 
         t2m_var = era_5_data.sel(variable='t2m').values
         u10_var = era_5_data.sel(variable='u10').values
