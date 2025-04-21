@@ -3,13 +3,13 @@ import pandas as pd
 import numpy as np
 from geopandas import GeoSeries
 
-from city_metrix.constants import NETCDF_FILE_EXTENSION
+from city_metrix.constants import GEOJSON_FILE_EXTENSION
 from city_metrix.layers import Era5HottestDay
 from city_metrix.metrix_model import GeoExtent, Metric, GeoZone
 
 
 class Era5MetPreprocessing(Metric):
-    GEOSPATIAL_FILE_FORMAT = NETCDF_FILE_EXTENSION
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 

@@ -80,10 +80,16 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/file
       '''
       * Note: the city_id and aoi_id may be determined via the Cities Indicators API at https://dev.cities-data-api.wri.org/docs
 3. Data layer caching:
-   1. Data layers can be cached to S3 buckets or local OS directory using the CIF-portal.
-   2. Once available, the system will read from the cached location.
+   1. Data layers for cities are automatically cached to S3 for default parameters and to a local repository for non-default parameters.
+      1. Default files are stored in the wri-cities-data-api bucket under the data folder.
+      2. Non-default files are stored in the "CIF_layer_repository" folder in the home directory of the processing machine
+   2. The system will read from both the S3 and local repositories.
    2. The cached data are stored in the following directory structure:
-      1. data/{env}/{layer_name}/{file_format}/{city_id}__{admin_level}__{layer_id} where: env is either development (dev) or production (prd) environment and file_format is the file extension.
+      1. data/{env}/{layer_name}/{file_format}/{city_id}__{admin_level}__{layer_id} 
+         1. where: env is either development (dev) or production (prd) environment and file_format is the file extension.
+4. Metric caching:
+   1. Metrics for cities are caches in S3 in the wri-cities-indicators bucket within the metrics folder.
+   2. All metrics for a city are stored in the same city folder.
       
 ### Testing
 Warning: Some tests in tests/resources folder write intermediate results to a shared S3 bucket, so there is some potential for collision between concurrent runs.

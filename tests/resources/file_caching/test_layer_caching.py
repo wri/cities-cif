@@ -11,17 +11,6 @@ from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84
 PROCESSING_CITY = GEOEXTENT_TERESINA_WGS84
 CITY_UT_NAME = 'teresina'
 
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def _run_cache_test(layer_obj):
-    file_key, file_uri, layer_id, is_custom_layer = get_layer_cache_variables(layer_obj, PROCESSING_CITY)
-
-    data = layer_obj.get_data_with_caching(PROCESSING_CITY, force_data_refresh=True)
-    assert np.size(data) > 0
-
-    cache_file_exists = check_if_cache_file_exists(file_uri)
-    assert cache_file_exists
-
-    return is_custom_layer
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_geojson_default_val():
@@ -64,3 +53,14 @@ def test_netcdf_custom_val():
     layer_obj = Era5HottestDay(start_date="2023-02-01")
     is_custom_layer = _run_cache_test(layer_obj)
     assert is_custom_layer == True
+
+def _run_cache_test(layer_obj):
+    file_key, file_uri, layer_id, is_custom_layer = get_layer_cache_variables(layer_obj, PROCESSING_CITY)
+
+    data = layer_obj.get_data_with_caching(PROCESSING_CITY, force_data_refresh=True)
+    assert np.size(data) > 0
+
+    cache_file_exists = check_if_cache_file_exists(file_uri)
+    assert cache_file_exists
+
+    return is_custom_layer
