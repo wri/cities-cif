@@ -5,7 +5,7 @@ from .overture_buildings import OvertureBuildings
 from .nasa_dem import NasaDEM
 from .era_5_hottest_day import Era5HottestDay
 from .impervious_surface import ImperviousSurface
-from .isoline import Isoline
+from .isoline import AccessibleRegion, AccessibleCount
 from .glad_lulc import LandCoverGlad
 from .glad_lulc import LandCoverSimplifiedGlad
 from .glad_lulc import LandCoverHabitatGlad
