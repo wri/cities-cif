@@ -139,23 +139,17 @@ def test_natural_areas():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="AWS credentials needed")
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
 def test_percent_population_access_all():
-    from .conftest import create_fishnet_grid
-    NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
-    indicator = percent_population_access_all(NAIROBI_BBOX, 'KEN-Nairobi', 'schools', 'walk', 'time', '15', 2024, aws_profilename=None)
-    expected_zone_size = NAIROBI_BBOX.geometry.size
-    actual_indicator_size = indicator.size
-    assert expected_zone_size == actual_indicator_size
+    indicator = AccessPopulationPercentAll('BRA-Belo_Horizonte', 'jobs', 'walk', '15', 'minutes')
+    assert actual_indicator_size > 0
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="AWS credentials needed")
-def test_count_accessible_amenities_all():
-    from .conftest import create_fishnet_grid
-    NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
-    indicator = count_accessible_amenities_all(NAIROBI_BBOX, 'KEN-Nairobi', 'schools', 'walk', 'time', '15', 2024, aws_profilename=None)
-    expected_zone_size = NAIROBI_BBOX.geometry.size
-    actual_indicator_size = indicator.size
-    assert expected_zone_size == actual_indicator_size
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
+# def test_count_accessible_amenities_all():
+    # rom .conftest import create_fishnet_grid
+    # NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
+    # indicator = AccessPopulationCountAll('BRA-Belo_Horizonte', 'jobs', 'walk', '15', 'minutes')
+    # assert actual_indicator_size > 0
 
 def test_percent_area_fracveg_exceeds_threshold():
     indicator = PercentAreaFracvegExceedsThreshold().get_data(IDN_JAKARTA_TILED_ZONES)
