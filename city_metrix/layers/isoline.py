@@ -9,17 +9,17 @@ BUCKET_NAME = 'wri-cities-indicators'
 PREFIX = 'data/isolines'
 
 class AccessibleRegion(Layer):
-    def __init__(self, amenity='jobs', travel_mode='walk', distance=15, unit='minutes', buffered_and_simplified=False, dissolved=True, **kwargs):
+    def __init__(self, amenity='jobs', travel_mode='walk', threshold=15, unit='minutes', buffered_and_simplified=False, dissolved=True, **kwargs):
         super().__init__(**kwargs)
         self.amenity = amenity
         self.travel_mode = travel_mode
-        self.distance = distance
+        self.threshold = threshold
         self.unit = unit
         self.buffered_and_simplified = buffered_and_simplified
         self.dissolved = dissolved
 
     def get_data(self, city_id):
-        url = f'https://{BUCKET_NAME}.s3.us-east-1.amazonaws.com/{PREFIX}/{city_id}__{self.amenity}__{self.travel_mode}__{self.distance}__{self.unit}.geojson'
+        url = f'https://{BUCKET_NAME}.s3.us-east-1.amazonaws.com/{PREFIX}/{city_id}__{self.amenity}__{self.travel_mode}__{self.threshold}__{self.unit}.geojson'
         print(f'Attempting to retrieve isoline file from {url}', end=' ')
         try:
             gdf = gpd.read_file(url)
@@ -45,8 +45,8 @@ class AccessibleRegion(Layer):
         return shorter_gdf
 
 class AccessibleCount(AccessibleRegion):
-    def __init__(self, amenity='jobs', travel_mode='walk', distance=15, unit='minutes', **kwargs):
-        super().__init__(amenity=amenity, travel_mode=travel_mode, distance=distance, unit=unit, buffered_and_simplified=True, dissolved=False, **kwargs)
+    def __init__(self, amenity='jobs', travel_mode='walk', threshold=15, unit='minutes', **kwargs):
+        super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit, buffered_and_simplified=True, dissolved=False, **kwargs)
 
     def get_data(self, city_id):
         iso_gdf = super().get_data(city_id)
