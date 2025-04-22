@@ -394,5 +394,36 @@ def get_image_collection(
     longitude_range = slice(west,east)
     latitude_range = slice(south, north)
     clipped_data = data.sel(x=longitude_range, y=latitude_range)
-
     return clipped_data
+
+def write_layer(path, data):
+    if isinstance(data, xr.DataArray):
+        write_dataarray(path, data)
+    elif isinstance(data, gpd.GeoDataFrame):
+        data.to_file(path, driver="GeoJSON")
+    else:
+        raise NotImplementedError("Can only write DataArray, Dataset, or GeoDataFrame")
+        raise NotImplementedError("Can only write DataArray, Dataset, or GeoDataFrame")
+
+def write_dataarray(path, data):
+    # for rasters, need to write to locally first then copy to cloud storage
+    if path.startswith("s3://"):
+        tmp_path = f"{uuid4()}.tif"
+        data.rio.to_raster(raster_path=tmp_path, driver="COG")
+
+        s3 = boto3.client('s3')
+        s3.upload_file(tmp_path, path.split('/')[2], '/'.join(path.split('/')[3:]))
+
+        os.remove(tmp_path)
+    else:
+        data.rio.to_raster(raster_path=path, driver="COG")
+
+def offset_meters_to_geographic_degrees(decimal_latitude, length_m):
+    # TODO consider replacing this spherical calculation with ellipsoidal
+    earth_radius_m = 6378137
+    rad = 180/math.pi
+
+    lon_degree_offset = abs((length_m / (earth_radius_m * math.cos(math.pi*decimal_latitude/180))) * rad)
+    lat_degree_offset = abs((length_m / earth_radius_m) * rad)
+
+    return lon_degree_offset, lat_degree_offset

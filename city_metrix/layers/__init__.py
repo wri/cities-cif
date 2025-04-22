@@ -1,6 +1,15 @@
 from .acag_pm2p5 import AcagPM2p5
 from .albedo import Albedo
 from .alos_dsm import AlosDSM
+from .overture_buildings import OvertureBuildings
+from .nasa_dem import NasaDEM
+from .era_5_hottest_day import Era5HottestDay
+from .impervious_surface import ImperviousSurface
+from .isoline import AccessibleRegion, AccessibleCount
+from .glad_lulc import LandCoverGlad
+from .glad_lulc import LandCoverSimplifiedGlad
+from .glad_lulc import LandCoverHabitatGlad
+from .glad_lulc import LandCoverHabitatChangeGlad
 from .aqueduct_flood import AqueductFlood
 from .average_net_building_height import AverageNetBuildingHeight
 from .built_up_height import BuiltUpHeight

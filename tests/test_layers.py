@@ -1,5 +1,4 @@
 import math
-
 import pytest
 import numpy as np
 
@@ -129,6 +128,12 @@ def test_impervious_surface():
     assert get_projection_name(data.crs) == 'utm'
     utm_bbox_data = ImperviousSurface().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="AWS redentials needed")
+def test_isoline():
+    layer = Isoline({'cityname': 'KEN-Nairobi', 'amenityname': 'schools', 'travelmode': 'walk', 'threshold_type': 'time', 'threshold_value': '15', 'year': 2023})
+    nairobi_bbox = (36.66446402, -1.44560888, 37.10497899, -1.16058296)
+    data = layer.get_data(nairobi_bbox)
 
 def test_land_cover_glad():
     data = LandCoverGlad().get_data(BBOX)

@@ -8,6 +8,7 @@ import pytest
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
 
+
 def test_built_land_with_high_lst():
     sample_zones = IDN_JAKARTA_TILED_ZONES
     indicator = BuiltLandWithHighLST().get_data(sample_zones)
@@ -63,6 +64,7 @@ def test_percent_canopy_covered_population_children():
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
+
 
 def test_percent_canopy_covered_population_elderly():
     indicator = PercentCanopyCoveredPopulationElderly().get_data(IDN_JAKARTA_TILED_ZONES)
@@ -136,6 +138,18 @@ def test_natural_areas():
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
+def test_percent_population_access_all():
+    indicator = AccessPopulationPercentAll('BRA-Belo_Horizonte', 'jobs', 'walk', '15', 'minutes')
+    assert actual_indicator_size > 0
+
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
+# def test_count_accessible_amenities_all():
+    # rom .conftest import create_fishnet_grid
+    # NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
+    # indicator = AccessPopulationCountAll('BRA-Belo_Horizonte', 'jobs', 'walk', '15', 'minutes')
+    # assert actual_indicator_size > 0
 
 def test_percent_area_fracveg_exceeds_threshold():
     indicator = PercentAreaFracvegExceedsThreshold().get_data(IDN_JAKARTA_TILED_ZONES)
