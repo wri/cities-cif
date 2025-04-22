@@ -394,6 +394,7 @@ def get_image_collection(
     longitude_range = slice(west,east)
     latitude_range = slice(south, north)
     clipped_data = data.sel(x=longitude_range, y=latitude_range)
+    return clipped_data
 
 def write_layer(path, data):
     if isinstance(data, xr.DataArray):

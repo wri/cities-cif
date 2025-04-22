@@ -3,14 +3,17 @@ import shapely
 import urllib
 from math import floor
 from .layer import Layer
+from .layer_geometry import GeoExtent, construct_city_aoi_json
 from .layer_geometry import get_utm_zone_from_latlon_point
 
 BUCKET_NAME = 'wri-cities-indicators'
 PREFIX = 'data/isolines'
+DEFAULT_SPATIAL_RESOLUTION = 10
 
 class AccessibleRegion(Layer):
-    def __init__(self, amenity='jobs', travel_mode='walk', threshold=15, unit='minutes', buffered_and_simplified=False, dissolved=True, **kwargs):
+    def __init__(self, city_id='KEN-Nairobi', amenity='jobs', travel_mode='walk', threshold=15, unit='minutes', buffered_and_simplified=False, dissolved=True, **kwargs):
         super().__init__(**kwargs)
+        self.city_id = city_id
         self.amenity = amenity
         self.travel_mode = travel_mode
         self.threshold = threshold
@@ -18,8 +21,9 @@ class AccessibleRegion(Layer):
         self.buffered_and_simplified = buffered_and_simplified
         self.dissolved = dissolved
 
-    def get_data(self, city_id):
-        url = f'https://{BUCKET_NAME}.s3.us-east-1.amazonaws.com/{PREFIX}/{city_id}__{self.amenity}__{self.travel_mode}__{self.threshold}__{self.unit}.geojson'
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None, allow_cache_retrieval=False):
+        url = f'https://{BUCKET_NAME}.s3.us-east-1.amazonaws.com/{PREFIX}/{self.city_id}__{self.amenity}__{self.travel_mode}__{self.threshold}__{self.unit}.geojson'
         print(f'Attempting to retrieve isoline file from {url}', end=' ')
         try:
             gdf = gpd.read_file(url)
@@ -45,11 +49,12 @@ class AccessibleRegion(Layer):
         return shorter_gdf
 
 class AccessibleCount(AccessibleRegion):
-    def __init__(self, amenity='jobs', travel_mode='walk', threshold=15, unit='minutes', **kwargs):
-        super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit, buffered_and_simplified=True, dissolved=False, **kwargs)
+    def __init__(self, city_id='KEN-Nairobi', amenity='jobs', travel_mode='walk', threshold=15, unit='minutes', **kwargs):
+        super().__init__(city_id=city_id, amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit, buffered_and_simplified=True, dissolved=False, **kwargs)
 
-    def get_data(self, city_id):
-        iso_gdf = super().get_data(city_id)
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None, allow_cache_retrieval=False):
+        iso_gdf = super().get_data(bbox)
         if len(iso_gdf) == 1 and type(iso_gdf.iloc[0].geometry) == shapely.geometry.polygon.Polygon: # only one simple-polygon isoline
             dissected_gdf = GeoDataFrame({'poly_id': [0], 'geometry': [iso_gdf.iloc[0].geometry]}).set_crs('EPSG:4326')
         else:

@@ -12,6 +12,11 @@ from ..constants import GTIFF_FILE_EXTENSION
 DEFAULT_SPATIAL_RESOLUTION = 100
 
 class WorldPopClass(Enum):
+    ADULT = ['F_15', 'F_20', 'F_25', 'F_30', 'F_35', 'F_40', 'F_45', 'F_50', 'F_55',
+             'F_60', 'F_65', 'F_70', 'F_75', 'F_80',
+             'M_15', 'M_20', 'M_25', 'M_30', 'M_35', 'M_40', 'M_45', 'M_50', 'M_55',
+             'M_60', 'M_65', 'M_70', 'M_75', 'M_80']
+               'M_60', 'M_65', 'M_70', 'M_75', 'M_80']
     ELDERLY = ['F_60', 'F_65', 'F_70', 'F_75', 'F_80',
                'M_60', 'M_65', 'M_70', 'M_75', 'M_80']
     CHILDREN = ['F_0', 'F_1', 'F_5', 'F_10', 'M_0', 'M_1', 'M_5', 'M_10']
@@ -94,6 +99,8 @@ class WorldPop(Layer):
                 ee_rectangle,
                 spatial_resolution,
                 "world pop age sex"
-            ).sum_age_sex_group
+            )
+            print(data)
+            data = data.sum_age_sex_group
 
         return data
