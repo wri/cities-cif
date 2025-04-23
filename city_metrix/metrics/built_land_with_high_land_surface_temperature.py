@@ -1,4 +1,4 @@
-from pandas import Series
+from pandas import GeoSeries
 
 from city_metrix.constants import GEOJSON_FILE_EXTENSION
 from city_metrix.layers import HighLandSurfaceTemperature, EsaWorldCoverClass, EsaWorldCover
@@ -15,7 +15,7 @@ class BuiltLandWithHighLST(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Series:
+                 spatial_resolution:int = None) -> GeoSeries:
         """
         Get percentage of built up land with low albedo based on Sentinel 2 imagery.
         :param geo_zone:

@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 from city_metrix import s3_client
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
     NETCDF_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI, RW_DASHBOARD_LAYER_S3_BUCKET_URI
-from city_metrix.metrix_tools import get_crs_from_data
+from city_metrix.metrix_tools import get_crs_from_data, standardize_y_dimension_direction
 
 
 def _read_geojson_from_s3(s3_bucket, file_key):
@@ -138,12 +138,13 @@ def write_geojson(data, uri):
 
 def _write_geotiff(data, uri):
     _verify_datatype('write_geotiff()', data, [xr.DataArray], is_spatial=True)
+    _, standardized_array = standardize_y_dimension_direction(data)
     if get_uri_scheme(uri) == 's3':
-        _write_file_to_s3(data, uri, GTIFF_FILE_EXTENSION)
+        _write_file_to_s3(standardized_array, uri, GTIFF_FILE_EXTENSION)
     else:
         uri_path = os.path.normpath(get_file_path_from_uri(uri))
         _create_local_target_folder(uri_path)
-        data.rio.to_raster(raster_path=uri_path, driver="GTiff")
+        standardized_array.rio.to_raster(raster_path=uri_path, driver="GTiff")
 
 def _write_netcdf(data, uri):
     _verify_datatype('write_netcdf()', data, [xr.DataArray], is_spatial=False)

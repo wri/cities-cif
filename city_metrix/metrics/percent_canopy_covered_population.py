@@ -1,7 +1,7 @@
-from geopandas import GeoDataFrame, GeoSeries
+from geopandas import GeoSeries
 
 from city_metrix.constants import GEOJSON_FILE_EXTENSION
-from city_metrix.metrix_model import Metric
+from city_metrix.metrix_model import Metric, GeoZone
 from city_metrix.layers import (
     WorldPop,
     WorldPopClass,
@@ -25,7 +25,7 @@ class PercentCanopyCoveredPopulation(Metric):
         self.informal_only = informal_only
 
     def get_metric(
-        self, zones: GeoDataFrame, spatial_resolution: int = None
+        self, geo_zone: GeoZone, spatial_resolution: int = None
     ) -> GeoSeries:
 
         coverage_mask = TreeCanopyCoverMask(height=self.height, percentage=self.percentage)
@@ -38,8 +38,8 @@ class PercentCanopyCoveredPopulation(Metric):
         else:
             pop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, masks=[coverage_mask])
 
-        access_pop = pop_layer.groupby(zones).sum()
-        total_pop = WorldPop(agesex_classes=self.worldpop_agesex_classes).groupby(zones).sum()
+        access_pop = pop_layer.groupby(geo_zone).sum()
+        total_pop = WorldPop(agesex_classes=self.worldpop_agesex_classes).groupby(geo_zone).sum()
 
         return 100 * access_pop.fillna(0) / total_pop
 
@@ -56,7 +56,7 @@ class PercentCanopyCoveredPopulationChildren(Metric):
         self.informal_only = informal_only
 
     def get_metric(
-        self, zones: GeoDataFrame, spatial_resolution: int = None
+        self, geo_zone: GeoZone, spatial_resolution: int = None
     ) -> GeoSeries:
         percent_canopy_covered_children = PercentCanopyCoveredPopulation(
             worldpop_agesex_classes=WorldPopClass.CHILDREN,
@@ -65,7 +65,7 @@ class PercentCanopyCoveredPopulationChildren(Metric):
             informal_only=self.informal_only,
         )
 
-        return percent_canopy_covered_children.get_metric(zones=zones)
+        return percent_canopy_covered_children.get_metric(geo_zone=geo_zone)
 
 class PercentCanopyCoveredPopulationElderly(Metric):
     GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
@@ -79,7 +79,7 @@ class PercentCanopyCoveredPopulationElderly(Metric):
         self.informal_only = informal_only
 
     def get_metric(
-        self, zones: GeoDataFrame, spatial_resolution: int = None
+        self, geo_zone: GeoZone, spatial_resolution: int = None
     ) -> GeoSeries:
         percent_canopy_covered_elderly = PercentCanopyCoveredPopulation(
             worldpop_agesex_classes=WorldPopClass.ELDERLY,
@@ -88,7 +88,7 @@ class PercentCanopyCoveredPopulationElderly(Metric):
             informal_only=self.informal_only,
         )
 
-        return percent_canopy_covered_elderly.get_metric(zones=zones)
+        return percent_canopy_covered_elderly.get_metric(geo_zone=geo_zone)
 
 class PercentCanopyCoveredPopulationFemale(Metric):
     GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
@@ -102,7 +102,7 @@ class PercentCanopyCoveredPopulationFemale(Metric):
         self.informal_only = informal_only
 
     def get_metric(
-        self, zones: GeoDataFrame, spatial_resolution: int = None
+        self, geo_zone: GeoZone, spatial_resolution: int = None
     ) -> GeoSeries:
         percent_canopy_covered_female = PercentCanopyCoveredPopulation(
             worldpop_agesex_classes=WorldPopClass.FEMALE,
@@ -111,7 +111,7 @@ class PercentCanopyCoveredPopulationFemale(Metric):
             informal_only=self.informal_only,
         )
 
-        return percent_canopy_covered_female.get_metric(zones=zones)
+        return percent_canopy_covered_female.get_metric(geo_zone=geo_zone)
 
 class PercentCanopyCoveredPopulationInformal(Metric):
     GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
@@ -125,7 +125,7 @@ class PercentCanopyCoveredPopulationInformal(Metric):
         self.percentage = percentage
 
     def get_metric(
-        self, zones: GeoDataFrame, spatial_resolution: int = None
+        self, geo_zone: GeoZone, spatial_resolution: int = None
     ) -> GeoSeries:
         percent_canopy_covered_informal = PercentCanopyCoveredPopulation(
             worldpop_agesex_classes=self.worldpop_agesex_classes,
@@ -134,4 +134,4 @@ class PercentCanopyCoveredPopulationInformal(Metric):
             informal_only=True,
         )
 
-        return percent_canopy_covered_informal.get_metric(zones=zones)
+        return percent_canopy_covered_informal.get_metric(geo_zone=geo_zone)

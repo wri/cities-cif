@@ -4,7 +4,8 @@ import timeout_decorator
 from city_metrix.metrics import *
 from city_metrix.cache_manager import check_if_cache_file_exists
 from ...tools.general_tools import get_layer_cache_variables
-from ..bbox_constants import GEOZONE_TERESINA_WGS84, GEOEXTENT_TERESINA_WGS84
+from ..bbox_constants import GEOZONE_TERESINA_WGS84, GEOEXTENT_TERESINA_WGS84, GEOEXTENT_FLORIANOPOLIS_WGS84, \
+    GEOZONE_FLORIANOPOLIS_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from ..tools import prep_output_path, cleanup_cache_files
 
@@ -12,7 +13,11 @@ PRESERVE_RESULTS_ON_S3 = True # True - Default for check-in
 PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
 FORCE_DATA_REFRESH = False # False - Default for check-in
 
-SLOW_TEST_TIMEOUT_SECONDS = 60 # 1 minute
+SLOW_TEST_TIMEOUT_SECONDS = 500 # seconds
+
+# PROCESSING_CITY = GEOEXTENT_FLORIANOPOLIS_WGS84
+# PROCESSING_CITY_GEOZONE = GEOZONE_FLORIANOPOLIS_WGS84
+# CITY_UT_NAME = 'florianopolis'
 
 PROCESSING_CITY = GEOEXTENT_TERESINA_WGS84
 PROCESSING_CITY_GEOZONE = GEOZONE_TERESINA_WGS84

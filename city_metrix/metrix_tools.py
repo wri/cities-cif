@@ -85,16 +85,16 @@ def get_projection_type(crs: Union[str | int]):
     return projection_type
 
 #  ================ Misc ======================
-# def standardize_y_dimension_direction(data_array):
-#     """
-#     Function resets y-values so they comply with the standard GDAL top-down increasing order, as needed.
-#     """
-#     was_reversed= False
-#     y_dimensions = data_array.shape[0]
-#     if data_array.y.data[0] < data_array.y.data[y_dimensions - 1]:
-#         data_array = data_array.isel({data_array.rio.y_dim: slice(None, None, -1)})
-#         was_reversed = True
-#     return was_reversed, data_array
+def standardize_y_dimension_direction(data_array):
+    """
+    Function resets y-values so they comply with the standard GDAL top-down increasing order, as needed.
+    """
+    was_reversed= False
+    y_dimensions = data_array.shape[0]
+    if data_array.y.data[0] < data_array.y.data[y_dimensions - 1]:
+        data_array = data_array.isel({data_array.rio.y_dim: slice(None, None, -1)})
+        was_reversed = True
+    return was_reversed, data_array
 
 def get_haversine_distance(lon1, lat1, lon2, lat2):
     # Global-average radius of the Earth in meters

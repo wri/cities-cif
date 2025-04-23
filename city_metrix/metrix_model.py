@@ -19,7 +19,7 @@ from shapely.geometry import box
 from xrspatial import zonal_stats
 
 
-from city_metrix.constants import WGS_CRS, ProjectionType, GeoType
+from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION
 from city_metrix.metrix_dao import (write_tile_grid, write_geojson, write_csv, write_layer,
                                     get_city, get_city_admin_boundaries, get_city_boundary)
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
@@ -550,6 +550,8 @@ class LayerGroupBy:
                 if result_stats is None:
                     result_stats = stats
                 else:
+                    # if metric values for a prior level are already in the results data, then merge in the new stats,
+                    # then combine them into a single column.
                     merged_df = pd.merge(result_stats, stats, on='zone', how='outer')
 
                     for func in stats_func:
@@ -825,7 +827,7 @@ class Metric():
         Write the metric to a path. Does not apply masks.
         :return:
         """
-        Metric._verify_extension(output_path, '.geojson')
+        Metric._verify_extension(output_path, f".{GEOJSON_FILE_EXTENSION}")
 
         indicator = self.layer.get_metric(geo_zone, spatial_resolution)
         # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
@@ -842,7 +844,7 @@ class Metric():
         Write the metric to a path. Does not apply masks.
         :return:
         """
-        Metric._verify_extension(output_path, '.csv')
+        Metric._verify_extension(output_path, f".{CSV_FILE_EXTENSION}")
 
         indicator = self.layer.get_metric(geo_zone, spatial_resolution)
         # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262

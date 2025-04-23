@@ -10,6 +10,9 @@
 1. Added test_write_all_metrics_by_city.py to write metrics by city
 1. Converted some functions to static class methods to improve performance
 1. Changed AWS profile for credentials file to "cities-data-dev"
+1. TODOs:
+   1. Performance of large cities needs to be tested since only small and moderate size have been run so far
+   2. Update the naming conventions wiki: https://gfw.atlassian.net/wiki/spaces/CIT/pages/1886126084/Proposal+for+layer-id+naming
 
 ## 2025/04/14
 1. Added timeout_decorator to environment.yml

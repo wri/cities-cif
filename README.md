@@ -48,7 +48,7 @@ To run the module,
      2. create a .cdsapirc file in your home directory and save the key you acquired from https://cds.climate.copernicus.eu/how-to-api
         1. Note: you do not need to specify any url's in the .cdsapirc file since they are specified in code.
   4. You must create an AWS credentials file in your system as described here: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
-     1. The credentials file must have a profile named "cities-data-user" with credentials for the cities-data-user IAM user
+     1. The credentials file must have a profile named "cities-data-dev" with credentials for the cities-data-dev IAM user
      2. Credentials are stored in AWS Secrets.
      
 ### Interactive development
