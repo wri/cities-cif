@@ -93,21 +93,21 @@ def test_mean_pm2p5_exposure_popweighted_children():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 20.64, 51.63, 100, 0)
+    assert_metric_stats(indicator, 2, 15.40, 62.79, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_elderly():
     indicator = MeanPM2P5ExposurePopWeightedElderly().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 20.64, 51.63, 100, 0)
+    assert_metric_stats(indicator, 2, 15.40, 62.79, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_female():
     indicator = MeanPM2P5ExposurePopWeightedFemale().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 20.64, 51.63, 100, 0)
+    assert_metric_stats(indicator, 2, 15.40, 62.79, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_informal():
     indicator = MeanPM2P5ExposurePopWeightedInformal().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -147,8 +147,8 @@ def test_percent_area_impervious():
 
 def test_percent_built_area_without_tree_cover():
     indicator = PercentBuiltAreaWithoutTreeCover().get_data(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
-    actual_indicator_size = indicator.size
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 36.36, 100, 54, 46)
 

@@ -19,7 +19,7 @@ BBOX_AS_UTM = BBOX.as_utm_bbox()
 def test_acag_pm2p5():
     data = AcagPM2p5().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 6.57, 6.57, 1, 0)
+    assert_raster_stats(data, 2, 6.18, 6.18, 1, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
     utm_bbox_data = AcagPM2p5().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))

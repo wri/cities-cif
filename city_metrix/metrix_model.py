@@ -830,8 +830,12 @@ class Metric():
         Metric._verify_extension(output_path, f".{GEOJSON_FILE_EXTENSION}")
 
         indicator = self.layer.get_metric(geo_zone, spatial_resolution)
+
         # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
-        indicator.name = 'indicator'
+        if indicator is not None:
+            indicator.name = 'indicator'
+        else:
+            raise NotImplementedError("Data not available for this geo_zone.")
 
         if isinstance(indicator, (pd.Series, pd.DataFrame)):
             gdf = pd.concat([geo_zone.zones, indicator], axis=1)
@@ -847,8 +851,11 @@ class Metric():
         Metric._verify_extension(output_path, f".{CSV_FILE_EXTENSION}")
 
         indicator = self.layer.get_metric(geo_zone, spatial_resolution)
-        # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
-        indicator.name = 'indicator'
+
+        if indicator is not None:
+            indicator.name = 'indicator'
+        else:
+            raise NotImplementedError("Data not available for this geo_zone.")
 
         if isinstance(indicator, (pd.Series, pd.DataFrame)):
             write_csv(indicator, output_path)
