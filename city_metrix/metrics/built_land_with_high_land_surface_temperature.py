@@ -1,4 +1,4 @@
-from pandas import GeoSeries
+from geopandas import GeoSeries
 
 from city_metrix.constants import GEOJSON_FILE_EXTENSION
 from city_metrix.layers import HighLandSurfaceTemperature, EsaWorldCoverClass, EsaWorldCover

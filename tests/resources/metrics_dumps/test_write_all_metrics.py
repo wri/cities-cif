@@ -37,14 +37,6 @@ def test_write_built_land_with_low_surface_reflectivity(target_folder):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_built_land_without_tree_cover(target_folder):
-    zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','built_land_without_tree_cover.geojson')
-
-    BuiltLandWithoutTreeCover().write(zones, file_path)
-    assert verify_file_is_populated(file_path)
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_canopy_area_per_resident_children(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(target_folder, 'metric','canopy_area_per_resident_children.geojson')
@@ -143,10 +135,19 @@ def test_write_natural_areas(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_PercentAreaFracvegExceedsThreshold(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','natural_areas.geojson')
+    file_path = prep_output_path(target_folder, 'metric','percent_area_fracveg_exceeds_threshold.geojson')
 
     PercentAreaFracvegExceedsThreshold().write(zones, file_path)
     assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_PercentBuiltAreaWithoutTreeCover(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric', 'percent_build_area_without_tree_cover.geojson')
+
+    PercentBuiltAreaWithoutTreeCover().write(zones, file_path)
+    assert verify_file_is_populated(file_path)
+
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_percent_area_impervious(target_folder):
@@ -159,7 +160,7 @@ def test_write_percent_area_impervious(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_PercentCanopyCoveredPopulation(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','percent_area_impervious.geojson')
+    file_path = prep_output_path(target_folder, 'metric','percent_canopy_covered_population.geojson')
 
     PercentCanopyCoveredPopulation().write(zones, file_path)
     assert verify_file_is_populated(file_path)

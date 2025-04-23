@@ -36,12 +36,6 @@ def test_write_BuiltLandWithLowSurfaceReflectivity(target_folder):
     _run_write_metrics_by_city_test(metric_obj, target_folder)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_BuiltLandWithoutTreeCover(target_folder):
-    metric_obj = BuiltLandWithoutTreeCover()
-    _run_write_metrics_by_city_test(metric_obj, target_folder)
-
-@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_CanopyAreaPerResidentChildren(target_folder):
     metric_obj = CanopyAreaPerResidentChildren()
@@ -116,6 +110,12 @@ def test_write_PercentAreaFracvegExceedsThreshold(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_PercentAreaImpervious(target_folder):
     metric_obj = PercentAreaImpervious()
+    _run_write_metrics_by_city_test(metric_obj, target_folder)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_PercentBuiltAreaWithoutTreeCover(target_folder):
+    metric_obj = PercentBuiltAreaWithoutTreeCover()
     _run_write_metrics_by_city_test(metric_obj, target_folder)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
