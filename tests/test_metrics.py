@@ -151,7 +151,7 @@ def test_percent_built_area_without_tree_cover():
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
-    # assert_metric_stats(indicator, 2, 36, 100, 100, 0)
+    assert_metric_stats(indicator, 2, 36.36, 100, 54, 46)
 
 
 def test_percent_protected_area():
