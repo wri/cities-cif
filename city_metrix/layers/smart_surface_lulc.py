@@ -1,22 +1,18 @@
 import xarray as xr
 import numpy as np
 import pandas as pd
-import geopandas as gpd
 from shapely.geometry import CAP_STYLE, JOIN_STYLE
-from shapely.geometry import box
 from exactextract import exact_extract
 from geocube.api.core import make_geocube
 import warnings
 from rasterio.enums import Resampling
 from xrspatial.classify import reclassify
 
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
-from .layer import Layer
+from city_metrix.metrix_model import Layer, GeoExtent
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .average_net_building_height import AverageNetBuildingHeight
@@ -26,9 +22,9 @@ from .overture_buildings import OvertureBuildings
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class SmartSurfaceLULC(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["land_cover_class"]
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["land_cover_class"]
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
@@ -39,20 +35,16 @@ class SmartSurfaceLULC(Layer):
         self.land_cover_class = land_cover_class
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_cache_retrieval=False):
+                 resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
-
         utm_crs = bbox.as_utm_bbox().crs
 
         # ESA world cover
-        esa_world_cover = EsaWorldCover(year=2021).get_data(bbox, spatial_resolution = spatial_resolution)
+        esa_world_cover = (EsaWorldCover(year=2021)
+                           .get_data_with_caching(bbox, spatial_resolution = spatial_resolution))
         # ESA reclass and upsample
         def get_data_esa_reclass(esa_world_cover):
             reclass_map = {
@@ -93,7 +85,7 @@ class SmartSurfaceLULC(Layer):
 
 
         # Water
-        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox).reset_index()
+        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data_with_caching(bbox).reset_index()
         water_osm['Value'] = 20
 
 

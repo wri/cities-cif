@@ -2,16 +2,14 @@ import ee
 import geopandas as gpd
 import geemap
 
-from .layer import Layer, get_image_collection
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class ProtectedAreas(Layer):
-    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["status"]
-    MINOR_LAYER_NAMING_ATTS = ["status_year", "iucn_cat"]
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["status_year"]
+    MINOR_NAMING_ATTS = ["status", "iucn_cat"]
 
     """
     Attributes:
@@ -26,12 +24,7 @@ class ProtectedAreas(Layer):
         self.iucn_cat = iucn_cat
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_cache_retrieval=False):
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
+                 force_data_refresh=False):
 
         dataset = ee.FeatureCollection('WCMC/WDPA/current/polygons')
         dataset = dataset.filter(ee.Filter.inList('STATUS', self.status)).filter(ee.Filter.lessThanOrEquals('STATUS_YR', self.status_year)).filter(ee.Filter.inList('IUCN_CAT', self.iucn_cat))

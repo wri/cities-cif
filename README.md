@@ -48,7 +48,7 @@ To run the module,
      2. create a .cdsapirc file in your home directory and save the key you acquired from https://cds.climate.copernicus.eu/how-to-api
         1. Note: you do not need to specify any url's in the .cdsapirc file since they are specified in code.
   4. You must create an AWS credentials file in your system as described here: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
-     1. The credentials file must have a profile named "cities-data-user" with credentials for the cities-data-user IAM user
+     1. The credentials file must have a profile named "cities-data-dev" with credentials for the cities-data-dev IAM user
      2. Credentials are stored in AWS Secrets.
      
 ### Interactive development
@@ -80,10 +80,16 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/file
       '''
       * Note: the city_id and aoi_id may be determined via the Cities Indicators API at https://dev.cities-data-api.wri.org/docs
 3. Data layer caching:
-   1. Data layers can be cached to S3 buckets or local OS directory using the CIF-portal.
-   2. Once available, the system will read from the cached location.
+   1. Data layers for cities are automatically cached to S3 for default parameters and to a local repository for non-default parameters.
+      1. Default files are stored in the wri-cities-data-api bucket under the data folder.
+      2. Non-default files are stored in the "CIF_layer_repository" folder in the home directory of the processing machine
+   2. The system will read from both the S3 and local repositories.
    2. The cached data are stored in the following directory structure:
-      1. data/{env}/{layer_name}/{file_format}/{city_id}__{admin_level}__{layer_id} where: env is either development (dev) or production (prd) environment and file_format is the file extension.
+      1. data/{env}/{layer_name}/{file_format}/{city_id}__{admin_level}__{layer_id} 
+         1. where: env is either development (dev) or production (prd) environment and file_format is the file extension.
+4. Metric caching:
+   1. Metrics for cities are caches in S3 in the wri-cities-indicators bucket within the metrics folder.
+   2. All metrics for a city are stored in the same city folder.
       
 ### Testing
 Warning: Some tests in tests/resources folder write intermediate results to a shared S3 bucket, so there is some potential for collision between concurrent runs.

@@ -1,23 +1,21 @@
-import math
-
 import numpy as np
 import pytest
 
+from city_metrix.constants import ProjectionType
 from city_metrix.layers import NasaDEM
-from city_metrix.layers.layer import WGS_CRS
-from city_metrix.layers.layer_geometry import GeoExtent, create_fishnet_grid, get_degree_offsets_for_meter_units, \
+from city_metrix.metrix_model import WGS_CRS, GeoExtent, create_fishnet_grid, get_degree_offsets_for_meter_units, \
     get_haversine_distance
-from tests.conftest import USA_OR_PORTLAND_ZONE
+from tests.conftest import USA_OR_PORTLAND_BBOX
 from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84, GEOEXTENT_TERESINA_UTM
 from tests.tools.spatial_tools import get_rounded_geometry
 
-USA_OR_PORTLAND_LATLON_BBOX = GeoExtent(USA_OR_PORTLAND_ZONE.total_bounds, USA_OR_PORTLAND_ZONE.crs.srs)
+USA_OR_PORTLAND_LATLON_BBOX = GeoExtent(USA_OR_PORTLAND_BBOX.total_bounds, USA_OR_PORTLAND_BBOX.crs.srs)
 
 def test_city_extent():
     city_geo_extent = GEOEXTENT_TERESINA_WGS84
     geom = city_geo_extent.centroid
     rounded_boundary_centroid = get_rounded_geometry(geom, 1)
-    assert city_geo_extent.projection_name == 'geographic'
+    assert city_geo_extent.projection_type == ProjectionType.GEOGRAPHIC
     assert rounded_boundary_centroid == 'POINT (-42.8 -5.1)'
 
 def test_nasa_dem_city_id_wgs84():
@@ -29,7 +27,7 @@ def test_nasa_dem_city_id_utm():
     assert np.size(data) > 0
 
 def test_centroid_property():
-    portland_centroid = USA_OR_PORTLAND_ZONE.centroid
+    portland_centroid = USA_OR_PORTLAND_BBOX.centroid
     bbox_centroid = USA_OR_PORTLAND_LATLON_BBOX.centroid
     assert bbox_centroid.x == portland_centroid.x[0]
 
@@ -49,7 +47,7 @@ def test_fishnet_in_degrees():
     tile_side_length = 0.5
     result_fishnet = (
         create_fishnet_grid(bbox, tile_side_length=tile_side_length, length_units="degrees",
-                            output_as='geographic'))
+                            output_as=ProjectionType.GEOGRAPHIC))
 
     actual_count = result_fishnet.geometry.count()
     expected_count = 4
@@ -73,7 +71,7 @@ def test_extreme_large_side():
     bbox = GeoExtent((100, 45, 100.5, 45.5), bbox_crs)
 
     with pytest.raises(ValueError, match='Value for tile_side_length is too large.'):
-        create_fishnet_grid(bbox=bbox, tile_side_length=1, length_units='degrees', output_as='geographic')
+        create_fishnet_grid(bbox=bbox, tile_side_length=1, length_units='degrees', output_as=ProjectionType.GEOGRAPHIC)
 
 
 def test_extreme_small_meters():

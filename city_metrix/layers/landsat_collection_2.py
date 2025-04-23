@@ -1,16 +1,14 @@
 import odc.stac
 import pystac_client
 
-from .layer import Layer
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 
 class LandsatCollection2(Layer):
-    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["bands"]
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["bands"]
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
@@ -25,16 +23,11 @@ class LandsatCollection2(Layer):
         self.bands = bands
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_cache_retrieval=False):
+                 force_data_refresh=False):
         if spatial_resolution is not None:
             raise Exception('spatial_resolution can not be specified.')
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         geographic_bounds = bbox.as_geographic_bbox().bounds
         catalog = pystac_client.Client.open("https://earth-search.aws.element84.com/v1")

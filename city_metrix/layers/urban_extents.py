@@ -1,18 +1,15 @@
-from dask.diagnostics import ProgressBar
 import ee
 import geemap
 import geopandas as gpd
 
-from .layer import Layer
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class UrbanExtents(Layer):
-    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = None
+    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
@@ -25,12 +22,7 @@ class UrbanExtents(Layer):
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_cache_retrieval=False):
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
+                 force_data_refresh=False):
 
         ue_fc = ee.FeatureCollection(f'projects/wri-datalab/cities/urban_land_use/data/global_cities_Aug2024/urbanextents_unions_{self.year}')
 
@@ -51,4 +43,6 @@ class UrbanExtents(Layer):
 
             urbexts_dissolved = urbexts_dissolved.to_crs(ee_rectangle['crs'])
 
-        return urbexts_dissolved
+        data = urbexts_dissolved
+
+        return data

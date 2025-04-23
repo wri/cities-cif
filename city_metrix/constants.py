@@ -1,17 +1,36 @@
+import os
+from enum import Enum
+from pathlib import Path
+
 WGS_CRS = 'EPSG:4326'
 WGS_EPSG_CODE = 4326
 
 GTIFF_FILE_EXTENSION = 'tif'
 GEOJSON_FILE_EXTENSION = 'geojson'
 NETCDF_FILE_EXTENSION = 'nc'
+CSV_FILE_EXTENSION = 'csv'
+
+DEFAULT_PUBLISHING_ENV = 'dev'
 
 # TODO replace with production value
-cif_production_aws_bucket_uri = 's3://cities-dev-sandbox' # 's3://wri-cities-data-api'
-ctcm_development_aws_bucket_uri = 's3://cities-tcm-dev-sandbox'
-cif_testing_s3_bucket_uri = 's3://cities-dev-sandbox'
+RO_DASHBOARD_LAYER_S3_BUCKET_URI = 's3://wri-cities-data-api'
+RW_DASHBOARD_LAYER_S3_BUCKET_URI = 's3://cities-test-sandbox' # 's3://wri-cities-data-api'
+RW_DASHBOARD_METRIC_S3_BUCKET_URI = 's3://wri-cities-indicators'
+RW_TESTING_S3_BUCKET_URI = 's3://cities-test-sandbox'
 
-aws_s3_profile = 'cities-data-user'
+repo_directory = os.path.join(Path.home(), 'CIF_layer_repository')
+LOCAL_REPO_URI = f'file://{repo_directory}'
 
-#TODO In near-term, the cities-dat-api must be replaced by dev.cities-data-api after the dev.. API stabilizes.
-# CITIES_DATA_API_URL = "dev.cities-data-api.wri.org"
 CITIES_DATA_API_URL = "cities-data-api.wri.org"
+
+class GeoType(Enum):
+    CITY = 0
+    GEOMETRY = 1
+
+class ProjectionType(Enum):
+    GEOGRAPHIC = 0
+    UTM = 1
+
+class ModelClassName(Enum):
+    LAYER = 0
+    METRIC = 1

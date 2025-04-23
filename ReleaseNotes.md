@@ -1,10 +1,28 @@
 # Release Notes
 
+## 2025/04/21
+1. Combined all bases classes into one file
+1. Removed retrieve_cached_city_data function call from derived classes
+1. Removed allow_cache_retrieval argument from get_data() method in layers 
+1. Removed CifCacheSettings
+1. Updated zonal statistics to handle large, tiled retrievals
+1. Updated zonal statistics to handle multi-level city and admin polygons
+1. Added test_write_all_metrics_by_city.py to write metrics by city
+1. Converted some functions to static class methods to improve performance
+1. Changed AWS profile for credentials file to "cities-data-dev"
+1. TODOs:
+   1. Performance of large cities needs to be tested since only small and moderate size have been run so far
+   2. Update the naming conventions wiki: https://gfw.atlassian.net/wiki/spaces/CIT/pages/1886126084/Proposal+for+layer-id+naming
+
 ## 2025/04/14
 1. Added timeout_decorator to environment.yml
 2. Warning: Some tests in tests/resources folder write intermediate results to a shared S3 bucket, so there is some potential for collision between concurrent runs.
 3. Simplified tests and renamed some tests
 4. Refocused layer-write tests on query by city name instead of by bbox.
+
+## 2025/04/9
+1. Merged some Layers and Metrics functions
+2. Increased granularity for controling whether individual tests are run by converting the old EXECUTE_IGNORED_TESTS boolean values into enums.
 
 ## 2025/04/7
 1. Created a Metric base class with get_data() and two write functions

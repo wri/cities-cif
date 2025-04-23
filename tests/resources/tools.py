@@ -1,19 +1,24 @@
 import os
 
-from city_metrix.file_cache_config import get_aws_bucket_name
-from city_metrix.layers.layer_dao import get_s3_client, get_uri_identifier
-from tests.resources.conftest import USE_WGS_BBOX, get_target_folder_path
+from city_metrix import s3_client
+from city_metrix.constants import RW_DASHBOARD_LAYER_S3_BUCKET_URI
+from city_metrix.metrix_dao import remove_scheme_from_uri
+from tests.resources.conftest import get_target_folder_path, USE_WGS_BBOX
+from tests.tools.general_tools import create_target_folder
 
-def delete_file_on_s3(s3_client, file_key):
-    aws_bucket = get_aws_bucket_name()
-    s3_client.delete_object(Bucket=aws_bucket, Key=file_key)
+def delete_file_on_s3(file_key):
+    s3_bucket = remove_scheme_from_uri(RW_DASHBOARD_LAYER_S3_BUCKET_URI)
+    s3_client.delete_object(Bucket=s3_bucket, Key=file_key)
 
 def delete_file_on_os(file_path):
     if os.path.exists(file_path):
         os.remove(file_path)
 
-def prep_output_path(output_folder, file_name):
-    file_path = os.path.join(output_folder, file_name)
+def prep_output_path(output_folder, model_name, file_name):
+    folder_path = os.path.join(output_folder, model_name)
+    create_target_folder(folder_path, False)
+
+    file_path = os.path.join(folder_path, file_name)
     if os.path.isfile(file_path):
         os.remove(file_path)
     return file_path
@@ -30,13 +35,13 @@ def get_file_count_in_folder(dir_path):
     return count
 
 def cleanup_cache_files(cache_scheme, key_file, file_path):
-    if cache_scheme == 's3':
-        s3_client = get_s3_client()
-        delete_file_on_s3(s3_client, key_file)
-    else:
-        target_folder = get_target_folder_path()
-        cache_file_path = os.path.join(target_folder, key_file)
-        delete_file_on_os(cache_file_path)
+    if key_file is not None:
+        if cache_scheme == 's3':
+            delete_file_on_s3(key_file)
+        else:
+            target_folder = get_target_folder_path()
+            cache_file_path = os.path.join(target_folder, key_file)
+            delete_file_on_os(cache_file_path)
     if file_path is not None:
         delete_file_on_os(file_path)
 
