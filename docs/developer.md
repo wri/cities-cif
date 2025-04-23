@@ -73,7 +73,7 @@ Hopefully we already have the layers you need in `city_metrix/layers/` and you c
 
 3. Create a Python file in [city_metrix/layers](../city_metrix/layers)
 
-    For consistency, the Python file name should match the **Name** in the Airtable [Layers table](https://airtable.com/appDWCVIQlVnLLaW2/tblS72ZH2EKJ3hy61/viw1IM6ZT6VoHSgBU?blocks=hide). Each data layer should be a class with `__init__()` and `get_data()` functions. It could also use functions defined in [layers.py](../city_metrix/metrix_model.py) or other necessary functions.
+    For consistency, the Python file name should match the **Name** in the Airtable [Layers table](https://airtable.com/appDWCVIQlVnLLaW2/tblS72ZH2EKJ3hy61/viw1IM6ZT6VoHSgBU?blocks=hide). Each data layer should be a class with `__init__()` and `get_data()` functions. It could also use functions defined in [metrix_model.py](../city_metrix/metrix_model.py) or other necessary functions.
 
     If the layer is from a new dataset, ideally, pull data from the source API or S3. If we need to get the data from Google Earth Engine, we are using `xee` wherever possible. 
 
