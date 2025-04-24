@@ -3,17 +3,22 @@ import shapely
 import urllib
 from math import floor
 from .layer import Layer
-from .layer_geometry import GeoExtent, construct_city_aoi_json
-from .layer_geometry import get_utm_zone_from_latlon_point
+from .layer_geometry import GeoExtent, construct_city_aoi_json, get_utm_zone_from_latlon_point
+from .world_pop import WorldPop, WorldPopClass
+from .urban_land_use import UrbanLandUse
+from geocube.api.core import make_geocube
 
 BUCKET_NAME = 'wri-cities-indicators'
-PREFIX = 'data/isolines'
+PREFIX = 'devdata/inputdata'
 DEFAULT_SPATIAL_RESOLUTION = 10
+WORLDPOP_SPATIAL_RESOLUTION = 100
+INFORMAL_CLASS = 3
 
 class AccessibleRegion(Layer):
-    def __init__(self, city_id='KEN-Nairobi', amenity='jobs', travel_mode='walk', threshold=15, unit='minutes', buffered_and_simplified=False, dissolved=True, **kwargs):
+    def __init__(self, city_id='KEN-Nairobi', level='adminbound', amenity='jobs', travel_mode='walk', threshold=15, unit='minutes', buffered_and_simplified=False, dissolved=True, **kwargs):
         super().__init__(**kwargs)
         self.city_id = city_id
+        self.level = level
         self.amenity = amenity
         self.travel_mode = travel_mode
         self.threshold = threshold
@@ -23,7 +28,7 @@ class AccessibleRegion(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_cache_retrieval=False):
-        url = f'https://{BUCKET_NAME}.s3.us-east-1.amazonaws.com/{PREFIX}/{self.city_id}__{self.amenity}__{self.travel_mode}__{self.threshold}__{self.unit}.geojson'
+        url = f'https://{BUCKET_NAME}.s3.us-east-1.amazonaws.com/{PREFIX}/{self.amenity}__{self.city_id}__{self.level}__{self.travel_mode}__{self.threshold}__{self.unit}.geojson'
         print(f'Attempting to retrieve isoline file from {url}', end=' ')
         try:
             gdf = gpd.read_file(url)
@@ -42,19 +47,29 @@ class AccessibleRegion(Layer):
             poly_list = [p.buffer(0.1) for p in iso_gdf.geometry]
         uu = shapely.unary_union(shapely.MultiPolygon(poly_list))
         if self.dissolved:
-            shorter_gdf = gpd.GeoDataFrame({'accessible': [1], 'geometry': uu}).set_crs(utm_epsg)
+            shorter_gdf = gpd.GeoDataFrame({'accessible': [1], 'geometry': uu}).dissolve().set_crs(utm_epsg)
         else:
             shorter_gdf = gpd.GeoDataFrame({'accessible': [1] * len(poly_list), 'geometry': poly_list}).set_crs(utm_epsg)
         shorter_gdf = shorter_gdf.to_crs('EPSG:4326').set_crs('EPSG:4326')
         return shorter_gdf
 
-class AccessibleCount(AccessibleRegion):
-    def __init__(self, city_id='KEN-Nairobi', amenity='jobs', travel_mode='walk', threshold=15, unit='minutes', **kwargs):
-        super().__init__(city_id=city_id, amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit, buffered_and_simplified=True, dissolved=False, **kwargs)
+class AccessibleCount(Layer):
+    def __init__(self, city_id='KEN-Nairobi', level='adminbound', amenity='jobs', travel_mode='walk', threshold=15, unit='minutes', align_to=None, **kwargs):
+        super().__init__(**kwargs)
+        self.city_id = city_id
+        self.level = level
+        self.amenity = amenity
+        self.travel_mode = travel_mode
+        self.threshold = threshold
+        self.unit = unit
+        self.buffered_and_simplified = False
+        self.dissolved = False
+        self.align_to = align_to
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_cache_retrieval=False):
-        iso_gdf = super().get_data(bbox)
+        iso_layer = AccessibleRegion(city_id=self.city_id, amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, buffered_and_simplified=self.buffered_and_simplified, dissolved=self.dissolved)
+        iso_gdf = iso_layer.get_data(bbox)
         if len(iso_gdf) == 1 and type(iso_gdf.iloc[0].geometry) == shapely.geometry.polygon.Polygon: # only one simple-polygon isoline
             dissected_gdf = GeoDataFrame({'poly_id': [0], 'geometry': [iso_gdf.iloc[0].geometry]}).set_crs('EPSG:4326')
         else:
@@ -89,4 +104,44 @@ class AccessibleCount(AccessibleRegion):
             count_amenities = count_amenities + (dissected_gdf.centroid.within(iso_gdf.iloc[[iso_idx]].geometry[iso_gdf.index[iso_idx]]) * 1)
         print("X")
         dissected_gdf['count'] = count_amenities
-        return dissected_gdf[['geometry', 'count']].reset_index()
+        if self.align_to is None:
+            raster = make_geocube(
+                vector_data=dissected_gdf[['geometry', 'count']].to_crs(bbox.as_utm_bbox().crs),
+                measurements=["count"],
+                resolution=(-spatial_resolution, spatial_resolution),
+            )
+        else:
+            raster = make_geocube(
+                vector_data=dissected_gdf[['geometry', 'count']].to_crs(bbox.as_utm_bbox().crs),
+                measurements=["count"],
+                like=self.align_to
+            )
+        return raster.to_array(dim='count').squeeze()
+
+class AccessibleCountPopWeighted(Layer):
+    def __init__(self, city_id='KEN-Nairobi', level='adminbound', amenity='jobs', travel_mode='walk', threshold=15, unit='minutes', worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False, **kwargs):
+        super().__init__(**kwargs)
+        self.city_id = city_id
+        self.level = level
+        self.amenity = amenity
+        self.travel_mode = travel_mode
+        self.threshold = threshold
+        self.unit = unit
+        self.buffered_and_simplified = False
+        self.dissolved = False
+        self.worldpop_agesex_classes = worldpop_agesex_classes
+        self.worldpop_year = worldpop_year
+        self.informal_only = informal_only
+
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=WORLDPOP_SPATIAL_RESOLUTION,
+                 resampling_method=None, allow_cache_retrieval=False):
+        population_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year)
+        if self.informal_only:
+            informal_layer = UrbanLandUse(return_value=INFORMAL_CLASS)
+            population_layer.masks.append(informal_layer)
+        population_data = population_layer.get_data(bbox, spatial_resolution=spatial_resolution)
+        count_layer = AccessibleCount(city_id=self.city_id, amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, align_to=population_data)
+        count_data = count_layer.get_data(bbox, spatial_resolution=WORLDPOP_SPATIAL_RESOLUTION)
+        utm_crs = bbox.as_utm_bbox().crs
+        data = count_data * (population_data / population_data.mean()).rio.write_crs(utm_crs)
+        return data
