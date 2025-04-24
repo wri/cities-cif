@@ -1,4 +1,5 @@
 from geopandas import GeoDataFrame, GeoSeries
+from city_metrix.layers.layer_geometry import GeoExtent
 from pandas import Series
 import shapely
 from city_metrix.metrics import Metric
@@ -23,7 +24,7 @@ class AccessPopulationPercent(Metric):
                  zones: GeoDataFrame,
                  spatial_resolution:int = None) -> GeoSeries:
         iso_layer = AccessibleRegion(amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit)
-        iso_data = iso_layer.get_data(self.city_id)
+        iso_data = iso_layer.get_data(GeoExtent(zones.total_bounds))
         accesspop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year, masks=[iso_layer,])
         totalpop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year)
         if self.informal_only:
