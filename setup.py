@@ -32,6 +32,7 @@ setup(
         "scipy",
         "numpy",
         "overturemaps",
+        "fiona"
         "ipython"
     ],
 )

@@ -3,6 +3,7 @@ import numpy as np
 import rasterio.features
 
 from city_metrix.metrix_model import Layer, GeoExtent
+from ut_globus_city_handler.ut_globus_city_handler import search_for_ut_globus_city_by_contained_polygon
 from . import NasaDEM
 from ..constants import GTIFF_FILE_EXTENSION
 from .overture_buildings_w_height import OvertureBuildingsHeight
@@ -12,7 +13,7 @@ DEFAULT_SPATIAL_RESOLUTION = 1
 
 class OvertureBuildingsDSM(Layer):
     GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = ["city"]
+    MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
     """
@@ -20,9 +21,8 @@ class OvertureBuildingsDSM(Layer):
         city: city id from https://sat-io.earthengine.app/view/ut-globus
     """
 
-    def __init__(self, city="", **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.city = city
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -30,11 +30,11 @@ class OvertureBuildingsDSM(Layer):
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        if self.city == "":
-            raise Exception("'city' can not be empty. Check and select a city id from https://sat-io.earthengine.app/view/ut-globus")
+        bbox_polygon = bbox.as_geographic_bbox().polygon
+        ut_globus_city_name = search_for_ut_globus_city_by_contained_polygon(bbox_polygon)
 
         # Load the datasets
-        buildings_gdf = OvertureBuildingsHeight(self.city).get_data(bbox)
+        buildings_gdf = OvertureBuildingsHeight(city=ut_globus_city_name).get_data(bbox)
         dem_da = NasaDEM().get_data(bbox, spatial_resolution=spatial_resolution)
 
         y_coords = dem_da.coords["y"].values
@@ -78,5 +78,11 @@ class OvertureBuildingsDSM(Layer):
 
         if needs_flip:
             building_dem_dsm.values = np.flipud(building_dem_dsm.values)
+
+        # clip to ee_rectangle
+        west, south, east, north = bbox.as_utm_bbox().bounds
+        longitude_range = slice(west, east)
+        latitude_range = slice(south, north)
+        building_dem_dsm = building_dem_dsm.sel(x=longitude_range, y=latitude_range)
 
         return building_dem_dsm

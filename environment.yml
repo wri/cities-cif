@@ -33,4 +33,5 @@ dependencies:
   - overturemaps=0.14.0
   - ipython=8.34.0
   - timeout-decorator
+  - fiona
 
