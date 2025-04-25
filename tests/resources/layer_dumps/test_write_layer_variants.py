@@ -14,24 +14,6 @@ from tests.resources.tools import get_test_bbox, cleanup_cache_files, prep_outpu
     get_file_count_in_folder
 from tests.tools.general_tools import get_class_default_spatial_resolution, get_layer_cache_variables
 
-# ============ TEST WRITE TO S3 CACHE, READ FROM S3 CACHE =====================
-# CACHE_TO_S3 = True
-#
-# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-# def test_geotiff_layer_caching(target_folder):
-#     layer_obj = VegetationWaterMap()
-#     _cache_write_read(layer_obj, target_folder)
-#
-# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-# def test_geojson_layer_caching(target_folder):
-#     # layer_obj = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD)
-#     layer_obj = ProtectedAreas()
-#     _cache_write_read(layer_obj, target_folder)
-#
-# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-# def test_netcdf_layer_caching(target_folder):
-#     layer_obj = Era5HottestDay()
-#     _cache_write_read(layer_obj, target_folder)
 
 # ==================== Test resolution changes ===========================
 # Multiplier applied to the default spatial_resolution of the layer

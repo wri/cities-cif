@@ -232,12 +232,12 @@ def test_overture_buildings_height():
     utm_bbox_data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
-def test_overture_buildings_height_raster():
-    data = OvertureBuildingsHeightRaster(CITY_CODE_FOR_BBOX).get_data(BBOX)
+def test_OvertureBuildingsDSM():
+    data = OvertureBuildingsDSM(CITY_CODE_FOR_BBOX).get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, -999.0, 12.5, 978604, 0)
+    assert_raster_stats(data, 1, 3.0, 64.5, 1023783, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
-    utm_bbox_data = OvertureBuildingsHeightRaster(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
+    utm_bbox_data = OvertureBuildingsDSM(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_protected_areas():

@@ -1,6 +1,7 @@
 import geopandas as gpd
 
 from city_metrix.metrix_model import Layer, GeoExtent
+
 from ..constants import GEOJSON_FILE_EXTENSION
 from .overture_buildings import OvertureBuildings
 from .ut_globus import UtGlobus
@@ -37,14 +38,19 @@ class OvertureBuildingsHeight(Layer):
 
         # Ensure columns are managed correctly after join
         # If height_right is not null, use it; otherwise, use height_left
-        joined_data["height"] = joined_data["height_right"].fillna(joined_data["height_left"])
-        joined_data.rename(
-            columns={
-                "height_left": "overture_height",
-                "height_right": "utglobus_height",
-            },
-            inplace=True,
-        )
+        if 'height' in overture_buildings.columns.to_list():
+            joined_data["height"] = joined_data["height_right"].fillna(joined_data["height_left"])
+            joined_data.rename(
+                columns={
+                    "height_left": "overture_height",
+                    "height_right": "utglobus_height",
+                },
+                inplace=True,
+            )
+        else:
+            joined_data['utglobus_height2'] = joined_data['height']
+            joined_data["overture_height"] = None
+
 
         # Remove any index columns potentially misinterpreted
         joined_data.drop(columns=["index_right"], inplace=True)
@@ -54,6 +60,8 @@ class OvertureBuildingsHeight(Layer):
 
         # Fill missing height values
         joined_data["height"] = joined_data["height"].fillna(0)
+
+        joined_data.drop_duplicates(subset='id')
 
         utm_crs = bbox.as_utm_bbox().crs
         joined_data = joined_data.to_crs(utm_crs)
