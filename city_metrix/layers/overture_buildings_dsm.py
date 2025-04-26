@@ -3,7 +3,7 @@ import numpy as np
 import rasterio.features
 
 from city_metrix.metrix_model import Layer, GeoExtent
-from ut_globus_city_handler.ut_globus_city_handler import search_for_ut_globus_city_by_contained_polygon
+from city_metrix.ut_globus_city_handler.ut_globus_city_handler import search_for_ut_globus_city_by_contained_polygon
 from . import NasaDEM
 from ..constants import GTIFF_FILE_EXTENSION
 from .overture_buildings_w_height import OvertureBuildingsHeight
