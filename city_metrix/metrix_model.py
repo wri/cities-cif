@@ -380,11 +380,10 @@ def create_fishnet_grid(bbox:GeoExtent,
 MAX_TILE_SIZE_DEGREES = 0.5 # TODO How was this value selected?
 
 class LayerGroupBy:
-    def __init__(self, aggregate, geo_zone, spatial_resolution=None, layer=None, force_data_refresh=True, masks=[]):
+    def __init__(self, aggregate, geo_zone: GeoZone, spatial_resolution=None, layer=None, force_data_refresh=True, masks=[]):
         self.aggregate = aggregate
         self.masks = masks
         self.geo_zone = geo_zone
-        self.zones = geo_zone.zones.reset_index(drop=True)
         self.spatial_resolution = spatial_resolution
         self.layer = layer
         self.force_data_refresh = force_data_refresh
@@ -399,11 +398,12 @@ class LayerGroupBy:
         return self._compute_statistic("sum")
 
     def _compute_statistic(self, stats_func):
-        return self._zonal_stats(stats_func, self.geo_zone, self.zones, self.aggregate, self.layer, self.masks,
+        return self._zonal_stats(stats_func, self.geo_zone, self.aggregate, self.layer, self.masks,
                                  self.spatial_resolution, self.force_data_refresh)
 
     @staticmethod
-    def _zonal_stats(stats_func, geo_zone, zones, aggregate, layer, masks, spatial_resolution, force_data_refresh):
+    def _zonal_stats(stats_func, geo_zone, aggregate, layer, masks, spatial_resolution, force_data_refresh):
+        zones = geo_zone.zones.reset_index(drop=True)
         # Get area of zone in square degrees
         if zones.crs == WGS_CRS:
             box_area = box(*zones.total_bounds).area
@@ -476,7 +476,9 @@ class LayerGroupBy:
             for tile_gdf in tile_gdfs
         ])
 
-        aggregated = tile_stats.groupby("zone").apply(LayerGroupBy._aggregate_stats, stats_func)
+        aggregated = (tile_stats
+                      .groupby("zone")
+                      .apply(LayerGroupBy._aggregate_stats, stats_func, include_groups=False))
         aggregated.name = stats_func
 
         return aggregated.reset_index()

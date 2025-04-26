@@ -1,13 +1,10 @@
 import os.path
-
 import fiona
 from shapely.geometry import shape
-from shapely.geometry.polygon import Polygon
-
 
 def search_for_ut_globus_city_by_contained_polygon(query_polygon):
-    root_path = _get_project_root()
-    gpkg_path = os.path.join(root_path, 'ut_globus_city_handler', 'global_ut_globus_cities.gpkg')
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    gpkg_path = os.path.join(dir_path, 'global_ut_globus_cities.gpkg')
 
     # Open the specified layer in the GeoPackage
     feature_rec = None
@@ -25,19 +22,10 @@ def search_for_ut_globus_city_by_contained_polygon(query_polygon):
         city_name = label.lstrip("_").rstrip(".tif").lower()
         return city_name
 
-def _get_project_root():
-    from pathlib import Path
 
-    # Start from the current file and search for the project root
-    project_folder = Path(__file__).resolve().parent
-    while not (project_folder / "environment.yml").exists() and project_folder != project_folder.parent:
-        project_folder = project_folder.parent
-
-    return project_folder
-
-# Example run
+# # Example run
+# from shapely.geometry.polygon import Polygon
 # query_polygon_coordinates = Polygon([(-122.3355, 47.6079), (-122.3358, 47.6081), (-122.3353, 47.6083), (-122.3355, 47.6079)])
-#
 # record = search_for_ut_globus_city_by_contained_polygon(query_polygon_coordinates)
 # if record:
 #     print("Matching record found:", record)
