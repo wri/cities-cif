@@ -3,7 +3,7 @@ import sys
 import geopandas as gpd
 
 def search_for_ut_globus_city_by_contained_polygon(query_polygon):
-    script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+    script_dir = os.path.dirname(os.path.abspath(__file__))
     gpkg_path = os.path.join(script_dir, 'global_ut_globus_cities.gpkg')
 
     gdf = gpd.read_file(gpkg_path, layer='ut_globus_cities')
