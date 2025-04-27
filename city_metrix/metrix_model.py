@@ -664,7 +664,7 @@ class Layer():
 
     def write(self, bbox: GeoExtent, output_path:str,
               tile_side_length:int=None, buffer_size:int=None, length_units:str=None,
-              spatial_resolution:int=None, resampling_method:int=None,
+              spatial_resolution:int=None, resampling_method:str=None,
               force_data_refresh:bool=False, **kwargs):
         """
         Write the layer to a path. Does not apply masks.
