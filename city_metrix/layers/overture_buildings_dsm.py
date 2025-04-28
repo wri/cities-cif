@@ -5,7 +5,6 @@ from exactextract import exact_extract
 from rasterio.features import rasterize
 
 from city_metrix.metrix_model import Layer, GeoExtent, validate_raster_resampling_method
-from city_metrix.ut_globus_city_handler.ut_globus_city_handler import search_for_ut_globus_city_by_contained_polygon
 from . import NasaDEM
 from ..constants import GTIFF_FILE_EXTENSION
 from .overture_buildings_w_height import OvertureBuildingsHeight
@@ -15,16 +14,16 @@ DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
 class OvertureBuildingsDSM(Layer):
     GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ["city"]
     MINOR_NAMING_ATTS = None
 
     """
     Attributes:
         city: city id from https://sat-io.earthengine.app/view/ut-globus
     """
-
-    def __init__(self, **kwargs):
+    def __init__(self, city="", **kwargs):
         super().__init__(**kwargs)
+        self.city = city
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method:str=DEFAULT_RESAMPLING_METHOD):
@@ -32,11 +31,8 @@ class OvertureBuildingsDSM(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        bbox_polygon = bbox.as_geographic_bbox().polygon
-        ut_globus_city_name = search_for_ut_globus_city_by_contained_polygon(bbox_polygon)
-
         # Load the datasets
-        buildings_gdf = OvertureBuildingsHeight(city=ut_globus_city_name).get_data(bbox)
+        buildings_gdf = OvertureBuildingsHeight(self.city).get_data(bbox)
         dem_da = NasaDEM().get_data(bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
 
         # Calculate mode elevation and estimate building elevations
