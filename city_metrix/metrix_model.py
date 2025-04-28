@@ -628,13 +628,14 @@ class Layer():
         """
         ...
 
-    def get_data_with_caching(self, bbox: GeoExtent, spatial_resolution:int=None,
+    def get_data_with_caching(self, bbox: GeoExtent, spatial_resolution:int=None, resampling_method:str=None,
                  force_data_refresh:bool=False) -> Union[xr.DataArray, gpd.GeoDataFrame]:
 
         retrieved_cached_data, file_uri = retrieve_cached_city_data(self.aggregate, bbox, force_data_refresh)
         result_data = None
         if retrieved_cached_data is None:
-            result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
+            result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution,
+                                                  resampling_method=resampling_method)
 
             if bbox.geo_type == GeoType.CITY:
                 write_layer(result_data, file_uri, self.GEOSPATIAL_FILE_FORMAT)
@@ -693,7 +694,7 @@ class Layer():
         if tile_side_length is None:
             utm_geo_extent = bbox.as_utm_bbox() # currently only support output as utm
             clipped_data = self.aggregate.get_data_with_caching(utm_geo_extent, spatial_resolution=spatial_resolution,
-                                                   force_data_refresh=force_data_refresh)
+                                                   resampling_method=resampling_method, force_data_refresh=force_data_refresh)
             if skip_write is False:
                 write_layer(clipped_data, output_path, file_format)
         else:
