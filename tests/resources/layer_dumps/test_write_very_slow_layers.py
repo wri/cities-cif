@@ -6,7 +6,7 @@ from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.tools import get_test_bbox, prep_output_path, verify_file_is_populated
 
 # These tests use a small bbox so that processing completes in a reasonably-short time interval.
-CITY_UT_NAME = 'portland'
+CITY_UT_NAME = 'vancouver'
 BBOX = BBOX_USA_OR_PORTLAND_2
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
