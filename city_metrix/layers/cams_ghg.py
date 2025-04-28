@@ -29,7 +29,7 @@ class CamsGhg(Layer):
                                      'sectors': ['ene', 'fef', 'ind', 'res', 'shp', 'slv', 'sum', 'tnr', 'tro']
                                      }
     }
-    SUPPORTED_YEARS = [2010, 2015, 2020, 2023]
+    SUPPORTED_YEARS = [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
 
     def __init__(self, species=None, sector='sum', co2e=True, year=2023, **kwargs):
         super().__init__(**kwargs)
@@ -64,8 +64,8 @@ class CamsGhg(Layer):
         ee_rectangle  = bbox.to_ee_rectangle()
 
         if self.species is not None:
-            data_ic = ee.ImageCollection(f'projects/wri-datalab/cams-glob-ant/{self.species}')
-            data_im = data_ic.filter(ee.Filter.eq('year', self.year)).filter(ee.Filter.eq('sector', self.sector)).first()
+            data_ic = ee.ImageCollection(f'projects/wri-datalab/cams-glob-ant/{self.species}_v6-2')
+            data_im = data_ic.filter(ee.Filter.eq('year', self.year)).select(self.sector).first()
             if self.co2e:
                 data_im = data_im.multiply(self.SUPPORTED_SPECIES[self.species]['GWP'])
             data_im = data_im.multiply(1000000)  # Tg to tonne
