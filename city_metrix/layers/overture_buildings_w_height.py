@@ -46,7 +46,7 @@ class OvertureBuildingsHeight(Layer):
                 inplace=True,
             )
         else:
-            joined_data['utglobus_height2'] = joined_data['height']
+            joined_data['utglobus_height'] = joined_data['height']
             joined_data["overture_height"] = None
 
 
