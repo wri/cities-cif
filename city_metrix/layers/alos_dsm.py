@@ -22,9 +22,11 @@ class AlosDSM(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
+        # convert values to float in order to successfully use interpolation
         alos_dsm = ee.ImageCollection("JAXA/ALOS/AW3D30/V3_2")
 
         ee_rectangle  = bbox.to_ee_rectangle()
+        boxcar_kernel = ee.Kernel.square(radius=7, units='pixels', normalize=True)
         alos_dsm_ic = ee.ImageCollection(
             alos_dsm
             .filterBounds(ee_rectangle['ee_geometry'])
@@ -33,12 +35,12 @@ class AlosDSM(Layer):
                  set_resampling_for_continuous_raster(x,
                                                       resampling_method,
                                                       spatial_resolution,
+                                                      boxcar_kernel,
                                                       ee_rectangle['crs']
                                                       )
                  )
             .mean()
         )
-
 
         data = get_image_collection(
             alos_dsm_ic,
@@ -47,4 +49,7 @@ class AlosDSM(Layer):
             "ALOS DSM"
         ).DSM
 
-        return data
+        # Round value to reduce variability
+        rounded_data = data.round(2)
+
+        return rounded_data

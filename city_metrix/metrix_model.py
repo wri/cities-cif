@@ -739,22 +739,34 @@ def validate_raster_resampling_method(resampling_method):
         raise ValueError(f"Invalid resampling method ('{resampling_method}'). "
                          f"Valid methods: {VALID_RASTER_RESAMPLING_METHODS}")
 
-
 def set_resampling_for_continuous_raster(image: ee.Image, resampling_method: str, resolution: int,
-                                         crs: str):
+                                         kernel_convolution, crs: str):
     """
     Function sets the resampling method on the GEE query dictionary for use on continuous raster layers.
     GEE only supports bilinear and bicubic interpolation methods.
+    :param: kernel_convolution: optional ee.Kernel for smoothing rasters
     """
     validate_raster_resampling_method(resampling_method)
 
     if resampling_method == 'nearest':
         data = (image
+                .toFloat()  # Ensure values are float in order to successfully use interpolation
                 .reproject(crs=crs, scale=resolution))
     else:
-        data = (image
-                .resample(resampling_method)
-                .reproject(crs=crs, scale=resolution))
+        if kernel_convolution is None:
+            data = (image
+                    .toFloat() # Ensure values are float in order to successfully use interpolation
+                    .resample(resampling_method)
+                    .reproject(crs=crs, scale=resolution)
+                    )
+        else:
+            # Convert values to float in order to successfully use interpolation
+            data = (image
+                    .toFloat() # Ensure values are float in order to successfully use interpolation
+                    .resample(resampling_method)
+                    .reproject(crs=crs, scale=resolution)
+                    .convolve(kernel_convolution)
+                    )
     return data
 
 def get_image_collection(

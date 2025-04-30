@@ -127,6 +127,7 @@ class Albedo(Layer):
                                     set_resampling_for_continuous_raster(x,
                                                                          resampling_method,
                                                                          spatial_resolution,
+                                                                         None,
                                                                          ee_rectangle['crs']
                                                                          )
                             )
