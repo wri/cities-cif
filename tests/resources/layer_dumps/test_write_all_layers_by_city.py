@@ -153,19 +153,8 @@ def test_OvertureBuildings_write_by_city(target_folder):
     layer_obj = OvertureBuildings()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
-# TODO Very slow processing
-@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_OvertureBuildingsHeight_write_by_city(target_folder):
-    layer_obj = OvertureBuildingsHeight(CITY_UT_NAME)
-    _run_write_layers_by_city_test(layer_obj, target_folder)
-
-# TODO Very slow processing
-@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_OvertureBuildingsHeightRaster_write_by_city(target_folder):
-    layer_obj = OvertureBuildingsHeightRaster(CITY_UT_NAME)
-    _run_write_layers_by_city_test(layer_obj, target_folder)
+# OvertureBuildingsHeight and OvertureBuildingsDSM are only needed for sub-city tiled areas for C-TCM,
+# therefore not tested here but are tested in test_write_very_slow_layers
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_PopWeightedPM2p5_write_by_city(target_folder):
