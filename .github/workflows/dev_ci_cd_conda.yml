@@ -39,8 +39,6 @@ jobs:
         activate-environment: cities-cif
         environment-file: environment.yml
         python-version: ${{ matrix.python-version }}
-        auto-update-conda: true
-        use-mamba: true  # Faster dependency resolution
 
     - name: Install Linux dependencies
       run: |
