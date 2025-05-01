@@ -12,23 +12,23 @@ jobs:
     runs-on: Ubuntu-24.04_8-core_arm64_0.02min
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash -l {0}  # Use login shell for proper conda activation
 
     strategy:
-      max-parallel: 4
+      max-parallel: 4  # Limit parallel matrix jobs to 4
       matrix:
         python-version: ["3.10"]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4  # Checkout repository code
 
-    # Limpa cache problemático (opcional para testes)
+    # Clean problematic cache (optional for debugging)
     - name: Clean problematic cache
       run: |
         rm -rf ~/conda_pkgs_dir
         rm -rf ~/mambaforge
 
-    # Instala Miniforge com URL garantido
+    # Install Miniforge with guaranteed ARM64-compatible URL
     - name: Setup Miniforge (ARM64)
       uses: conda-incubator/setup-miniconda@v2
       with:
@@ -36,9 +36,9 @@ jobs:
         activate-environment: cities-cif
         environment-file: environment.yml
         python-version: ${{ matrix.python-version }}
-        auto-activate-base: false
+        auto-activate-base: false  # Prevent base environment interference
 
-    # Verifica se o ambiente foi criado corretamente
+    # Verify conda environment was created correctly
     - name: Verify Conda environment
       run: |
         conda env list
@@ -47,7 +47,7 @@ jobs:
     - name: Install Linux dependencies
       run: |
         sudo apt update
-        sudo apt install -y gdal-bin libgdal-dev
+        sudo apt install -y gdal-bin libgdal-dev  # Install GDAL dependencies
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
