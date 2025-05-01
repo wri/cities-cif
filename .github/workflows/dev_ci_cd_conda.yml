@@ -83,10 +83,11 @@ jobs:
       run: |
         conda activate cities-cif
         
-        # Execute fast tests in parallel (4 workers)
-        # --dist=loadfile groups tests by file to minimize overhead
-        # --durations=10 shows the 10 slowest tests
-        pytest tests -m "not slow" -n 4 --dist=loadfile --durations=10
-        
-        # Execute slow tests serially to avoid resource contention
-        pytest tests -m "slow" --durations=10
+        # Run fast tests in parallel (4 workers)
+        pytest tests -m "not slow" -n 4 --dist=loadfile --durations=0
+    
+        # Run slow tests sequentially with progress reporting
+        pytest tests -m "slow" -v --durations=0 --tb=short
+    
+        # Run all other tests (not marked slow or fast)
+        pytest tests -m "not slow and not fast" -n 2
