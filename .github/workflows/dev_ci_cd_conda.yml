@@ -1,4 +1,4 @@
-name: Dev CIF API CI/CD Conda
+name: Dev CIF API CI/CD Conda (Optimized ARM64)
 
 on:
   pull_request:
@@ -6,37 +6,67 @@ on:
 
 permissions:
   contents: read
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: Ubuntu-24.04_8-core_arm64_0.02min
     defaults:
       run:
         shell: bash -l {0}
+
     strategy:
       max-parallel: 4
       matrix:
         python-version: ["3.10"]
+
     steps:
     - uses: actions/checkout@v4
+
+    # Configure cache for Conda/Mamba
+    - name: Cache conda packages
+      uses: actions/cache@v3
+      id: cache-conda
+      with:
+        path: |
+          ~/conda_pkgs_dir
+          ~/mambaforge
+        key: ${{ runner.os }}-arm64-conda-${{ hashFiles('environment.yml') }}
+
+    # Configure cache for pip
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      id: cache-pip
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-arm64-pip-${{ hashFiles('environment.yml') }}
+
+    # Install Miniforge/Mambaforge (otimized for ARM64)
     - uses: conda-incubator/setup-miniconda@v2
       with:
+        miniforge-version: "latest"       # Conda distribution for ARM
+        miniforge-variant: "Mambaforge"   # Mamba version (faster)
         activate-environment: cities-cif
         environment-file: environment.yml
         python-version: ${{ matrix.python-version }}
         auto-update-conda: true
+        use-mamba: true                   # Use mamba to solve dependencies faster
+#        condarc-file: ~/.condarc         # Optional: in case of a custom .condarc
+
     - name: Install Linux dependencies
       run: |
         sudo apt update
         sudo apt install -y gdal-bin libgdal-dev
+
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
+
     - name: Run Tests
       env:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
-          pytest tests
+        pytest tests
