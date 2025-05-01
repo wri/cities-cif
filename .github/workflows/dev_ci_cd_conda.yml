@@ -1,4 +1,4 @@
-name: Dev CIF API CI/CD Conda (ARM64 Fixed)
+name: Dev CIF API CI/CD Conda (Optimized ARM64)
 
 on:
   pull_request:
@@ -9,49 +9,64 @@ permissions:
 
 jobs:
   build:
+    # Use ARM64 runner for better performance/cost ratio
     runs-on: Ubuntu-24.04_8-core_arm64_0.02min
     defaults:
       run:
+        # Use login shell to ensure proper conda environment activation
         shell: bash -l {0}
 
     strategy:
-      max-parallel: 4
+      # Limit parallel matrix jobs to prevent resource contention
+      max-parallel: 4  
       matrix:
         python-version: ["3.10"]
 
     steps:
+    # Checkout repository code
     - uses: actions/checkout@v4
 
+    # Cache dependencies to speed up subsequent runs
     - name: Cache dependencies
       uses: actions/cache@v3
       with:
         path: |
-          ~/conda_pkgs_dir
-          ~/.cache/pip
-        key: ${{ runner.os }}-deps-${{ hashFiles('environment.yml') }}
+          ~/conda_pkgs_dir  # Conda package cache
+          ~/.cache/pip      # Pip package cache
+          ~/.cache/pre-commit  # Pre-commit cache if used
+        key: ${{ runner.os }}-arm64-deps-${{ hashFiles('environment.yml') }}-v3
 
-    # Install miniforge
+    # Set up Conda environment with Miniforge (ARM64 optimized)
     - name: Setup Miniforge (ARM64)
       uses: conda-incubator/setup-miniconda@v2
       with:
+        # Specific Miniforge version known to work well with ARM64
         installer-url: https://github.com/conda-forge/miniforge/releases/download/23.3.1-0/Miniforge3-Linux-aarch64.sh
-        activate-environment: cities-cif
-        environment-file: environment.yml
+        activate-environment: cities-cif  # Your conda environment name
+        environment-file: environment.yml  # Your environment specification
         python-version: ${{ matrix.python-version }}
-        auto-activate-base: false
-        auto-update-conda: false
+        auto-activate-base: false  # Avoid base environment interference
+        auto-update-conda: false   # Skip conda update to save time
 
-    # Verify environment
-    - name: Verify Conda environment
+    # Install parallel test execution dependencies
+    - name: Install test dependencies
       run: |
-        conda env list
-        conda list -n cities-cif
+        conda activate cities-cif
+        # Install pytest-xdist for parallel test execution
+        # Install pytest-cov for coverage reporting (optional)
+        conda install -y -c conda-forge pytest-xdist pytest-cov
 
+    # Install system-level dependencies
     - name: Install Linux dependencies
       run: |
-        sudo apt update
-        sudo apt install -y gdal-bin libgdal-dev
+        # Quiet mode for apt to reduce log noise
+        sudo apt-get update -qq
+        # Install GDAL dependencies without recommended packages
+        sudo apt-get install -y --no-install-recommends gdal-bin libgdal-dev
+        # Clean up apt cache to reduce image size
+        sudo rm -rf /var/lib/apt/lists/*
 
+    # Configure AWS credentials for any AWS services used in tests
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -59,10 +74,19 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
+    # Optimized test execution strategy
     - name: Run Tests
       env:
+        # Google Earth Engine credentials
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
         conda activate cities-cif
-        pytest tests -n auto --dist=loadscope --durations=10
+        
+        # Execute fast tests in parallel (4 workers)
+        # --dist=loadfile groups tests by file to minimize overhead
+        # --durations=10 shows the 10 slowest tests
+        pytest tests -m "not slow" -n 4 --dist=loadfile --durations=10
+        
+        # Execute slow tests serially to avoid resource contention
+        pytest tests -m "slow" --durations=10
