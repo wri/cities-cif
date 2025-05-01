@@ -1,4 +1,4 @@
-name: Dev CIF API CI/CD Conda (Optimized ARM64)
+name: Dev CIF API CI/CD Conda (ARM64 Fixed)
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: Ubuntu-24.04_8-core_arm64_0.02min  # ARM64 runner
+    runs-on: Ubuntu-24.04_8-core_arm64_0.02min
     defaults:
       run:
         shell: bash -l {0}
@@ -22,23 +22,27 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # Cache Conda packages
-    - name: Cache conda
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/conda_pkgs_dir
-          ~/mambaforge
-        key: ${{ runner.os }}-arm64-conda-${{ hashFiles('environment.yml') }}
+    # Limpa cache problemático (opcional para testes)
+    - name: Clean problematic cache
+      run: |
+        rm -rf ~/conda_pkgs_dir
+        rm -rf ~/mambaforge
 
-    # Install Miniforge (ARM64-specific)
+    # Instala Miniforge com URL garantido
     - name: Setup Miniforge (ARM64)
       uses: conda-incubator/setup-miniconda@v2
       with:
-        installer-url: https://github.com/conda-forge/miniforge/releases/download/25.3.0-1/Miniforge3-25.3.0-1-Linux-aarch64.sh
+        installer-url: https://github.com/conda-forge/miniforge/releases/download/23.3.1-0/Miniforge3-Linux-aarch64.sh
         activate-environment: cities-cif
         environment-file: environment.yml
         python-version: ${{ matrix.python-version }}
+        auto-activate-base: false
+
+    # Verifica se o ambiente foi criado corretamente
+    - name: Verify Conda environment
+      run: |
+        conda env list
+        conda list -n cities-cif
 
     - name: Install Linux dependencies
       run: |
@@ -57,4 +61,5 @@ jobs:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
+        conda activate cities-cif
         pytest tests
