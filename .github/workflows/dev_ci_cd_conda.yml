@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: Ubuntu-24.04_8-core_arm64_0.02min
+    runs-on: Ubuntu-24.04_8-core_arm64_0.02min  # ARM64 runner
     defaults:
       run:
         shell: bash -l {0}
@@ -22,35 +22,25 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # Configure cache for Conda/Mamba
-    - name: Cache conda packages
+    # Cache Conda packages
+    - name: Cache conda
       uses: actions/cache@v3
-      id: cache-conda
       with:
         path: |
           ~/conda_pkgs_dir
           ~/mambaforge
         key: ${{ runner.os }}-arm64-conda-${{ hashFiles('environment.yml') }}
 
-    # Configure cache for pip
-    - name: Cache pip packages
-      uses: actions/cache@v3
-      id: cache-pip
+    # Install Miniforge (ARM64-specific)
+    - name: Setup Miniforge (ARM64)
+      uses: conda-incubator/setup-miniconda@v2
       with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-arm64-pip-${{ hashFiles('environment.yml') }}
-
-    # Install Miniforge/Mambaforge (otimized for ARM64)
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-        miniforge-version: "latest"       # Conda distribution for ARM
-        miniforge-variant: "Mambaforge"   # Mamba version (faster)
+        installer-url: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-aarch64.sh
         activate-environment: cities-cif
         environment-file: environment.yml
         python-version: ${{ matrix.python-version }}
         auto-update-conda: true
-        use-mamba: true                   # Use mamba to solve dependencies faster
-#        condarc-file: ~/.condarc         # Optional: in case of a custom .condarc
+        use-mamba: true  # Faster dependency resolution
 
     - name: Install Linux dependencies
       run: |
