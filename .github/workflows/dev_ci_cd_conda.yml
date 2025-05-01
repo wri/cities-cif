@@ -22,13 +22,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # Limpa cache problemático (opcional para testes)
-    - name: Clean problematic cache
-      run: |
-        rm -rf ~/conda_pkgs_dir
-        rm -rf ~/mambaforge
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/conda_pkgs_dir
+          ~/.cache/pip
+        key: ${{ runner.os }}-deps-${{ hashFiles('environment.yml') }}
 
-    # Instala Miniforge com URL garantido
+    # Install miniforge
     - name: Setup Miniforge (ARM64)
       uses: conda-incubator/setup-miniconda@v2
       with:
@@ -37,8 +39,9 @@ jobs:
         environment-file: environment.yml
         python-version: ${{ matrix.python-version }}
         auto-activate-base: false
+        auto-update-conda: false
 
-    # Verifica se o ambiente foi criado corretamente
+    # Verify environment
     - name: Verify Conda environment
       run: |
         conda env list
@@ -62,4 +65,4 @@ jobs:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
         conda activate cities-cif
-        pytest tests
+        pytest tests -n auto --dist=loadscope --durations=10
