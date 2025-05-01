@@ -35,7 +35,7 @@ jobs:
     - name: Setup Miniforge (ARM64)
       uses: conda-incubator/setup-miniconda@v2
       with:
-        installer-url: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-aarch64.sh
+        installer-url: https://github.com/conda-forge/miniforge/releases/download/25.3.0-1/Miniforge3-25.3.0-1-Linux-aarch64.sh
         activate-environment: cities-cif
         environment-file: environment.yml
         python-version: ${{ matrix.python-version }}
