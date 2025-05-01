@@ -30,6 +30,11 @@ class NasaDEM(Layer):
         nasa_dem = ee.Image("NASA/NASADEM_HGT/001")
 
         ee_rectangle  = bbox.to_ee_rectangle()
+
+        # Based on testing, this kernel reduces some noise while maintaining range of values
+        kernel = ee.Kernel.gaussian(
+            radius=3, sigma=1, units='pixels', normalize=True
+        )
         nasa_dem_elev = (ee.ImageCollection(nasa_dem)
                          .filterBounds(ee_rectangle['ee_geometry'])
                          .select('elevation')
@@ -37,6 +42,8 @@ class NasaDEM(Layer):
                               set_resampling_for_continuous_raster(x,
                                                                    resampling_method,
                                                                    spatial_resolution,
+                                                                   DEFAULT_SPATIAL_RESOLUTION,
+                                                                   kernel,
                                                                    ee_rectangle['crs']
                                                                    )
                               )
@@ -51,4 +58,7 @@ class NasaDEM(Layer):
             "NASA DEM"
         ).elevation
 
-        return data
+        # Round value to reduce variability
+        rounded_data = data.round(2)
+
+        return rounded_data

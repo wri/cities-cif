@@ -25,6 +25,10 @@ class AlosDSM(Layer):
         alos_dsm = ee.ImageCollection("JAXA/ALOS/AW3D30/V3_2")
 
         ee_rectangle  = bbox.to_ee_rectangle()
+        # Based on testing, this kernel reduces some noise while maintaining range of values
+        kernel = ee.Kernel.gaussian(
+            radius=3, sigma=0.25, units='pixels', normalize=True
+        )
         alos_dsm_ic = ee.ImageCollection(
             alos_dsm
             .filterBounds(ee_rectangle['ee_geometry'])
@@ -33,12 +37,13 @@ class AlosDSM(Layer):
                  set_resampling_for_continuous_raster(x,
                                                       resampling_method,
                                                       spatial_resolution,
+                                                      DEFAULT_SPATIAL_RESOLUTION,
+                                                      kernel,
                                                       ee_rectangle['crs']
                                                       )
                  )
             .mean()
         )
-
 
         data = get_image_collection(
             alos_dsm_ic,
@@ -47,4 +52,7 @@ class AlosDSM(Layer):
             "ALOS DSM"
         ).DSM
 
-        return data
+        # Round value to reduce variability
+        rounded_data = data.round(2)
+
+        return rounded_data

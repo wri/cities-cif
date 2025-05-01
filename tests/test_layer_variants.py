@@ -62,8 +62,8 @@ def test_albedo_metrics_default_resampling():
     actual_max_value = _convert_fraction_to_rounded_percent(data.values.max())
 
     # Value range
-    assert expected_min_value == actual_min_value
-    assert expected_max_value == actual_max_value
+    assert actual_min_value == expected_min_value
+    assert actual_max_value == expected_max_value
 
 
 def test_albedo_metrics_no_resampling():
@@ -76,22 +76,22 @@ def test_albedo_metrics_no_resampling():
     actual_max_value = _convert_fraction_to_rounded_percent(data.values.max())
 
     # Value range
-    assert expected_min_value == actual_min_value
-    assert expected_max_value == actual_max_value
+    assert actual_min_value == expected_min_value
+    assert actual_max_value == expected_max_value
 
 
 def test_alos_dsm_values():
     data = AlosDSM().get_data(BBOX, resampling_method=None)
 
     # Bounding values
-    expected_min_value = 17
+    expected_min_value = 16
     expected_max_value = 86
     actual_min_value = _convert_to_rounded_integer(data.values.min())
     actual_max_value = _convert_to_rounded_integer(data.values.max())
 
     # Value range
-    assert expected_min_value == actual_min_value
-    assert expected_max_value == actual_max_value
+    assert actual_min_value == expected_min_value
+    assert actual_max_value == expected_max_value
 
     
 def test_ndvi_values():

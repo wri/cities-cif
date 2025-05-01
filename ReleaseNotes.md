@@ -1,5 +1,8 @@
 # Release Notes
 
+## 2025/04/30
+1. Updated NasaDEM and AlosDSM to emit smoother surface interpolations for non-default resolutions.
+
 ## 2025/04/25
 1. Renamed overture_buildings_w_height_raster to overture_buildings_dsm and updated to return raster of Overture buildings combined with DEM.
 1. Added ut_globus_city_handler package for storing geopackage and query function for UT Globus cities.

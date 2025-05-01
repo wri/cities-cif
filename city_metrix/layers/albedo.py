@@ -122,11 +122,14 @@ class Albedo(Layer):
         dataset = self.get_masked_s2_collection(ee_rectangle['ee_geometry'], self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
 
+        kernel_convolution = None
         albedo_mean = (s2_albedo
                        .map(lambda x:
                                     set_resampling_for_continuous_raster(x,
                                                                          resampling_method,
                                                                          spatial_resolution,
+                                                                         DEFAULT_SPATIAL_RESOLUTION,
+                                                                         kernel_convolution,
                                                                          ee_rectangle['crs']
                                                                          )
                             )
