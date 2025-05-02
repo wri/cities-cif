@@ -68,7 +68,7 @@ class MeanPM2P5ExposurePopWeightedChildren(Metric):
         pop_weighted_pm2p5_children = (MeanPM2P5ExposurePopWeighted(acag_year=self.acag_year, worldpop_agesex_classes=WorldPopClass.CHILDREN,
                                                                     informal_only=False))
 
-        return pop_weighted_pm2p5_children.get_data(zones=zones)
+        return pop_weighted_pm2p5_children.get_data(zones=zones, spatial_resolution=spatial_resolution)
 
 
 class MeanPM2P5ExposurePopWeightedElderly(Metric):
@@ -82,7 +82,7 @@ class MeanPM2P5ExposurePopWeightedElderly(Metric):
         pop_weighted_pm2p5_elderly = (MeanPM2P5ExposurePopWeighted(acag_year=self.acag_year, worldpop_agesex_classes=WorldPopClass.ELDERLY,
                                                                     informal_only=False))
 
-        return pop_weighted_pm2p5_elderly.get_data(zones=zones)
+        return pop_weighted_pm2p5_elderly.get_data(zones=zones, spatial_resolution=spatial_resolution)
 
 
 class MeanPM2P5ExposurePopWeightedFemale(Metric):
@@ -96,7 +96,7 @@ class MeanPM2P5ExposurePopWeightedFemale(Metric):
         pop_weighted_pm2p5_female = (MeanPM2P5ExposurePopWeighted(acag_year=self.acag_year, worldpop_agesex_classes=WorldPopClass.FEMALE,
                                                                   informal_only=False))
 
-        return pop_weighted_pm2p5_female.get_data(zones=zones)
+        return pop_weighted_pm2p5_female.get_data(zones=zones, spatial_resolution=spatial_resolution)
 
 
 class MeanPM2P5ExposurePopWeightedInformal(Metric):
@@ -110,4 +110,4 @@ class MeanPM2P5ExposurePopWeightedInformal(Metric):
         pop_weighted_pm2p5_informal = (MeanPM2P5ExposurePopWeighted(acag_year=self.acag_year, worldpop_agesex_classes=[],
                                                                   informal_only=True))
 
-        return pop_weighted_pm2p5_informal.get_data(zones=zones)
+        return pop_weighted_pm2p5_informal.get_data(zones=zones, spatial_resolution=spatial_resolution)
