@@ -18,6 +18,7 @@ class MeanPM2P5Exposure(Metric):
                  zones: GeoDataFrame,
                  spatial_resolution:int = None) -> GeoSeries:
 
+        zones = zones.reset_index()
         pm2p5_layer = AcagPM2p5()
 
         if self.informal_only:
@@ -43,14 +44,14 @@ class MeanPM2P5ExposurePopWeighted(Metric):
     def get_data(self,
                  zones: GeoDataFrame,
                  spatial_resolution:int = None) -> GeoSeries:
-
+        zones = zones.reset_index()
         pop_weighted_pm2p5 = PopWeightedPM2p5(acag_year=self.acag_year, worldpop_agesex_classes=self.worldpop_agesex_classes)
 
         if self.informal_only:
             informal_layer = UrbanLandUse(ulu_class=3)
-            mean_pm2p5 = pop_weighted_pm2p5.mask(informal_layer).groupby(zones.reset_index()).mean()
+            mean_pm2p5 = pop_weighted_pm2p5.mask(informal_layer).groupby(zones).mean()
         else:
-            mean_pm2p5 = pop_weighted_pm2p5.groupby(zones.reset_index()).mean()
+            mean_pm2p5 = pop_weighted_pm2p5.groupby(zones).mean()
 
         return mean_pm2p5
 
