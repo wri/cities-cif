@@ -34,7 +34,7 @@ class AccessibleRegion(Layer):
             gdf = gpd.read_file(url)
             print('(Succeeded)')
         except urllib.error.HTTPError:
-            raise Exception(f"Isoline file {filename} does not exist.")
+            raise Exception(f"Isoline file {url} does not exist.")
         iso_gdf = gpd.GeoDataFrame({'is_accessible': [1] * len(gdf), 'geometry': gdf.to_crs('EPSG:4326')['geometry']}).to_crs('EPSG:4326').set_crs('EPSG:4326').set_geometry('geometry')
         if iso_gdf.crs in ('EPSG:4326', 'epsg:4326'):
             total_bounds = iso_gdf.total_bounds

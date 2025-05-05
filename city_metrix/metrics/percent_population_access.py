@@ -23,7 +23,7 @@ class AccessPopulationPercent(Metric):
     def get_data(self,
                  zones: GeoDataFrame,
                  spatial_resolution:int = None) -> GeoSeries:
-        iso_layer = AccessibleRegion(amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit)
+        iso_layer = AccessibleRegion(city_id=self.city_id, amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit)
         iso_data = iso_layer.get_data(GeoExtent(zones.total_bounds))
         accesspop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year, masks=[iso_layer,])
         totalpop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year)
