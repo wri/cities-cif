@@ -3,7 +3,7 @@ import timeout_decorator
 
 from city_metrix.layers import *
 from city_metrix.cache_manager import check_if_cache_file_exists
-from ...tools.general_tools import get_layer_cache_variables
+from ...tools.general_tools import get_cache_variables
 from tests.resources.tools import cleanup_cache_files, prep_output_path
 from ..bbox_constants import GEOEXTENT_TERESINA_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
@@ -237,7 +237,7 @@ def test_WorldPop_write_by_city(target_folder):
 def _run_write_layers_by_city_test(layer_obj, target_folder):
     cache_scheme = 's3'
     geo_extent = PROCESSING_CITY
-    file_key, file_uri, layer_id, is_custom_layer = get_layer_cache_variables(layer_obj, geo_extent)
+    file_key, file_uri, layer_id, is_custom_layer = get_cache_variables(layer_obj, geo_extent)
 
     os_file_path = prep_output_path(target_folder, 'layer', layer_id)
     try:
@@ -249,4 +249,4 @@ def _run_write_layers_by_city_test(layer_obj, target_folder):
     finally:
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         file_key = None if PRESERVE_RESULTS_ON_S3 else file_key
-        cleanup_cache_files(cache_scheme, file_key, cleanup_os_file_path)
+        cleanup_cache_files('layer', cache_scheme, file_key, cleanup_os_file_path)

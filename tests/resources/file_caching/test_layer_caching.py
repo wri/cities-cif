@@ -5,7 +5,7 @@ from city_metrix.constants import RW_TESTING_S3_BUCKET_URI
 from city_metrix.layers import AcagPM2p5, ProtectedAreas, Era5HottestDay
 from city_metrix.cache_manager import check_if_cache_file_exists
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
-from tests.tools.general_tools import get_layer_cache_variables
+from tests.tools.general_tools import get_cache_variables
 from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84
 
 PROCESSING_CITY = GEOEXTENT_TERESINA_WGS84
@@ -55,7 +55,7 @@ def test_netcdf_custom_val():
     assert is_custom_layer == True
 
 def _run_cache_test(layer_obj):
-    file_key, file_uri, layer_id, is_custom_layer = get_layer_cache_variables(layer_obj, PROCESSING_CITY)
+    file_key, file_uri, layer_id, is_custom_layer = get_cache_variables(layer_obj, PROCESSING_CITY)
 
     data = layer_obj.get_data_with_caching(PROCESSING_CITY, force_data_refresh=True)
     assert np.size(data) > 0

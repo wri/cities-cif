@@ -4,7 +4,7 @@ from enum import Enum
 
 from city_metrix import s3_client
 from city_metrix.constants import GeoType, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION, \
-    LOCAL_REPO_URI, DEFAULT_PUBLISHING_ENV, RW_DASHBOARD_LAYER_S3_BUCKET_URI, RW_DASHBOARD_METRIC_S3_BUCKET_URI
+    LOCAL_REPO_URI, DEFAULT_PUBLISHING_ENV, RW_CACHE_S3_BUCKET_URI
 from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_cache, \
     read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_bucket_name_from_s3_uri
 from city_metrix.metrix_tools import get_class_from_instance
@@ -14,7 +14,7 @@ def build_file_key(class_obj, geo_extent):
     admin_level = geo_extent.admin_level
 
     # Construct layer filename and s3 key
-    cache_folder_name, feature_id, is_custom_layer = build_cache_layer_names(class_obj)
+    cache_folder_name, feature_id, is_custom_object = build_cache_name(class_obj)
 
     # Determine if object is a layer or metric
     feature_base_class_name = class_obj.__class__.__bases__[0].__name__
@@ -22,9 +22,9 @@ def build_file_key(class_obj, geo_extent):
     file_key = get_cached_file_key(feature_base_class_name, cache_folder_name, city_id,
                                    admin_level, feature_id)
 
-    file_uri = get_cached_file_uri(feature_base_class_name, file_key, is_custom_layer)
+    file_uri = get_cached_file_uri(file_key, is_custom_object)
 
-    return file_uri, file_key, is_custom_layer
+    return file_uri, file_key, is_custom_object
 
 def retrieve_cached_city_data(class_obj, geo_extent, force_data_refresh: bool):
     file_uri, file_key, is_custom_layer = build_file_key(class_obj, geo_extent)
@@ -34,7 +34,7 @@ def retrieve_cached_city_data(class_obj, geo_extent, force_data_refresh: bool):
 
     # Retrieve from cache
     result_data = None
-    file_format = class_obj.GEOSPATIAL_FILE_FORMAT
+    file_format = class_obj.OUTPUT_FILE_FORMAT
     if file_format == GTIFF_FILE_EXTENSION:
         result_data = read_geotiff_from_cache(file_uri)
     elif file_format == GEOJSON_FILE_EXTENSION:
@@ -65,42 +65,42 @@ def has_default_attribute_values(layer_obj):
     return has_matched_cls_obj_atts, unmatched_atts
 
 
-def build_cache_layer_names(layer_obj):
+def build_cache_name(class_obj):
     """
-    Function uses the sequence of layer-class parameters specified in two class constants, plus standard date
-    parameters in many of the layer classes to construct names for cache folders and cached layer files.
+    Function uses the sequence of class parameters specified in two class constants, plus standard date
+    parameters in many of the classes to construct names for cache folders and cached layer files.
     """
-    has_matched_cls_obj_atts, unmatched_atts = has_default_attribute_values(layer_obj)
+    has_matched_cls_obj_atts, unmatched_atts = has_default_attribute_values(class_obj)
 
-    primary_qualifiers = _build_layer_name_part(layer_obj, layer_obj.MAJOR_NAMING_ATTS, [])
+    primary_qualifiers = _build_class_name_part(class_obj, class_obj.MAJOR_NAMING_ATTS, [])
     if has_matched_cls_obj_atts:
         secondary_qualifiers = ""
     else:
-        secondary_qualifiers = _build_layer_name_part(layer_obj, layer_obj.MINOR_NAMING_ATTS, unmatched_atts)
+        secondary_qualifiers = _build_class_name_part(class_obj, class_obj.MINOR_NAMING_ATTS, unmatched_atts)
 
     # Determine if request it for a CIF-non-default layer
     if (
             (
-                    layer_obj.MINOR_NAMING_ATTS is not None and unmatched_atts is not None
-                    and any(item in layer_obj.MINOR_NAMING_ATTS for item in unmatched_atts)
+                    class_obj.MINOR_NAMING_ATTS is not None and unmatched_atts is not None
+                    and any(item in class_obj.MINOR_NAMING_ATTS for item in unmatched_atts)
             )
             or any(item in DATE_ATTRIBUTES for item in unmatched_atts)
     ):
-        is_custom_layer = True
+        is_custom_object = True
     else:
-        is_custom_layer = False
+        is_custom_object = False
 
-    date_kv_string = _build_naming_string_from_standard_parameters(layer_obj, is_custom_layer)
+    date_kv_string = _build_naming_string_from_standard_parameters(class_obj, is_custom_object)
 
-    class_name = layer_obj.__class__.__name__
-    file_format = layer_obj.GEOSPATIAL_FILE_FORMAT
+    class_name = class_obj.__class__.__name__
+    file_format = class_obj.OUTPUT_FILE_FORMAT
     layer_folder_name = f"{class_name}{primary_qualifiers}"
     layer_id = f"{layer_folder_name}{secondary_qualifiers}{date_kv_string}.{file_format}"
 
-    return layer_folder_name, layer_id, is_custom_layer
+    return layer_folder_name, layer_id, is_custom_object
 
 
-def _build_layer_name_part(layer_obj, naming_atts, mismatched_atts):
+def _build_class_name_part(layer_obj, naming_atts, mismatched_atts):
     """
     Function takes the list of layer-class attributes, converts the attribute name to Pascal-case,
     appends the object parameter value, and constructs a name-value string to be used as part of the
@@ -199,11 +199,8 @@ def check_if_cache_file_exists(file_uri):
         uri_path = os.path.normpath(get_file_path_from_uri(file_key))
         return os.path.exists(uri_path)
 
-def get_cached_file_uri(feature_base_class_name, file_key, is_custom_layer):
-    if feature_base_class_name.lower() == 'layer':
-        uri = LOCAL_REPO_URI if is_custom_layer else RW_DASHBOARD_LAYER_S3_BUCKET_URI
-    else:
-        uri = RW_DASHBOARD_METRIC_S3_BUCKET_URI
+def get_cached_file_uri(file_key, is_custom_layer):
+    uri = LOCAL_REPO_URI if is_custom_layer else RW_CACHE_S3_BUCKET_URI
 
     if get_uri_scheme(uri) in ('s3', 'file'):
         file_uri = f"{uri}/{file_key}"

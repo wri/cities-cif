@@ -25,7 +25,7 @@ ZONE = GEOZONE_FLORIANOPOLIS_WGS84
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_large_city(target_folder):
     file_path = prep_output_path(target_folder, 'metric', 'natural_areas_percent.geojson')
-    NaturalAreasPercent().write(ZONE, file_path)
+    NaturalAreasPercent().write_as_geojson(ZONE, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -33,7 +33,7 @@ def test_write_polygonal_zones(target_folder):
     zone = IDN_Jakarta_zone
     file_path = prep_output_path(target_folder, 'metric', 'IDN_Jakarta_natural_areas_polygon.geojson')
 
-    NaturalAreasPercent().write(zone, file_path)
+    NaturalAreasPercent().write_as_geojson(zone, file_path)
     assert verify_file_is_populated(file_path)
 
     indicator = NaturalAreasPercent().get_metric(zone)
@@ -46,7 +46,7 @@ def test_write_data_series_as_geojson(target_folder):
     zones = IDN_Jakarta_zone
 
     csv_file_path = prep_output_path(target_folder, 'metric', 'data_series_csv.geojson')
-    BuiltLandWithHighLST().write(zones,csv_file_path)
+    BuiltLandWithHighLST().write_as_geojson(zones,csv_file_path)
     assert verify_file_is_populated(csv_file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -54,5 +54,5 @@ def test_write_data_series_as_csv(target_folder):
     zones = IDN_Jakarta_zone
 
     csv_file_path = prep_output_path(target_folder, 'metric', 'data_series_csv.csv')
-    BuiltLandWithHighLST().write_as_csv(zones,csv_file_path)
+    BuiltLandWithHighLST().write(zones,csv_file_path)
     assert verify_file_is_populated(csv_file_path)

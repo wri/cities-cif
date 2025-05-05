@@ -22,7 +22,7 @@ from .overture_buildings import OvertureBuildings
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class SmartSurfaceLULC(Layer):
-    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["land_cover_class"]
     MINOR_NAMING_ATTS = None
 

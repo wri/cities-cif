@@ -7,7 +7,7 @@ from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class ProtectedAreas(Layer):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["status_year"]
     MINOR_NAMING_ATTS = ["status", "iucn_cat"]
 

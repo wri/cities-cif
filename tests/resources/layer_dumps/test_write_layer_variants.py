@@ -12,7 +12,7 @@ from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84, GEOEXTENT_T
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.tools import get_test_bbox, cleanup_cache_files, prep_output_path, verify_file_is_populated, \
     get_file_count_in_folder
-from tests.tools.general_tools import get_class_default_spatial_resolution, get_layer_cache_variables
+from tests.tools.general_tools import get_class_default_spatial_resolution, get_cache_variables
 
 
 # ==================== Test resolution changes ===========================

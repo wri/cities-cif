@@ -1,11 +1,11 @@
 from geopandas import GeoSeries
 
-from city_metrix.constants import GEOJSON_FILE_EXTENSION
+from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import Metric, GeoZone
 from city_metrix.layers import FractionalVegetation
 
 class PercentAreaFracvegExceedsThreshold(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 

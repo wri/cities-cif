@@ -15,7 +15,7 @@ class WorldPopClass(Enum):
 
 
 class WorldPop(Layer):
-    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["agesex_classes"]
     MINOR_NAMING_ATTS = None
 

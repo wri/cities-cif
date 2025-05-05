@@ -2,7 +2,7 @@ import os
 import shutil
 import numpy as np
 
-from city_metrix.cache_manager import build_file_key, build_cache_layer_names
+from city_metrix.cache_manager import build_file_key, build_cache_name
 
 
 def is_valid_path(path: str):
@@ -59,7 +59,7 @@ def get_param_info(func):
     }
     return default_values
 
-def get_layer_cache_variables(layer_obj, geo_extent):
-    file_uri, file_key, is_custom_layer = build_file_key(layer_obj, geo_extent)
-    layer_folder_name, layer_id, _ = build_cache_layer_names(layer_obj)
-    return file_key, file_uri, layer_id, is_custom_layer
+def get_cache_variables(class_obj, geo_extent):
+    file_uri, file_key, is_custom_object = build_file_key(class_obj, geo_extent)
+    layer_folder_name, layer_id, _ = build_cache_name(class_obj)
+    return file_key, file_uri, layer_id, is_custom_object

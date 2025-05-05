@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 from city_metrix import s3_client
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
-    NETCDF_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI, RW_DASHBOARD_LAYER_S3_BUCKET_URI
+    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI
 from city_metrix.metrix_tools import get_crs_from_data, standardize_y_dimension_direction
 
 
@@ -113,6 +113,10 @@ def _write_file_to_s3(data, uri, file_extension):
                 data.rio.to_raster(raster_path=temp_file.name, driver="GTiff")
             elif file_extension == NETCDF_FILE_EXTENSION:
                 data.to_netcdf(temp_file.name)
+            elif file_extension == CSV_FILE_EXTENSION:
+                data.to_csv(temp_file.name, header=True, index=False)
+            else:
+                raise Exception(f"File extension{file_extension} currently not handled for writing to S3")
 
             s3_client.upload_file(
                 temp_file.name, s3_bucket, file_key, ExtraArgs={"ACL": "public-read"}
@@ -121,11 +125,11 @@ def _write_file_to_s3(data, uri, file_extension):
 def write_csv(data, uri):
     _verify_datatype('write_csv()', data, [pd.Series, pd.DataFrame], is_spatial=False)
     if get_uri_scheme(uri) == 's3':
-        _write_file_to_s3(data, uri, GEOJSON_FILE_EXTENSION)
+        _write_file_to_s3(data, uri, CSV_FILE_EXTENSION)
     else:
         uri_path = os.path.normpath(get_file_path_from_uri(uri))
         _create_local_target_folder(uri_path)
-        data.to_csv(uri, header=True, index=True, index_label='index')
+        data.to_csv(uri, header=True, index=False)
 
 def write_geojson(data, uri):
     _verify_datatype('write_geojson()', data, [gpd.GeoDataFrame], is_spatial=True)

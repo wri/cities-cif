@@ -607,7 +607,7 @@ class LayerGroupBy:
 
 
 class Layer():
-    GEOSPATIAL_FILE_FORMAT = None
+    OUTPUT_FILE_FORMAT = None
     def __init__(self, aggregate=None, masks=[]):
         self.aggregate = aggregate
         if aggregate is None:
@@ -637,7 +637,7 @@ class Layer():
             result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
 
             if bbox.geo_type == GeoType.CITY:
-                write_layer(result_data, file_uri, self.GEOSPATIAL_FILE_FORMAT)
+                write_layer(result_data, file_uri, self.OUTPUT_FILE_FORMAT)
         else:
             result_data = retrieved_cached_data
 
@@ -679,7 +679,7 @@ class Layer():
         :return:
         """
 
-        file_format = self.GEOSPATIAL_FILE_FORMAT
+        file_format = self.OUTPUT_FILE_FORMAT
 
         # Determine if write can be skipped
         if bbox.geo_type == GeoType.CITY:
@@ -828,10 +828,10 @@ def get_image_collection(
 
 
 class Metric():
-    def __init__(self, layer=None):
-        self.layer = layer
-        if layer is None:
-            self.layer = self
+    def __init__(self, metric=None):
+        self.metric = metric
+        if metric is None:
+            self.metric = self
 
     @abstractmethod
     def get_metric(self, geo_zone: GeoZone, spatial_resolution:int) -> pd.Series:
@@ -841,14 +841,14 @@ class Metric():
         """
         ...
 
-    def write(self, geo_zone: GeoZone, output_path:str, spatial_resolution:int = None, **kwargs):
+    def write_as_geojson(self, geo_zone: GeoZone, output_path:str, spatial_resolution:int = None, **kwargs):
         """
         Write the metric to a path. Does not apply masks.
         :return:
         """
         Metric._verify_extension(output_path, f".{GEOJSON_FILE_EXTENSION}")
 
-        indicator = self.layer.get_metric(geo_zone, spatial_resolution)
+        indicator = self.metric.get_metric(geo_zone, spatial_resolution)
 
         # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
         if indicator is not None:
@@ -862,14 +862,14 @@ class Metric():
         else:
             raise NotImplementedError("Can only write Series or Dataframe Indicator data")
 
-    def write_as_csv(self, geo_zone: GeoZone, output_path: str, spatial_resolution:int = None, **kwargs):
+    def write(self, geo_zone: GeoZone, output_path: str, spatial_resolution:int = None, **kwargs):
         """
         Write the metric to a path. Does not apply masks.
         :return:
         """
         Metric._verify_extension(output_path, f".{CSV_FILE_EXTENSION}")
 
-        indicator = self.layer.get_metric(geo_zone, spatial_resolution)
+        indicator = self.metric.get_metric(geo_zone, spatial_resolution)
 
         if indicator is not None:
             indicator.name = 'indicator'
@@ -877,7 +877,11 @@ class Metric():
             raise NotImplementedError("Data not available for this geo_zone.")
 
         if isinstance(indicator, (pd.Series, pd.DataFrame)):
-            write_csv(indicator, output_path)
+            keeper_columns = ['geo_id', 'geo_name', 'geo_level']
+            thinned_gdf = geo_zone.zones[keeper_columns]
+            thinned_gdf['metrix_id'] = self.metric.__class__.__name__
+            city_admin_indicator = pd.concat([thinned_gdf, indicator], axis=1)
+            write_csv(city_admin_indicator, output_path)
         else:
             raise NotImplementedError("Can only write Series or Dataframe Indicator data")
 

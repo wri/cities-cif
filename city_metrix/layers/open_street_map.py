@@ -67,7 +67,7 @@ class OpenStreetMapClass(Enum):
 
 
 class OpenStreetMap(Layer):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["osm_class"]
     MINOR_NAMING_ATTS = None
 

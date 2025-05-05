@@ -8,7 +8,7 @@ from .ut_globus import UtGlobus
 
 
 class OvertureBuildingsHeight(Layer):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["city"]
     MINOR_NAMING_ATTS = None
 

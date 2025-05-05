@@ -23,7 +23,7 @@ SAMPLE_TILED_LARGE_ZONES = (
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_built_land_with_high_land_surface_temperature(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','built_land_with_high_land_surface_temperature.geojson')
+    file_path = prep_output_path(target_folder, 'metric','built_land_with_high_land_surface_temperature.csv')
 
     BuiltLandWithHighLST().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -31,7 +31,7 @@ def test_write_built_land_with_high_land_surface_temperature(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_built_land_with_low_surface_reflectivity(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','built_land_with_low_surface_reflectivity.geojson')
+    file_path = prep_output_path(target_folder, 'metric','built_land_with_low_surface_reflectivity.csv')
 
     BuiltLandWithLowSurfaceReflectivity().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -39,7 +39,7 @@ def test_write_built_land_with_low_surface_reflectivity(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_canopy_area_per_resident_children(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','canopy_area_per_resident_children.geojson')
+    file_path = prep_output_path(target_folder, 'metric','canopy_area_per_resident_children.csv')
 
     CanopyAreaPerResidentChildren().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -47,7 +47,7 @@ def test_write_canopy_area_per_resident_children(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_canopy_area_per_resident_elderly(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','canopy_area_per_resident_elderly.geojson')
+    file_path = prep_output_path(target_folder, 'metric','canopy_area_per_resident_elderly.csv')
 
     CanopyAreaPerResidentElderly().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -55,7 +55,7 @@ def test_write_canopy_area_per_resident_elderly(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_canopy_area_per_resident_female(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','canopy_area_per_resident_female.geojson')
+    file_path = prep_output_path(target_folder, 'metric','canopy_area_per_resident_female.csv')
 
     CanopyAreaPerResidentFemale().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -63,7 +63,7 @@ def test_write_canopy_area_per_resident_female(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_canopy_area_per_resident_informal(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','canopy_area_per_resident_informal.geojson')
+    file_path = prep_output_path(target_folder, 'metric','canopy_area_per_resident_informal.csv')
 
     CanopyAreaPerResidentInformal().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -71,7 +71,7 @@ def test_write_canopy_area_per_resident_informal(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_era_5_met_preprocessing(target_folder):
     zones = SAMPLE_TILED_SINGLE_ZONE
-    file_path = prep_output_path(target_folder, 'metric','era_5_met_preprocessing.geojson')
+    file_path = prep_output_path(target_folder, 'metric','era_5_met_preprocessing.csv')
 
     Era5MetPreprocessing().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -79,7 +79,7 @@ def test_write_era_5_met_preprocessing(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_mean_pm2p5_exposure(target_folder):
     zones = SAMPLE_TILED_LARGE_ZONES
-    file_path = prep_output_path(target_folder, 'metric','mean_pm2p5_exposure.geojson')
+    file_path = prep_output_path(target_folder, 'metric','mean_pm2p5_exposure.csv')
 
     MeanPM2P5Exposure().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -87,7 +87,7 @@ def test_write_mean_pm2p5_exposure(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_mean_pm2p5_exposure_pop_weighted_children(target_folder):
     zones = SAMPLE_TILED_LARGE_ZONES
-    file_path = prep_output_path(target_folder, 'metric','mean_pm2p5_exposure_pop_weighted_children.geojson')
+    file_path = prep_output_path(target_folder, 'metric','mean_pm2p5_exposure_pop_weighted_children.csv')
 
     MeanPM2P5ExposurePopWeightedChildren().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -95,7 +95,7 @@ def test_write_mean_pm2p5_exposure_pop_weighted_children(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_mean_pm2p5_exposure_pop_weighted_elderly(target_folder):
     zones = SAMPLE_TILED_LARGE_ZONES
-    file_path = prep_output_path(target_folder, 'metric','mean_pm2p5_exposure_pop_weighted_elderly.geojson')
+    file_path = prep_output_path(target_folder, 'metric','mean_pm2p5_exposure_pop_weighted_elderly.csv')
 
     MeanPM2P5ExposurePopWeightedElderly().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -103,7 +103,7 @@ def test_write_mean_pm2p5_exposure_pop_weighted_elderly(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_mean_pm2p5_exposure_pop_weighted_female(target_folder):
     zones = SAMPLE_TILED_LARGE_ZONES
-    file_path = prep_output_path(target_folder, 'metric','mean_pm2p5_exposure_pop_weighted_female.geojson')
+    file_path = prep_output_path(target_folder, 'metric','mean_pm2p5_exposure_pop_weighted_female.csv')
 
     MeanPM2P5ExposurePopWeightedFemale().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -111,7 +111,7 @@ def test_write_mean_pm2p5_exposure_pop_weighted_female(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_mean_pm2p5_exposure_pop_weighted_informal(target_folder):
     zones = SAMPLE_TILED_LARGE_ZONES
-    file_path = prep_output_path(target_folder, 'metric','mean_pm2p5_exposure_pop_weighted_informal.geojson')
+    file_path = prep_output_path(target_folder, 'metric','mean_pm2p5_exposure_pop_weighted_informal.csv')
 
     MeanPM2P5ExposurePopWeightedInformal().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -119,7 +119,7 @@ def test_write_mean_pm2p5_exposure_pop_weighted_informal(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_mean_tree_cover(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','mean_tree_cover.geojson')
+    file_path = prep_output_path(target_folder, 'metric','mean_tree_cover.csv')
 
     MeanTreeCover().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -127,7 +127,7 @@ def test_write_mean_tree_cover(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_natural_areas(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','natural_areas.geojson')
+    file_path = prep_output_path(target_folder, 'metric','natural_areas.csv')
 
     NaturalAreasPercent().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -135,7 +135,7 @@ def test_write_natural_areas(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_PercentAreaFracvegExceedsThreshold(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','percent_area_fracveg_exceeds_threshold.geojson')
+    file_path = prep_output_path(target_folder, 'metric','percent_area_fracveg_exceeds_threshold.csv')
 
     PercentAreaFracvegExceedsThreshold().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -144,7 +144,7 @@ def test_write_PercentAreaFracvegExceedsThreshold(target_folder):
 # @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 # def test_write_PercentBuiltAreaWithoutTreeCover(target_folder):
 #     zones = SAMPLE_TILED_ZONES
-#     file_path = prep_output_path(target_folder, 'metric', 'percent_build_area_without_tree_cover.geojson')
+#     file_path = prep_output_path(target_folder, 'metric', 'percent_build_area_without_tree_cover.csv')
 #
 #     PercentBuiltAreaWithoutTreeCover().write(zones, file_path)
 #     assert verify_file_is_populated(file_path)
@@ -152,7 +152,7 @@ def test_write_PercentAreaFracvegExceedsThreshold(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_percent_area_impervious(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','percent_area_impervious.geojson')
+    file_path = prep_output_path(target_folder, 'metric','percent_area_impervious.csv')
 
     PercentAreaImpervious().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -160,7 +160,7 @@ def test_write_percent_area_impervious(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_PercentCanopyCoveredPopulation(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','percent_canopy_covered_population.geojson')
+    file_path = prep_output_path(target_folder, 'metric','percent_canopy_covered_population.csv')
 
     PercentCanopyCoveredPopulation().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -168,7 +168,7 @@ def test_write_PercentCanopyCoveredPopulation(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_percent_protected_area(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','percent_protected_area.geojson')
+    file_path = prep_output_path(target_folder, 'metric','percent_protected_area.csv')
 
     PercentProtectedArea().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -176,7 +176,7 @@ def test_write_percent_protected_area(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_recreational_space_per_capita(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','recreational_space_per_capita.geojson')
+    file_path = prep_output_path(target_folder, 'metric','recreational_space_per_capita.csv')
 
     RecreationalSpacePerCapita().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -184,7 +184,7 @@ def test_write_recreational_space_per_capita(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_urban_open_space(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','urban_open_space.geojson')
+    file_path = prep_output_path(target_folder, 'metric','urban_open_space.csv')
 
     UrbanOpenSpace().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -192,7 +192,7 @@ def test_write_urban_open_space(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_vegetation_water_change_gain_area(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','vegetation_water_change_gain_area.geojson')
+    file_path = prep_output_path(target_folder, 'metric','vegetation_water_change_gain_area.csv')
 
     VegetationWaterChangeGainArea().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -200,7 +200,7 @@ def test_write_vegetation_water_change_gain_area(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_vegetation_water_change_loss_area(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','vegetation_water_change_loss_area.geojson')
+    file_path = prep_output_path(target_folder, 'metric','vegetation_water_change_loss_area.csv')
 
     VegetationWaterChangeLossArea().write(zones, file_path)
     assert verify_file_is_populated(file_path)
@@ -208,7 +208,7 @@ def test_write_vegetation_water_change_loss_area(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_vegetation_water_change_gain_loss_ratio(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','vegetation_water_change_gain_loss_ratio.geojson')
+    file_path = prep_output_path(target_folder, 'metric','vegetation_water_change_gain_loss_ratio.csv')
 
     VegetationWaterChangeGainLossRatio().write(zones, file_path)
     assert verify_file_is_populated(file_path)

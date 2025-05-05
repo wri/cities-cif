@@ -6,7 +6,7 @@ from ..constants import GTIFF_FILE_EXTENSION
 DEFAULT_SPATIAL_RESOLUTION = 1113.1949
 
 class PopWeightedPM2p5(Layer):
-    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["worldpop_agesex_classes"]
     MINOR_NAMING_ATTS = ["worldpop_year", "acag_year", "acag_return_above"]
 
