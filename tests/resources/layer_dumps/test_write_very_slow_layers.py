@@ -6,7 +6,7 @@ from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.tools import get_test_bbox, prep_output_path, verify_file_is_populated
 
 # These tests use a small bbox so that processing completes in a reasonably-short time interval.
-CITY_UT_NAME = 'portland'
+CITY_UT_NAME = 'vancouver'
 BBOX = BBOX_USA_OR_PORTLAND_2
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -17,6 +17,13 @@ def test_FractionalVegetation_write_small_bbox(target_folder):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_UtGlobus_write_small_bbox(target_folder):
+    file_path = prep_output_path(target_folder, 'layer','UTGlobus_small_bbox.geojson')
+    bbox = get_test_bbox(BBOX)
+    UtGlobus(CITY_UT_NAME).write(bbox, file_path, tile_side_length=None)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_OvertureBuildingsHeight_write_small_bbox(target_folder):
     file_path = prep_output_path(target_folder, 'layer','OvertureBuildingsHeight_small_bbox.geojson')
     bbox = get_test_bbox(BBOX)
@@ -24,10 +31,10 @@ def test_OvertureBuildingsHeight_write_small_bbox(target_folder):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_OvertureBuildingsHeightRaster_write_small_bbox(target_folder):
-    file_path = prep_output_path(target_folder, 'layer','OvertureBuildingsHeightRaster_small_bbox.tif')
+def test_OvertureBuildingsDSM_write_small_bbox(target_folder):
+    file_path = prep_output_path(target_folder, 'layer','OvertureBuildingsDSM_small_bbox.tif')
     bbox = get_test_bbox(BBOX)
-    OvertureBuildingsHeightRaster(CITY_UT_NAME).write(bbox, file_path, tile_side_length=None)
+    OvertureBuildingsDSM().write(bbox, file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")

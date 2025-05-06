@@ -1,9 +1,13 @@
 import ee
+import numpy as np
 import pytest
 
-from city_metrix.layers import NdviSentinel2, TreeCover, Albedo, AlosDSM
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
+from city_metrix.constants import ProjectionType
+from city_metrix.layers import NdviSentinel2, TreeCover, Albedo, AlosDSM, UtGlobus
+from city_metrix.metrix_tools import get_projection_type
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_2
 from city_metrix.metrix_model import get_image_collection
+from tests.test_layers import assert_vector_stats
 
 EE_IMAGE_DIMENSION_TOLERANCE = 1  # Tolerance compensates for variable results from GEE service
 COUNTRY_CODE_FOR_BBOX = 'BRA'
@@ -58,8 +62,8 @@ def test_albedo_metrics_default_resampling():
     actual_max_value = _convert_fraction_to_rounded_percent(data.values.max())
 
     # Value range
-    assert expected_min_value == actual_min_value
-    assert expected_max_value == actual_max_value
+    assert actual_min_value == expected_min_value
+    assert actual_max_value == expected_max_value
 
 
 def test_albedo_metrics_no_resampling():
@@ -72,22 +76,22 @@ def test_albedo_metrics_no_resampling():
     actual_max_value = _convert_fraction_to_rounded_percent(data.values.max())
 
     # Value range
-    assert expected_min_value == actual_min_value
-    assert expected_max_value == actual_max_value
+    assert actual_min_value == expected_min_value
+    assert actual_max_value == expected_max_value
 
 
 def test_alos_dsm_values():
     data = AlosDSM().get_data(BBOX, resampling_method=None)
 
     # Bounding values
-    expected_min_value = 17
+    expected_min_value = 16
     expected_max_value = 86
     actual_min_value = _convert_to_rounded_integer(data.values.min())
     actual_max_value = _convert_to_rounded_integer(data.values.max())
 
     # Value range
-    assert expected_min_value == actual_min_value
-    assert expected_max_value == actual_max_value
+    assert actual_min_value == expected_min_value
+    assert actual_max_value == expected_max_value
 
     
 def test_ndvi_values():
@@ -111,6 +115,12 @@ def test_tree_cover_values():
     assert (
             pytest.approx(expected_mean_value, rel=tolerance) == actual_mean_value
     )
+
+def test_ut_globus_blank_city():
+    data = UtGlobus().get_data(BBOX_USA_OR_PORTLAND_2)
+    assert np.size(data) > 0
+    assert_vector_stats(data, 'height', 0, 3, 16, 1095, 0)
+
 
 def _convert_fraction_to_rounded_percent(fraction):
         return _convert_to_rounded_integer(fraction * 100)

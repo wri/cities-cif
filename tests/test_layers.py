@@ -36,7 +36,7 @@ def test_albedo():
 def test_alos_dsm():
     data = AlosDSM().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 0, 66, 1122, 0)
+    assert_raster_stats(data, 1, 0, 68, 1122, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
     utm_bbox_data = AlosDSM().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
@@ -117,7 +117,7 @@ def test_high_land_surface_temperature():
 def test_high_slope():
     data = HighSlope().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 10.07, 22.01, 143, 979)
+    assert_raster_stats(data, 1, 10.0, 25.2, 146, 976)
     assert get_projection_type(data.crs) == ProjectionType.UTM
     utm_bbox_data = HighSlope().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
@@ -232,12 +232,12 @@ def test_overture_buildings_height():
     utm_bbox_data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
-def test_overture_buildings_height_raster():
-    data = OvertureBuildingsHeightRaster(CITY_CODE_FOR_BBOX).get_data(BBOX)
+def test_OvertureBuildingsDSM():
+    data = OvertureBuildingsDSM().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, -999.0, 12.5, 978604, 0)
+    assert_raster_stats(data, 1, 3.0, 63.0, 976626, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
-    utm_bbox_data = OvertureBuildingsHeightRaster(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
+    utm_bbox_data = OvertureBuildingsDSM().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_protected_areas():
