@@ -20,6 +20,7 @@ from .natural_areas import NaturalAreas
 from .ndvi_sentinel2_gee import NdviSentinel2
 from .open_buildings import OpenBuildings
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
+from .open_urban import OpenUrban
 from .overture_buildings_dsm import OvertureBuildingsDSM
 from .overture_buildings_w_height import OvertureBuildingsHeight
 from .overture_buildings import OvertureBuildings
