@@ -20,7 +20,7 @@ from xrspatial import zonal_stats
 
 
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION
-from city_metrix.metrix_dao import (write_tile_grid, write_geojson, write_csv, write_layer,
+from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_admin_boundaries, get_city_boundary)
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
                                       reproject_units, parse_city_aoi_json, construct_city_aoi_json)
@@ -682,13 +682,7 @@ class Layer():
         file_format = self.OUTPUT_FILE_FORMAT
 
         # Determine if write can be skipped
-        if bbox.geo_type == GeoType.CITY:
-            file_uri, _, _ = build_file_key(self.aggregate, bbox)
-            skip_write = True if file_uri == output_path else False
-        elif output_path is None:
-            skip_write = True
-        else:
-            skip_write = False
+        skip_write = decide_if_write_can_be_skipped(self.aggregate, bbox, output_path)
 
         if tile_side_length is None:
             utm_geo_extent = bbox.as_utm_bbox() # currently only support output as utm
@@ -841,51 +835,92 @@ class Metric():
         """
         ...
 
-    def write_as_geojson(self, geo_zone: GeoZone, output_path:str, spatial_resolution:int = None, **kwargs):
-        """
-        Write the metric to a path. Does not apply masks.
-        :return:
-        """
-        Metric._verify_extension(output_path, f".{GEOJSON_FILE_EXTENSION}")
+    def get_metric_with_caching(self, geo_zone: GeoZone, spatial_resolution:int=None,
+                              force_data_refresh:bool=False) -> Union[xr.DataArray, gpd.GeoDataFrame]:
 
-        indicator = self.metric.get_metric(geo_zone, spatial_resolution)
+        retrieved_cached_data, file_uri = retrieve_cached_city_data(self.metric, geo_zone, force_data_refresh)
+        result_metric = None
+        if retrieved_cached_data is None:
+            result_metric = self.metric.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
 
-        # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
-        if indicator is not None:
-            indicator.name = 'indicator'
+            if geo_zone.geo_type == GeoType.CITY:
+                write_metric(result_metric, file_uri, self.OUTPUT_FILE_FORMAT)
         else:
-            raise NotImplementedError("Data not available for this geo_zone.")
+            result_metric = retrieved_cached_data
 
-        if isinstance(indicator, (pd.Series, pd.DataFrame)):
-            gdf = pd.concat([geo_zone.zones, indicator], axis=1)
-            write_geojson(gdf, output_path)
-        else:
-            raise NotImplementedError("Can only write Series or Dataframe Indicator data")
+        return result_metric
 
-    def write(self, geo_zone: GeoZone, output_path: str, spatial_resolution:int = None, **kwargs):
+    def write(self, geo_zone: GeoZone, output_path: str, spatial_resolution:int = None,
+              force_data_refresh:bool = False, **kwargs):
         """
         Write the metric to a path. Does not apply masks.
         :return:
         """
         Metric._verify_extension(output_path, f".{CSV_FILE_EXTENSION}")
 
-        indicator = self.metric.get_metric(geo_zone, spatial_resolution)
+        indicator = self.metric.get_metric_with_caching(geo_zone, spatial_resolution, force_data_refresh)
 
-        if indicator is not None:
-            indicator.name = 'indicator'
-        else:
+        if indicator is None:
             raise NotImplementedError("Data not available for this geo_zone.")
 
-        if isinstance(indicator, (pd.Series, pd.DataFrame)):
-            keeper_columns = ['geo_id', 'geo_name', 'geo_level']
-            thinned_gdf = geo_zone.zones[keeper_columns]
-            thinned_gdf['metrix_id'] = self.metric.__class__.__name__
-            city_admin_indicator = pd.concat([thinned_gdf, indicator], axis=1)
-            write_csv(city_admin_indicator, output_path)
-        else:
-            raise NotImplementedError("Can only write Series or Dataframe Indicator data")
+        # Determine if write can be skipped
+        skip_write = decide_if_write_can_be_skipped(self.metric, geo_zone, output_path)
+
+        if not skip_write:
+            # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
+            indicator.name = 'indicator'
+
+            result_gdf = geo_zone.zones
+            if geo_zone.geo_type == GeoType.CITY:
+                result_gdf = result_gdf[['geo_id', 'geo_name', 'geo_level']]
+
+            result_gdf['metrix_id'] = self.metric.__class__.__name__
+            result_df = result_gdf.drop(columns='geometry')
+
+            write_metric(result_df, output_path, CSV_FILE_EXTENSION)
+
+    def write_as_geojson(self, geo_zone: GeoZone, output_path:str, spatial_resolution:int = None,
+                         force_data_refresh:bool = False, **kwargs):
+        """
+        Write the metric to a path. Does not apply masks.
+        :return:
+        """
+        Metric._verify_extension(output_path, f".{GEOJSON_FILE_EXTENSION}")
+
+        indicator = self.metric.get_metric_with_caching(geo_zone, spatial_resolution, force_data_refresh)
+
+        if indicator is None:
+            raise NotImplementedError("Data not available for this geo_zone.")
+
+        # Determine if write can be skipped
+        skip_write = decide_if_write_can_be_skipped(self.metric, geo_zone, output_path)
+
+        if not skip_write:
+            # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
+            indicator.name = 'indicator'
+
+            result_gdf = geo_zone.zones
+            if geo_zone.geo_type == GeoType.CITY:
+                result_gdf = result_gdf[['geo_id', 'geo_name', 'geo_level', 'geometry']]
+
+            result_gdf['metrix_id'] = self.metric.__class__.__name__
+
+            indicator_gdf = pd.concat([result_gdf, indicator], axis=1)
+            write_metric(indicator_gdf, output_path, GEOJSON_FILE_EXTENSION)
 
     @staticmethod
     def _verify_extension(file_path, extension):
         if Path(file_path).suffix != extension:
             raise ValueError(f"File name must have '{extension}' extension")
+
+
+def decide_if_write_can_be_skipped(feature, selection_object, output_path):       # Determine if write can be skipped
+    if selection_object.geo_type == GeoType.CITY:
+        default_s3_uri, _, _ = build_file_key(feature, selection_object)
+        skip_write = True if default_s3_uri == output_path else False
+    elif output_path is None:
+        skip_write = True
+    else:
+        skip_write = False
+
+    return skip_write
