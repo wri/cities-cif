@@ -846,7 +846,7 @@ class Metric():
             if geo_zone.geo_type == GeoType.CITY:
                 write_metric(result_metric, file_uri, self.OUTPUT_FILE_FORMAT)
         else:
-            result_metric = retrieved_cached_data
+            result_metric = retrieved_cached_data.squeeze()
 
         return result_metric
 
@@ -870,14 +870,19 @@ class Metric():
             # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
             indicator.name = 'indicator'
 
-            result_gdf = geo_zone.zones
-            if geo_zone.geo_type == GeoType.CITY:
-                result_gdf = result_gdf[['geo_id', 'geo_name', 'geo_level']]
+            result_df = geo_zone.zones
+            if 'geo_id' in result_df.columns:
+                result_df = result_df[['geo_id', 'geo_name', 'geo_level']]
 
-            result_gdf['metrix_id'] = self.metric.__class__.__name__
-            result_df = result_gdf.drop(columns='geometry')
+            if 'geometry' in result_df.columns:
+                result_df.drop(columns=['geometry'], inplace=True)
 
-            write_metric(result_df, output_path, CSV_FILE_EXTENSION)
+            metric_name = self.metric.__class__.__name__
+            result_df = result_df.assign(metric_id=metric_name)
+
+            indicator_df = pd.concat([result_df, indicator], axis=1)
+
+            write_metric(indicator_df, output_path, CSV_FILE_EXTENSION)
 
     def write_as_geojson(self, geo_zone: GeoZone, output_path:str, spatial_resolution:int = None,
                          force_data_refresh:bool = False, **kwargs):
@@ -899,14 +904,15 @@ class Metric():
             # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
             indicator.name = 'indicator'
 
-            result_gdf = geo_zone.zones
-            if geo_zone.geo_type == GeoType.CITY:
-                result_gdf = result_gdf[['geo_id', 'geo_name', 'geo_level', 'geometry']]
+            result_df = geo_zone.zones
+            if 'geo_id' in result_df.columns:
+                result_df = result_df[['geo_id', 'geo_name', 'geo_level', 'geometry']]
 
-            result_gdf['metrix_id'] = self.metric.__class__.__name__
+            metric_name = self.metric.__class__.__name__
+            result_df = result_df.assign(metric_id=metric_name)
 
-            indicator_gdf = pd.concat([result_gdf, indicator], axis=1)
-            write_metric(indicator_gdf, output_path, GEOJSON_FILE_EXTENSION)
+            indicator_df = pd.concat([result_df, indicator], axis=1)
+            write_metric(indicator_df, output_path, GEOJSON_FILE_EXTENSION)
 
     @staticmethod
     def _verify_extension(file_path, extension):

@@ -14,17 +14,11 @@ from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEO
     NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI, RW_CACHE_S3_BUCKET_URI
 from city_metrix.metrix_tools import get_crs_from_data, standardize_y_dimension_direction
 
-
 def _read_geojson_from_s3(s3_bucket, file_key):
-    result_data = None
     with tempfile.TemporaryDirectory() as temp_dir:
-        with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
-            try:
-                # Download the file from S3
-                s3_client.download_file(s3_bucket, file_key, temp_file.name)
-                result_data = gpd.read_file(temp_file.name)
-            except Exception as e:
-                print(f"Error downloading file: {file_key} with error: {e}")
+        temp_file_path = os.path.join(temp_dir, 'tempfile')
+        s3_client.download_file(s3_bucket, file_key, temp_file_path)
+        result_data = gpd.read_file(temp_file_path)
     return result_data
 
 def read_geojson_from_cache(uri):
@@ -70,13 +64,9 @@ def read_netcdf_from_cache(file_uri):
         file_key = _get_file_key_from_url(file_uri)
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
-                try:
-                    # Download the file from S3
-                    s3_client.download_file(s3_bucket, file_key, temp_file.name)
-                    result_data = xr.open_dataarray(temp_file.name)
-                except Exception as e:
-                    print(f"Error downloading file: {file_uri} with error: {e}")
+            temp_file_path = os.path.join(temp_dir, 'tempfile')
+            s3_client.download_file(s3_bucket, file_key, temp_file_path)
+            result_data = xr.open_dataarray(temp_file_path)
     else:
         file_path = os.path.normpath(get_file_path_from_uri(file_uri))
         result_data = xr.open_dataarray(file_path)
@@ -88,13 +78,9 @@ def read_csv_from_s3(file_uri):
     file_key = _get_file_key_from_url(file_uri)
     result_data = None
     with tempfile.TemporaryDirectory() as temp_dir:
-        with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
-            try:
-                # Download the file from S3
-                s3_client.download_file(s3_bucket, file_key, temp_file.name)
-                result_data = pd.read_csv(temp_file.name)
-            except Exception as e:
-                print(f"Error downloading file: {file_key} with error: {e}")
+        temp_file_path = os.path.join(temp_dir, 'tempfile')
+        s3_client.download_file(s3_bucket, file_key, temp_file_path)
+        result_data = pd.read_csv(temp_file_path)
     return result_data
 
 
