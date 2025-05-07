@@ -31,8 +31,17 @@ class OvertureBuildingsDSM(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        # Load the datasets
+        # Load the building footprints and heights
         buildings_gdf = OvertureBuildingsHeight(self.city).get_data(bbox)
+
+        # Buffer the bbox for DEM to avoid computing footprint elevation from only elevations in the local tile
+        buffet_offset_m = 100
+        initial_bbox = bbox.as_utm_bbox().bounds
+        buffered_west = initial_bbox[0] - buffet_offset_m
+        buffered_south = initial_bbox[1] - buffet_offset_m
+        buffered_east = initial_bbox[2] + buffet_offset_m
+        buffered_north = initial_bbox[3] + buffet_offset_m
+        buffered_geo_extent = GeoExtent()
         dem_da = NasaDEM().get_data(bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
 
         # Calculate mode elevation and estimate building elevations
