@@ -55,7 +55,7 @@ def test_netcdf_custom_val():
     assert is_custom_layer == True
 
 def _run_cache_test(layer_obj):
-    file_key, file_uri, layer_id, is_custom_layer = get_cache_variables(layer_obj, PROCESSING_CITY)
+    _, file_uri, _, is_custom_layer = get_cache_variables(layer_obj, PROCESSING_CITY)
 
     data = layer_obj.get_data_with_caching(PROCESSING_CITY, force_data_refresh=True)
     assert np.size(data) > 0

@@ -14,23 +14,23 @@ def build_file_key(class_obj, geo_extent):
     admin_level = geo_extent.admin_level
 
     # Construct layer filename and s3 key
-    cache_folder_name, feature_id, is_custom_object = build_cache_name(class_obj)
+    cache_folder_name, feature_id, file_format, is_custom_object = build_cache_name(class_obj)
 
     # Determine if object is a layer or metric
     feature_base_class_name = class_obj.__class__.__bases__[0].__name__
 
     file_key = get_cached_file_key(feature_base_class_name, cache_folder_name, city_id,
-                                   admin_level, feature_id)
+                                   admin_level, feature_id, file_format)
 
     file_uri = get_cached_file_uri(file_key, is_custom_object)
 
-    return file_uri, file_key, is_custom_object
+    return file_uri, file_key, feature_id, is_custom_object
 
 def retrieve_cached_city_data(class_obj, geo_extent, force_data_refresh: bool):
-    file_uri, file_key, is_custom_layer = build_file_key(class_obj, geo_extent)
+    file_uri, file_key, feature_id, is_custom_layer = build_file_key(class_obj, geo_extent)
 
     if force_data_refresh or geo_extent.geo_type == GeoType.GEOMETRY or not check_if_cache_file_exists(file_uri):
-        return None, file_uri
+        return None, feature_id, file_uri
 
     # Retrieve from cache
     result_data = None
@@ -46,7 +46,7 @@ def retrieve_cached_city_data(class_obj, geo_extent, force_data_refresh: bool):
     else:
         raise Exception(f"Unrecognized file_format of '{file_format}'")
 
-    return result_data, file_uri
+    return result_data, feature_id, file_uri
 
 # ============ Object naming ================================
 DATE_ATTRIBUTES = ['year', 'start_year', 'start_date', 'end_year', 'end_date']
@@ -95,11 +95,12 @@ def build_cache_name(class_obj):
     date_kv_string = _build_naming_string_from_standard_parameters(class_obj, is_custom_object)
 
     class_name = class_obj.__class__.__name__
-    file_format = class_obj.OUTPUT_FILE_FORMAT
     layer_folder_name = f"{class_name}{primary_qualifiers}"
-    layer_id = f"{layer_folder_name}{secondary_qualifiers}{date_kv_string}.{file_format}"
+    feature_id = f"{layer_folder_name}{secondary_qualifiers}{date_kv_string}"
 
-    return layer_folder_name, layer_id, is_custom_object
+    file_format = class_obj.OUTPUT_FILE_FORMAT
+
+    return layer_folder_name, feature_id, file_format, is_custom_object
 
 
 def _build_class_name_part(layer_obj, naming_atts, mismatched_atts):
@@ -211,12 +212,10 @@ def get_cached_file_uri(file_key, is_custom_layer):
     return file_uri
 
 
-def get_cached_file_key(feature_based_class_name, feature_name, city_id, admin_level, feature_id):
-    from pathlib import Path
-    file_format = Path(feature_id).suffix.lstrip('.')
+def get_cached_file_key(feature_based_class_name, feature_name, city_id, admin_level, feature_id, file_format):
     env = DEFAULT_PUBLISHING_ENV
     if feature_based_class_name.lower() == 'layer':
-        file_key = f"data/{env}/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}"
+        file_key = f"data/{env}/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}.{file_format}"
     else:
-        file_key = f"metrics/{env}/{city_id}/{city_id}__{feature_id}"
+        file_key = f"metrics/{env}/{city_id}/{city_id}__{feature_id}.{file_format}"
     return file_key

@@ -631,7 +631,7 @@ class Layer():
     def get_data_with_caching(self, bbox: GeoExtent, spatial_resolution:int=None,
                               force_data_refresh:bool=False) -> Union[xr.DataArray, gpd.GeoDataFrame]:
 
-        retrieved_cached_data, file_uri = retrieve_cached_city_data(self.aggregate, bbox, force_data_refresh)
+        retrieved_cached_data, _, file_uri = retrieve_cached_city_data(self.aggregate, bbox, force_data_refresh)
         result_data = None
         if retrieved_cached_data is None:
             result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
@@ -838,7 +838,7 @@ class Metric():
     def get_metric_with_caching(self, geo_zone: GeoZone, spatial_resolution:int=None,
                               force_data_refresh:bool=False) -> Union[xr.DataArray, gpd.GeoDataFrame]:
 
-        retrieved_cached_data, file_uri = retrieve_cached_city_data(self.metric, geo_zone, force_data_refresh)
+        retrieved_cached_data, feature_id, file_uri = retrieve_cached_city_data(self.metric, geo_zone, force_data_refresh)
         result_metric = None
         if retrieved_cached_data is None:
             result_metric = self.metric.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
@@ -848,7 +848,7 @@ class Metric():
         else:
             result_metric = retrieved_cached_data.squeeze()
 
-        return result_metric
+        return result_metric, feature_id
 
     def write(self, geo_zone: GeoZone, output_path: str, spatial_resolution:int = None,
               force_data_refresh:bool = False, **kwargs):
@@ -858,7 +858,7 @@ class Metric():
         """
         Metric._verify_extension(output_path, f".{CSV_FILE_EXTENSION}")
 
-        indicator = self.metric.get_metric_with_caching(geo_zone, spatial_resolution, force_data_refresh)
+        indicator, feature_id = self.metric.get_metric_with_caching(geo_zone, spatial_resolution, force_data_refresh)
 
         if indicator is None:
             raise NotImplementedError("Data not available for this geo_zone.")
@@ -867,8 +867,7 @@ class Metric():
         skip_write = decide_if_write_can_be_skipped(self.metric, geo_zone, output_path)
 
         if not skip_write:
-            # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
-            indicator.name = 'indicator'
+            indicator.name = 'value'
 
             result_df = geo_zone.zones
             if 'geo_id' in result_df.columns:
@@ -877,8 +876,7 @@ class Metric():
             if 'geometry' in result_df.columns:
                 result_df.drop(columns=['geometry'], inplace=True)
 
-            metric_name = self.metric.__class__.__name__
-            result_df = result_df.assign(metric_id=metric_name)
+            result_df = result_df.assign(metric_id=feature_id)
 
             indicator_df = pd.concat([result_df, indicator], axis=1)
 
@@ -892,7 +890,7 @@ class Metric():
         """
         Metric._verify_extension(output_path, f".{GEOJSON_FILE_EXTENSION}")
 
-        indicator = self.metric.get_metric_with_caching(geo_zone, spatial_resolution, force_data_refresh)
+        indicator, feature_id = self.metric.get_metric_with_caching(geo_zone, spatial_resolution, force_data_refresh)
 
         if indicator is None:
             raise NotImplementedError("Data not available for this geo_zone.")
@@ -901,15 +899,13 @@ class Metric():
         skip_write = decide_if_write_can_be_skipped(self.metric, geo_zone, output_path)
 
         if not skip_write:
-            # rename stats function column to 'indicator' per https://gfw.atlassian.net/browse/CDB-262
-            indicator.name = 'indicator'
+            indicator.name = 'value'
 
             result_df = geo_zone.zones
             if 'geo_id' in result_df.columns:
                 result_df = result_df[['geo_id', 'geo_name', 'geo_level', 'geometry']]
 
-            metric_name = self.metric.__class__.__name__
-            result_df = result_df.assign(metric_id=metric_name)
+            result_df = result_df.assign(metric_id=feature_id)
 
             indicator_df = pd.concat([result_df, indicator], axis=1)
             write_metric(indicator_df, output_path, GEOJSON_FILE_EXTENSION)
@@ -922,7 +918,7 @@ class Metric():
 
 def decide_if_write_can_be_skipped(feature, selection_object, output_path):       # Determine if write can be skipped
     if selection_object.geo_type == GeoType.CITY:
-        default_s3_uri, _, _ = build_file_key(feature, selection_object)
+        default_s3_uri, _, _, _ = build_file_key(feature, selection_object)
         skip_write = True if default_s3_uri == output_path else False
     elif output_path is None:
         skip_write = True

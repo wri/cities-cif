@@ -60,6 +60,7 @@ def get_param_info(func):
     return default_values
 
 def get_cache_variables(class_obj, geo_extent):
-    file_uri, file_key, is_custom_object = build_file_key(class_obj, geo_extent)
-    layer_folder_name, layer_id, _ = build_cache_name(class_obj)
-    return file_key, file_uri, layer_id, is_custom_object
+    file_uri, file_key, feature_id, is_custom_object = build_file_key(class_obj, geo_extent)
+    file_format = class_obj.OUTPUT_FILE_FORMAT
+    feature_with_extension = f"{feature_id}.{file_format}"
+    return file_key, file_uri, feature_with_extension, is_custom_object
