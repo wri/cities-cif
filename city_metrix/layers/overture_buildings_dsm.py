@@ -31,7 +31,8 @@ class OvertureBuildingsDSM(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        buffered_bbox = bbox.buffer_utm_bbox(200)
+        building_buffer = 500
+        buffered_bbox = bbox.buffer_utm_bbox(building_buffer)
 
         # Load the datasets
         buildings_gdf = OvertureBuildingsHeight(self.city).get_data(buffered_bbox)

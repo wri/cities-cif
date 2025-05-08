@@ -7,12 +7,15 @@ def search_for_ut_globus_city_by_contained_polygon(query_polygon):
     gpkg_path = os.path.join(script_dir, 'global_ut_globus_cities.gpkg')
 
     gdf = gpd.read_file(gpkg_path, layer='ut_globus_cities')
-    containing_records = gdf[gdf.geometry.contains(query_polygon)]
 
-    if containing_records is None:
+    # Find the record with the greatest overlap
+    gdf['overlap_area'] = gdf['geometry'].intersection(query_polygon).area
+    max_overlap_record = gdf.loc[gdf['overlap_area'].idxmax()]
+
+    if max_overlap_record is None:
         return None
     else:
-        label = containing_records.iloc[0]['Label']
+        label = max_overlap_record['Label']
         city_name = label.lstrip("_").rstrip(".tif").lower()
         return city_name
 
