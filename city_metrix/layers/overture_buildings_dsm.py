@@ -31,34 +31,34 @@ class OvertureBuildingsDSM(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        # Load the building footprints and heights
-        buildings_gdf = OvertureBuildingsHeight(self.city).get_data(bbox)
+        buffered_bbox = bbox.buffer_utm_bbox(200)
 
-        # Buffer the bbox for DEM to avoid computing footprint elevation from only elevations in the local tile
-        buffet_offset_m = 100
-        initial_bbox = bbox.as_utm_bbox().bounds
-        buffered_west = initial_bbox[0] - buffet_offset_m
-        buffered_south = initial_bbox[1] - buffet_offset_m
-        buffered_east = initial_bbox[2] + buffet_offset_m
-        buffered_north = initial_bbox[3] + buffet_offset_m
-        buffered_geo_extent = GeoExtent()
-        dem_da = NasaDEM().get_data(bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
+        # Load the datasets
+        buildings_gdf = OvertureBuildingsHeight(self.city).get_data(buffered_bbox)
+        contained_buildings = buildings_gdf[buildings_gdf.geometry.apply(lambda x: x.within(buffered_bbox.polygon))]
+
+        dem_da = NasaDEM().get_data(buffered_bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
 
         # Calculate mode elevation and estimate building elevations
-        buildings_gdf['mode_elevation'] = (
-            exact_extract(dem_da, buildings_gdf, ["mode"], output='pandas')['mode']
+        contained_buildings['mode_elevation'] = (
+            exact_extract(dem_da, contained_buildings, ["mode"], output='pandas')['mode']
         )
-        buildings_gdf["elevation_estimate"] = buildings_gdf["height"] + buildings_gdf["mode_elevation"]
+        contained_buildings["elevation_estimate"] = contained_buildings["height"] + contained_buildings["mode_elevation"]
 
         # Rasterize polygons to create a building elevation raster
-        overture_buildings_raster = _rasterize_polygons(buildings_gdf, values=["elevation_estimate"],
+        overture_buildings_raster = _rasterize_polygons(contained_buildings, values=["elevation_estimate"],
                                                         snap_to_raster=dem_da)
 
         # Combine building raster with DEM
         target_crs = dem_da.rio.crs
         composite_bldg_dem = _combine_building_and_dem(dem_da, overture_buildings_raster, target_crs)
 
-        return composite_bldg_dem
+        west, south, east, north = bbox.bounds
+        longitude_range = slice(west, east)
+        latitude_range = slice(south, north)
+        clipped_data = composite_bldg_dem.sel(x=longitude_range, y=latitude_range)
+
+        return clipped_data
 
 
 def _combine_building_and_dem(dem, buildings, target_crs):
