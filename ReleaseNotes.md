@@ -1,5 +1,8 @@
 # Release Notes
 
+## 2025/05/09
+1. Re-implemented OvertureBuildingsDSM to fix a bug and improve cross-tile correspondence in building elevation.
+
 ## 2025/04/30
 1. Updated NasaDEM and AlosDSM to emit smoother surface interpolations for non-default resolutions.
 
