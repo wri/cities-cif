@@ -49,13 +49,12 @@ class OvertureBuildingsDSM(Layer):
             polygon = building['geometry']
 
             # Rasterize footprint to create a mask
-            building_mask = geometry_mask([polygon], transform=DEM.rio.transform(), all_touched=True, out_shape=DEM.shape)
+            building_mask = geometry_mask([polygon], transform=DEM.rio.transform(), all_touched=True, invert=True, out_shape=DEM.shape)
 
-            # Get aggregated elevation within footprint
+            # get aggregated elevation within footprint
             # TODO Implement a more sophisticated method. See https://gfw.atlassian.net/browse/CDB-309
             DEM_values = DEM.values[building_mask]
             # Only include features that arg large enough to overlap or touch a raster cell
-            # This situation should not happen, so the check is mostly precautionary
             if DEM_values.size > 0:
                 footprint_elevation = DEM_values.max()
 
