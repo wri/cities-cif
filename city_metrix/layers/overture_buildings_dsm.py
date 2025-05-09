@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import rasterio
 import xarray as xr
@@ -32,13 +34,21 @@ class OvertureBuildingsDSM(Layer):
         validate_raster_resampling_method(resampling_method)
 
         building_buffer = 500
-        buffered_bbox = bbox.buffer_utm_bbox(building_buffer)
+        buffered_utm_bbox = bbox.buffer_utm_bbox(building_buffer)
+        # adjust buffered bbox to round integer values
+        minx, miny, maxx, maxy = buffered_utm_bbox.bounds
+        floor_minx = math.floor(minx)
+        floor_miny = math.floor(miny)
+        floor_maxx = math.floor(maxx)
+        floor_maxy = math.floor(maxy)
+        utm_crs = buffered_utm_bbox.crs
+        round_buf_utm_bbox = GeoExtent(bbox=(floor_minx, floor_miny, floor_maxx, floor_maxy), crs=utm_crs)
 
         # Load the datasets
-        buildings_gdf = OvertureBuildingsHeight(self.city).get_data(buffered_bbox)
-        contained_buildings = buildings_gdf[buildings_gdf.geometry.apply(lambda x: x.within(buffered_bbox.polygon))]
+        buildings_gdf = OvertureBuildingsHeight(self.city).get_data(round_buf_utm_bbox)
+        contained_buildings = buildings_gdf[buildings_gdf.geometry.apply(lambda x: x.within(round_buf_utm_bbox.polygon))]
 
-        dem_da = NasaDEM().get_data(buffered_bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
+        dem_da = NasaDEM().get_data(round_buf_utm_bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
 
         # Calculate mode elevation and estimate building elevations
         contained_buildings['mode_elevation'] = (
@@ -54,7 +64,7 @@ class OvertureBuildingsDSM(Layer):
         target_crs = dem_da.rio.crs
         composite_bldg_dem = _combine_building_and_dem(dem_da, overture_buildings_raster, target_crs)
 
-        west, south, east, north = bbox.bounds
+        west, south, east, north = bbox.as_utm_bbox().bounds
         longitude_range = slice(west, east)
         latitude_range = slice(south, north)
         clipped_data = composite_bldg_dem.sel(x=longitude_range, y=latitude_range)

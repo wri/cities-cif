@@ -152,7 +152,7 @@ class GeoExtent():
 
     def buffer_utm_bbox(self, buffer_m):
         minx, miny, maxx, maxy = self.as_utm_bbox().bounds
-        utm_crs = self.crs
+        utm_crs = self.as_utm_bbox().crs
         buf_minx = minx - buffer_m
         buf_miny = miny - buffer_m
         buf_maxx = maxx + buffer_m
