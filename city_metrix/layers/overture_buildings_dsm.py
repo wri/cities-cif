@@ -9,6 +9,9 @@ from .overture_buildings_w_height import OvertureBuildingsHeight
 DEFAULT_SPATIAL_RESOLUTION = 1
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
+# This value was determined from a large warehouse as a worst-case example at lon/lat -122.76768,45.63313
+BUILDING_INCLUSION_BUFFER_METERS = 500
+
 class OvertureBuildingsDSM(Layer):
     GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["city"]
@@ -31,7 +34,7 @@ class OvertureBuildingsDSM(Layer):
         # Minimize the probability that buildings will bridge tile boundaries and therefor sample elevations for
         # only part of the full footprint by 1. buffering out the selection area, 2. filtering to contained buildings,
         # and 3. clipping back to the original selection area
-        building_buffer = 500
+        building_buffer = BUILDING_INCLUSION_BUFFER_METERS
         buffered_utm_bbox = bbox.buffer_utm_bbox(building_buffer)
 
         # Load buildings and sub-select to ones fully contained in buffered area
