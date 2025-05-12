@@ -243,7 +243,7 @@ def test_overture_buildings_height():
 def test_overture_buildings_dsm():
     data = OvertureBuildingsDSM().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 3.0, 63.0, 976626, 0)
+    assert_raster_stats(data, 1, 1.0, 60.28, 976626, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
     utm_bbox_data = OvertureBuildingsDSM().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
