@@ -1,5 +1,8 @@
 # Release Notes
 
+## 2025/05/12
+1. Moved OpenUrban layer from C-TCM to CIF. Former location: https://github.com/wri/cities-thermal-comfort-modeling/blob/main/src/workers/open_urban.py
+
 ## 2025/05/09
 1. Re-implemented OvertureBuildingsDSM to fix a bug and improve cross-tile correspondence in building elevation.
 
