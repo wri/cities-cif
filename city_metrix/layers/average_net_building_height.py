@@ -3,9 +3,8 @@ import ee
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
-DEFAULT_SPATIAL_RESOLUTION = 100
-
 class AverageNetBuildingHeight(Layer):
+    DEFAULT_SPATIAL_RESOLUTION = 100
     GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -17,7 +16,7 @@ class AverageNetBuildingHeight(Layer):
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
 
         # https://ghsl.jrc.ec.europa.eu/ghs_buH2023.php
