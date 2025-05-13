@@ -1,8 +1,6 @@
-import math
-import numpy as np
 from rasterio.features import geometry_mask
 from city_metrix.metrix_model import Layer, GeoExtent, validate_raster_resampling_method
-from . import NasaDEM
+from . import FabDEM
 from ..constants import GTIFF_FILE_EXTENSION
 from .overture_buildings_w_height import OvertureBuildingsHeight
 
@@ -42,32 +40,32 @@ class OvertureBuildingsDSM(Layer):
         contained_buildings_gdf = (
             raw_buildings_gdf)[raw_buildings_gdf.geometry.apply(lambda x: x.within(buffered_utm_bbox.polygon))]
 
-        DEM = NasaDEM().get_data(buffered_utm_bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
+        fab_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=1, resampling_method='bilinear')
 
         # Create an array to store the updated DEM values
-        DEM_updated = DEM.copy()
+        dem_updated = fab_dem.copy()
 
         for _, building in contained_buildings_gdf.iterrows():
             height = building['height']
             polygon = building['geometry']
 
             # Rasterize footprint to create a mask
-            building_mask = geometry_mask([polygon], transform=DEM.rio.transform(), all_touched=True, invert=True, out_shape=DEM.shape)
+            building_mask = geometry_mask([polygon], transform=fab_dem.rio.transform(), all_touched=True, invert=True, out_shape=fab_dem.shape)
 
             # get aggregated elevation within footprint
             # TODO Implement a more sophisticated method. See https://gfw.atlassian.net/browse/CDB-309
-            DEM_values = DEM.values[building_mask]
+            dem_values = fab_dem.values[building_mask]
             # Only include features that arg large enough to overlap or touch a raster cell
-            if DEM_values.size > 0:
-                footprint_elevation = DEM_values.max()
+            if dem_values.size > 0:
+                footprint_elevation = dem_values.max()
 
                 # Add the building height and mean elevation
-                DEM_updated.values[building_mask] = footprint_elevation + height
+                dem_updated.values[building_mask] = footprint_elevation + height
 
         # Clip back to the original AOI
         west, south, east, north = bbox.as_utm_bbox().bounds
         longitude_range = slice(west, east)
         latitude_range = slice(south, north)
-        clipped_data = DEM_updated.sel(x=longitude_range, y=latitude_range)
+        clipped_data = dem_updated.sel(x=longitude_range, y=latitude_range)
 
         return clipped_data
