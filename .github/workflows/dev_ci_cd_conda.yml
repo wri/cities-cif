@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: Ubuntu-24.04_8-core_arm64_0.02min
     defaults:
       run:
         shell: bash -l {0}
