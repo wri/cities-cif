@@ -1,4 +1,4 @@
-name: Dev CIF API CI/CD Conda
+name: Dev CIF API CI/CD Conda (ARM64 Fixed)
 
 on:
   pull_request:
@@ -6,37 +6,60 @@ on:
 
 permissions:
   contents: read
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: Ubuntu-24.04_8-core_arm64_0.02min
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash -l {0}  # Use login shell for proper conda activation
+
     strategy:
-      max-parallel: 4
+      max-parallel: 4  # Limit parallel matrix jobs to 4
       matrix:
         python-version: ["3.10"]
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: conda-incubator/setup-miniconda@v2
+    - uses: actions/checkout@v4  # Checkout repository code
+
+    # Clean problematic cache (optional for debugging)
+    - name: Clean problematic cache
+      run: |
+        rm -rf ~/conda_pkgs_dir
+        rm -rf ~/mambaforge
+
+    # Install Miniforge with guaranteed ARM64-compatible URL
+    - name: Setup Miniforge (ARM64)
+      uses: conda-incubator/setup-miniconda@v2
       with:
+        installer-url: https://github.com/conda-forge/miniforge/releases/download/23.3.1-0/Miniforge3-Linux-aarch64.sh
         activate-environment: cities-cif
         environment-file: environment.yml
         python-version: ${{ matrix.python-version }}
-        auto-update-conda: true
+        auto-activate-base: false  # Prevent base environment interference
+
+    # Verify conda environment was created correctly
+    - name: Verify Conda environment
+      run: |
+        conda env list
+        conda list -n cities-cif
+
     - name: Install Linux dependencies
       run: |
         sudo apt update
-        sudo apt install -y gdal-bin libgdal-dev
+        sudo apt install -y gdal-bin libgdal-dev  # Install GDAL dependencies
+
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
+
     - name: Run Tests
       env:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
-          pytest tests
+        conda activate cities-cif
+        pytest tests
