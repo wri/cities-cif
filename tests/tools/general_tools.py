@@ -44,20 +44,6 @@ def convert_ratio_to_percentage(data):
 
     return values_as_percent
 
-def get_class_default_spatial_resolution(obj):
-    obj_param_info = get_param_info(obj.get_data)
-    obj_spatial_resolution = obj_param_info.get('spatial_resolution')
-    return obj_spatial_resolution
-
-def get_param_info(func):
-    import inspect
-    signature = inspect.signature(func)
-    default_values = {
-        k: v.default
-        for k, v in signature.parameters.items()
-        if v.default is not inspect.Parameter.empty
-    }
-    return default_values
 
 def get_layer_cache_variables(layer_obj, geo_extent):
     file_uri, file_key, is_custom_layer = build_file_key(layer_obj, geo_extent)
