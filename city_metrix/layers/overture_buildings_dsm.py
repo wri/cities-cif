@@ -3,7 +3,7 @@ import geopandas as gpd
 from shapely.geometry import Point
 
 from city_metrix.metrix_model import Layer, GeoExtent, validate_raster_resampling_method
-from .nasa_dem import NasaDEM
+from . import FabDEM
 from .overture_buildings_w_height import OvertureBuildingsHeight
 from ..constants import GTIFF_FILE_EXTENSION
 
@@ -47,18 +47,18 @@ class OvertureBuildingsDSM(Layer):
         contained_buildings_gdf = (
             raw_buildings_gdf)[raw_buildings_gdf.geometry.apply(lambda x: x.within(buffered_utm_bbox.polygon))]
 
-        DEM = NasaDEM().get_data(buffered_utm_bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
+        fab_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=1, resampling_method='bilinear')
 
         # Stack the DataArray into a 1-D table
-        DEM_stacked = DEM.stack(points=("x", "y"))
+        dem_stacked = fab_dem.stack(points=("x", "y"))
         # Build a GeoDataFrame of those points
         pts = gpd.GeoDataFrame(
-            {"dem": DEM_stacked.values},
+            {"dem": dem_stacked.values},
             geometry=[
                 Point(x, y)
-                for x, y in zip(DEM_stacked["x"].values, DEM_stacked["y"].values)
+                for x, y in zip(dem_stacked["x"].values, dem_stacked["y"].values)
             ],
-            crs=DEM.crs,
+            crs=fab_dem.crs,
         )
 
         # Spatial join: find which polygon (if any) each point falls in
@@ -87,18 +87,18 @@ class OvertureBuildingsDSM(Layer):
         #  Compute the new elevation: building + elevation‐mode
         pts_joined["new_elev"] = pts_joined["height"] + pts_joined["elev_mode"]
 
-        # Reshape back into the DEM DataArray
-        DEM_updated = xr.DataArray(
-            pts_joined["new_elev"].values.reshape(DEM.shape),
-            coords=DEM.coords,
-            dims=DEM.dims,
-            name=DEM.name,
+        # Reshape back into the fab_dem DataArray
+        dem_updated = xr.DataArray(
+            pts_joined["new_elev"].values.reshape(fab_dem.shape),
+            coords=fab_dem.coords,
+            dims=fab_dem.dims,
+            name=fab_dem.name,
         )
 
         # Clip back to the original AOI
         west, south, east, north = bbox.as_utm_bbox().bounds
         longitude_range = slice(west, east)
         latitude_range = slice(south, north)
-        clipped_data = DEM_updated.sel(x=longitude_range, y=latitude_range)
+        clipped_data = dem_updated.sel(x=longitude_range, y=latitude_range)
 
         return clipped_data
