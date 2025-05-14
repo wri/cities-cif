@@ -47,7 +47,7 @@ class OvertureBuildingsDSM(Layer):
         contained_buildings_gdf = (
             raw_buildings_gdf)[raw_buildings_gdf.geometry.apply(lambda x: x.within(buffered_utm_bbox.polygon))]
 
-        fab_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=1, resampling_method='bilinear')
+        fab_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
 
         # Stack the DataArray into a 1-D table
         dem_stacked = fab_dem.stack(points=("x", "y"))
@@ -94,6 +94,7 @@ class OvertureBuildingsDSM(Layer):
             dims=fab_dem.dims,
             name=fab_dem.name,
         )
+        dem_updated.attrs = fab_dem.attrs.copy()
 
         # Clip back to the original AOI
         west, south, east, north = bbox.as_utm_bbox().bounds
