@@ -1,11 +1,6 @@
-import math
-import numpy as np
-import rasterio
 import xarray as xr
-from exactextract import exact_extract
-from rasterio.features import rasterize
-from geocube.api.core import make_geocube
-from rasterio.features import geometry_mask
+import geopandas as gpd
+from shapely.geometry import Point
 
 from city_metrix.metrix_model import Layer, GeoExtent, validate_raster_resampling_method
 from .nasa_dem import NasaDEM
@@ -19,6 +14,7 @@ DEFAULT_RESAMPLING_METHOD = "bilinear"
 
 # This value was determined from a large warehouse as a worst-case example at lon/lat -122.76768,45.63313
 BUILDING_INCLUSION_BUFFER_METERS = 500
+
 
 class OvertureBuildingsDSM(Layer):
     GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
@@ -46,24 +42,6 @@ class OvertureBuildingsDSM(Layer):
         building_buffer = BUILDING_INCLUSION_BUFFER_METERS
         buffered_utm_bbox = bbox.buffer_utm_bbox(building_buffer)
 
-        # Calculate mode elevation and estimate building elevations
-        buildings_gdf["mode_elevation"] = exact_extract(dem_da, buildings_gdf, ["mode"], output="pandas")["mode"]
-        buildings_gdf["elevation_estimate"] = buildings_gdf["height"] + buildings_gdf["mode_elevation"]
-
-        # Rasterize the buildings_gdf into an xarray Dataset
-        overture_buildings_raster = make_geocube(
-            vector_data=buildings_gdf,
-            measurements=["elevation_estimate"],
-            like=dem_da,
-        ).elevation_estimate
-        overture_buildings_raster = overture_buildings_raster.rio.reproject_match(dem_da)
-
-        # take values from overture_buildings_raster where ever overture_buildings_raster is not NaN,
-        # and wherever overture_buildings_raster is NaN it will fill in from dem_da
-        composite_bldg_dem = overture_buildings_raster.combine_first(dem_da)
-
-        return composite_bldg_dem
-
         # Load buildings and sub-select to ones fully contained in buffered area
         raw_buildings_gdf = OvertureBuildingsHeight(self.city).get_data(buffered_utm_bbox)
         contained_buildings_gdf = (
@@ -71,25 +49,51 @@ class OvertureBuildingsDSM(Layer):
 
         DEM = NasaDEM().get_data(buffered_utm_bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
 
-        # Create an array to store the updated DEM values
-        DEM_updated = DEM.copy()
+        # Stack the DataArray into a 1-D table
+        DEM_stacked = DEM.stack(points=("x", "y"))
+        # Build a GeoDataFrame of those points
+        pts = gpd.GeoDataFrame(
+            {"dem": DEM_stacked.values},
+            geometry=[
+                Point(x, y)
+                for x, y in zip(DEM_stacked["x"].values, DEM_stacked["y"].values)
+            ],
+            crs=DEM.crs,
+        )
 
-        for _, building in contained_buildings_gdf.iterrows():
-            height = building['height']
-            polygon = building['geometry']
+        # Spatial join: find which polygon (if any) each point falls in
+        pts_joined = gpd.sjoin(
+            pts,
+            contained_buildings_gdf[["geometry", "height"]],
+            how="left",
+            predicate="within",
+        )
+        # Keep only the first match for each point
+        pts_joined = pts_joined.loc[~pts_joined.index.duplicated(keep="first")]
+        pts_joined["height"] = pts_joined["height"].fillna(0)
 
-            # Rasterize footprint to create a mask
-            building_mask = geometry_mask([polygon], transform=DEM.rio.transform(), all_touched=True, invert=True, out_shape=DEM.shape)
+        # Compute the mode of 'dem' for each polygon drop NaNs so we ignore points not in any polygon
+        elev_modes = (
+            pts_joined.dropna(subset=["index_right"])
+            .groupby("index_right")["dem"]
+            .agg(lambda x: x.mode().iloc[0])
+        )
 
-            # get aggregated elevation within footprint
-            # TODO Implement a more sophisticated method. See https://gfw.atlassian.net/browse/CDB-309
-            DEM_values = DEM.values[building_mask]
-            # Only include features that arg large enough to overlap or touch a raster cell
-            if DEM_values.size > 0:
-                footprint_elevation = DEM_values.max()
+        # Map the elevation mode back to each point (0 for outside any polygon)
+        pts_joined["elev_mode"] = (
+            pts_joined["index_right"].map(elev_modes).fillna(pts_joined["dem"])
+         )
 
-                # Add the building height and mean elevation
-                DEM_updated.values[building_mask] = footprint_elevation + height
+        #  Compute the new elevation: building + elevation‐mode
+        pts_joined["new_elev"] = pts_joined["height"] + pts_joined["elev_mode"]
+
+        # Reshape back into the DEM DataArray
+        DEM_updated = xr.DataArray(
+            pts_joined["new_elev"].values.reshape(DEM.shape),
+            coords=DEM.coords,
+            dims=DEM.dims,
+            name=DEM.name,
+        )
 
         # Clip back to the original AOI
         west, south, east, north = bbox.as_utm_bbox().bounds
