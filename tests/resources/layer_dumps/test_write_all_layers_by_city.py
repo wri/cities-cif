@@ -9,7 +9,7 @@ from ..bbox_constants import GEOEXTENT_TERESINA_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 
 PRESERVE_RESULTS_ON_S3 = True # True - Default for check-in
-PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
+PRESERVE_RESULTS_ON_OS = True # False - Default for check-in
 FORCE_DATA_REFRESH = True # True - Default for check-in
 
 SLOW_TEST_TIMEOUT_SECONDS = 300 # 300 seconds = 5 minutes
@@ -66,7 +66,7 @@ def test_EsaWorldCover_write_by_city(target_folder):
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_Fabdem_write_by_city(target_folder):
-    layer_obj = Fabdem()
+    layer_obj = FabDEM()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 # TODO Very slow processing
