@@ -1,3 +1,4 @@
+import numpy as np
 from rasterio.features import geometry_mask
 from city_metrix.metrix_model import Layer, GeoExtent, validate_raster_resampling_method
 from . import FabDEM
@@ -29,9 +30,11 @@ class OvertureBuildingsDSM(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        # Minimize the probability that buildings will bridge tile boundaries and therefor sample elevations for
-        # only part of the full footprint by 1. buffering out the selection area, 2. filtering to contained buildings,
-        # and 3. clipping back to the original selection area
+        # Minimize the probability that buildings will bridge tile boundaries and thereby sample elevations for
+        # only part of the full footprint by: 1. buffering out AOI, 2. filtering buildings to contained buildings,
+        # 3. masking buffered DEM by footprint and determining elevation of footprint, 4. masking unbuffered DEM
+        # with footprint, 5. add footprint elevation to unbuffered DEM.
+        # Population of the unbuffered DEM ensures that AOI is correct.
         building_buffer = BUILDING_INCLUSION_BUFFER_METERS
         buffered_utm_bbox = bbox.buffer_utm_bbox(building_buffer)
 
@@ -39,33 +42,37 @@ class OvertureBuildingsDSM(Layer):
         raw_buildings_gdf = OvertureBuildingsHeight(self.city).get_data(buffered_utm_bbox)
         contained_buildings_gdf = (
             raw_buildings_gdf)[raw_buildings_gdf.geometry.apply(lambda x: x.within(buffered_utm_bbox.polygon))]
+        contained_buildings_gdf['roof_elev'] = np.NaN
 
-        fab_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=1, resampling_method='bilinear')
+        buffered_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=1, resampling_method='bilinear')
 
-        # Create an array to store the updated DEM values
-        dem_updated = fab_dem.copy()
-
-        for _, building in contained_buildings_gdf.iterrows():
+        for index, building in contained_buildings_gdf.iterrows():
             height = building['height']
             polygon = building['geometry']
 
-            # Rasterize footprint to create a mask
-            building_mask = geometry_mask([polygon], transform=fab_dem.rio.transform(), all_touched=True, invert=True, out_shape=fab_dem.shape)
+            # Rasterize footprint to create a mask. Use all_touched=True to ensure that at least one raster is read
+            building_mask = geometry_mask([polygon], transform=buffered_dem.rio.transform(),
+                                          all_touched=True, invert=True, out_shape=buffered_dem.shape)
 
             # get aggregated elevation within footprint
             # TODO Implement a more sophisticated method. See https://gfw.atlassian.net/browse/CDB-309
-            dem_values = fab_dem.values[building_mask]
-            # Only include features that arg large enough to overlap or touch a raster cell
-            if dem_values.size > 0:
-                footprint_elevation = dem_values.max()
+            buffered_dem_values = buffered_dem.values[building_mask]
+            # Only include features that are large enough to overlap or touch a raster cell
+            if buffered_dem_values.size > 0:
+                footprint_elevation = buffered_dem_values.max()
+                contained_buildings_gdf.loc[index, ['roof_elev']] = [footprint_elevation + height]
 
-                # Add the building height and mean elevation
-                dem_updated.values[building_mask] = footprint_elevation + height
+        dem = FabDEM().get_data(bbox, spatial_resolution=1, resampling_method='bilinear')
+        for index, building in contained_buildings_gdf.iterrows():
+            polygon = building['geometry']
+            roof_elev = building['roof_elev']
 
-        # Clip back to the original AOI
-        west, south, east, north = bbox.as_utm_bbox().bounds
-        longitude_range = slice(west, east)
-        latitude_range = slice(south, north)
-        clipped_data = dem_updated.sel(x=longitude_range, y=latitude_range)
+            # Rasterize footprint to create a mask. Use all_touched=False to produce truer shape of footprint.
+            building_mask = geometry_mask([polygon], transform=dem.rio.transform(), all_touched=False,
+                                          invert=True, out_shape=dem.shape)
 
-        return clipped_data
+            # Only include features that are large enough to overlap or touch a raster cell
+            if np.any(building_mask):
+                dem.values[building_mask] = roof_elev
+
+        return dem
