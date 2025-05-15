@@ -36,9 +36,11 @@ class OvertureBuildingsDSM(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        # Minimize the probability that buildings will bridge tile boundaries and therefor sample elevations for
-        # only part of the full footprint by 1. buffering out the selection area, 2. filtering to contained buildings,
-        # and 3. clipping back to the original selection area
+        # Minimize the probability that buildings will bridge tile boundaries and thereby sample elevations for
+        # only part of the full footprint by: 1. buffering out AOI, 2. filtering buildings to contained buildings,
+        # 3. masking buffered DEM by footprint and determining elevation of footprint, 4. masking unbuffered DEM
+        # with footprint, 5. add footprint elevation to unbuffered DEM.
+        # Population of the unbuffered DEM ensures that AOI is correct.
         building_buffer = BUILDING_INCLUSION_BUFFER_METERS
         buffered_utm_bbox = bbox.buffer_utm_bbox(building_buffer)
 
@@ -88,18 +90,12 @@ class OvertureBuildingsDSM(Layer):
         pts_joined["new_elev"] = pts_joined["height"] + pts_joined["elev_mode"]
 
         # Reshape back into the fab_dem DataArray
-        dem_updated = xr.DataArray(
+        result_dem = xr.DataArray(
             pts_joined["new_elev"].values.reshape(fab_dem.shape),
             coords=fab_dem.coords,
             dims=fab_dem.dims,
             name=fab_dem.name,
         )
-        dem_updated.attrs = fab_dem.attrs.copy()
+        result_dem.attrs = fab_dem.attrs.copy()
 
-        # Clip back to the original AOI
-        west, south, east, north = bbox.as_utm_bbox().bounds
-        longitude_range = slice(west, east)
-        latitude_range = slice(south, north)
-        clipped_data = dem_updated.sel(x=longitude_range, y=latitude_range)
-
-        return clipped_data
+        return result_dem
