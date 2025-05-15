@@ -26,7 +26,7 @@ setup(
         "boto3",
         "cdsapi",
         "timezonefinder",
-        "scikit-image>=0.25.2",
+        "scikit-image",
         "exactextract>=0.2.0",
         "cfgrib",
         "scipy",
