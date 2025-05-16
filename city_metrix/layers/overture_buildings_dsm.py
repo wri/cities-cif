@@ -52,7 +52,7 @@ class OvertureBuildingsDSM(Layer):
         fab_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
 
         # Stack the DataArray into a 1-D table
-        dem_stacked = fab_dem.stack(points=("x", "y"))
+        dem_stacked = fab_dem.stack(points=("y", "x"))
         # Build a GeoDataFrame of those points
         pts = gpd.GeoDataFrame(
             {"dem": dem_stacked.values},
