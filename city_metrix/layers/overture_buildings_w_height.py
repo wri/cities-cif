@@ -81,7 +81,7 @@ def _join_overture_and_utglobus(overture_buildings, ut_globus):
     joined_data = gpd.sjoin(overture_buildings, ut_globus[["geometry", "height"]], how="left")
 
     # Add column to store the source of height information
-    joined_data['height_source'] = np.nan
+    joined_data['height_source'] = ''
 
     if 'height' in overture_buildings.columns.to_list():
         # Ensure columns are managed correctly after join

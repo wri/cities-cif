@@ -1,15 +1,20 @@
-import numpy as np
-from rasterio.features import geometry_mask
+import xarray as xr
+import geopandas as gpd
+from shapely.geometry import Point
+
 from city_metrix.metrix_model import Layer, GeoExtent, validate_raster_resampling_method
 from . import FabDEM
-from ..constants import GTIFF_FILE_EXTENSION
 from .overture_buildings_w_height import OvertureBuildingsHeight
+from ..constants import GTIFF_FILE_EXTENSION
+
 
 DEFAULT_SPATIAL_RESOLUTION = 1
-DEFAULT_RESAMPLING_METHOD = 'bilinear'
+DEFAULT_RESAMPLING_METHOD = "bilinear"
+
 
 # This value was determined from a large warehouse as a worst-case example at lon/lat -122.76768,45.63313
 BUILDING_INCLUSION_BUFFER_METERS = 500
+
 
 class OvertureBuildingsDSM(Layer):
     GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
@@ -20,12 +25,13 @@ class OvertureBuildingsDSM(Layer):
     Attributes:
         city: city id from https://sat-io.earthengine.app/view/ut-globus
     """
+
     def __init__(self, city="", **kwargs):
         super().__init__(**kwargs)
         self.city = city
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method:str=DEFAULT_RESAMPLING_METHOD):
+                 resampling_method: str = DEFAULT_RESAMPLING_METHOD):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
@@ -43,33 +49,56 @@ class OvertureBuildingsDSM(Layer):
         contained_buildings_gdf = (
             raw_buildings_gdf)[raw_buildings_gdf.geometry.apply(lambda x: x.within(buffered_utm_bbox.polygon))]
 
-        buffered_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=1, resampling_method='bilinear')
-        query_dem = FabDEM().get_data(bbox, spatial_resolution=1, resampling_method='bilinear')
-        # Change will be applied only to the copy to avoid doubly changing the raster
-        result_dem = query_dem.copy()
+        fab_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
 
-        for _, building in contained_buildings_gdf.iterrows():
-            height = building['height']
-            polygon = building['geometry']
+        # Stack the DataArray into a 1-D table
+        dem_stacked = fab_dem.stack(points=("y", "x"))
+        # Build a GeoDataFrame of those points
+        pts = gpd.GeoDataFrame(
+            {"dem": dem_stacked.values},
+            geometry=[
+                Point(x, y)
+                for x, y in zip(dem_stacked["x"].values, dem_stacked["y"].values)
+            ],
+            crs=fab_dem.crs,
+        )
 
-            # Rasterize footprint to create a mask.
-            buffered_building_mask = geometry_mask([polygon], transform=buffered_dem.rio.transform(),
-                                          all_touched=False, invert=True, out_shape=buffered_dem.shape)
+        # Spatial join: find which polygon (if any) each point falls in
+        pts_joined = gpd.sjoin(
+            pts,
+            contained_buildings_gdf[["geometry", "height"]],
+            how="left",
+            predicate="within",
+        )
+        # Keep only the first match for each point
+        pts_joined = pts_joined.loc[~pts_joined.index.duplicated(keep="first")]
+        pts_joined["height"] = pts_joined["height"].fillna(0)
 
-            # get aggregated elevation within footprint
-            # TODO Implement a more sophisticated method. See https://gfw.atlassian.net/browse/CDB-309
-            buffered_dem_values = buffered_dem.values[buffered_building_mask]
-            # Only include features that are large enough to overlap or touch a raster cell
-            if buffered_dem_values.size > 0:
-                footprint_elevation = buffered_dem_values.max()
-                roof_elev = footprint_elevation + height
+        # Compute the mode of 'dem' for each polygon drop NaNs so we ignore points not in any polygon
+        elev_modes = (
+            pts_joined.dropna(subset=["index_right"])
+            .groupby("index_right")["dem"]
+            .agg(lambda x: x.mode().iloc[0])
+        )
 
-                # Rasterize footprint to create a mask. Use all_touched=False to produce narrower shape of footprint.
-                building_mask = geometry_mask([polygon], transform=query_dem.rio.transform(), all_touched=False,
-                                              invert=True, out_shape=query_dem.shape)
+        # Map the elevation mode back to each point (0 for outside any polygon)
+        pts_joined["elev_mode"] = (
+            pts_joined["index_right"].map(elev_modes).fillna(pts_joined["dem"])
+         )
 
-                # Only include features that are large enough to overlap or touch a raster cell
-                if np.any(building_mask):
-                    result_dem.values[building_mask] = roof_elev
+        #  Compute the new elevation: building + elevation‐mode
+        pts_joined["new_elev"] = pts_joined["height"] + pts_joined["elev_mode"]
+
+        # Reshape back into the fab_dem DataArray
+        result_dem = xr.DataArray(
+            pts_joined["new_elev"].values.reshape(fab_dem.shape),
+            coords=fab_dem.coords,
+            dims=fab_dem.dims,
+            name=fab_dem.name,
+        )
+        result_dem.attrs = fab_dem.attrs.copy()
+
+        # Clip to original bbox without buffer
+        result_dem = result_dem.rio.clip([bbox.as_utm_bbox().polygon])
 
         return result_dem
