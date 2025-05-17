@@ -29,7 +29,7 @@ from city_metrix.cache_manager import retrieve_cached_city_data, build_file_key
 
 # ============= GeoZone ======================================
 class GeoZone():
-    def __init__(self, geo_zone:Union[GeoDataFrame | str], crs=WGS_CRS):
+    def __init__(self, geo_zone:Union[GeoDataFrame, str], crs=WGS_CRS):
         if isinstance(geo_zone, str):
             self.geo_type = GeoType.CITY
         else:
@@ -81,7 +81,7 @@ class GeoZone():
 
 
 class GeoExtent():
-    def __init__(self, bbox:Union[tuple[float, float, float, float]|GeoZone|str], crs=WGS_CRS):
+    def __init__(self, bbox:Union[tuple[float, float, float, float], GeoZone, str], crs=WGS_CRS):
         if isinstance(bbox, str) or (isinstance(bbox, GeoZone) and bbox.geo_type == GeoType.CITY):
             self.geo_type = GeoType.CITY
         else:
