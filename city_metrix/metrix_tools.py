@@ -5,7 +5,7 @@ from pyproj import CRS
 from shapely.geometry import point
 
 from city_metrix.constants import WGS_EPSG_CODE, ProjectionType
-
+from typing import Union
 
 def parse_city_aoi_json(json_str):
     import json
@@ -60,7 +60,7 @@ def get_utm_zone_from_latlon_point(sample_point: point) -> str:
 
     return f"EPSG:{epsg}"
 
-def get_projection_type(crs: Union[str | int]):
+def get_projection_type(crs: Union[str, int]):
     if isinstance(crs, str):
         if crs.lower().startswith('epsg:'):
             epsg_code = int(crs.split(':')[1])
