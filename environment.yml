@@ -4,9 +4,9 @@ channels:
 dependencies:
   - python=3.10.16
   - boto3=1.38.18
-  - cdsapi=0.7.6
+  - cdsapi=0.7.5
   - cfgrib=0.9.15.0
-  - dask[complete]=2025.5.0
+  - dask[complete]=2025.2.0
   - earthengine-api=1.5.15
   - exactextract=0.2.2
   - gdal=3.10.3
@@ -14,13 +14,13 @@ dependencies:
   - geocube=0.7.1
   - geopandas=1.0.1
   - ipython=8.36.0
-  - jupyterlab
+  - jupyterlab=4.4.2
   - matplotlib=3.10.3
-  - numpy=2.2.6
+  - numpy=2.2.5
   - odc-stac=0.4.0
   - osmnx=2.0.2
   - overturemaps=0.14.0
-  - pip=25.1.1
+  - pip=25.0.1
   - pystac-client=0.8.6
   - pytest=8.3.5
   - rioxarray=0.19.0
