@@ -91,7 +91,7 @@ class AlbedoCloudMasked(Layer):
             albedo_median_ic, 
             ee_rectangle, 
             spatial_resolution, 
-            "albedo"
+            "cloud masked albedo"
         ).albedo_median
 
         # clamping all values ≥ 1 down to exactly 1, and leaving values < 1 untouched
