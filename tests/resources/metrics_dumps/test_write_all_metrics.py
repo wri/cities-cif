@@ -133,21 +133,12 @@ def test_write_natural_areas(target_folder):
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_PercentAreaFracvegExceedsThreshold(target_folder):
+def test_write_percent_area_fracveg_exceeds_threshold(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(target_folder, 'metric','percent_area_fracveg_exceeds_threshold.geojson')
 
     PercentAreaFracvegExceedsThreshold().write(zones, file_path)
     assert verify_file_is_populated(file_path)
-
-# TODO Test fails for Teresina since data are not available. Find a different city for it to succeed.
-# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-# def test_write_PercentBuiltAreaWithoutTreeCover(target_folder):
-#     zones = SAMPLE_TILED_ZONES
-#     file_path = prep_output_path(target_folder, 'metric', 'percent_build_area_without_tree_cover.geojson')
-#
-#     PercentBuiltAreaWithoutTreeCover().write(zones, file_path)
-#     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_percent_area_impervious(target_folder):
@@ -155,6 +146,14 @@ def test_write_percent_area_impervious(target_folder):
     file_path = prep_output_path(target_folder, 'metric','percent_area_impervious.geojson')
 
     PercentAreaImpervious().write(zones, file_path)
+    assert verify_file_is_populated(file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_percent_built_area_without_tree_cover(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric', 'percent_built_area_without_tree_cover.geojson')
+
+    PercentBuiltAreaWithoutTreeCover().write(zones, file_path)
     assert verify_file_is_populated(file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
