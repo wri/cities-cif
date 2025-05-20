@@ -50,7 +50,7 @@ class OvertureBuildingsDSM(Layer):
             raw_buildings_gdf)[raw_buildings_gdf.geometry.apply(lambda x: x.within(buffered_utm_bbox.polygon))]
 
         fab_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
-
+        query_dem = FabDEM().get_data(bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
         # Stack the DataArray into a 1-D table
         dem_stacked = fab_dem.stack(points=("y", "x"))
         # Build a GeoDataFrame of those points
@@ -90,20 +90,13 @@ class OvertureBuildingsDSM(Layer):
         pts_joined["new_elev"] = pts_joined["height"] + pts_joined["elev_mode"]
 
         # Reshape back into the fab_dem DataArray
-        result_dem = xr.DataArray(
-            pts_joined["new_elev"].values.reshape(fab_dem.shape),
-            coords=fab_dem.coords,
-            dims=fab_dem.dims,
-            name=fab_dem.name,
-        )
-        result_dem.attrs = fab_dem.attrs.copy()
-
+        result_dem = fab_dem.copy(data=pts_joined["new_elev"].values.reshape(fab_dem.shape))
+        
         # Clip to original bbox without buffer
         bbox_utm = bbox.as_utm_bbox()
-        result_dem = result_dem.rio.clip_box(
-            minx=bbox_utm.min_x, miny=bbox_utm.min_y,
-            maxx=bbox_utm.max_x, maxy=bbox_utm.max_y,
-            crs=result_dem.rio.crs
-        )
+        result_dem = result_dem.rio.clip([bbox_utm.polygon])
+
+        # Reshape back into the query_dem DataArray
+        result_dem = query_dem.copy(data=result_dem)
 
         return result_dem

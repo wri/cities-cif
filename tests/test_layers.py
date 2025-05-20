@@ -240,20 +240,20 @@ def test_overture_buildings():
     utm_bbox_data = OvertureBuildings().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
-def test_overture_buildings_height():
-    data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX)
-    assert np.size(data) > 0
-    assert_vector_stats(data, 'overture_height', 1, 2.0, 12.5, 1079, 145)
-    assert get_projection_type(data.crs.srs) == ProjectionType.UTM
-    utm_bbox_data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
-    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
-
 def test_overture_buildings_dsm():
     data = OvertureBuildingsDSM().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 1.0, 60.28, 976626, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
     utm_bbox_data = OvertureBuildingsDSM().get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
+def test_overture_buildings_height():
+    data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX)
+    assert np.size(data) > 0
+    assert_vector_stats(data, 'overture_height', 1, 2.0, 12.5, 1079, 145)
+    assert get_projection_type(data.crs.srs) == ProjectionType.UTM
+    utm_bbox_data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 # TODO add value testing
