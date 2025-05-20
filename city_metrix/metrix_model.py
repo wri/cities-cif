@@ -150,6 +150,16 @@ class GeoExtent():
 
         return ee_rectangle
 
+    def buffer_utm_bbox(self, buffer_m):
+        minx, miny, maxx, maxy = self.as_utm_bbox().bounds
+        utm_crs = self.as_utm_bbox().crs
+        buf_minx = minx - buffer_m
+        buf_miny = miny - buffer_m
+        buf_maxx = maxx + buffer_m
+        buf_maxy = maxy + buffer_m
+        buf_bbox = GeoExtent(bbox=(buf_minx, buf_miny, buf_maxx, buf_maxy), crs=utm_crs)
+        return buf_bbox
+
     @staticmethod
     def _build_ee_rectangle(min_x, min_y, max_x, max_y, crs):
         # Snap coordinates to lower 1-meter on all sides so that adjacent tiles align to each other.
@@ -885,3 +895,20 @@ class Metric():
     def _verify_extension(file_path, extension):
         if Path(file_path).suffix != extension:
             raise ValueError(f"File name must have '{extension}' extension")
+
+
+def get_class_default_spatial_resolution(obj):
+    obj_param_info = get_param_info(obj.get_data)
+    obj_spatial_resolution = obj_param_info.get('spatial_resolution')
+    return obj_spatial_resolution
+
+
+def get_param_info(func):
+    import inspect
+    signature = inspect.signature(func)
+    default_values = {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
+    return default_values
