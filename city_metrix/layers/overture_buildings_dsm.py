@@ -99,6 +99,11 @@ class OvertureBuildingsDSM(Layer):
         result_dem.attrs = fab_dem.attrs.copy()
 
         # Clip to original bbox without buffer
-        result_dem = result_dem.rio.clip([bbox.as_utm_bbox().polygon])
+        bbox_utm = bbox.as_utm_bbox()
+        result_dem = result_dem.rio.clip_box(
+            minx=bbox_utm.min_x, miny=bbox_utm.min_y,
+            maxx=bbox_utm.max_x, maxy=bbox_utm.max_y,
+            crs=result_dem.rio.crs
+        )
 
         return result_dem

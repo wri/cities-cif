@@ -43,14 +43,14 @@ class OvertureBuildingsHeight(Layer):
                                                     (result_building_heights['height'] == 0)]
         if empty_height_blgs.size > 0:
             # Determine height from num_floors column in Overture
-            storied_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].notna()]
+            storied_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].notna()].copy()
             storied_bldgs['height'] = storied_bldgs['num_floors'] * STANDARD_BUILDING_FLOOR_HEIGHT_M
             storied_bldgs['height_source'] = 'Overture_floors'
             result_building_heights.loc[storied_bldgs.index, ['height', 'height_source']] = (
                 storied_bldgs)[['height', 'height_source']]
 
             # Set height base on assumption about size of small, one-storied buildings
-            unstoried_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].isna()]
+            unstoried_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].isna()].copy()
             unstoried_bldgs = unstoried_bldgs[unstoried_bldgs.geometry.area <= STANDARD_SINGLE_STORY_BUILDING_SQM]
             unstoried_bldgs['height'] = STANDARD_BUILDING_FLOOR_HEIGHT_M
             unstoried_bldgs['height_source'] = 'Overture_small_area'
@@ -130,7 +130,7 @@ def _get_anbh_for_buildings(bbox, empty_height_blgs):
     anbh_da = anbh_obj.get_data_with_caching(buffered_utm_bbox)
 
     # Ensure the CRS matches
-    empty_height_blgs = empty_height_blgs.to_crs(anbh_da.rio.crs)
+    empty_height_blgs = empty_height_blgs.to_crs(anbh_da.rio.crs).copy()
 
     # Iterate through polygons
     for index, row in empty_height_blgs.iterrows():
