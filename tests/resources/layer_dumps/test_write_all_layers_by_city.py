@@ -23,6 +23,11 @@ def test_AcagPM2p5_write_by_city(target_folder):
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_AlbedoCloudMasked_write_by_city(target_folder):
+    layer_obj = AlbedoCloudMasked()
+    _run_write_layers_by_city_test(layer_obj, target_folder)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_Albedo_write_by_city(target_folder):
     layer_obj = Albedo()
     _run_write_layers_by_city_test(layer_obj, target_folder)
@@ -65,7 +70,7 @@ def test_EsaWorldCover_write_by_city(target_folder):
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_Fabdem_write_by_city(target_folder):
+def test_FabDEM_write_by_city(target_folder):
     layer_obj = FabDEM()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
