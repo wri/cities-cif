@@ -12,8 +12,6 @@ class AlbedoCloudMasked(Layer):
     GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
-    S2_ALBEDO_EQN = "((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))"
-    CLEAR_THRESHOLD = 0.60
 
     """
     Attributes:
@@ -26,6 +24,22 @@ class AlbedoCloudMasked(Layer):
         self.start_date = start_date
         self.end_date = end_date
 
+    def get_masked_s2_collection(self, bbox_ee, start_date, end_date):
+        CLEAR_THRESHOLD = 0.60
+
+        S2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
+        S2CS = ee.ImageCollection("GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED")
+
+        # Cloud score+
+        S2filtered = (
+            S2.filterBounds(bbox_ee["ee_geometry"])
+            .filterDate(start_date, end_date)
+            .linkCollection(S2CS, ["cs"])
+            .map(lambda img: img.updateMask(img.select("cs").gte(CLEAR_THRESHOLD)).divide(10000))
+        )
+
+        return S2filtered
+
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method: str = DEFAULT_RESAMPLING_METHOD):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
@@ -36,6 +50,7 @@ class AlbedoCloudMasked(Layer):
         # weights derived from
         # S. Bonafoni and A. Sekertekin, "Albedo Retrieval From Sentinel-2 by New Narrow-to-Broadband Conversion Coefficients," in IEEE Geoscience and Remote Sensing Letters, vol. 17, no. 9, pp. 1618-1622, Sept. 2020, doi: 10.1109/LGRS.2020.2967085.
         def calc_s2_albedo(image):
+            S2_ALBEDO_EQN = "((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))"
             config = {
                 "Bw": 0.2266,
                 "Gw": 0.1236,
@@ -51,46 +66,34 @@ class AlbedoCloudMasked(Layer):
                 "SWIR2": image.select("B12"),
             }
 
-            albedo = image.expression(self.S2_ALBEDO_EQN, config).double().rename("albedo")
+            albedo = image.expression(S2_ALBEDO_EQN, config).double().rename("albedo")
 
             return albedo
 
-        s2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
-        s2cs = ee.ImageCollection("GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED")
-
-        ee_rectangle = bbox.to_ee_rectangle()
-        # Cloud score+
-        s2_filtered = (
-            s2.filterBounds(ee_rectangle["ee_geometry"])
-            .filterDate(self.start_date, self.end_date)
-            .linkCollection(s2cs, linkedBands=["cs"])
-        )
-        s2_filtered = s2_filtered.map(
-            lambda img: img.updateMask(
-                img.select("cs").gte(self.CLEAR_THRESHOLD)
-            ).divide(10000)
-        )
+        bbox_ee = bbox.to_ee_rectangle()
+        # Get masked S2 collection
+        S2filtered = self.get_masked_s2_collection(bbox_ee, self.start_date, self.end_date)
         # Add albedo
-        s2_albedo = s2_filtered.map(calc_s2_albedo).select("albedo")
+        S2albedo = S2filtered.map(calc_s2_albedo).select("albedo")
 
         # Median albedo
         kernel_convolution = None
-        albedo_median = s2_albedo.map(
+        albedo_median = S2albedo.map(
             lambda x: set_resampling_for_continuous_raster(
                 x,
                 resampling_method,
                 spatial_resolution,
                 DEFAULT_SPATIAL_RESOLUTION,
                 kernel_convolution,
-                ee_rectangle["crs"],
+                bbox_ee["crs"],
             )
         ).reduce(ee.Reducer.median())
 
         albedo_median_ic = ee.ImageCollection(albedo_median)
         data = get_image_collection(
-            albedo_median_ic, 
-            ee_rectangle, 
-            spatial_resolution, 
+            albedo_median_ic,
+            bbox_ee,
+            spatial_resolution,
             "cloud masked albedo"
         ).albedo_median
 
