@@ -1,6 +1,8 @@
+import numpy as np
+from scipy.stats import mode
+import rasterio.features
 import xarray as xr
 import geopandas as gpd
-from shapely.geometry import Point
 
 from city_metrix.metrix_model import Layer, GeoExtent, validate_raster_resampling_method
 from . import FabDEM
@@ -51,52 +53,57 @@ class OvertureBuildingsDSM(Layer):
 
         fab_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
         query_dem = FabDEM().get_data(bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
-        # Stack the DataArray into a 1-D table
-        dem_stacked = fab_dem.stack(points=("y", "x"))
-        # Build a GeoDataFrame of those points
-        pts = gpd.GeoDataFrame(
-            {"dem": dem_stacked.values},
-            geometry=[
-                Point(x, y)
-                for x, y in zip(dem_stacked["x"].values, dem_stacked["y"].values)
-            ],
-            crs=fab_dem.crs,
-        )
-
-        # Spatial join: find which polygon (if any) each point falls in
-        pts_joined = gpd.sjoin(
-            pts,
-            contained_buildings_gdf[["geometry", "height"]],
-            how="left",
-            predicate="within",
-        )
-        # Keep only the first match for each point
-        pts_joined = pts_joined.loc[~pts_joined.index.duplicated(keep="first")]
-        pts_joined["height"] = pts_joined["height"].fillna(0)
-
-        # Compute the mode of 'dem' for each polygon drop NaNs so we ignore points not in any polygon
-        elev_modes = (
-            pts_joined.dropna(subset=["index_right"])
-            .groupby("index_right")["dem"]
-            .agg(lambda x: x.mode().iloc[0])
-        )
-
-        # Map the elevation mode back to each point (0 for outside any polygon)
-        pts_joined["elev_mode"] = (
-            pts_joined["index_right"].map(elev_modes).fillna(pts_joined["dem"])
-         )
-
-        #  Compute the new elevation: building + elevation‐mode
-        pts_joined["new_elev"] = pts_joined["height"] + pts_joined["elev_mode"]
-
-        # Reshape back into the fab_dem DataArray
-        result_dem = fab_dem.copy(data=pts_joined["new_elev"].values.reshape(fab_dem.shape))
         
-        # Clip to original bbox without buffer
-        bbox_utm = bbox.as_utm_bbox()
-        result_dem = result_dem.rio.clip([bbox_utm.polygon])
+        # rasterize building IDs
+        building_id = (
+            (geom, idx)
+            for idx, geom in enumerate(contained_buildings_gdf.geometry, start=1)
+        )
+        building_id_raster = rasterio.features.rasterize(
+            building_id,
+            out_shape=fab_dem.shape,
+            transform=fab_dem.rio.transform(),
+            fill=0,
+            dtype="int32",
+        )
+        
+        # rasterize building heights
+        building_height = (
+            (geom, h)
+            for geom, h in zip(contained_buildings_gdf.geometry, contained_buildings_gdf.height)
+        )
+        building_height_raster = rasterio.features.rasterize(
+            building_height,
+            out_shape=fab_dem.shape,
+            transform=fab_dem.rio.transform(),
+            fill=0,
+            dtype=fab_dem.dtype,
+        )
 
-        # Reshape back into the query_dem DataArray
-        result_dem = query_dem.copy(data=result_dem)
+        # compute per-building DEM mode
+        mode_raster = fab_dem.values.copy()
+        # find all building IDs present
+        for bid in np.unique(building_id_raster):
+            if bid == 0:
+                continue  # skip background
+            mask = building_id_raster == bid
+            vals = fab_dem.values[mask]
+            if vals.size:
+                mode_val = mode(vals, nan_policy="omit").mode
+                mode_raster[mask] = mode_val
+        
+        # add height to the ground-mode
+        result_dem_val = mode_raster + building_height_raster
+
+        # wrap back into xarray, clip & reproject
+        buffered_result = xr.DataArray(
+            result_dem_val,
+            coords=fab_dem.coords,
+            dims=fab_dem.dims,
+            attrs=fab_dem.attrs,
+        ).rio.write_crs(fab_dem.rio.crs)
+
+        clipped = buffered_result.rio.clip([bbox.as_utm_bbox().polygon])
+        result_dem = query_dem.copy(data=clipped)
 
         return result_dem
