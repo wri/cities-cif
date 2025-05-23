@@ -42,7 +42,7 @@ class OvertureBuildingsHeight(Layer):
         # Step 3 and 4 Get heights based on two simple assumptions
         empty_height_blgs = result_building_heights[result_building_heights['height'].isna() |
                                                     (result_building_heights['height'] == 0)]
-        if empty_height_blgs.size > 0:
+        if len(empty_height_blgs) > 0:
             # Determine height from num_floors column in Overture
             storied_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].notna()].copy()
             storied_bldgs['height'] = storied_bldgs['num_floors'] * STANDARD_BUILDING_FLOOR_HEIGHT_M
@@ -60,14 +60,14 @@ class OvertureBuildingsHeight(Layer):
 
         # Step 6 Estimate height using the ANBH Built-H dataset
         empty_height_blgs = result_building_heights[result_building_heights['height'].isna() | (result_building_heights['height'] == 0)]
-        if empty_height_blgs.size > 0:
+        if len(empty_height_blgs) > 0:
             large_unstoried_height = _get_anbh_for_buildings(bbox, empty_height_blgs)
             result_building_heights.loc[large_unstoried_height.index, ['height', 'height_source']] = (
                 large_unstoried_height)[['height', 'height_source']]
 
         # Step 7 Set any remainders to one floor, however no building should remain at this point
         empty_height_blgs = result_building_heights[result_building_heights['height'].isna() | (result_building_heights['height'] == 0)]
-        if empty_height_blgs.size > 0:
+        if len(empty_height_blgs) > 0:
             empty_height_blgs.loc[:, ['height', 'height_source']] = [STANDARD_BUILDING_FLOOR_HEIGHT_M, 'Remainder']
 
         utm_crs = bbox.as_utm_bbox().crs
@@ -104,7 +104,7 @@ def _join_overture_and_utglobus(overture_buildings, ut_globus):
 
     # Get mode of heights from UT Globus for buildings that overlapped with UTGlobus buildings
     filtered_data = joined_data.dropna(subset=['utglobus_height'])
-    mode_df  = filtered_data.groupby('id')['utglobus_height'].apply(lambda x: x.mode()[0]).reset_index()
+    mode_df  = filtered_data.groupby('id')['utglobus_height'].apply(mode_or_median).reset_index()
     merged_gdf = filtered_data.merge(mode_df.rename(columns={'utglobus_height': 'mode_utglobus_height'}), on='id')
     overture_with_globus_height = merged_gdf.drop(columns=['utglobus_height', 'height']).drop_duplicates()
     overture_with_globus_height['height'] = overture_with_globus_height['mode_utglobus_height']
@@ -121,6 +121,25 @@ def _join_overture_and_utglobus(overture_buildings, ut_globus):
     df_combined = gpd.GeoDataFrame(pd.concat([overture_with_globus_height, overture_without_globus_height], ignore_index=True)).reset_index(drop=True)
 
     return df_combined
+
+def mode_or_median(series):
+    mode_values = series.mode()
+    if mode_values.size == 1:
+        return mode_values.iloc[0]
+    else:
+        y =  custom_median(series)
+        return y
+
+
+def custom_median(series):
+    sorted_values = np.sort(series)
+    n = len(sorted_values)
+
+    if n % 2 == 1:  # Odd length, return the center value
+        return sorted_values[n // 2]
+    else:  # Even length, return the lower of the two middle values
+        return sorted_values[n // 2 - 1]
+
 
 def _get_anbh_for_buildings(bbox, empty_height_blgs):
     from rasterio.features import geometry_mask
