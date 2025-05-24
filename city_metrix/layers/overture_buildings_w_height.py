@@ -102,19 +102,19 @@ def _join_overture_and_utglobus(overture_buildings, ut_globus):
     # Explicitly handle the unique uri_scheme for each row
     joined_data["id"] = joined_data.apply(lambda row: row["id"] if "id" in row else row.name, axis=1)
 
-    # Get mode of heights from UT Globus for buildings that overlapped with UTGlobus buildings
+    # Get mode or median of heights from UT Globus for buildings that overlapped with UTGlobus buildings
     filtered_data = joined_data.dropna(subset=['utglobus_height'])
-    mode_df  = filtered_data.groupby('id')['utglobus_height'].apply(mode_or_median).reset_index()
-    merged_gdf = filtered_data.merge(mode_df.rename(columns={'utglobus_height': 'mode_utglobus_height'}), on='id')
+    mode_or_median_df  = filtered_data.groupby('id')['utglobus_height'].apply(mode_or_median).reset_index()
+    merged_gdf = filtered_data.merge(mode_or_median_df.rename(columns={'utglobus_height': 'mode_or_med_utglobus_height'}), on='id')
     overture_with_globus_height = merged_gdf.drop(columns=['utglobus_height', 'height']).drop_duplicates()
-    overture_with_globus_height['height'] = overture_with_globus_height['mode_utglobus_height']
+    overture_with_globus_height['height'] = overture_with_globus_height['mode_or_med_utglobus_height']
     # Assign source as UTGlobus
     overture_with_globus_height['height_source'] = 'UTGlobus'
 
     # Get buildings that did not overlap with a UTGlobus value
-    overture_without_globus_height = joined_data[~joined_data['id'].isin(mode_df['id'])]
+    overture_without_globus_height = joined_data[~joined_data['id'].isin(mode_or_median_df['id'])]
     overture_without_globus_height = overture_without_globus_height.drop(columns=['utglobus_height'])
-    overture_without_globus_height['mode_utglobus_height'] = np.nan
+    overture_without_globus_height['mode_or_med_utglobus_height'] = np.nan
     overture_without_globus_height['height_source'] = np.where(overture_without_globus_height['overture_height'].notna(), 'Overture', '')
 
     # Combine Globus and non-Globus records
