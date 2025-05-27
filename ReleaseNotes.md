@@ -1,5 +1,15 @@
 # Release Notes
 
+## 2025/05/24
+1. CDB-322. Fixed error in UTGlobus-to-Overture conflation that had produced many-to-one matches and resulting errors in height computation.
+2. Modified computation of UTGlobus heights to use mode or median computation. See updated https://gfw.atlassian.net/wiki/spaces/CIT/pages/1971912734/Primary+Raster+Layers+for+Thermal+Comfort+Modeling
+
+## 2025/05/12
+1. Moved OpenUrban layer from C-TCM to CIF. Former location: https://github.com/wri/cities-thermal-comfort-modeling/blob/main/src/workers/open_urban.py
+
+## 2025/05/09
+1. Re-implemented OvertureBuildingsDSM to fix a bug and improve cross-tile correspondence in building elevation.
+
 ## 2025/04/30
 1. Updated NasaDEM and AlosDSM to emit smoother surface interpolations for non-default resolutions.
 

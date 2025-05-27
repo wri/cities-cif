@@ -7,6 +7,7 @@ from .built_up_height import BuiltUpHeight
 from .cams import Cams
 from .era_5_hottest_day import Era5HottestDay
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
+from .fab_dem import FabDEM
 from .fractional_vegetation import FractionalVegetation
 from .glad_lulc import LandCoverGlad, LandCoverSimplifiedGlad, LandCoverHabitatGlad, LandCoverHabitatChangeGlad
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
@@ -20,6 +21,7 @@ from .natural_areas import NaturalAreas
 from .ndvi_sentinel2_gee import NdviSentinel2
 from .open_buildings import OpenBuildings
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
+from .open_urban import OpenUrban
 from .overture_buildings_dsm import OvertureBuildingsDSM
 from .overture_buildings_w_height import OvertureBuildingsHeight
 from .overture_buildings import OvertureBuildings

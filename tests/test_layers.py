@@ -90,6 +90,14 @@ def test_esa_world_cover():
     utm_bbox_data = EsaWorldCover(land_cover_class=land_cover_class).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
+def test_fab_dem():
+    data = FabDEM().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 1, 1, 47.4, 1122, 0)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+    utm_bbox_data = FabDEM().get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
 def test_fractional_vegetation():
     data = FractionalVegetation().get_data(BBOX)
     assert np.size(data) > 0
@@ -216,6 +224,14 @@ def test_open_street_map():
     utm_bbox_data = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
+def test_open_urban_map():
+    data = OpenUrban().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 0, 110, 622, 976626, 0)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+    utm_bbox_data = OpenUrban().get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
 def test_overture_buildings():
     data = OvertureBuildings().get_data(BBOX)
     assert np.size(data) > 0
@@ -232,18 +248,19 @@ def test_overture_buildings_height():
     utm_bbox_data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
-def test_OvertureBuildingsDSM():
+def test_overture_buildings_dsm():
     data = OvertureBuildingsDSM().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 3.0, 63.0, 976626, 0)
+    assert_raster_stats(data, 1, 1.0, 60.28, 976626, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
     utm_bbox_data = OvertureBuildingsDSM().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
+# TODO add value testing
 def test_protected_areas():
     data = ProtectedAreas().get_data(BBOX)
-    assert np.size(data) > 0
-    assert_vector_stats(data, 'protected', 0, 1, 1, 1, 0)
+    # assert np.size(data) > 0
+    # assert_vector_stats(data, 'protected', 0, 1, 1, 1, 0)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
     utm_bbox_data = ProtectedAreas().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))

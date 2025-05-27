@@ -9,7 +9,7 @@ from ..bbox_constants import GEOEXTENT_TERESINA_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 
 PRESERVE_RESULTS_ON_S3 = True # True - Default for check-in
-PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
+PRESERVE_RESULTS_ON_OS = True # False - Default for check-in
 FORCE_DATA_REFRESH = True # True - Default for check-in
 
 SLOW_TEST_TIMEOUT_SECONDS = 300 # 300 seconds = 5 minutes
@@ -62,6 +62,11 @@ def test_Cams_write_by_city(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_EsaWorldCover_write_by_city(target_folder):
     layer_obj = EsaWorldCover()
+    _run_write_layers_by_city_test(layer_obj, target_folder)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_Fabdem_write_by_city(target_folder):
+    layer_obj = FabDEM()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 # TODO Very slow processing
@@ -155,6 +160,10 @@ def test_OvertureBuildings_write_by_city(target_folder):
 
 # OvertureBuildingsHeight and OvertureBuildingsDSM are only needed for sub-city tiled areas for C-TCM,
 # therefore not tested here but are tested in test_write_very_slow_layers
+# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+# def test_OvertureBuildingHeights_write_by_city(target_folder):
+#     layer_obj = OvertureBuildingsHeight(CITY_UT_NAME)
+#     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_PopWeightedPM2p5_write_by_city(target_folder):

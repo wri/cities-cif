@@ -7,13 +7,11 @@ import xarray as xr
 
 from city_metrix.constants import RW_TESTING_S3_BUCKET_URI
 from city_metrix.layers import *
-from city_metrix.cache_manager import check_if_cache_file_exists
+from city_metrix.metrix_model import get_class_default_spatial_resolution
 from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84, GEOEXTENT_TERESINA_UTM, BBOX_USA_OR_PORTLAND_2
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.tools import get_test_bbox, cleanup_cache_files, prep_output_path, verify_file_is_populated, \
     get_file_count_in_folder
-from tests.tools.general_tools import get_class_default_spatial_resolution, get_cache_variables
-
 
 # ==================== Test resolution changes ===========================
 # Multiplier applied to the default spatial_resolution of the layer
