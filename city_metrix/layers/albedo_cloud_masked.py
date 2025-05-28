@@ -17,12 +17,14 @@ class AlbedoCloudMasked(Layer):
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
+        zonal_stats: use 'mean' or 'median' for albedo zonal stats
     """
 
-    def __init__(self, start_date="2023-06-01", end_date="2023-08-31", **kwargs):
+    def __init__(self, start_date="2023-06-01", end_date="2023-08-31", zonal_stats='median', **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
+        self.zonal_stats = zonal_stats
 
     def get_masked_s2_collection(self, bbox_ee, start_date, end_date):
         CLEAR_THRESHOLD = 0.60
@@ -78,24 +80,38 @@ class AlbedoCloudMasked(Layer):
 
         # Median albedo
         kernel_convolution = None
-        albedo_median = S2albedo.map(
-            lambda x: set_resampling_for_continuous_raster(
-                x,
-                resampling_method,
-                spatial_resolution,
-                DEFAULT_SPATIAL_RESOLUTION,
-                kernel_convolution,
-                bbox_ee["crs"],
-            )
-        ).reduce(ee.Reducer.median())
+        if self.zonal_stats == 'mean':
+            albedo_zonal = S2albedo.map(
+                lambda x: set_resampling_for_continuous_raster(
+                    x,
+                    resampling_method,
+                    spatial_resolution,
+                    DEFAULT_SPATIAL_RESOLUTION,
+                    kernel_convolution,
+                    bbox_ee["crs"],
+                )
+            ).reduce(ee.Reducer.mean()).rename('albedo_zonal')
+        elif self.zonal_stats == 'median':
+            albedo_zonal = S2albedo.map(
+                lambda x: set_resampling_for_continuous_raster(
+                    x,
+                    resampling_method,
+                    spatial_resolution,
+                    DEFAULT_SPATIAL_RESOLUTION,
+                    kernel_convolution,
+                    bbox_ee["crs"],
+                )
+            ).reduce(ee.Reducer.median()).rename('albedo_zonal')
+        else:
+            raise Exception("invalid zonal stats method, should be 'mean' or 'median'")
 
-        albedo_median_ic = ee.ImageCollection(albedo_median)
+        albedo_zonal_ic = ee.ImageCollection(albedo_zonal)
         data = get_image_collection(
-            albedo_median_ic,
+            albedo_zonal_ic,
             bbox_ee,
             spatial_resolution,
             "cloud masked albedo"
-        ).albedo_median
+        ).albedo_zonal
 
         # clamping all values ≥ 1 down to exactly 1, and leaving values < 1 untouched
         data = data.where(data < 1, 1)
