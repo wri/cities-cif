@@ -25,7 +25,7 @@ class WorldPop(Layer):
                         list of age-sex classes to retrieve (see https://airtable.com/appDWCVIQlVnLLaW2/tblYpXsxxuaOk3PaZ/viwExxAgTQKZnRfWU/recFjH7WngjltFMGi?blocks=hide)
         year: year used for data retrieval
     """
-    def __init__(self, agesex_classes=[], year=2020, **kwargs):
+    def __init__(self, agesex_classes:WorldPopClass=[], year=2020, **kwargs):
         super().__init__(**kwargs)
         # agesex_classes options:
         # M_0, M_1, M_5, M_10, M_15, M_20, M_25, M_30, M_35, M_40, M_45, M_50, M_55, M_60, M_65, M_70, M_75, M_80

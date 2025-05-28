@@ -33,7 +33,7 @@ class EsaWorldCover(Layer):
         land_cover_class: Enum value from EsaWorldCoverClass
         year: year used for data retrieval
     """
-    def __init__(self, land_cover_class=None, year=2020, **kwargs):
+    def __init__(self, land_cover_class:EsaWorldCoverClass=None, year=2020, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
         self.year = year

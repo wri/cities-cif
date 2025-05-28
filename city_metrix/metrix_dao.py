@@ -111,25 +111,32 @@ def write_layer(data, uri, file_format):
         raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 
 def _write_file_to_s3(data, uri, file_extension):
+    import shutil
     s3_bucket = get_bucket_name_from_s3_uri(uri)
     file_key = _get_file_key_from_url(uri)
-    suffix = f".{file_extension}"
-    with tempfile.TemporaryDirectory() as temp_dir:
-        with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
-            if file_extension == GEOJSON_FILE_EXTENSION:
-                data.to_file(temp_file.name, driver="GeoJSON")
-            elif file_extension == GTIFF_FILE_EXTENSION:
-                data.rio.to_raster(raster_path=temp_file.name, driver="GTiff")
-            elif file_extension == NETCDF_FILE_EXTENSION:
-                data.to_netcdf(temp_file.name)
-            elif file_extension == CSV_FILE_EXTENSION:
-                data.to_csv(temp_file.name, header=True, index=False)
-            else:
-                raise Exception(f"File extension{file_extension} currently not handled for writing to S3")
+    try:
+        temp_dir = tempfile.mkdtemp()
+        temp_file = os.path.join(temp_dir, 'tempfile')
 
-            s3_client.upload_file(
-                temp_file.name, s3_bucket, file_key, ExtraArgs={"ACL": "public-read"}
-            )
+        if file_extension == GEOJSON_FILE_EXTENSION:
+            data.to_file(temp_file, driver="GeoJSON")
+        elif file_extension == GTIFF_FILE_EXTENSION:
+            data.rio.to_raster(raster_path=temp_file, driver="GTiff")
+        elif file_extension == NETCDF_FILE_EXTENSION:
+            data.to_netcdf(temp_file)
+        elif file_extension == CSV_FILE_EXTENSION:
+            data.to_csv(temp_file, header=True, index=False)
+        else:
+            raise Exception(f"File extension{file_extension} currently not handled for writing to S3")
+
+        s3_client.upload_file(
+            temp_file, s3_bucket, file_key, ExtraArgs={"ACL": "public-read"}
+        )
+
+    except Exception as e_msg:
+        print(f"Error writing to {file_key}")
+
+    shutil.rmtree(temp_dir)
 
 def write_csv(data, uri):
     _verify_datatype('write_csv()', data, [pd.Series, pd.DataFrame], is_spatial=False)
