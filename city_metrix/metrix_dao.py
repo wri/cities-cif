@@ -38,7 +38,11 @@ def read_geojson_from_cache(uri):
     return result_data
 
 def read_geotiff_from_cache(file_uri):
-    data = rioxarray.open_rasterio(file_uri, driver="GTiff")
+    if get_uri_scheme(file_uri) == 'file':
+        file_path = os.path.normpath(get_file_path_from_uri(file_uri))
+    else:
+        file_path = file_uri
+    data = rioxarray.open_rasterio(file_path, driver="GTiff")
 
     result_data = data.squeeze('band', drop=True)
 
@@ -91,8 +95,11 @@ def write_metric(data, uri, file_format):
             write_csv(data, uri)
         elif file_format == GEOJSON_FILE_EXTENSION:
             write_geojson(data, uri)
+    elif data is None:
+        raise NotImplementedError("No data found for selection area.")
     else:
-        raise NotImplementedError("Can only write Series or Dataframe Indicator data")
+        raise NotImplementedError("Can only write Series or Dataframe Indicator data.")
+
 
 def write_layer(data, uri, file_format):
     if data is None:
@@ -265,12 +272,20 @@ def get_uri_scheme(uri):
 
 
 def get_file_path_from_uri(uri):
-  parsed_url = urlparse(uri)
-  file_path = parsed_url.path
-  uri_scheme = get_uri_scheme(uri)
-  if uri_scheme == "s3":
-      file_path = file_path[1:]
-  return file_path
+    parsed_url = urlparse(uri)
+    if get_uri_scheme(uri) == "s3":
+        file_path = parsed_url.path
+        file_path = file_path[1:]
+    elif get_uri_scheme(uri) == "file":
+        p1 = os.path.normpath(parsed_url.netloc)
+        p2 = os.path.normpath(parsed_url.path)
+        file_path = p1+p2
+    else:
+        # assume it's a local path
+        file_path = uri
+
+    return file_path
+
 
 def get_bucket_name_from_s3_uri(uri):
     # Ensure the URI starts with 's3://'
