@@ -20,7 +20,7 @@ class AlbedoCloudMasked(Layer):
         zonal_stats: use 'mean' or 'median' for albedo zonal stats
     """
 
-    def __init__(self, start_date="2023-01-01", end_date="2023-12-31", zonal_stats='median', **kwargs):
+    def __init__(self, start_date="2023-01-01", end_date="2024-01-01", zonal_stats='median', **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
