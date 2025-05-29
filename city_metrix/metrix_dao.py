@@ -277,9 +277,9 @@ def get_file_path_from_uri(uri):
         file_path = parsed_url.path
         file_path = file_path[1:]
     elif get_uri_scheme(uri) == "file":
-        p1 = os.path.normpath(parsed_url.netloc)
-        p2 = os.path.normpath(parsed_url.path)
-        file_path = p1+p2
+        p1 = parsed_url.netloc
+        p2 = parsed_url.path
+        file_path = os.path.normpath(p1+p2)
     else:
         # assume it's a local path
         file_path = uri
