@@ -1,5 +1,10 @@
 # Release Notes
 
+## 2025/05/30
+1. Added write/read for metrics in CSV format, instead of geojson.
+2. Adjusted temp-file handling for both windows and Linux.
+3. Improved caching logic.
+
 ## 2025/05/24
 1. CDB-322. Fixed error in UTGlobus-to-Overture conflation that had produced many-to-one matches and resulting errors in height computation.
 2. Modified computation of UTGlobus heights to use mode or median computation. See updated https://gfw.atlassian.net/wiki/spaces/CIT/pages/1971912734/Primary+Raster+Layers+for+Thermal+Comfort+Modeling
