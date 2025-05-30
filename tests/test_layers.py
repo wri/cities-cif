@@ -24,6 +24,13 @@ def test_acag_pm2p5():
     utm_bbox_data = AcagPM2p5().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
+def test_albedo_cloud_masked():
+    data = AlbedoCloudMasked().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 3, 0.01685, 0.600, 9797, 0)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+    utm_bbox_data = AlbedoCloudMasked().get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_albedo():
     data = Albedo().get_data(BBOX)
