@@ -3,7 +3,7 @@ import ee
 
 from .land_surface_temperature import LandSurfaceTemperature
 from city_metrix.metrix_model import Layer, GeoExtent
-from ..constants import GTIFF_FILE_EXTENSION
+from ..constants import GTIFF_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
@@ -35,7 +35,7 @@ class HighLandSurfaceTemperature(Layer):
 
         ee_rectangle = bbox.to_ee_rectangle()
         lst = (LandSurfaceTemperature(start_date, end_date)
-               .get_data_with_caching(bbox, spatial_resolution))
+               .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution))
 
         lst_mean = lst.mean(dim=['x', 'y'])
         high_lst = lst.where(lst >= (lst_mean + self.THRESHOLD_ADD))

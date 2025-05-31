@@ -1,4 +1,5 @@
 import os
+import shutil
 
 from city_metrix import s3_client
 from city_metrix.constants import RW_CACHE_S3_BUCKET_URI
@@ -33,18 +34,20 @@ def cleanup_cache_files(base_class_name, cache_scheme, key_file, file_path):
         else:
             target_folder = get_target_folder_path()
             cache_file_path = os.path.join(target_folder, key_file)
-            delete_file_on_os(cache_file_path)
+            delete_path_on_os(cache_file_path)
     if file_path is not None:
-        delete_file_on_os(file_path)
+        delete_path_on_os(file_path)
 
 def delete_cache_file_on_s3(file_key):
     s3_bucket = remove_scheme_from_uri(RW_CACHE_S3_BUCKET_URI)
     s3_client.delete_object(Bucket=s3_bucket, Key=file_key)
 
-def delete_file_on_os(file_path):
-    if os.path.exists(file_path):
-        os.remove(file_path)
-
+def delete_path_on_os(path):
+    if os.path.exists(path):
+        if os.path.isfile(path):
+            os.remove(path)
+        elif os.path.isdir(path):
+            shutil.rmtree(path)
 
 def get_test_bbox(sample_box):
     bbox = sample_box if USE_WGS_BBOX else sample_box.as_geographic_bbox()

@@ -5,7 +5,7 @@ from datetime import datetime
 import pytest
 import xarray as xr
 
-from city_metrix.constants import RW_TESTING_S3_BUCKET_URI
+from city_metrix.constants import RW_TESTING_S3_BUCKET_URI, DEFAULT_DEVELOPMENT_ENV
 from city_metrix.layers import *
 from city_metrix.metrix_model import get_class_default_spatial_resolution
 from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84, GEOEXTENT_TERESINA_UTM, BBOX_USA_OR_PORTLAND_2
@@ -28,17 +28,18 @@ def test_write_alos_dsm(target_folder):
     file_path = prep_output_path(target_folder, 'layer','AlosDSM_targeted_resolution.tif')
     target_resolution = get_test_resolution(AlosDSM())
     bbox = get_test_bbox(BBOX)
-    AlosDSM().write(bbox, file_path, spatial_resolution=target_resolution)
+    AlosDSM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path, spatial_resolution=target_resolution)
     assert verify_file_is_populated(file_path)
+    cleanup_cache_files(None, None, None, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_nasa_dem(target_folder):
     file_path = prep_output_path(target_folder, 'layer','NasaDEM_targeted_resolution.tif')
     target_resolution = get_test_resolution(NasaDEM())
     bbox = get_test_bbox(BBOX)
-    NasaDEM().write(bbox, file_path, spatial_resolution=target_resolution)
+    NasaDEM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path, spatial_resolution=target_resolution)
     assert verify_file_is_populated(file_path)
-
+    cleanup_cache_files(None, None, None, file_path)
 
 # ==================== Other tests ===========================
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -47,12 +48,13 @@ def test_write_albedo_tiled_unbuffered(target_folder):
     target_resolution = get_test_resolution(Albedo())
     bbox = get_test_bbox(BBOX)
     (Albedo()
-     .write(bbox, file_path, tile_side_length=0.01, buffer_size=None, length_units="degrees",
-            spatial_resolution=target_resolution))
+     .write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path, tile_side_length=0.01,
+            buffer_size=None, length_units="degrees", spatial_resolution=target_resolution))
     file_count = get_file_count_in_folder(file_path)
 
     expected_file_count = 3 # includes 2 tiles and one json file
     assert file_count == expected_file_count
+    cleanup_cache_files(None, None, None, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_albedo_tiled_buffered(target_folder):
@@ -61,12 +63,13 @@ def test_write_albedo_tiled_buffered(target_folder):
     target_resolution = get_test_resolution(Albedo())
     bbox = get_test_bbox(BBOX)
     (Albedo()
-     .write(bbox, file_path, tile_side_length=0.01, buffer_size=buffer_degrees, length_units="degrees",
-            spatial_resolution=target_resolution))
+     .write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path, tile_side_length=0.01,
+            buffer_size=buffer_degrees, length_units="degrees", spatial_resolution=target_resolution))
     file_count = get_file_count_in_folder(file_path)
 
     expected_file_count = 4 # includes 2 tiles and two json files
     assert file_count == expected_file_count
+    cleanup_cache_files(None, None, None, file_path)
 
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -75,13 +78,14 @@ def test_write_nasa_dem_tiled_unbuffered(target_folder):
     target_resolution = get_test_resolution(NasaDEM())
     bbox = get_test_bbox(BBOX)
     (NasaDEM()
-     .write(bbox, file_path,
-            tile_side_length=.008, length_units='degrees',
-            spatial_resolution=target_resolution, resampling_method='bilinear'))
+     .write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV,
+               tile_side_length=.008, length_units='degrees', output_uri=file_path,
+               spatial_resolution=target_resolution, resampling_method='bilinear'))
 
     file_count = get_file_count_in_folder(file_path)
     expected_file_count = 5 # includes 4 tiles and 1 json files
     assert file_count == expected_file_count
+    cleanup_cache_files(None, None, None, file_path)
 
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -96,15 +100,17 @@ def test_get_nasa_dem_bicubic(target_folder):
 def test_write_nasa_dem(target_folder):
     file_path = prep_output_path(target_folder, 'layer','NasaDEM_small_city_wgs84.tif')
     bbox = get_test_bbox(GEOEXTENT_TERESINA_WGS84)
-    NasaDEM().write(bbox, file_path)
+    NasaDEM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
     assert verify_file_is_populated(file_path)
+    cleanup_cache_files(None, None, None, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_nasa_dem_utm(target_folder):
     file_path = prep_output_path(target_folder, 'layer','NasaDEM_small_city_utm.tif')
     bbox = get_test_bbox(GEOEXTENT_TERESINA_UTM)
-    NasaDEM().write(bbox, file_path)
+    NasaDEM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
     assert verify_file_is_populated(file_path)
+    cleanup_cache_files(None, None, None, file_path)
 
 # def _cache_write_read(layer_obj, target_folder):
 #     if CACHE_TO_S3:

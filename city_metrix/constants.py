@@ -10,7 +10,9 @@ GEOJSON_FILE_EXTENSION = 'geojson'
 NETCDF_FILE_EXTENSION = 'nc'
 CSV_FILE_EXTENSION = 'csv'
 
-DEFAULT_PUBLISHING_ENV = 'dev'
+DEFAULT_PRODUCTION_ENV = 'prd' # 'prd'
+DEFAULT_DEVELOPMENT_ENV = 'dev'
+DEFAULT_STAGING_ENV = 'staging'
 
 RO_DASHBOARD_LAYER_S3_BUCKET_URI = 's3://wri-cities-data-api'
 RW_CACHE_S3_BUCKET_URI = 's3://cities-test-sandbox' # 's3://cities-cache-store'

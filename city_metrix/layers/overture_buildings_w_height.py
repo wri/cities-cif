@@ -4,7 +4,7 @@ import numpy as np
 
 from city_metrix.metrix_model import Layer, GeoExtent, get_class_default_spatial_resolution
 from . import AverageNetBuildingHeight
-from ..constants import GEOJSON_FILE_EXTENSION
+from ..constants import GEOJSON_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
 from .overture_buildings import OvertureBuildings
 from .ut_globus import UtGlobus
 
@@ -29,8 +29,9 @@ class OvertureBuildingsHeight(Layer):
         # Note: spatial_resolution and resampling_method arguments are ignored.
 
         # Load the datasets
-        overture_buildings = OvertureBuildings().get_data_with_caching(bbox)
-        ut_globus = UtGlobus(self.city).get_data_with_caching(bbox)
+        # Specify DEFAULT_DEVELOPMENT_ENV since below are not Dashboard layers
+        overture_buildings = OvertureBuildings().get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV)
+        ut_globus = UtGlobus(self.city).get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV)
         ut_globus = ut_globus.to_crs(overture_buildings.crs)
 
         # Use the logic described in this page to determine height settings.
@@ -148,7 +149,7 @@ def _get_anbh_for_buildings(bbox, empty_height_blgs):
     anbh_obj = AverageNetBuildingHeight()
     anbh_cell_size = get_class_default_spatial_resolution(anbh_obj)
     buffered_utm_bbox = bbox.buffer_utm_bbox(anbh_cell_size * 2)
-    anbh_da = anbh_obj.get_data_with_caching(buffered_utm_bbox)
+    anbh_da = anbh_obj.get_data(bbox=buffered_utm_bbox)
 
     # Ensure the CRS matches
     empty_height_blgs = empty_height_blgs.to_crs(anbh_da.rio.crs).copy()

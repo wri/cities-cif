@@ -43,8 +43,7 @@ class SmartSurfaceLULC(Layer):
         utm_crs = bbox.as_utm_bbox().crs
 
         # ESA world cover
-        esa_world_cover = (EsaWorldCover(year=2021)
-                           .get_data_with_caching(bbox, spatial_resolution = spatial_resolution))
+        esa_world_cover = EsaWorldCover(year=2021).get_data(bbox=bbox, spatial_resolution = spatial_resolution)
         # ESA reclass and upsample
         def get_data_esa_reclass(esa_world_cover):
             reclass_map = {
@@ -80,17 +79,17 @@ class SmartSurfaceLULC(Layer):
 
 
         # Open space
-        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).reset_index()
+        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox=bbox).reset_index()
         open_space_osm['Value'] = 10
 
 
         # Water
-        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data_with_caching(bbox).reset_index()
+        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox=bbox).reset_index()
         water_osm['Value'] = 20
 
 
         # Roads
-        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox).reset_index()
+        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox=bbox).reset_index()
         if len(roads_osm) > 0:
             roads_osm['lanes'] = pd.to_numeric(roads_osm['lanes'], errors='coerce')
             # Get the average number of lanes per highway class
