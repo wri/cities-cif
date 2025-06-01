@@ -1,15 +1,16 @@
 import pytest
 import timeout_decorator
 
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
 from city_metrix.layers import *
 from city_metrix.cache_manager import check_if_cache_file_exists
-from ...tools.general_tools import get_layer_cache_variables
+from ...tools.general_tools import get_test_cache_variables
 from tests.resources.tools import cleanup_cache_files, prep_output_path
 from ..bbox_constants import GEOEXTENT_TERESINA_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 
-PRESERVE_RESULTS_ON_S3 = True # True - Default for check-in
-PRESERVE_RESULTS_ON_OS = True # False - Default for check-in
+PRESERVE_RESULTS_ON_S3 = False # False - Default for check-in
+PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
 FORCE_DATA_REFRESH = True # True - Default for check-in
 
 SLOW_TEST_TIMEOUT_SECONDS = 300 # 300 seconds = 5 minutes
@@ -251,16 +252,16 @@ def test_WorldPop_write_by_city(target_folder):
 def _run_write_layers_by_city_test(layer_obj, target_folder):
     cache_scheme = 's3'
     geo_extent = PROCESSING_CITY
-    file_key, file_uri, layer_id, is_custom_layer = get_layer_cache_variables(layer_obj, geo_extent)
+    file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
 
     os_file_path = prep_output_path(target_folder, 'layer', layer_id)
     try:
-        layer_obj.write(bbox=geo_extent, output_path=file_uri, force_data_refresh=FORCE_DATA_REFRESH)
+        layer_obj.write(bbox=geo_extent, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=FORCE_DATA_REFRESH)
         cache_file_exists = check_if_cache_file_exists(file_uri)
         assert cache_file_exists, "Test failed since file did not upload to s3"
         if cache_file_exists and PRESERVE_RESULTS_ON_OS:
-            layer_obj.write(bbox=geo_extent, output_path=os_file_path)
+            layer_obj.write(bbox=geo_extent, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=os_file_path)
     finally:
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         file_key = None if PRESERVE_RESULTS_ON_S3 else file_key
-        cleanup_cache_files(cache_scheme, file_key, cleanup_os_file_path)
+        cleanup_cache_files('layer', cache_scheme, file_key, cleanup_os_file_path)

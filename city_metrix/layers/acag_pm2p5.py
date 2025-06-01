@@ -7,7 +7,7 @@ DEFAULT_SPATIAL_RESOLUTION = 1113.1949  # 10 degrees of earth circumference
 
 
 class AcagPM2p5(Layer):
-    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["return_above"]
     """

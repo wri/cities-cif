@@ -1,6 +1,6 @@
 from geopandas import GeoSeries
 
-from city_metrix.constants import GEOJSON_FILE_EXTENSION
+from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import WorldPop, OpenStreetMap, OpenStreetMapClass
 from city_metrix.metrix_model import Metric
 from city_metrix.metrics import GeoZone
@@ -8,7 +8,7 @@ from city_metrix.metrics import GeoZone
 DEFAULT_SPATIAL_RESOLUTION = 100
 
 class RecreationalSpacePerCapita(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 

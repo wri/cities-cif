@@ -2,13 +2,13 @@ from xrspatial import slope
 
 from city_metrix.metrix_model import Layer, validate_raster_resampling_method, GeoExtent
 from .nasa_dem import NasaDEM
-from ..constants import GTIFF_FILE_EXTENSION
+from ..constants import GTIFF_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
 class HighSlope(Layer):
-    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["slope_threshold"]
     MINOR_NAMING_ATTS = None
 
@@ -32,7 +32,8 @@ class HighSlope(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        nasa_dem = NasaDEM().get_data_with_caching(bbox, spatial_resolution=spatial_resolution)
+        # Specify DEFAULT_DEVELOPMENT_ENV since NasaDEM is not a Dashboard layer
+        nasa_dem = NasaDEM().get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution)
 
         slope_data = slope(nasa_dem)
         # filter for steep slope

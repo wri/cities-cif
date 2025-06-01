@@ -2,7 +2,9 @@ import os
 import shutil
 import numpy as np
 
-from city_metrix.cache_manager import build_file_key, build_cache_layer_names
+from city_metrix.cache_manager import build_file_key, build_cache_name
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, DEFAULT_STAGING_ENV
+from city_metrix.metrix_model import Layer
 
 
 def is_valid_path(path: str):
@@ -45,7 +47,12 @@ def convert_ratio_to_percentage(data):
     return values_as_percent
 
 
-def get_layer_cache_variables(layer_obj, geo_extent):
-    file_uri, file_key, is_custom_layer = build_file_key(layer_obj, geo_extent)
-    layer_folder_name, layer_id, _ = build_cache_layer_names(layer_obj)
-    return file_key, file_uri, layer_id, is_custom_layer
+def get_test_cache_variables(class_obj, geo_extent):
+    if isinstance(class_obj, Layer):
+        s3_env = DEFAULT_DEVELOPMENT_ENV
+    else:
+        s3_env = DEFAULT_STAGING_ENV
+    file_uri, file_key, feature_id, is_custom_object = build_file_key(s3_env, class_obj, geo_extent)
+    file_format = class_obj.OUTPUT_FILE_FORMAT
+    feature_with_extension = f"{feature_id}.{file_format}"
+    return file_key, file_uri, feature_with_extension, is_custom_object

@@ -1,6 +1,6 @@
 from geopandas import GeoSeries
 
-from city_metrix.constants import GEOJSON_FILE_EXTENSION
+from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import Metric, GeoZone
 from city_metrix.layers import (
     WorldPop,
@@ -11,7 +11,7 @@ from city_metrix.layers import (
 
 
 class PercentCanopyCoveredPopulation(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
@@ -45,7 +45,7 @@ class PercentCanopyCoveredPopulation(Metric):
 
 
 class PercentCanopyCoveredPopulationChildren(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
@@ -68,7 +68,7 @@ class PercentCanopyCoveredPopulationChildren(Metric):
         return percent_canopy_covered_children.get_metric(geo_zone=geo_zone)
 
 class PercentCanopyCoveredPopulationElderly(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
@@ -91,7 +91,7 @@ class PercentCanopyCoveredPopulationElderly(Metric):
         return percent_canopy_covered_elderly.get_metric(geo_zone=geo_zone)
 
 class PercentCanopyCoveredPopulationFemale(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
@@ -114,7 +114,7 @@ class PercentCanopyCoveredPopulationFemale(Metric):
         return percent_canopy_covered_female.get_metric(geo_zone=geo_zone)
 
 class PercentCanopyCoveredPopulationInformal(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
