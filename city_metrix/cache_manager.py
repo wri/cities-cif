@@ -132,23 +132,42 @@ def _build_naming_string_from_standard_parameters(layer_obj, is_custom_layer):
     for key, value in layer_obj.__dict__.items():
         if key in DATE_ATTRIBUTES:
             date_key, date_value = _standardize_date_kv(key, value, is_custom_layer)
-            string_val = _construct_naming_string_from_date_attribute(date_key, date_value)
+            if date_key == 'year':
+                # Expand year into start and end year
+                start_year_kv_string = _construct_naming_string_from_date_attribute('start_year', date_value)
+                end_year_kv_string = _construct_naming_string_from_date_attribute('end_year', date_value)
+                string_val = start_year_kv_string + end_year_kv_string
+            else:
+                string_val = _construct_naming_string_from_date_attribute(date_key, date_value)
             date_kv_string += string_val if string_val is not None else ""
 
     return date_kv_string
 
-def _standardize_date_kv(date_key, date_value, is_custom_layer):
+def _standardize_date_kv(date_key:str, date_value, is_custom_layer:bool):
+    date_key = date_key.lower()
+    year_value = date_value
     if not is_custom_layer:
         # For default parameters, collapse dates into just the year
         if isinstance(date_value, str):
-            date_value = datetime.strptime(date_value, "%Y-%m-%d").year
+            if date_key == 'end_date':
+                # If end date is on January 1, then reset year to prior year
+                date_obj = datetime.strptime(date_value, "%Y-%m-%d")
+                raw_year_value = date_obj.year
+                if date_obj.month == 1 and date_obj.day == 1:
+                    year_value = raw_year_value - 1
+                else:
+                    year_value = raw_year_value
+            else:
+                year_value = datetime.strptime(date_value, "%Y-%m-%d").year
+        else:
+            year_value = date_value
 
         if date_key == 'start_date':
             date_key = 'start_year'
         elif date_key == 'end_date':
             date_key = 'end_year'
 
-    return date_key, date_value
+    return date_key, year_value
 
 
 def _construct_naming_string_from_date_attribute(date_key, date_value):
@@ -186,7 +205,8 @@ def _convert_snake_case_to_pascal_case(attribute_name):
     return pascal_name
 
 def _construct_kv_string(key, value):
-    return f"__{key}_{value}"
+    separator = '_' if key in 'EndYear' else '__'
+    return f"{separator}{key}_{value}"
 
 def check_if_cache_file_exists(file_uri):
     uri_scheme = get_uri_scheme(file_uri)
