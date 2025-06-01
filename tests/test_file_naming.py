@@ -1,55 +1,80 @@
 from city_metrix import BuiltLandWithLowSurfaceReflectivity
-from city_metrix.layers import Albedo, AcagPM2p5, LandCoverHabitatChangeGlad, EsaWorldCover, EsaWorldCoverClass, Cams
+from city_metrix.layers import Albedo, AcagPM2p5, LandCoverHabitatChangeGlad, EsaWorldCover, EsaWorldCoverClass, Cams, \
+    AqueductFlood
 from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84
 from tests.resources.metrics_dumps.test_write_metric_variants import IDN_Jakarta_zone
 from tests.tools.general_tools import get_test_cache_variables
 
 
-def test_layer_with_year():
+def test_default_name_for_default_name_for_layer_with_year():
     geo_extent = GEOEXTENT_TERESINA_WGS84
     layer_obj = AcagPM2p5()
     file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
 
-    assert layer_id == 'AcagPM2p5__StartYear_2022_EndYear_2022.tif'
     assert is_custom_layer == False
+    assert layer_id == 'AcagPM2p5__StartYear_2022_EndYear_2022.tif'
 
-def test_layer_with_start_end_year():
+def test_default_name_for_layer_with_start_end_years():
     geo_extent = GEOEXTENT_TERESINA_WGS84
     layer_obj = LandCoverHabitatChangeGlad()
     file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
 
-    assert layer_id == 'LandCoverHabitatChangeGlad__StartYear_2000_EndYear_2020.tif'
     assert is_custom_layer == False
+    assert layer_id == 'LandCoverHabitatChangeGlad__StartYear_2000_EndYear_2020.tif'
 
-def test_layer_with_start_end_date():
+def test_default_name_for_layer_with_start_end_dates():
     geo_extent = GEOEXTENT_TERESINA_WGS84
     layer_obj = Albedo()
     file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
 
-    assert layer_id == 'Albedo__StartYear_2021_EndYear_2021.tif'
     assert is_custom_layer == False
+    assert layer_id == 'Albedo__StartYear_2021_EndYear_2021.tif'
 
-def test_layer_with_start_end_date_in_same_year():
+def test_default_name_for_layer_with_start_end_dates_in_same_year():
     geo_extent = GEOEXTENT_TERESINA_WGS84
     layer_obj = Cams()
     file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
 
-    assert layer_id == 'Cams__StartYear_2023_EndYear_2023.nc'
     assert is_custom_layer == False
+    assert layer_id == 'Cams__StartYear_2023_EndYear_2023.nc'
 
-def test_layer_with_major_name():
+def test_default_name_for_layer_with_major_name():
     geo_extent = GEOEXTENT_TERESINA_WGS84
     layer_obj = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
     file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
 
-    assert layer_id == 'EsaWorldCover__LandCoverClass_BUILT_UP__StartYear_2020_EndYear_2020.tif'
     assert is_custom_layer == False
+    assert layer_id == 'EsaWorldCover__LandCoverClass_BUILT_UP__StartYear_2020_EndYear_2020.tif'
 
-def test_metric_with_start_end_date():
+def test_default_name_for_metric_with_start_end_dates():
     zones = IDN_Jakarta_zone
     metric_obj = BuiltLandWithLowSurfaceReflectivity()
     file_key, file_uri, metric_id, is_custom_metric = get_test_cache_variables(metric_obj, zones)
 
-    assert metric_id == 'BuiltLandWithLowSurfaceReflectivity__StartYear_2021_EndYear_2021.csv'
     assert is_custom_metric == False
+    assert metric_id == 'BuiltLandWithLowSurfaceReflectivity__StartYear_2021_EndYear_2021.csv'
 
+
+def test_custom_name_for_layer_with_start_end_dates():
+    geo_extent = GEOEXTENT_TERESINA_WGS84
+    layer_obj = Albedo(threshold=0.2)
+    file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
+
+    assert is_custom_layer == True
+    assert layer_id == 'Albedo__Threshold_02__StartDate_2021-01-01_EndDate_2022-01-01.tif'
+
+def test_custom_name_for_layer_with_one_custom_minor_param():
+    geo_extent = GEOEXTENT_TERESINA_WGS84
+    layer_obj = AqueductFlood(return_period_c="rp0002")
+    file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
+
+    assert is_custom_layer == True
+    assert layer_id == 'AqueductFlood__ReturnPeriodC_rp0002__EndYear_2050.tif'
+
+def test_custom_name_for_layer_with_two_custom_minor_param():
+    geo_extent = GEOEXTENT_TERESINA_WGS84
+    layer_obj = AqueductFlood(return_period_c="rp0002", return_period_r="rp00002")
+    file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
+
+    assert is_custom_layer == True
+    assert layer_id == 'AqueductFlood__ReturnPeriodC_rp0002__ReturnPeriodR_rp00002__EndYear_2050.tif'
