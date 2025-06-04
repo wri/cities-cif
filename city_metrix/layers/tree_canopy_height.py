@@ -41,11 +41,13 @@ class TreeCanopyHeight(Layer):
             spatial_resolution,
             "tree canopy height"
         ).cover_code
+        result_data = data.astype("uint8")
 
         if self.height:
-            data = data.where(data >= self.height)
+            result_data = result_data.where(result_data >= self.height)
 
         utm_crs = bbox.as_utm_bbox().crs
-        data = data.rio.write_crs(utm_crs)
+        result_data = result_data.rio.write_crs(utm_crs)
 
-        return data
+
+        return result_data
