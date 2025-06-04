@@ -105,9 +105,9 @@ def build_cache_name(class_obj):
 
 def _build_class_name_part(layer_obj, naming_atts, mismatched_atts):
     """
-    Function takes the list of layer-class attributes, converts the attribute name to Pascal-case,
+    Function takes the list of feature-class attributes, converts the attribute name to Pascal-case,
     appends the object parameter value, and constructs a name-value string to be used as part of the
-    cif-cache storage folder name and layer file name.
+    cif-cache storage folder name and file name.
     """
     qualifier_name = ""
     if not (naming_atts is None or naming_atts == ""):
@@ -118,42 +118,74 @@ def _build_class_name_part(layer_obj, naming_atts, mismatched_atts):
                 flat_value = _flatten_attribute_value(value)
                 if flat_value is not None:
                     pascal_key = _convert_snake_case_to_pascal_case(attribute)
-                    param_name = _construct_kv_string(pascal_key, flat_value)
+                    param_name = _construct_kv_string(pascal_key, flat_value, '__')
                     qualifier_name += param_name
     return qualifier_name
 
 
-def _build_naming_string_from_standard_parameters(layer_obj, is_custom_layer):
+def _build_naming_string_from_standard_parameters(feature_obj, is_custom_feature):
     """
-    Function takes the values from standard date attributes in a layer-class and constructs a name-value string
-    to be used as part of the cif-cache layer file name.
+    Function takes the values from standard date attributes in a feature-class and constructs a name-value string
+    to be used as part of the cif-cache file name.
     """
     date_kv_string = ""
-    for key, value in layer_obj.__dict__.items():
-        if key in DATE_ATTRIBUTES:
-            date_key, date_value = _standardize_date_kv(key, value, is_custom_layer)
-            string_val = _construct_naming_string_from_date_attribute(date_key, date_value)
-            date_kv_string += string_val if string_val is not None else ""
+    feature_atts = feature_obj.__dict__
+    feature_date_atts = {key: feature_atts[key] for key in DATE_ATTRIBUTES if key in feature_atts}
+    has_paired_start_end_dates = _has_paired_start_end_keys(feature_date_atts)
+    for key, value in feature_date_atts.items():
+        date_key, date_value = _standardize_date_kv(key, value, is_custom_feature)
+        if date_key == 'year':
+            # Expand year into start and end year
+            start_year_kv_string = _construct_naming_string_from_date_attribute('start_year', date_value, '__')
+            end_year_kv_string = _construct_naming_string_from_date_attribute('end_year', date_value, '_')
+            string_val = start_year_kv_string + end_year_kv_string
+        else:
+            if key in ('end_year', 'end_date') and has_paired_start_end_dates:
+                separator = '_'
+            else:
+                separator = '__'
+            string_val = _construct_naming_string_from_date_attribute(date_key, date_value, separator)
+        date_kv_string += string_val if string_val is not None else ""
 
     return date_kv_string
 
-def _standardize_date_kv(date_key, date_value, is_custom_layer):
-    if not is_custom_layer:
+def _has_paired_start_end_keys(att_dict):
+    prefix_list = ['start', 'end']
+    filtered_dict = {key: value for key, value in att_dict.items() if any(key.startswith(prefix) for prefix in prefix_list)}
+    has_paired_start_end_dates = True if len(filtered_dict) == 2 else False
+    return has_paired_start_end_dates
+
+
+def _standardize_date_kv(date_key:str, date_value, is_custom_feature:bool):
+    date_key = date_key.lower()
+    year_value = date_value
+    if not is_custom_feature:
         # For default parameters, collapse dates into just the year
         if isinstance(date_value, str):
-            date_value = datetime.strptime(date_value, "%Y-%m-%d").year
+            if date_key == 'end_date':
+                # If end date is on January 1, then reset year to prior year
+                date_obj = datetime.strptime(date_value, "%Y-%m-%d")
+                raw_year_value = date_obj.year
+                if date_obj.month == 1 and date_obj.day == 1:
+                    year_value = raw_year_value - 1
+                else:
+                    year_value = raw_year_value
+            else:
+                year_value = datetime.strptime(date_value, "%Y-%m-%d").year
+        else:
+            year_value = date_value
 
         if date_key == 'start_date':
             date_key = 'start_year'
         elif date_key == 'end_date':
             date_key = 'end_year'
 
-    return date_key, date_value
+    return date_key, year_value
 
 
-def _construct_naming_string_from_date_attribute(date_key, date_value):
+def _construct_naming_string_from_date_attribute(date_key, date_value, separator):
     pascal_key_name = _convert_snake_case_to_pascal_case(date_key)
-    date_kv_name = _construct_kv_string(pascal_key_name, date_value)
+    date_kv_name = _construct_kv_string(pascal_key_name, date_value, separator)
 
     return date_kv_name
 
@@ -185,8 +217,8 @@ def _convert_snake_case_to_pascal_case(attribute_name):
     pascal_name = attribute_name.replace("_", " ").title().replace(" ", "")
     return pascal_name
 
-def _construct_kv_string(key, value):
-    return f"__{key}_{value}"
+def _construct_kv_string(key, value, separator):
+    return f"{separator}{key}_{value}"
 
 def check_if_cache_file_exists(file_uri):
     uri_scheme = get_uri_scheme(file_uri)

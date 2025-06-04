@@ -13,43 +13,43 @@ CITY_UT_NAME = 'teresina'
 
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_geojson_default_val():
+def test_geojson_default_param_vals():
     layer_obj = ProtectedAreas()
     is_custom_layer = _run_cache_test(layer_obj)
     assert is_custom_layer == False
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_geojson_default_variant_val():
+def test_geojson_custom_param_val():
     layer_obj = ProtectedAreas(status_year=2020)
     is_custom_layer = _run_cache_test(layer_obj)
-    assert is_custom_layer == False
+    assert is_custom_layer == True
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_geojson_custom_val():
+def test_geojson_custom_param_val():
     layer_obj = ProtectedAreas(status=['Inscribed', 'Adopted', 'Designated'],status_year=2020)
     is_custom_layer = _run_cache_test(layer_obj)
     assert is_custom_layer == True
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_geotiff_default_val():
+def test_geotiff_default_param_val():
     layer_obj = AcagPM2p5()
     is_custom_layer = _run_cache_test(layer_obj)
     assert is_custom_layer == False
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_geotiff_custom_val():
+def test_geotiff_custom_param_val():
     layer_obj = AcagPM2p5(return_above=1)
     is_custom_layer = _run_cache_test(layer_obj)
     assert is_custom_layer == True
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_netcdf_default_val():
+def test_netcdf_default_param_val():
     layer_obj = Era5HottestDay()
     is_custom_layer = _run_cache_test(layer_obj)
     assert is_custom_layer == False
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_netcdf_custom_val():
+def test_netcdf_custom_param_val():
     layer_obj = Era5HottestDay(start_date="2023-02-01")
     is_custom_layer = _run_cache_test(layer_obj)
     assert is_custom_layer == True
