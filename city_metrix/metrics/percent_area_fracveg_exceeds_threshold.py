@@ -9,7 +9,7 @@ class PercentAreaFracvegExceedsThreshold(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, min_threshold=6, year=2024, **kwargs):
+    def __init__(self, min_threshold=60, year=2024, **kwargs):
         super().__init__(**kwargs)
         self.min_threshold = min_threshold
         self.year = year
