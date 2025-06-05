@@ -8,7 +8,7 @@ from ..constants import GTIFF_FILE_EXTENSION
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 
-class FractionalVegetation(Layer):
+class FractionalVegetationPercent(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["min_threshold"]
     MINOR_NAMING_ATTS = None
