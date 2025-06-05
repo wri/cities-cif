@@ -9,7 +9,7 @@ from .cams import Cams
 from .era_5_hottest_day import Era5HottestDay
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .fab_dem import FabDEM
-from .fractional_vegetation import FractionalVegetation
+from .fractional_vegetation import FractionalVegetationPercent
 from .glad_lulc import LandCoverGlad, LandCoverSimplifiedGlad, LandCoverHabitatGlad, LandCoverHabitatChangeGlad
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
 from .high_land_surface_temperature import HighLandSurfaceTemperature

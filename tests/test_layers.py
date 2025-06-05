@@ -106,11 +106,11 @@ def test_fab_dem():
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_fractional_vegetation():
-    data = FractionalVegetation().get_data(BBOX)
+    data = FractionalVegetationPercent().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 0.00000006, 1, 9797, 0)
+    assert_raster_stats(data, 1, 0, 100, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
-    utm_bbox_data = FractionalVegetation().get_data(BBOX_AS_UTM)
+    utm_bbox_data = FractionalVegetationPercent().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 def test_height_above_nearest_drainage():
