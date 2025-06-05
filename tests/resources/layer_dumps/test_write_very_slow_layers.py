@@ -10,7 +10,7 @@ from tests.resources.tools import get_test_bbox, prep_output_path, verify_file_i
 CITY_UT_NAME = 'vancouver'
 BBOX = BBOX_USA_OR_PORTLAND_2
 
-PRESERVE_RESULTS_ON_OS = True # False - Default for check-in
+PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_FractionalVegetation_write_small_bbox(target_folder):
