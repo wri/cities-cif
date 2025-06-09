@@ -8,7 +8,7 @@ from ..constants import GTIFF_FILE_EXTENSION
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 
-class FractionalVegetation(Layer):
+class FractionalVegetationPercent(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     PROCESSING_TILE_SIDE_M = 10000
     MAJOR_NAMING_ATTS = ["min_threshold"]
@@ -126,6 +126,8 @@ class FractionalVegetation(Layer):
                 .divide(vegNDVI.subtract(soilNDVI))
                 .pow(2)
                 .min(1)
+                .multiply(100)
+                .toUint8()
                 .rename("Fr")
             )
 
@@ -152,7 +154,7 @@ class FractionalVegetation(Layer):
                 bbox_ee,
                 spatial_resolution,
                 "fractional vegetation",
-            ).Fr
+            ).astype(np.uint8).Fr
             if self.min_threshold is not None:
                 data = xr.where(data >= self.min_threshold, 1, np.nan).rio.write_crs(data.crs)
 

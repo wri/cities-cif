@@ -10,12 +10,14 @@ from tests.resources.tools import get_test_bbox, prep_output_path, verify_file_i
 CITY_UT_NAME = 'vancouver'
 BBOX = BBOX_USA_OR_PORTLAND_2
 
-# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-# def test_FractionalVegetation_write_small_bbox(target_folder):
-#     file_path = prep_output_path(target_folder, 'layer','FractionalVegetation_small_bbox.tif')
-#     bbox = get_test_bbox(BBOX)
-#     layer_obj = FractionalVegetation()
-#     _write_verify(layer_obj, bbox, file_path)
+PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_FractionalVegetation_write_small_bbox(target_folder):
+    file_path = prep_output_path(target_folder, 'layer','FractionalVegetation_small_bbox.tif')
+    bbox = get_test_bbox(BBOX)
+    layer_obj = FractionalVegetationPercent()
+    _write_verify(layer_obj, bbox, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_OvertureBuildingsHeight_write_small_bbox(target_folder):
@@ -69,4 +71,6 @@ def test_UtGlobus_write_small_bbox(target_folder):
 def _write_verify(layer_obj, bbox, file_path):
     layer_obj.write(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
-    cleanup_cache_files(None, None, None, file_path)
+
+    if not PRESERVE_RESULTS_ON_OS:
+        cleanup_cache_files(None, None, None, file_path)
