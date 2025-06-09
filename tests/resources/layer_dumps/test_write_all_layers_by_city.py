@@ -9,9 +9,9 @@ from tests.resources.tools import cleanup_cache_files, prep_output_path
 from ..bbox_constants import GEOEXTENT_TERESINA_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 
-PRESERVE_RESULTS_ON_S3 = True # False - Default for check-in
-PRESERVE_RESULTS_ON_OS = True # False - Default for check-in
-FORCE_DATA_REFRESH = False # True - Default for check-in
+PRESERVE_RESULTS_ON_S3 = False # False - Default for check-in
+PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
+FORCE_DATA_REFRESH = True # True - Default for check-in
 
 SLOW_TEST_TIMEOUT_SECONDS = 1200 # 1200 seconds = 20 minutes
 
