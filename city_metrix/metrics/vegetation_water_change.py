@@ -1,6 +1,6 @@
 from geopandas import GeoSeries
 
-from city_metrix.constants import GEOJSON_FILE_EXTENSION
+from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import GeoZone, Metric
 from city_metrix.layers import VegetationWaterMap
 
@@ -10,7 +10,7 @@ DEFAULT_SPATIAL_RESOLUTION = 10
 # TODO: layer generation and zonal stats use different spatial resolutions
 
 class VegetationWaterChangeGainArea(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
@@ -29,7 +29,7 @@ class VegetationWaterChangeGainArea(Metric):
 
 
 class VegetationWaterChangeLossArea(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
@@ -48,7 +48,7 @@ class VegetationWaterChangeLossArea(Metric):
 
 
 class VegetationWaterChangeGainLossRatio(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 

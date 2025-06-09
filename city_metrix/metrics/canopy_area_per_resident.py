@@ -1,12 +1,12 @@
 from geopandas import GeoSeries
 
-from city_metrix.constants import GEOJSON_FILE_EXTENSION
+from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import TreeCanopyHeight, WorldPop, WorldPopClass, UrbanLandUse
 from city_metrix.metrix_model import GeoZone, Metric
 
 
 class CanopyAreaPerResident(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
@@ -41,7 +41,7 @@ class CanopyAreaPerResident(Metric):
 
 
 class CanopyAreaPerResidentChildren(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
@@ -59,7 +59,7 @@ class CanopyAreaPerResidentChildren(Metric):
 
 
 class CanopyAreaPerResidentElderly(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
@@ -77,7 +77,7 @@ class CanopyAreaPerResidentElderly(Metric):
 
 
 class CanopyAreaPerResidentFemale(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
@@ -94,7 +94,7 @@ class CanopyAreaPerResidentFemale(Metric):
                 .get_metric(geo_zone))
 
 class CanopyAreaPerResidentInformal(Metric):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 

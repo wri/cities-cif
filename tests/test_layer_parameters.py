@@ -4,9 +4,8 @@ import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from pyproj import CRS
 from city_metrix.layers import *
-from city_metrix.metrix_model import GeoExtent, Layer
+from city_metrix.metrix_model import GeoExtent, Layer, get_class_default_spatial_resolution
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
-from tests.tools.general_tools import get_class_default_spatial_resolution
 from city_metrix.metrix_tools import get_class_from_instance
 
 COUNTRY_CODE_FOR_BBOX = 'BRA'
@@ -338,12 +337,12 @@ def _evaluate_raster_value(raw_data, downsized_data):
     normalized_rmse_tolerance = 0.3
 
     populated_raw_data_ratio = _get_populated_fraction(raw_data)
-    populated_downsized_data_ratio = _get_populated_fraction(raw_data)
-    populated_fraction_diff = abs(populated_raw_data_ratio - populated_downsized_data_ratio)
+    populated_resized_data_ratio = _get_populated_fraction(raw_data)
+    populated_fraction_diff = abs(populated_raw_data_ratio - populated_resized_data_ratio)
     populated_fraction_eval = True if populated_fraction_diff <= populated_fraction_tolerance else False
 
     filled_raw_data = raw_data.fillna(0)
-    filled_downsized_data = downsized_data.fillna(0)
+    filled_resized_data = downsized_data.fillna(0)
 
     # Resample raw_data to match the resolution of the downsized_data.
     # This operation is necessary in order to use RMSE and SSIM since they require matching array dimensions.
@@ -353,29 +352,29 @@ def _evaluate_raster_value(raw_data, downsized_data):
     # Note: Initial investigations using the unresampled-raw and downsized data with evaluation by
     # mean value, quantiles,and standard deviation were unsuccessful due to false failures on valid downsized images.
     resampled_filled_raw_data = (filled_raw_data
-                                 .interp_like(filled_downsized_data, method='linear')
+                                 .interp_like(filled_resized_data, method='linear')
                                  .fillna(0))
 
     # Convert xarray DataArrays to numpy arrays
     processed_raw_data_np = resampled_filled_raw_data.values
-    processed_downsized_data_np = filled_downsized_data.values
+    processed_resized_data_np = filled_resized_data.values
 
     # Calculate and evaluate normalized Root Mean Squared Error (RMSE)
-    max_val = processed_downsized_data_np.max() \
-        if processed_downsized_data_np.max() > processed_raw_data_np.max() else processed_raw_data_np.max()
-    normalized_rmse = np.sqrt(np.mean(np.square(processed_downsized_data_np - processed_raw_data_np))) / max_val
+    max_val = processed_resized_data_np.max() \
+        if processed_resized_data_np.max() > processed_raw_data_np.max() else processed_raw_data_np.max()
+    normalized_rmse = np.sqrt(np.mean(np.square(processed_resized_data_np - processed_raw_data_np))) / max_val
     matching_rmse = True if normalized_rmse < normalized_rmse_tolerance else False
 
     # Calculate and evaluate Structural Similarity Index (SSIM)
     # Progressively decrease criteria for asserting a match as raster count decreases and null values increase
-    if processed_downsized_data_np.size > 100:
+    if processed_resized_data_np.size > 100:
         if populated_fraction_diff <= 0.1:
             ssim_index_tolerance = 0.6
         else:
             ssim_index_tolerance = 0.4
     else:
         ssim_index_tolerance = 0.3
-    ssim_index, _ = ssim(processed_downsized_data_np, processed_raw_data_np, full=True, data_range=max_val)
+    ssim_index, _ = ssim(processed_resized_data_np, processed_raw_data_np, full=True, data_range=max_val)
     matching_ssim = True if round(ssim_index,1) >= ssim_index_tolerance else False
 
     results_match = True if (populated_fraction_eval & matching_rmse & matching_ssim) else False

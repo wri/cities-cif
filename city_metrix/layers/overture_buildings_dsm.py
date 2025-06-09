@@ -1,19 +1,18 @@
 import numpy as np
-import rasterio
-import xarray as xr
-from exactextract import exact_extract
-from rasterio.features import rasterize
-
+from rasterio.features import geometry_mask
 from city_metrix.metrix_model import Layer, GeoExtent, validate_raster_resampling_method
-from . import NasaDEM
+from . import FabDEM
 from ..constants import GTIFF_FILE_EXTENSION
 from .overture_buildings_w_height import OvertureBuildingsHeight
 
 DEFAULT_SPATIAL_RESOLUTION = 1
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
+# This value was determined from a large warehouse as a worst-case example at lon/lat -122.76768,45.63313
+BUILDING_INCLUSION_BUFFER_METERS = 500
+
 class OvertureBuildingsDSM(Layer):
-    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["city"]
     MINOR_NAMING_ATTS = None
 
@@ -31,100 +30,46 @@ class OvertureBuildingsDSM(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        # Load the datasets
-        buildings_gdf = OvertureBuildingsHeight(self.city).get_data(bbox)
-        dem_da = NasaDEM().get_data(bbox, spatial_resolution=spatial_resolution, resampling_method=resampling_method)
+        # Minimize the probability that buildings will bridge tile boundaries and thereby sample elevations for
+        # only part of the full footprint by: 1. buffering out AOI, 2. filtering buildings to contained buildings,
+        # 3. masking buffered DEM by footprint and determining elevation of footprint, 4. masking unbuffered DEM
+        # with footprint, 5. add footprint elevation to unbuffered DEM.
+        # Population of the unbuffered DEM ensures that AOI is correct.
+        building_buffer = BUILDING_INCLUSION_BUFFER_METERS
+        buffered_utm_bbox = bbox.buffer_utm_bbox(building_buffer)
 
-        # Calculate mode elevation and estimate building elevations
-        buildings_gdf['mode_elevation'] = (
-            exact_extract(dem_da, buildings_gdf, ["mode"], output='pandas')['mode']
-        )
-        buildings_gdf["elevation_estimate"] = buildings_gdf["height"] + buildings_gdf["mode_elevation"]
+        # Load buildings and sub-select to ones fully contained in buffered area
+        raw_buildings_gdf = OvertureBuildingsHeight(self.city).get_data(buffered_utm_bbox)
+        contained_buildings_gdf = (
+            raw_buildings_gdf)[raw_buildings_gdf.geometry.apply(lambda x: x.within(buffered_utm_bbox.polygon))]
 
-        # Rasterize polygons to create a building elevation raster
-        overture_buildings_raster = _rasterize_polygons(buildings_gdf, values=["elevation_estimate"],
-                                                        snap_to_raster=dem_da)
+        buffered_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=1, resampling_method='bilinear')
+        query_dem = FabDEM().get_data(bbox, spatial_resolution=1, resampling_method='bilinear')
+        # Change will be applied only to the copy to avoid doubly changing the raster
+        result_dem = query_dem.copy()
 
-        # Combine building raster with DEM
-        target_crs = dem_da.rio.crs
-        composite_bldg_dem = _combine_building_and_dem(dem_da, overture_buildings_raster, target_crs)
+        for _, building in contained_buildings_gdf.iterrows():
+            height = building['height']
+            polygon = building['geometry']
 
-        return composite_bldg_dem
+            # Rasterize footprint to create a mask.
+            buffered_building_mask = geometry_mask([polygon], transform=buffered_dem.rio.transform(),
+                                          all_touched=False, invert=True, out_shape=buffered_dem.shape)
 
+            # get aggregated elevation within footprint
+            # TODO Implement a more sophisticated method. See https://gfw.atlassian.net/browse/CDB-309
+            buffered_dem_values = buffered_dem.values[buffered_building_mask]
+            # Only include features that are large enough to overlap or touch a raster cell
+            if buffered_dem_values.size > 0:
+                footprint_elevation = buffered_dem_values.max()
+                roof_elev = footprint_elevation + height
 
-def _combine_building_and_dem(dem, buildings, target_crs):
-    coords_dict = {dim: dem.coords[dim].values for dim in dem.dims}
+                # Rasterize footprint to create a mask. Use all_touched=False to produce narrower shape of footprint.
+                building_mask = geometry_mask([polygon], transform=query_dem.rio.transform(), all_touched=False,
+                                              invert=True, out_shape=query_dem.shape)
 
-    # Convert to ndarray in order to mask and combine layers
-    dem_nda = dem.to_numpy()
-    bldg_nda = buildings.to_numpy().reshape(dem_nda.shape)
+                # Only include features that are large enough to overlap or touch a raster cell
+                if np.any(building_mask):
+                    result_dem.values[building_mask] = roof_elev
 
-    # Mask of building cells
-    mask = (bldg_nda != -9999) & (~np.isnan(bldg_nda))
-
-    # Mask buildings onto DEM
-    dem_nda[mask] = bldg_nda[mask]
-
-    # Convert results into DataArray and re-add coordinates and CRS
-    composite_xa = xr.DataArray(
-        dem_nda,
-        dims=["y", "x"],
-        coords=coords_dict,
-        name="elevation"
-    )
-    composite_xa.rio.write_crs(target_crs, inplace=True)
-
-    return composite_xa
-
-
-def _rasterize_polygons(gdf, values=["elevation"], snap_to_raster=None):
-    """
-    Rasterizes polygons in the GeoDataFrame to match the properties of a reference raster.
-
-    Parameters:
-        gdf (GeoDataFrame): The GeoDataFrame containing polygon geometries and values.
-        values (list): List of column names whose values will be assigned to the raster.
-                       Defaults to ["elevation"].
-        snap_to_raster (xarray.DataArray): Reference raster for alignment (optional).
-
-    Returns:
-        xarray.DataArray: Rasterized version of the polygons with the specified values.
-    """
-    if gdf.empty:
-        # Return an empty raster matching the reference raster if GeoDataFrame is empty
-        feature_raster = xr.zeros_like(snap_to_raster)
-        feature_raster.name = values[0] if values else "elevation"
-        return feature_raster
-
-    if snap_to_raster is None:
-        raise ValueError("snap_to_raster must be provided for alignment.")
-
-    # Extract raster properties from the reference raster
-    transform = snap_to_raster.rio.transform()
-    out_shape = (snap_to_raster.sizes["y"], snap_to_raster.sizes["x"])
-
-    # Use `getattr` to safely access values when iterating through rows
-    shapes = [
-        (geometry, getattr(row, values[0])) for geometry, row in zip(gdf.geometry, gdf.itertuples())
-    ]
-
-    # Rasterize the polygons
-    rasterized_array = rasterio.features.rasterize(
-        shapes=shapes,
-        out_shape=out_shape,
-        transform=transform,
-        fill=-9999,  # NoData value
-        dtype="float32",
-    )
-
-    # Convert the rasterized array to an xarray.DataArray
-    coords_dict = {dim: snap_to_raster.coords[dim].values for dim in snap_to_raster.dims}
-    feature_raster = xr.DataArray(
-        rasterized_array,
-        dims=["y", "x"],
-        coords=coords_dict,
-        name=values[0] if values else "elevation"
-    )
-    feature_raster.rio.write_crs(snap_to_raster.rio.crs, inplace=True)
-
-    return feature_raster
+        return result_dem

@@ -5,7 +5,7 @@ from ..constants import GTIFF_FILE_EXTENSION
 
 
 class Sentinel2Level2(Layer):
-    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["bands"]
     MINOR_NAMING_ATTS = None
 
