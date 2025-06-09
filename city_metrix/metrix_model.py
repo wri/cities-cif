@@ -1,5 +1,7 @@
 import math
 import os
+import tempfile
+
 import geopandas as gpd
 import xarray as xr
 import numpy as np
@@ -22,9 +24,10 @@ from xrspatial import zonal_stats
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, DEFAULT_STAGING_ENV
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
-                                    get_city, get_city_admin_boundaries, get_city_boundary)
+                                    get_city, get_city_admin_boundaries, get_city_boundary, read_geotiff_from_cache)
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
-                                      reproject_units, parse_city_aoi_json, construct_city_aoi_json)
+                                      reproject_units, parse_city_aoi_json, construct_city_aoi_json,
+                                      standardize_y_dimension_direction)
 from city_metrix.cache_manager import retrieve_cached_city_data, build_file_key
 
 
@@ -639,18 +642,60 @@ class Layer():
         """
         ...
 
+    def get_data_by_fishnet_tiles(self, bbox, tile_side_m, spatial_resolution, file_uri):
+        # TODO: Code currently only handles raster data
+        from osgeo import gdal
+
+        length_units = bbox.units
+        output_as = ProjectionType.UTM
+        crs = bbox.crs
+
+        fishnet = create_fishnet_grid(bbox, tile_side_length=tile_side_m, length_units=length_units,
+                                      spatial_resolution=spatial_resolution, output_as=output_as)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            array_list = []
+            print("\n")
+            for index, row in fishnet.iterrows():
+                tile_bounds = row['geometry'].bounds
+                geo_extent = GeoExtent(tile_bounds, crs)
+
+                tile_data = self.aggregate.get_data(bbox=geo_extent, spatial_resolution=spatial_resolution)
+                _, tile_data = standardize_y_dimension_direction(tile_data)
+
+                file_name = f'layer{index}.tif'
+                temp_file = os.path.join(temp_dir, file_name)
+                write_layer(tile_data, temp_file, self.OUTPUT_FILE_FORMAT)
+                array_list.append(temp_file)
+
+            output_file_path = os.path.join(temp_dir, 'composite_layer.tif')
+            gdal.Warp(output_file_path, array_list, format="GTiff")
+
+            temp_file_uri = 'file://'+output_file_path
+            data = read_geotiff_from_cache(temp_file_uri)
+
+            if bbox.geo_type == GeoType.CITY:
+                write_layer(data, file_uri, self.OUTPUT_FILE_FORMAT)
+
+        return data
+
+
+
     def get_data_with_caching(self, bbox: GeoExtent, s3_env:str, spatial_resolution:int=None,
                               force_data_refresh:bool=False) -> Union[xr.DataArray, gpd.GeoDataFrame]:
 
         standard_env = standardize_s3_env(self, s3_env)
         retrieved_cached_data, _, file_uri = retrieve_cached_city_data(self.aggregate, bbox, standard_env, force_data_refresh)
-        result_data = None
         if retrieved_cached_data is None:
-            result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
+            tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
+            if tile_side_m is None:
+                result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
 
-            # Write to cache
-            if bbox.geo_type == GeoType.CITY:
-                write_layer(result_data, file_uri, self.OUTPUT_FILE_FORMAT)
+                # Write to cache
+                if bbox.geo_type == GeoType.CITY:
+                    write_layer(result_data, file_uri, self.OUTPUT_FILE_FORMAT)
+            else:
+                result_data = self.get_data_by_fishnet_tiles(bbox, tile_side_m, spatial_resolution, file_uri)
         else:
             result_data = retrieved_cached_data
 
