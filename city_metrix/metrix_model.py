@@ -692,10 +692,12 @@ class Layer():
         standard_env = standardize_s3_env(self, s3_env)
         retrieved_cached_data, _, file_uri = retrieve_cached_city_data(self.aggregate, bbox, standard_env, force_data_refresh)
         if retrieved_cached_data is None:
-            tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
-            # tile_side_m = None
+            if hasattr(self.aggregate, 'PROCESSING_TILE_SIDE_M'):
+                tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
+            else:
+                tile_side_m = None
             bbox_area = bbox.polygon.area
-            if bbox_area > tile_side_m and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
+            if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
                 result_data = self.get_data_by_fishnet_tiles(bbox, tile_side_m, spatial_resolution, file_uri)
             else:
                 result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
