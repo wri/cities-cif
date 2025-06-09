@@ -79,7 +79,7 @@ def test_FabDEM_write_by_city(target_folder):
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_FractionalVegetation_write_by_city(target_folder):
-    layer_obj = FractionalVegetation()
+    layer_obj = FractionalVegetationPercent()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -201,8 +201,6 @@ def test_SmartSurfaceLULC_write_by_city(target_folder):
     layer_obj = SmartSurfaceLULC()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
-# TODO Very slow processing. Long runtime can cause failure for larger city
-@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_TreeCanopyHeight_write_by_city(target_folder):
     layer_obj = TreeCanopyHeight()
