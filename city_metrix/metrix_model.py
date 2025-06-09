@@ -22,7 +22,7 @@ from xrspatial import zonal_stats
 
 
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
-    DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, DEFAULT_STAGING_ENV
+    DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, DEFAULT_STAGING_ENV, GTIFF_FILE_EXTENSION
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_admin_boundaries, get_city_boundary, read_geotiff_from_cache)
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
@@ -674,11 +674,16 @@ class Layer():
             temp_file_uri = 'file://'+output_file_path
             data = read_geotiff_from_cache(temp_file_uri)
 
+            # clip to bounds
+            west, south, east, north = bbox.bounds
+            longitude_range = slice(west, east)
+            latitude_range = slice(north, south)
+            clipped_data = data.sel(x=longitude_range, y=latitude_range)
+
             if bbox.geo_type == GeoType.CITY:
-                write_layer(data, file_uri, self.OUTPUT_FILE_FORMAT)
+                write_layer(clipped_data, file_uri, self.OUTPUT_FILE_FORMAT)
 
-        return data
-
+        return clipped_data
 
 
     def get_data_with_caching(self, bbox: GeoExtent, s3_env:str, spatial_resolution:int=None,
@@ -688,14 +693,16 @@ class Layer():
         retrieved_cached_data, _, file_uri = retrieve_cached_city_data(self.aggregate, bbox, standard_env, force_data_refresh)
         if retrieved_cached_data is None:
             tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
-            if tile_side_m is None:
+            # tile_side_m = None
+            bbox_area = bbox.polygon.area
+            if bbox_area > tile_side_m and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
+                result_data = self.get_data_by_fishnet_tiles(bbox, tile_side_m, spatial_resolution, file_uri)
+            else:
                 result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
 
                 # Write to cache
                 if bbox.geo_type == GeoType.CITY:
                     write_layer(result_data, file_uri, self.OUTPUT_FILE_FORMAT)
-            else:
-                result_data = self.get_data_by_fishnet_tiles(bbox, tile_side_m, spatial_resolution, file_uri)
         else:
             result_data = retrieved_cached_data
 
