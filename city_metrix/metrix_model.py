@@ -675,7 +675,7 @@ class Layer():
             data = read_geotiff_from_cache(temp_file_uri)
 
             # clip to bounds
-            west, south, east, north = bbox.bounds
+            west, south, east, north = bbox.as_utm_bbox().bounds
             longitude_range = slice(west, east)
             latitude_range = slice(north, south)
             clipped_data = data.sel(x=longitude_range, y=latitude_range)
@@ -696,7 +696,7 @@ class Layer():
                 tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
             else:
                 tile_side_m = None
-            bbox_area = bbox.polygon.area
+            bbox_area = bbox.as_utm_bbox().polygon.area
             if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
                 result_data = self.get_data_by_fishnet_tiles(bbox, tile_side_m, spatial_resolution, file_uri)
             else:
