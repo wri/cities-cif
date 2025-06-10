@@ -1,5 +1,8 @@
 # Release Notes
 
+## 2025/06/01
+1. CDB-262: Updated written-file naming conventions.
+
 ## 2025/05/30
 1. Added s3_env parameters to write functions
 1. Changed write/read for metrics to CSV format, instead of geojson.

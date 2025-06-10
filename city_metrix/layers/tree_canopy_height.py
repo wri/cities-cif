@@ -7,8 +7,8 @@ DEFAULT_SPATIAL_RESOLUTION = 1
 
 class TreeCanopyHeight(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = ["height"]
-    MINOR_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height"]
     NO_DATA_VALUE = 0
 
     """
