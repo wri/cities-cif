@@ -155,6 +155,6 @@ class FractionalVegetationPercent(Layer):
                 "fractional vegetation",
             ).astype(np.uint8).Fr
             if self.min_threshold is not None:
-                data = xr.where(data >= self.min_threshold, 1, np.nan).rio.write_crs(data.crs)
+                data = xr.where(data >= self.min_threshold, 1, np.nan).astype(np.uint8).rio.write_crs(data.crs)
 
         return data
