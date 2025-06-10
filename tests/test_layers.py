@@ -105,7 +105,7 @@ def test_fab_dem():
     utm_bbox_data = FabDEM().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
-def test_fractional_vegetation():
+def test_fractional_vegetation_percent():
     data = FractionalVegetationPercent().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 0, 100, 9797, 0)
