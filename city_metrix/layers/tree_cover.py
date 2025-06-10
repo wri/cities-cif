@@ -6,7 +6,7 @@ from ..constants import GTIFF_FILE_EXTENSION
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class TreeCover(Layer):
-    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["min_tree_cover", "max_tree_cover"]
     MINOR_NAMING_ATTS = None
     NO_DATA_VALUE = 255

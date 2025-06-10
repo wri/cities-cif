@@ -10,12 +10,12 @@ GEOJSON_FILE_EXTENSION = 'geojson'
 NETCDF_FILE_EXTENSION = 'nc'
 CSV_FILE_EXTENSION = 'csv'
 
-DEFAULT_PUBLISHING_ENV = 'dev'
+DEFAULT_PRODUCTION_ENV = 'prd' # 'prd'
+DEFAULT_DEVELOPMENT_ENV = 'dev'
+DEFAULT_STAGING_ENV = 'staging'
 
-# TODO replace with production value
 RO_DASHBOARD_LAYER_S3_BUCKET_URI = 's3://wri-cities-data-api'
-RW_DASHBOARD_LAYER_S3_BUCKET_URI = 's3://cities-test-sandbox' # 's3://wri-cities-data-api'
-RW_DASHBOARD_METRIC_S3_BUCKET_URI = 's3://wri-cities-indicators'
+RW_CACHE_S3_BUCKET_URI = 's3://cities-test-sandbox' # 's3://cities-cache-store'
 RW_TESTING_S3_BUCKET_URI = 's3://cities-test-sandbox'
 
 repo_directory = os.path.join(Path.home(), 'CIF_layer_repository')

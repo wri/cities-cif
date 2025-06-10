@@ -6,7 +6,7 @@ from ..constants import GTIFF_FILE_EXTENSION
 DEFAULT_SPATIAL_RESOLUTION = 100
 
 class AqueductFlood(Layer):
-    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["return_period_c", "return_period_r", "climate", "subsidence", "sea_level_rise_scenario"]
 

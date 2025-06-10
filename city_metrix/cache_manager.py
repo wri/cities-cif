@@ -4,47 +4,49 @@ from enum import Enum
 
 from city_metrix import s3_client
 from city_metrix.constants import GeoType, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION, \
-    LOCAL_REPO_URI, DEFAULT_PUBLISHING_ENV, RW_DASHBOARD_LAYER_S3_BUCKET_URI, RW_DASHBOARD_METRIC_S3_BUCKET_URI
+    CSV_FILE_EXTENSION, LOCAL_REPO_URI, DEFAULT_PRODUCTION_ENV, RW_CACHE_S3_BUCKET_URI
 from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_cache, \
-    read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_bucket_name_from_s3_uri
+    read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_bucket_name_from_s3_uri, read_csv_from_s3
 from city_metrix.metrix_tools import get_class_from_instance
 
-def build_file_key(class_obj, geo_extent):
+def build_file_key(output_env, class_obj, geo_extent):
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
 
     # Construct layer filename and s3 key
-    cache_folder_name, feature_id, is_custom_layer = build_cache_layer_names(class_obj)
+    cache_folder_name, feature_id, file_format, is_custom_object = build_cache_name(class_obj)
 
     # Determine if object is a layer or metric
     feature_base_class_name = class_obj.__class__.__bases__[0].__name__
 
-    file_key = get_cached_file_key(feature_base_class_name, cache_folder_name, city_id,
-                                   admin_level, feature_id)
+    file_key = get_cached_file_key(feature_base_class_name, output_env, cache_folder_name, city_id,
+                                   admin_level, feature_id, file_format)
 
-    file_uri = get_cached_file_uri(feature_base_class_name, file_key, is_custom_layer)
+    file_uri = get_cached_file_uri(file_key, is_custom_object)
 
-    return file_uri, file_key, is_custom_layer
+    return file_uri, file_key, feature_id, is_custom_object
 
-def retrieve_cached_city_data(class_obj, geo_extent, force_data_refresh: bool):
-    file_uri, file_key, is_custom_layer = build_file_key(class_obj, geo_extent)
+def retrieve_cached_city_data(class_obj, geo_extent, output_env, force_data_refresh: bool):
+    file_uri, file_key, feature_id, is_custom_layer = build_file_key(output_env, class_obj, geo_extent)
 
-    if force_data_refresh == True or geo_extent.geo_type == GeoType.GEOMETRY or not check_if_cache_file_exists(file_uri):
-        return None, file_uri
+    if force_data_refresh or geo_extent.geo_type == GeoType.GEOMETRY or not check_if_cache_file_exists(file_uri):
+        return None, feature_id, file_uri
 
     # Retrieve from cache
     result_data = None
-    file_format = class_obj.GEOSPATIAL_FILE_FORMAT
+    file_format = class_obj.OUTPUT_FILE_FORMAT
     if file_format == GTIFF_FILE_EXTENSION:
         result_data = read_geotiff_from_cache(file_uri)
     elif file_format == GEOJSON_FILE_EXTENSION:
         result_data = read_geojson_from_cache(file_uri)
     elif file_format == NETCDF_FILE_EXTENSION:
         result_data = read_netcdf_from_cache(file_uri)
+    elif file_format == CSV_FILE_EXTENSION:
+        result_data = read_csv_from_s3(file_uri)
     else:
         raise Exception(f"Unrecognized file_format of '{file_format}'")
 
-    return result_data, file_uri
+    return result_data, feature_id, file_uri
 
 # ============ Object naming ================================
 DATE_ATTRIBUTES = ['year', 'start_year', 'start_date', 'end_year', 'end_date']
@@ -65,46 +67,47 @@ def has_default_attribute_values(layer_obj):
     return has_matched_cls_obj_atts, unmatched_atts
 
 
-def build_cache_layer_names(layer_obj):
+def build_cache_name(class_obj):
     """
-    Function uses the sequence of layer-class parameters specified in two class constants, plus standard date
-    parameters in many of the layer classes to construct names for cache folders and cached layer files.
+    Function uses the sequence of class parameters specified in two class constants, plus standard date
+    parameters in many of the classes to construct names for cache folders and cached layer files.
     """
-    has_matched_cls_obj_atts, unmatched_atts = has_default_attribute_values(layer_obj)
+    has_matched_cls_obj_atts, unmatched_atts = has_default_attribute_values(class_obj)
 
-    primary_qualifiers = _build_layer_name_part(layer_obj, layer_obj.MAJOR_NAMING_ATTS, [])
+    primary_qualifiers = _build_class_name_part(class_obj, class_obj.MAJOR_NAMING_ATTS, [])
     if has_matched_cls_obj_atts:
         secondary_qualifiers = ""
     else:
-        secondary_qualifiers = _build_layer_name_part(layer_obj, layer_obj.MINOR_NAMING_ATTS, unmatched_atts)
+        secondary_qualifiers = _build_class_name_part(class_obj, class_obj.MINOR_NAMING_ATTS, unmatched_atts)
 
     # Determine if request it for a CIF-non-default layer
     if (
             (
-                    layer_obj.MINOR_NAMING_ATTS is not None and unmatched_atts is not None
-                    and any(item in layer_obj.MINOR_NAMING_ATTS for item in unmatched_atts)
+                    class_obj.MINOR_NAMING_ATTS is not None and unmatched_atts is not None
+                    and any(item in class_obj.MINOR_NAMING_ATTS for item in unmatched_atts)
             )
             or any(item in DATE_ATTRIBUTES for item in unmatched_atts)
     ):
-        is_custom_layer = True
+        is_custom_object = True
     else:
-        is_custom_layer = False
+        is_custom_object = False
 
-    date_kv_string = _build_naming_string_from_standard_parameters(layer_obj, is_custom_layer)
+    date_kv_string = _build_naming_string_from_standard_parameters(class_obj, is_custom_object)
 
-    class_name = layer_obj.__class__.__name__
-    file_format = layer_obj.GEOSPATIAL_FILE_FORMAT
+    class_name = class_obj.__class__.__name__
     layer_folder_name = f"{class_name}{primary_qualifiers}"
-    layer_id = f"{layer_folder_name}{secondary_qualifiers}{date_kv_string}.{file_format}"
+    feature_id = f"{layer_folder_name}{secondary_qualifiers}{date_kv_string}"
 
-    return layer_folder_name, layer_id, is_custom_layer
+    file_format = class_obj.OUTPUT_FILE_FORMAT
+
+    return layer_folder_name, feature_id, file_format, is_custom_object
 
 
-def _build_layer_name_part(layer_obj, naming_atts, mismatched_atts):
+def _build_class_name_part(layer_obj, naming_atts, mismatched_atts):
     """
-    Function takes the list of layer-class attributes, converts the attribute name to Pascal-case,
+    Function takes the list of feature-class attributes, converts the attribute name to Pascal-case,
     appends the object parameter value, and constructs a name-value string to be used as part of the
-    cif-cache storage folder name and layer file name.
+    cif-cache storage folder name and file name.
     """
     qualifier_name = ""
     if not (naming_atts is None or naming_atts == ""):
@@ -115,42 +118,74 @@ def _build_layer_name_part(layer_obj, naming_atts, mismatched_atts):
                 flat_value = _flatten_attribute_value(value)
                 if flat_value is not None:
                     pascal_key = _convert_snake_case_to_pascal_case(attribute)
-                    param_name = _construct_kv_string(pascal_key, flat_value)
+                    param_name = _construct_kv_string(pascal_key, flat_value, '__')
                     qualifier_name += param_name
     return qualifier_name
 
 
-def _build_naming_string_from_standard_parameters(layer_obj, is_custom_layer):
+def _build_naming_string_from_standard_parameters(feature_obj, is_custom_feature):
     """
-    Function takes the values from standard date attributes in a layer-class and constructs a name-value string
-    to be used as part of the cif-cache layer file name.
+    Function takes the values from standard date attributes in a feature-class and constructs a name-value string
+    to be used as part of the cif-cache file name.
     """
     date_kv_string = ""
-    for key, value in layer_obj.__dict__.items():
-        if key in DATE_ATTRIBUTES:
-            date_key, date_value = _standardize_date_kv(key, value, is_custom_layer)
-            string_val = _construct_naming_string_from_date_attribute(date_key, date_value)
-            date_kv_string += string_val if string_val is not None else ""
+    feature_atts = feature_obj.__dict__
+    feature_date_atts = {key: feature_atts[key] for key in DATE_ATTRIBUTES if key in feature_atts}
+    has_paired_start_end_dates = _has_paired_start_end_keys(feature_date_atts)
+    for key, value in feature_date_atts.items():
+        date_key, date_value = _standardize_date_kv(key, value, is_custom_feature)
+        if date_key == 'year':
+            # Expand year into start and end year
+            start_year_kv_string = _construct_naming_string_from_date_attribute('start_year', date_value, '__')
+            end_year_kv_string = _construct_naming_string_from_date_attribute('end_year', date_value, '_')
+            string_val = start_year_kv_string + end_year_kv_string
+        else:
+            if key in ('end_year', 'end_date') and has_paired_start_end_dates:
+                separator = '_'
+            else:
+                separator = '__'
+            string_val = _construct_naming_string_from_date_attribute(date_key, date_value, separator)
+        date_kv_string += string_val if string_val is not None else ""
 
     return date_kv_string
 
-def _standardize_date_kv(date_key, date_value, is_custom_layer):
-    if not is_custom_layer:
+def _has_paired_start_end_keys(att_dict):
+    prefix_list = ['start', 'end']
+    filtered_dict = {key: value for key, value in att_dict.items() if any(key.startswith(prefix) for prefix in prefix_list)}
+    has_paired_start_end_dates = True if len(filtered_dict) == 2 else False
+    return has_paired_start_end_dates
+
+
+def _standardize_date_kv(date_key:str, date_value, is_custom_feature:bool):
+    date_key = date_key.lower()
+    year_value = date_value
+    if not is_custom_feature:
         # For default parameters, collapse dates into just the year
         if isinstance(date_value, str):
-            date_value = datetime.strptime(date_value, "%Y-%m-%d").year
+            if date_key == 'end_date':
+                # If end date is on January 1, then reset year to prior year
+                date_obj = datetime.strptime(date_value, "%Y-%m-%d")
+                raw_year_value = date_obj.year
+                if date_obj.month == 1 and date_obj.day == 1:
+                    year_value = raw_year_value - 1
+                else:
+                    year_value = raw_year_value
+            else:
+                year_value = datetime.strptime(date_value, "%Y-%m-%d").year
+        else:
+            year_value = date_value
 
         if date_key == 'start_date':
             date_key = 'start_year'
         elif date_key == 'end_date':
             date_key = 'end_year'
 
-    return date_key, date_value
+    return date_key, year_value
 
 
-def _construct_naming_string_from_date_attribute(date_key, date_value):
+def _construct_naming_string_from_date_attribute(date_key, date_value, separator):
     pascal_key_name = _convert_snake_case_to_pascal_case(date_key)
-    date_kv_name = _construct_kv_string(pascal_key_name, date_value)
+    date_kv_name = _construct_kv_string(pascal_key_name, date_value, separator)
 
     return date_kv_name
 
@@ -182,8 +217,8 @@ def _convert_snake_case_to_pascal_case(attribute_name):
     pascal_name = attribute_name.replace("_", " ").title().replace(" ", "")
     return pascal_name
 
-def _construct_kv_string(key, value):
-    return f"__{key}_{value}"
+def _construct_kv_string(key, value, separator):
+    return f"{separator}{key}_{value}"
 
 def check_if_cache_file_exists(file_uri):
     uri_scheme = get_uri_scheme(file_uri)
@@ -199,11 +234,8 @@ def check_if_cache_file_exists(file_uri):
         uri_path = os.path.normpath(get_file_path_from_uri(file_key))
         return os.path.exists(uri_path)
 
-def get_cached_file_uri(feature_base_class_name, file_key, is_custom_layer):
-    if feature_base_class_name.lower() == 'layer':
-        uri = LOCAL_REPO_URI if is_custom_layer else RW_DASHBOARD_LAYER_S3_BUCKET_URI
-    else:
-        uri = RW_DASHBOARD_METRIC_S3_BUCKET_URI
+def get_cached_file_uri(file_key, is_custom_layer):
+    uri = LOCAL_REPO_URI if is_custom_layer else RW_CACHE_S3_BUCKET_URI
 
     if get_uri_scheme(uri) in ('s3', 'file'):
         file_uri = f"{uri}/{file_key}"
@@ -212,12 +244,9 @@ def get_cached_file_uri(feature_base_class_name, file_key, is_custom_layer):
     return file_uri
 
 
-def get_cached_file_key(feature_based_class_name, feature_name, city_id, admin_level, feature_id):
-    from pathlib import Path
-    file_format = Path(feature_id).suffix.lstrip('.')
-    env = DEFAULT_PUBLISHING_ENV
+def get_cached_file_key(feature_based_class_name, output_env, feature_name, city_id, admin_level, feature_id, file_format):
     if feature_based_class_name.lower() == 'layer':
-        file_key = f"data/{env}/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}"
+        file_key = f"data/{output_env}/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}.{file_format}"
     else:
-        file_key = f"metrics/{env}/{city_id}/{city_id}__{feature_id}"
+        file_key = f"metrics/{output_env}/{city_id}/{city_id}__{feature_id}.{file_format}"
     return file_key

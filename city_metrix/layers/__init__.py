@@ -1,4 +1,5 @@
 from .acag_pm2p5 import AcagPM2p5
+from .albedo_cloud_masked import AlbedoCloudMasked
 from .albedo import Albedo
 from .alos_dsm import AlosDSM
 from .aqueduct_flood import AqueductFlood
@@ -8,7 +9,7 @@ from .cams import Cams
 from .era_5_hottest_day import Era5HottestDay
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .fab_dem import FabDEM
-from .fractional_vegetation import FractionalVegetation
+from .fractional_vegetation_percent import FractionalVegetationPercent
 from .glad_lulc import LandCoverGlad, LandCoverSimplifiedGlad, LandCoverHabitatGlad, LandCoverHabitatChangeGlad
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
 from .high_land_surface_temperature import HighLandSurfaceTemperature

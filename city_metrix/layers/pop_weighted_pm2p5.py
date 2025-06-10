@@ -1,12 +1,12 @@
 from city_metrix.metrix_model import Layer, GeoExtent
-from .world_pop import WorldPop
+from .world_pop import WorldPop, WorldPopClass
 from .acag_pm2p5 import AcagPM2p5
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 1113.1949
 
 class PopWeightedPM2p5(Layer):
-    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["worldpop_agesex_classes"]
     MINOR_NAMING_ATTS = ["worldpop_year", "acag_year", "acag_return_above"]
 
@@ -19,7 +19,7 @@ class PopWeightedPM2p5(Layer):
         acag_return_above:
     """
     # get_data() for this class returns DataArray with pm2.5 concentration multiplied by (pixelpop/meanpop)
-    def __init__(self, worldpop_agesex_classes=[], worldpop_year=2020, acag_year=2022, acag_return_above=0, **kwargs):
+    def __init__(self, worldpop_agesex_classes:WorldPopClass=[], worldpop_year=2020, acag_year=2022, acag_return_above=0, **kwargs):
         super().__init__(**kwargs)
         self.worldpop_agesex_classes = worldpop_agesex_classes
         self.worldpop_year = worldpop_year
