@@ -9,8 +9,8 @@ DEFAULT_SPATIAL_RESOLUTION = 1
 
 class TreeCanopyCoverMask(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = ["height"]
-    MINOR_NAMING_ATTS = ["percentage"]
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height", "percentage"]
 
     """
     Attributes:

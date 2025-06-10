@@ -7,8 +7,8 @@ DEFAULT_SPATIAL_RESOLUTION = 1
 
 class TreeCanopyHeight(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = ["height"]
-    MINOR_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height"]
     NO_DATA_VALUE = 0
 
     """
@@ -41,11 +41,12 @@ class TreeCanopyHeight(Layer):
             spatial_resolution,
             "tree canopy height"
         ).cover_code
+        result_data = data.astype("uint8")
 
         if self.height:
-            data = data.where(data >= self.height)
+            result_data = result_data.where(result_data >= self.height)
 
         utm_crs = bbox.as_utm_bbox().crs
-        data = data.rio.write_crs(utm_crs)
+        result_data = result_data.rio.write_crs(utm_crs)
 
-        return data
+        return result_data
