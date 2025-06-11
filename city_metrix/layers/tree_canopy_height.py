@@ -46,7 +46,7 @@ class TreeCanopyHeight(Layer):
         if self.height:
             result_data = result_data.where(result_data >= self.height)
 
-        utm_crs = bbox.as_utm_bbox().crs
+        utm_crs = ee_rectangle['crs']
         result_data = result_data.rio.write_crs(utm_crs)
 
         return result_data
