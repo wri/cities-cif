@@ -233,7 +233,7 @@ def get_city_boundary(city_id: str, admin_level: str):
     query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
     city_boundary = requests.get(query)
     if city_boundary.status_code in range(200, 206):
-        tuple_str = city_boundary.json()['bounding_box']
+        tuple_str = city_boundary.json()['bounding_box'][admin_level]
         bounds = _string_to_float_tuple(tuple_str)
         return bounds
     raise Exception("City boundary not found")
