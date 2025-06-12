@@ -222,34 +222,39 @@ def _get_file_key_from_url(s3_url):
 
 def get_city(city_id: str):
     query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
-    city = requests.get(query)
-    if city.status_code in range(200, 206):
-        return city.json()
-    raise Exception("City not found")
-
+    try:
+        city = requests.get(query)
+        if city.status_code in range(200, 206):
+            return city.json()
+    except Exception as e_msg:
+        raise Exception(f"API call for city failed with error: {e_msg}")
 
 # == API queries ==
 def get_city_boundary(city_id: str, admin_level: str):
     query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
-    city_boundary = requests.get(query)
-    if city_boundary.status_code in range(200, 206):
-        tuple_str = city_boundary.json()['bounding_box']
-        bounds = _string_to_float_tuple(tuple_str)
-        return bounds
-    raise Exception("City boundary not found")
+    try:
+        city_boundary = requests.get(query)
+        if city_boundary.status_code in range(200, 206):
+            tuple_str = city_boundary.json()['bounding_box'][admin_level]
+            bounds = _string_to_float_tuple(tuple_str)
+            return bounds
+    except Exception as e_msg:
+        raise Exception(f"API call for city boundary failed with error: {e_msg}")
 
 def get_city_admin_boundaries(city_id: str, admin_level: str) -> GeoDataFrame:
     query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
-    city_boundary = requests.get(query)
-    if city_boundary.status_code in range(200, 206):
-        boundaries_uri = city_boundary.json()['layers_url']['geojson']
-        boundaries_geojson = read_geojson_from_cache(boundaries_uri)
+    try:
+        city_boundary = requests.get(query)
+        if city_boundary.status_code in range(200, 206):
+            boundaries_uri = city_boundary.json()['layers_url']['geojson']
+            boundaries_geojson = read_geojson_from_cache(boundaries_uri)
 
-        geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
-        boundaries = boundaries_geojson[geom_columns]
-        boundaries_with_index = boundaries.reset_index()
-        return boundaries_with_index
-    raise Exception("City boundary not found")
+            geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
+            boundaries = boundaries_geojson[geom_columns]
+            boundaries_with_index = boundaries.reset_index()
+            return boundaries_with_index
+    except Exception as e_msg:
+        raise Exception(f"API call for city-admin boundary failed with error: {e_msg}")
 
 def _string_to_float_tuple(string_tuple):
     string_tuple = string_tuple.replace("[", "").replace("]", "")
