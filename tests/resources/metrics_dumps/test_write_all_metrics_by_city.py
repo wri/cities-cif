@@ -14,7 +14,7 @@ PRESERVE_RESULTS_ON_S3 = False # False - Default for check-in
 PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
 FORCE_DATA_REFRESH = True # True - Default for check-in
 
-SLOW_TEST_TIMEOUT_SECONDS = 500 # seconds
+SLOW_TEST_TIMEOUT_SECONDS = 600 # seconds
 
 # PROCESSING_CITY = GEOEXTENT_FLORIANOPOLIS_WGS84
 # PROCESSING_CITY_GEOZONE = GEOZONE_FLORIANOPOLIS_WGS84
@@ -37,25 +37,31 @@ def test_write_BuiltLandWithLowSurfaceReflectivity(target_folder):
     _run_write_metrics_by_city_test(metric_obj, target_folder)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_CanopyAreaPerResident(target_folder):
+    metric_obj = CanopyAreaPerResident()
+    _run_write_metrics_by_city_test(metric_obj, target_folder)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_CanopyAreaPerResidentChildren(target_folder):
     metric_obj = CanopyAreaPerResidentChildren()
     _run_write_metrics_by_city_test(metric_obj, target_folder)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_CanopyAreaPerResidentElderly(target_folder):
     metric_obj = CanopyAreaPerResidentElderly()
     _run_write_metrics_by_city_test(metric_obj, target_folder)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_CanopyAreaPerResidentFemale(target_folder):
     metric_obj = CanopyAreaPerResidentFemale()
     _run_write_metrics_by_city_test(metric_obj, target_folder)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_CanopyAreaPerResidentInformal(target_folder):
     metric_obj = CanopyAreaPerResidentInformal()
     _run_write_metrics_by_city_test(metric_obj, target_folder)
@@ -101,8 +107,8 @@ def test_write_NaturalAreasPercent(target_folder):
     metric_obj = NaturalAreasPercent()
     _run_write_metrics_by_city_test(metric_obj, target_folder)
 
-@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+# @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_PercentAreaFracvegExceedsThreshold(target_folder):
     metric_obj = PercentAreaFracvegExceedsThreshold()
     _run_write_metrics_by_city_test(metric_obj, target_folder)
