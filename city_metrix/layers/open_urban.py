@@ -4,7 +4,7 @@ from city_metrix.constants import GTIFF_FILE_EXTENSION
 from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
 
 class OpenUrban(Layer):
-    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 

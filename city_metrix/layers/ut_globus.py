@@ -10,7 +10,7 @@ from ..ut_globus_city_handler.ut_globus_city_handler import search_for_ut_globus
 
 
 class UtGlobus(Layer):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["city"]
     MINOR_NAMING_ATTS = None
 

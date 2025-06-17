@@ -7,9 +7,9 @@ from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class ProtectedAreas(Layer):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = ["status_year"]
-    MINOR_NAMING_ATTS = ["status", "iucn_cat"]
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["status_year", "status", "iucn_cat"]
 
     """
     Attributes:
@@ -30,7 +30,7 @@ class ProtectedAreas(Layer):
         dataset = dataset.filter(ee.Filter.inList('STATUS', self.status)).filter(ee.Filter.lessThanOrEquals('STATUS_YR', self.status_year)).filter(ee.Filter.inList('IUCN_CAT', self.iucn_cat))
 
         ee_rectangle = bbox.to_ee_rectangle()
-        utm_crs = bbox.as_utm_bbox().crs
+        utm_crs = ee_rectangle['crs']
 
         dataset = dataset.filterBounds(ee_rectangle['ee_geometry'])
         if dataset.size().getInfo() == 0:

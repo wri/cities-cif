@@ -1,17 +1,18 @@
 import pytest
 import timeout_decorator
 
+from city_metrix.constants import DEFAULT_STAGING_ENV
 from city_metrix.metrics import *
 from city_metrix.cache_manager import check_if_cache_file_exists
-from ...tools.general_tools import get_layer_cache_variables
+from ...tools.general_tools import get_test_cache_variables
 from ..bbox_constants import GEOZONE_TERESINA_WGS84, GEOEXTENT_TERESINA_WGS84, GEOEXTENT_FLORIANOPOLIS_WGS84, \
     GEOZONE_FLORIANOPOLIS_WGS84
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from ..tools import prep_output_path, cleanup_cache_files
 
-PRESERVE_RESULTS_ON_S3 = True # True - Default for check-in
+PRESERVE_RESULTS_ON_S3 = False # False - Default for check-in
 PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
-FORCE_DATA_REFRESH = False # False - Default for check-in
+FORCE_DATA_REFRESH = True # True - Default for check-in
 
 SLOW_TEST_TIMEOUT_SECONDS = 500 # seconds
 
@@ -156,18 +157,19 @@ def test_write_VegetationWaterChangeGainLossRatio(target_folder):
 
 
 def _run_write_metrics_by_city_test(metric_obj, target_folder):
+    cache_scheme = 's3'
     geo_zone = PROCESSING_CITY_GEOZONE
-    file_key, file_uri, metric_id, _ = get_layer_cache_variables(metric_obj, PROCESSING_CITY)
+    file_key, file_uri, metric_id, _ = get_test_cache_variables(metric_obj, PROCESSING_CITY)
 
     os_file_path = prep_output_path(target_folder, 'metric', metric_id)
     try:
-        metric_obj.write(geo_zone=geo_zone, output_path=file_uri, force_data_refresh=FORCE_DATA_REFRESH)
+        metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_STAGING_ENV, force_data_refresh=FORCE_DATA_REFRESH)
         cache_file_exists = check_if_cache_file_exists(file_uri)
         assert cache_file_exists, "Test failed since file did not upload to s3"
         if cache_file_exists and PRESERVE_RESULTS_ON_OS:
-            metric_obj.write(geo_zone=geo_zone, output_path=os_file_path)
+            metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_STAGING_ENV, output_uri=os_file_path)
     finally:
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         file_key = None if PRESERVE_RESULTS_ON_S3 else file_key
-        cleanup_cache_files('s3', file_key, cleanup_os_file_path)
+        cleanup_cache_files('metric', cache_scheme, file_key, cleanup_os_file_path)
     

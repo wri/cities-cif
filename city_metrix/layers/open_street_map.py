@@ -67,7 +67,7 @@ class OpenStreetMapClass(Enum):
 
 
 class OpenStreetMap(Layer):
-    GEOSPATIAL_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["osm_class"]
     MINOR_NAMING_ATTS = None
 
@@ -75,7 +75,7 @@ class OpenStreetMap(Layer):
     Attributes:
         osm_class: OSM class
     """
-    def __init__(self, osm_class=OpenStreetMapClass.ALL, **kwargs):
+    def __init__(self, osm_class:OpenStreetMapClass=OpenStreetMapClass.ALL, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 

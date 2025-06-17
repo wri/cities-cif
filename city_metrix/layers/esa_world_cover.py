@@ -21,7 +21,7 @@ class EsaWorldCoverClass(Enum):
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class EsaWorldCover(Layer):
-    GEOSPATIAL_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["land_cover_class"]
     MINOR_NAMING_ATTS = None
     STAC_CATALOG_URI = "https://services.terrascope.be/stac/"
@@ -33,7 +33,7 @@ class EsaWorldCover(Layer):
         land_cover_class: Enum value from EsaWorldCoverClass
         year: year used for data retrieval
     """
-    def __init__(self, land_cover_class=None, year=2020, **kwargs):
+    def __init__(self, land_cover_class:EsaWorldCoverClass=None, year=2020, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
         self.year = year

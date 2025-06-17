@@ -1,5 +1,14 @@
 # Release Notes
 
+## 2025/06/01
+1. CDB-262: Updated written-file naming conventions.
+
+## 2025/05/30
+1. Added s3_env parameters to write functions
+1. Changed write/read for metrics to CSV format, instead of geojson.
+1. Adjusted temp-file handling for both windows and Linux.
+1. Improved caching logic.
+
 ## 2025/05/24
 1. CDB-322. Fixed error in UTGlobus-to-Overture conflation that had produced many-to-one matches and resulting errors in height computation.
 2. Modified computation of UTGlobus heights to use mode or median computation. See updated https://gfw.atlassian.net/wiki/spaces/CIT/pages/1971912734/Primary+Raster+Layers+for+Thermal+Comfort+Modeling

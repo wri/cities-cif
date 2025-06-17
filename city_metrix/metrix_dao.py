@@ -11,20 +11,14 @@ from urllib.parse import urlparse
 
 from city_metrix import s3_client
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
-    NETCDF_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI, RW_DASHBOARD_LAYER_S3_BUCKET_URI
+    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI, RW_CACHE_S3_BUCKET_URI
 from city_metrix.metrix_tools import get_crs_from_data, standardize_y_dimension_direction
 
-
 def _read_geojson_from_s3(s3_bucket, file_key):
-    result_data = None
     with tempfile.TemporaryDirectory() as temp_dir:
-        with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
-            try:
-                # Download the file from S3
-                s3_client.download_file(s3_bucket, file_key, temp_file.name)
-                result_data = gpd.read_file(temp_file.name)
-            except Exception as e:
-                print(f"Error downloading file: {file_key} with error: {e}")
+        temp_file_path = os.path.join(temp_dir, 'tempfile')
+        s3_client.download_file(s3_bucket, file_key, temp_file_path)
+        result_data = gpd.read_file(temp_file_path)
     return result_data
 
 def read_geojson_from_cache(uri):
@@ -44,7 +38,11 @@ def read_geojson_from_cache(uri):
     return result_data
 
 def read_geotiff_from_cache(file_uri):
-    data = rioxarray.open_rasterio(file_uri, driver="GTiff")
+    if get_uri_scheme(file_uri) == 'file':
+        file_path = os.path.normpath(get_file_path_from_uri(file_uri))
+    else:
+        file_path = file_uri
+    data = rioxarray.open_rasterio(file_path, driver="GTiff")
 
     result_data = data.squeeze('band', drop=True)
 
@@ -66,25 +64,43 @@ def read_geotiff_from_cache(file_uri):
 def read_netcdf_from_cache(file_uri):
     result_data = None
     if get_uri_scheme(file_uri) == 's3':
-        s3_bucket = remove_scheme_from_uri(RW_DASHBOARD_LAYER_S3_BUCKET_URI)
+        s3_bucket = remove_scheme_from_uri(RW_CACHE_S3_BUCKET_URI)
         file_key = _get_file_key_from_url(file_uri)
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
-                try:
-                    # Download the file from S3
-                    s3_client.download_file(s3_bucket, file_key, temp_file.name)
-                    result_data = xr.open_dataarray(temp_file.name)
-                except Exception as e:
-                    print(f"Error downloading file: {file_uri} with error: {e}")
+            temp_file_path = os.path.join(temp_dir, 'tempfile')
+            s3_client.download_file(s3_bucket, file_key, temp_file_path)
+            result_data = xr.open_dataarray(temp_file_path)
     else:
         file_path = os.path.normpath(get_file_path_from_uri(file_uri))
         result_data = xr.open_dataarray(file_path)
 
     return result_data
 
+def read_csv_from_s3(file_uri):
+    s3_bucket = remove_scheme_from_uri(RW_CACHE_S3_BUCKET_URI)
+    file_key = _get_file_key_from_url(file_uri)
+    result_data = None
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_file_path = os.path.join(temp_dir, 'tempfile')
+        s3_client.download_file(s3_bucket, file_key, temp_file_path)
+        result_data = pd.read_csv(temp_file_path)
+    return result_data
+
 
 # == Writes ==
+def write_metric(data, uri, file_format):
+    if isinstance(data, (pd.Series, pd.DataFrame, gpd.GeoDataFrame)):
+        if file_format == CSV_FILE_EXTENSION:
+            write_csv(data, uri)
+        elif file_format == GEOJSON_FILE_EXTENSION:
+            write_geojson(data, uri)
+    elif data is None:
+        raise NotImplementedError("No data found for selection area.")
+    else:
+        raise NotImplementedError("Can only write Series or Dataframe Indicator data.")
+
+
 def write_layer(data, uri, file_format):
     if data is None:
         raise Exception(f"Result dataset is empty and not written to: {uri}")
@@ -102,30 +118,41 @@ def write_layer(data, uri, file_format):
         raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 
 def _write_file_to_s3(data, uri, file_extension):
+    import shutil
     s3_bucket = get_bucket_name_from_s3_uri(uri)
     file_key = _get_file_key_from_url(uri)
-    suffix = f".{file_extension}"
-    with tempfile.TemporaryDirectory() as temp_dir:
-        with open(os.path.join(temp_dir, 'tempfile'), 'w+') as temp_file:
-            if file_extension == GEOJSON_FILE_EXTENSION:
-                data.to_file(temp_file.name, driver="GeoJSON")
-            elif file_extension == GTIFF_FILE_EXTENSION:
-                data.rio.to_raster(raster_path=temp_file.name, driver="GTiff")
-            elif file_extension == NETCDF_FILE_EXTENSION:
-                data.to_netcdf(temp_file.name)
+    try:
+        temp_dir = tempfile.mkdtemp()
+        temp_file = os.path.join(temp_dir, 'tempfile')
 
-            s3_client.upload_file(
-                temp_file.name, s3_bucket, file_key, ExtraArgs={"ACL": "public-read"}
-            )
+        if file_extension == GEOJSON_FILE_EXTENSION:
+            data.to_file(temp_file, driver="GeoJSON")
+        elif file_extension == GTIFF_FILE_EXTENSION:
+            data.rio.to_raster(raster_path=temp_file, driver="GTiff")
+        elif file_extension == NETCDF_FILE_EXTENSION:
+            data.to_netcdf(temp_file)
+        elif file_extension == CSV_FILE_EXTENSION:
+            data.to_csv(temp_file, header=True, index=False)
+        else:
+            raise Exception(f"File extension{file_extension} currently not handled for writing to S3")
+
+        s3_client.upload_file(
+            temp_file, s3_bucket, file_key, ExtraArgs={"ACL": "public-read"}
+        )
+
+    except Exception as e_msg:
+        print(f"Error writing to {file_key}")
+
+    shutil.rmtree(temp_dir)
 
 def write_csv(data, uri):
     _verify_datatype('write_csv()', data, [pd.Series, pd.DataFrame], is_spatial=False)
     if get_uri_scheme(uri) == 's3':
-        _write_file_to_s3(data, uri, GEOJSON_FILE_EXTENSION)
+        _write_file_to_s3(data, uri, CSV_FILE_EXTENSION)
     else:
         uri_path = os.path.normpath(get_file_path_from_uri(uri))
         _create_local_target_folder(uri_path)
-        data.to_csv(uri, header=True, index=True, index_label='index')
+        data.to_csv(uri, header=True, index=False)
 
 def write_geojson(data, uri):
     _verify_datatype('write_geojson()', data, [gpd.GeoDataFrame], is_spatial=True)
@@ -195,34 +222,39 @@ def _get_file_key_from_url(s3_url):
 
 def get_city(city_id: str):
     query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
-    city = requests.get(query)
-    if city.status_code in range(200, 206):
-        return city.json()
-    raise Exception("City not found")
-
+    try:
+        city = requests.get(query)
+        if city.status_code in range(200, 206):
+            return city.json()
+    except Exception as e_msg:
+        raise Exception(f"API call for city failed with error: {e_msg}")
 
 # == API queries ==
 def get_city_boundary(city_id: str, admin_level: str):
     query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
-    city_boundary = requests.get(query)
-    if city_boundary.status_code in range(200, 206):
-        tuple_str = city_boundary.json()['bounding_box']
-        bounds = _string_to_float_tuple(tuple_str)
-        return bounds
-    raise Exception("City boundary not found")
+    try:
+        city_boundary = requests.get(query)
+        if city_boundary.status_code in range(200, 206):
+            tuple_str = city_boundary.json()['bounding_box'][admin_level]
+            bounds = _string_to_float_tuple(tuple_str)
+            return bounds
+    except Exception as e_msg:
+        raise Exception(f"API call for city boundary failed with error: {e_msg}")
 
 def get_city_admin_boundaries(city_id: str, admin_level: str) -> GeoDataFrame:
     query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
-    city_boundary = requests.get(query)
-    if city_boundary.status_code in range(200, 206):
-        boundaries_uri = city_boundary.json()['layers_url']['geojson']
-        boundaries_geojson = read_geojson_from_cache(boundaries_uri)
+    try:
+        city_boundary = requests.get(query)
+        if city_boundary.status_code in range(200, 206):
+            boundaries_uri = city_boundary.json()['layers_url']['geojson']
+            boundaries_geojson = read_geojson_from_cache(boundaries_uri)
 
-        geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
-        boundaries = boundaries_geojson[geom_columns]
-        boundaries_with_index = boundaries.reset_index()
-        return boundaries_with_index
-    raise Exception("City boundary not found")
+            geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
+            boundaries = boundaries_geojson[geom_columns]
+            boundaries_with_index = boundaries.reset_index()
+            return boundaries_with_index
+    except Exception as e_msg:
+        raise Exception(f"API call for city-admin boundary failed with error: {e_msg}")
 
 def _string_to_float_tuple(string_tuple):
     string_tuple = string_tuple.replace("[", "").replace("]", "")
@@ -245,12 +277,20 @@ def get_uri_scheme(uri):
 
 
 def get_file_path_from_uri(uri):
-  parsed_url = urlparse(uri)
-  file_path = parsed_url.path
-  uri_scheme = get_uri_scheme(uri)
-  if uri_scheme == "s3":
-      file_path = file_path[1:]
-  return file_path
+    parsed_url = urlparse(uri)
+    if get_uri_scheme(uri) == "s3":
+        file_path = parsed_url.path
+        file_path = file_path[1:]
+    elif get_uri_scheme(uri) == "file":
+        p1 = parsed_url.netloc
+        p2 = parsed_url.path
+        file_path = os.path.normpath(p1+p2)
+    else:
+        # assume it's a local path
+        file_path = uri
+
+    return file_path
+
 
 def get_bucket_name_from_s3_uri(uri):
     # Ensure the URI starts with 's3://'
