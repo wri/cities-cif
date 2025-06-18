@@ -1,27 +1,31 @@
 from datetime import datetime
 import pandas as pd
 import numpy as np
-from geopandas import GeoDataFrame, GeoSeries
+from geopandas import GeoSeries
 
+from city_metrix.constants import CSV_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV
 from city_metrix.layers import Era5HottestDay
-from city_metrix.layers.layer_geometry import GeoExtent
-from city_metrix.metrics.metric import Metric
+from city_metrix.metrix_model import GeoExtent, Metric, GeoZone
 
 
 class Era5MetPreprocessing(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_data(self,
-                 zones: GeoDataFrame,
+    def get_metric(self,
+                 geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         """
         Get ERA 5 data for the hottest day
-        :param zones: GeoDataFrame with geometries to collect zonal stats on
+        :param geo_zone: GeoZone with geometries to collect zonal stats on
         :return: Pandas Dataframe of data
         """
-        bbox = GeoExtent(zones.total_bounds, zones.crs.srs)
-        era_5_data = Era5HottestDay().get_data(bbox)
+        bbox = GeoExtent(geo_zone.bounds, geo_zone.crs)
+        era_5_data = Era5HottestDay().get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution)
 
         t2m_var = era_5_data.sel(variable='t2m').values
         u10_var = era_5_data.sel(variable='u10').values

@@ -1,34 +1,26 @@
-import xarray as xr
 from xrspatial.classify import reclassify
 
-from .layer import Layer
+from city_metrix.metrix_model import Layer, GeoExtent
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
-from ..constants import GTIFF_FILE_EXTENSION
+from ..constants import GTIFF_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class NaturalAreas(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_cache_retrieval=False):
+                 resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
-
-        esa_world_cover = EsaWorldCover().get_data(bbox, spatial_resolution=spatial_resolution)
+        esa_world_cover = EsaWorldCover().get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution)
         reclass_map = {
             EsaWorldCoverClass.TREE_COVER.value: 1,
             EsaWorldCoverClass.SHRUBLAND.value: 1,

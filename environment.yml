@@ -12,6 +12,8 @@ dependencies:
   - odc-stac=0.3.11
   - pystac-client=0.8.6
   - pytest=8.3.5
+  - pytest-xdist
+  - pytest-timeout
   - xarray-spatial=0.4.0
   - xee=0.0.20
   - utm=0.7.0
@@ -33,4 +35,3 @@ dependencies:
   - overturemaps=0.14.0
   - ipython=8.34.0
   - timeout-decorator
-  

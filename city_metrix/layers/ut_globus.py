@@ -4,16 +4,15 @@ import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
-from .layer import Layer, WGS_CRS
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, WGS_CRS, GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
+from ..ut_globus_city_handler.ut_globus_city_handler import search_for_ut_globus_city_by_contained_polygon
 
 
 class UtGlobus(Layer):
     OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["city"]
-    MINOR_LAYER_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ["city"]
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
@@ -24,16 +23,13 @@ class UtGlobus(Layer):
         super().__init__(**kwargs)
         self.city = city
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None, 
-                 allow_cache_retrieval=False):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 force_data_refresh=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
-        if self.city == "":
-            raise Exception("'city' can not be empty. Check and select a city id from https://sat-io.earthengine.app/view/ut-globus")
 
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
+        if self.city == '' or self.city is None:
+            bbox_polygon = bbox.as_geographic_bbox().polygon
+            self.city = search_for_ut_globus_city_by_contained_polygon(bbox_polygon)
 
         dataset = ee.FeatureCollection(f"projects/sat-io/open-datasets/UT-GLOBUS/{self.city}")
         ee_rectangle = bbox.to_ee_rectangle()

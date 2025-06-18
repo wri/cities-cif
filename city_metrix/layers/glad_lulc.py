@@ -1,17 +1,15 @@
 import xarray as xr
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class LandCoverGlad(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
@@ -22,13 +20,8 @@ class LandCoverGlad(Layer):
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_cache_retrieval=False):
+                 resampling_method=None):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         lcluc_ic = ee.ImageCollection(ee.Image(f'projects/glad/GLCLU2020/LCLUC_{self.year}'))
         ee_rectangle  = bbox.to_ee_rectangle()
@@ -44,8 +37,8 @@ class LandCoverGlad(Layer):
 
 class LandCoverSimplifiedGlad(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
@@ -56,14 +49,9 @@ class LandCoverSimplifiedGlad(Layer):
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_cache_retrieval=False):
+                 resampling_method=None):
 
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         glad = LandCoverGlad(year=self.year).get_data(bbox, spatial_resolution=spatial_resolution)
         # Copy the original data
@@ -94,8 +82,8 @@ class LandCoverSimplifiedGlad(Layer):
 
 class LandCoverHabitatGlad(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
@@ -106,14 +94,9 @@ class LandCoverHabitatGlad(Layer):
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_cache_retrieval=False):
+                 resampling_method=None):
 
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         simplified_glad = (LandCoverSimplifiedGlad(year=self.year)
                            .get_data(bbox, spatial_resolution=spatial_resolution))
@@ -131,8 +114,8 @@ class LandCoverHabitatGlad(Layer):
 
 class LandCoverHabitatChangeGlad(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
@@ -145,14 +128,9 @@ class LandCoverHabitatChangeGlad(Layer):
         self.end_year = end_year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_cache_retrieval=False):
+                 resampling_method=None):
 
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         habitat_glad_start = (LandCoverHabitatGlad(year=self.start_year)
                               .get_data(bbox, spatial_resolution=spatial_resolution))

@@ -3,18 +3,16 @@ import numpy as np
 import ee
 from scipy.ndimage import distance_transform_edt
 
-from .layer import Layer, get_image_collection
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
-from ..constants import GTIFF_FILE_EXTENSION
+from ..constants import GTIFF_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class RiparianAreas(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = ["river_head", "thresh"]
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["river_head", "thresh"]
 
     """
     Attributes:
@@ -30,18 +28,15 @@ class RiparianAreas(Layer):
         self.thresh = thresh
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_cache_retrieval=False):
+                 resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
-
         # read HAND data to generate drainage paths
-        hand = HeightAboveNearestDrainage(river_head=self.river_head, thresh=self.thresh).get_data(bbox, spatial_resolution=spatial_resolution)
+        # Specify DEFAULT_DEVELOPMENT_ENV since this is not a default layer
+        hand = (HeightAboveNearestDrainage(river_head=self.river_head, thresh=self.thresh)
+                .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution))
 
         # Read surface water occurance
         water = ee.Image('JRC/GSW1_3/GlobalSurfaceWater').select(['occurrence']).gte(50)

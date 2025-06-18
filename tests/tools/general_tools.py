@@ -2,6 +2,11 @@ import os
 import shutil
 import numpy as np
 
+from city_metrix.cache_manager import build_file_key, build_cache_name
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, DEFAULT_STAGING_ENV
+from city_metrix.metrix_model import Layer
+
+
 def is_valid_path(path: str):
     return os.path.exists(path)
 
@@ -41,21 +46,13 @@ def convert_ratio_to_percentage(data):
 
     return values_as_percent
 
-def get_class_default_spatial_resolution(obj):
-    obj_param_info = get_param_info(obj.get_data)
-    obj_spatial_resolution = obj_param_info.get('spatial_resolution')
-    return obj_spatial_resolution
 
-def get_param_info(func):
-    import inspect
-    signature = inspect.signature(func)
-    default_values = {
-        k: v.default
-        for k, v in signature.parameters.items()
-        if v.default is not inspect.Parameter.empty
-    }
-    return default_values
-
-def get_class_from_instance(obj):
-    cls = obj.__class__()
-    return cls
+def get_test_cache_variables(class_obj, geo_extent):
+    if isinstance(class_obj, Layer):
+        s3_env = DEFAULT_DEVELOPMENT_ENV
+    else:
+        s3_env = DEFAULT_STAGING_ENV
+    file_uri, file_key, feature_id, is_custom_object = build_file_key(s3_env, class_obj, geo_extent)
+    file_format = class_obj.OUTPUT_FILE_FORMAT
+    feature_with_extension = f"{feature_id}.{file_format}"
+    return file_key, file_uri, feature_with_extension, is_custom_object

@@ -1,19 +1,16 @@
-import ee
 from xrspatial import slope
 
-from .layer import Layer, validate_raster_resampling_method
+from city_metrix.metrix_model import Layer, validate_raster_resampling_method, GeoExtent
 from .nasa_dem import NasaDEM
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
-from ..constants import GTIFF_FILE_EXTENSION
+from ..constants import GTIFF_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
 class HighSlope(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["slope_threshold"]
-    MINOR_LAYER_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ["slope_threshold"]
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
@@ -29,19 +26,14 @@ class HighSlope(Layer):
         resampling_method: interpolation method used by Google Earth Engine. Valid options: ('bilinear', 'bicubic', 'nearest').
     """
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method: str = DEFAULT_RESAMPLING_METHOD, allow_cache_retrieval=False):
+                 resampling_method: str = DEFAULT_RESAMPLING_METHOD):
 
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
-
-        nasa_dem = NasaDEM().get_data(bbox, spatial_resolution=spatial_resolution,
-                                      resampling_method=resampling_method)
+        # Specify DEFAULT_DEVELOPMENT_ENV since NasaDEM is not a Dashboard layer
+        nasa_dem = NasaDEM().get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution)
 
         slope_data = slope(nasa_dem)
         # filter for steep slope

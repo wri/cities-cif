@@ -1,18 +1,14 @@
-from dask.diagnostics import ProgressBar
-import xarray as xr
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class HeightAboveNearestDrainage(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["river_head"]
-    MINOR_LAYER_NAMING_ATTS = ["thresh"]
+    MAJOR_NAMING_ATTS = ["river_head"]
+    MINOR_NAMING_ATTS = ["thresh"]
 
     """
     Attributes:
@@ -26,17 +22,12 @@ class HeightAboveNearestDrainage(Layer):
         self.thresh = thresh
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_cache_retrieval=False):
+                 resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         if spatial_resolution not in [30,90]:
             raise Exception(f'spatial_resolution of {spatial_resolution} is currently not supported.')
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         if spatial_resolution == 30 and self.river_head == 100:
             hand = ee.ImageCollection('users/gena/global-hand/hand-100')

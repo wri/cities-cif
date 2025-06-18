@@ -1,11 +1,7 @@
 import ee
-import xarray
-from dask.diagnostics import ProgressBar
 
-from .layer import (Layer, get_image_collection, set_resampling_for_continuous_raster,
-                    validate_raster_resampling_method)
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import (Layer, get_image_collection, set_resampling_for_continuous_raster,
+                                      validate_raster_resampling_method, GeoExtent)
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
@@ -13,8 +9,8 @@ DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
 class Albedo(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = ["threshold"]
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["threshold"]
     MAX_CLOUD_PROB = 30
     S2_ALBEDO_EQN = '((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))'
 
@@ -93,15 +89,10 @@ class Albedo(Layer):
         return s2_with_clouds_ic
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method:str=DEFAULT_RESAMPLING_METHOD, allow_cache_retrieval=False):
+                 resampling_method:str=DEFAULT_RESAMPLING_METHOD):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         # calculate albedo for images
         # weights derived from
@@ -131,11 +122,14 @@ class Albedo(Layer):
         dataset = self.get_masked_s2_collection(ee_rectangle['ee_geometry'], self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
 
+        kernel_convolution = None
         albedo_mean = (s2_albedo
                        .map(lambda x:
                                     set_resampling_for_continuous_raster(x,
                                                                          resampling_method,
                                                                          spatial_resolution,
+                                                                         DEFAULT_SPATIAL_RESOLUTION,
+                                                                         kernel_convolution,
                                                                          ee_rectangle['crs']
                                                                          )
                             )

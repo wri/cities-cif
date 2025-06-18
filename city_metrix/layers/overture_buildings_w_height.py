@@ -1,17 +1,20 @@
+import pandas as pd
 import geopandas as gpd
+import numpy as np
 
-from .layer import Layer
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
-from ..constants import GEOJSON_FILE_EXTENSION
+from city_metrix.metrix_model import Layer, GeoExtent, get_class_default_spatial_resolution
+from . import AverageNetBuildingHeight
+from ..constants import GEOJSON_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
 from .overture_buildings import OvertureBuildings
 from .ut_globus import UtGlobus
 
+STANDARD_BUILDING_FLOOR_HEIGHT_M = 3.5
+STANDARD_SINGLE_STORY_BUILDING_SQM = 50
 
 class OvertureBuildingsHeight(Layer):
     OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["city"]
-    MINOR_LAYER_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ["city"]
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
@@ -22,28 +25,66 @@ class OvertureBuildingsHeight(Layer):
         super().__init__(**kwargs)
         self.city = city
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None, allow_cache_retrieval=False):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
         # Note: spatial_resolution and resampling_method arguments are ignored.
-        if self.city == "":
-            raise Exception("'city' can not be empty. Check and select a city id from https://sat-io.earthengine.app/view/ut-globus")
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         # Load the datasets
-        overture_buildings = OvertureBuildings().get_data(bbox)
-        ut_globus = UtGlobus(self.city).get_data(bbox)
-
-        # Ensure both GeoDataFrames are using the same coordinate reference system
+        # Specify DEFAULT_DEVELOPMENT_ENV since below are not Dashboard layers
+        overture_buildings = OvertureBuildings().get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV)
+        ut_globus = UtGlobus(self.city).get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV)
         ut_globus = ut_globus.to_crs(overture_buildings.crs)
 
-        # Perform spatial join - transferring height values directly during the join
-        joined_data = gpd.sjoin(overture_buildings, ut_globus[["geometry", "height"]], how="left")
+        # Use the logic described in this page to determine height settings.
+        # https://gfw.atlassian.net/wiki/spaces/CIT/pages/1971912734/Primary+Raster+Layers+for+Thermal+Comfort+Modeling
 
+        # Step 1 and 2 Get heights from UTGlobus and Overture
+        result_building_heights = _join_overture_and_utglobus(overture_buildings, ut_globus)
+
+        # Step 3 and 4 Get heights based on two simple assumptions
+        empty_height_blgs = result_building_heights[result_building_heights['height'].isna() |
+                                                    (result_building_heights['height'] == 0)]
+        if len(empty_height_blgs) > 0:
+            # Determine height from num_floors column in Overture
+            storied_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].notna()].copy()
+            storied_bldgs['height'] = storied_bldgs['num_floors'] * STANDARD_BUILDING_FLOOR_HEIGHT_M
+            storied_bldgs['height_source'] = 'Overture_floors'
+            result_building_heights.loc[storied_bldgs.index, ['height', 'height_source']] = (
+                storied_bldgs)[['height', 'height_source']]
+
+            # Set height base on assumption about size of small, one-storied buildings
+            unstoried_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].isna()].copy()
+            unstoried_bldgs = unstoried_bldgs[unstoried_bldgs.geometry.area <= STANDARD_SINGLE_STORY_BUILDING_SQM]
+            unstoried_bldgs['height'] = STANDARD_BUILDING_FLOOR_HEIGHT_M
+            unstoried_bldgs['height_source'] = 'Overture_small_area'
+            result_building_heights.loc[unstoried_bldgs.index, ['height', 'height_source']] = (
+                unstoried_bldgs)[['height', 'height_source']]
+
+        # Step 6 Estimate height using the ANBH Built-H dataset
+        empty_height_blgs = result_building_heights[result_building_heights['height'].isna() | (result_building_heights['height'] == 0)]
+        if len(empty_height_blgs) > 0:
+            large_unstoried_height = _get_anbh_for_buildings(bbox, empty_height_blgs)
+            result_building_heights.loc[large_unstoried_height.index, ['height', 'height_source']] = (
+                large_unstoried_height)[['height', 'height_source']]
+
+        # Step 7 Set any remainders to one floor, however no building should remain at this point
+        empty_height_blgs = result_building_heights[result_building_heights['height'].isna() | (result_building_heights['height'] == 0)]
+        if len(empty_height_blgs) > 0:
+            empty_height_blgs.loc[:, ['height', 'height_source']] = [STANDARD_BUILDING_FLOOR_HEIGHT_M, 'Remainder']
+
+        utm_crs = bbox.as_utm_bbox().crs
+        result_building_heights = result_building_heights.to_crs(utm_crs)
+        result_building_heights['height'] = result_building_heights['height'].round(2)
+
+        return result_building_heights
+
+def _join_overture_and_utglobus(overture_buildings, ut_globus):
+    # Perform spatial join - transferring height values directly during the join
+    # Give preference to UTGlobus heights
+    joined_data = gpd.sjoin(overture_buildings, ut_globus[["geometry", "height"]], how="left")
+
+    if 'height' in overture_buildings.columns.to_list():
         # Ensure columns are managed correctly after join
-        # If height_right is not null, use it; otherwise, use height_left
+        # If height_right (UTGlobus) is not null, use it; otherwise, use height_left (Overture)
         joined_data["height"] = joined_data["height_right"].fillna(joined_data["height_left"])
         joined_data.rename(
             columns={
@@ -52,17 +93,82 @@ class OvertureBuildingsHeight(Layer):
             },
             inplace=True,
         )
+    else:
+        joined_data['utglobus_height'] = joined_data['height']
+        joined_data["overture_height"] = None
 
         # Remove any index columns potentially misinterpreted
-        joined_data.drop(columns=["index_right"], inplace=True)
+    joined_data.drop(columns=["index_right"], inplace=True)
 
-        # Explicitly handle the unique identifier for each row
-        joined_data["id"] = joined_data.apply(lambda row: row["id"] if "id" in row else row.name, axis=1)
+    # Explicitly handle the unique uri_scheme for each row
+    joined_data["id"] = joined_data.apply(lambda row: row["id"] if "id" in row else row.name, axis=1)
 
-        # Fill missing height values
-        joined_data["height"] = joined_data["height"].fillna(0)
+    # Get mode or median of heights from UT Globus for buildings that overlapped with UTGlobus buildings
+    filtered_data = joined_data.dropna(subset=['utglobus_height'])
+    mode_or_median_df  = filtered_data.groupby('id')['utglobus_height'].apply(mode_or_median).reset_index()
+    merged_gdf = filtered_data.merge(mode_or_median_df.rename(columns={'utglobus_height': 'mode_or_med_utglobus_height'}), on='id')
+    overture_with_globus_height = merged_gdf.drop(columns=['utglobus_height', 'height']).drop_duplicates()
+    overture_with_globus_height['height'] = overture_with_globus_height['mode_or_med_utglobus_height']
+    # Assign source as UTGlobus
+    overture_with_globus_height['height_source'] = 'UTGlobus'
 
-        utm_crs = bbox.as_utm_bbox().crs
-        joined_data = joined_data.to_crs(utm_crs)
+    # Get buildings that did not overlap with a UTGlobus value
+    overture_without_globus_height = joined_data[~joined_data['id'].isin(mode_or_median_df['id'])]
+    overture_without_globus_height = overture_without_globus_height.drop(columns=['utglobus_height'])
+    overture_without_globus_height['mode_or_med_utglobus_height'] = np.nan
+    overture_without_globus_height['height_source'] = np.where(overture_without_globus_height['overture_height'].notna(), 'Overture', '')
 
-        return joined_data
+    # Combine Globus and non-Globus records
+    df_combined = gpd.GeoDataFrame(pd.concat([overture_with_globus_height, overture_without_globus_height], ignore_index=True)).reset_index(drop=True)
+
+    return df_combined
+
+def mode_or_median(series):
+    mode_values = series.mode()
+    if mode_values.size == 1:
+        return mode_values.iloc[0]
+    else:
+        y =  custom_median(series)
+        return y
+
+
+def custom_median(series):
+    sorted_values = np.sort(series)
+    n = len(sorted_values)
+
+    if n % 2 == 1:  # Odd length, return the center value
+        return sorted_values[n // 2]
+    else:  # Even length, return the lower of the two middle values
+        return sorted_values[n // 2 - 1]
+
+
+def _get_anbh_for_buildings(bbox, empty_height_blgs):
+    from rasterio.features import geometry_mask
+
+    # Expand the AOI to ensure coverage of all buildings by ANBH
+    anbh_obj = AverageNetBuildingHeight()
+    anbh_cell_size = get_class_default_spatial_resolution(anbh_obj)
+    buffered_utm_bbox = bbox.buffer_utm_bbox(anbh_cell_size * 2)
+    anbh_da = anbh_obj.get_data(bbox=buffered_utm_bbox)
+
+    # Ensure the CRS matches
+    empty_height_blgs = empty_height_blgs.to_crs(anbh_da.rio.crs).copy()
+
+    # Iterate through polygons
+    for index, row in empty_height_blgs.iterrows():
+        polygon = row.geometry
+
+        # Mask raster using polygon
+        try:
+            building_mask = geometry_mask([polygon], transform=anbh_da.rio.transform(), all_touched=True,
+                                          invert=True, out_shape=anbh_da.shape)
+            height_values = anbh_da.values[building_mask]
+            # Only include features that arg large enough to overlap or touch a raster cell
+            if height_values.size > 0:
+                min_value = height_values.min().round(2)
+                empty_height_blgs.loc[index, ['height', 'height_source']] = [min_value, 'ANBH']
+        except Exception as e_msg:
+            print(e_msg)
+
+    populated_rows = empty_height_blgs[empty_height_blgs['height_source'] == 'ANBH']
+    return populated_rows

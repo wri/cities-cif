@@ -3,10 +3,9 @@ import osmnx as ox
 import geopandas as gpd
 import pandas as pd
 
-from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION
-from .layer import Layer
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GeoType
+from city_metrix.metrix_model import Layer, GeoExtent
+
 
 class OpenStreetMapClass(Enum):
     # ALL includes all 29 primary features https://wiki.openstreetmap.org/wiki/Map_features
@@ -69,25 +68,20 @@ class OpenStreetMapClass(Enum):
 
 class OpenStreetMap(Layer):
     OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["osm_class"]
-    MINOR_LAYER_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ["osm_class"]
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
         osm_class: OSM class
     """
-    def __init__(self, osm_class=OpenStreetMapClass.ALL, **kwargs):
+    def __init__(self, osm_class:OpenStreetMapClass=OpenStreetMapClass.ALL, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_cache_retrieval=False):
+                 force_data_refresh=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         min_lon, min_lat, max_lon, max_lat = bbox.as_geographic_bbox().bounds
         utm_crs = bbox.as_utm_bbox().crs
