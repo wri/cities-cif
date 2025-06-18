@@ -16,6 +16,7 @@ from dask.diagnostics import ProgressBar
 from ee import ImageCollection
 from geocube.api.core import make_geocube
 from geopandas import GeoDataFrame
+from pandas import Series
 from shapely import geometry
 from shapely.geometry import box
 from xrspatial import zonal_stats
@@ -950,14 +951,19 @@ class Metric():
         standard_env = standardize_s3_env(self, s3_env)
         retrieved_cached_data, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, standard_env, None,
                                                                           force_data_refresh)
-        result_metric = None
         if retrieved_cached_data is None:
             result_metric = self.metric.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
-
-            if geo_zone.geo_type == GeoType.CITY:
-                write_metric(result_metric, file_uri, self.OUTPUT_FILE_FORMAT)
         else:
             result_metric = retrieved_cached_data.squeeze()
+
+        zones = geo_zone.zones
+        if 'geo_level' in zones.columns and isinstance(result_metric, Series):
+            result_metric.name = 'value'
+            results = zones.join(result_metric)
+            result_metric = _thin_metrics_df_to_core_columns(results)
+
+        if retrieved_cached_data is None and geo_zone.geo_type == GeoType.CITY:
+            write_metric(result_metric, file_uri, self.OUTPUT_FILE_FORMAT)
 
         return result_metric, feature_id
 
@@ -984,18 +990,20 @@ class Metric():
 
         if not skip_write:
             Metric._verify_extension(output_uri, f".{CSV_FILE_EXTENSION}")
-            indicator.name = 'value'
 
-            result_df = geo_zone.zones
-            if 'geo_id' in result_df.columns:
-                result_df = result_df[['geo_id', 'geo_name', 'geo_level']]
+            if  isinstance(indicator, Series):
+                indicator.name = 'value'
 
-            if 'geometry' in result_df.columns:
-                result_df.drop(columns=['geometry'], inplace=True)
+                result_df = geo_zone.zones
+                indicator_df = pd.concat([result_df, indicator], axis=1)
+            else:
+                indicator_df = indicator
 
-            result_df = result_df.assign(metric_id=feature_id)
+            if 'metric_id' not in indicator_df.columns:
+                indicator_df = indicator_df.assign(metric_id=feature_id)
 
-            indicator_df = pd.concat([result_df, indicator], axis=1)
+            if 'geo_id' in indicator_df.columns:
+                indicator_df = _thin_metrics_df_to_core_columns(indicator_df)
 
             write_metric(indicator_df, output_uri, CSV_FILE_EXTENSION)
 
@@ -1035,6 +1043,12 @@ class Metric():
         if Path(file_path).suffix != extension:
             raise ValueError(f"File name must have '{extension}' extension")
 
+def _thin_metrics_df_to_core_columns(metrics_df):
+    if 'metric_id' in metrics_df.columns:
+        result_df = metrics_df[['geo_id', 'geo_name', 'geo_level', 'metric_id', 'value']]
+    else:
+        result_df = metrics_df[['geo_id', 'geo_name', 'geo_level', 'value']]
+    return result_df
 
 def decide_if_write_can_be_skipped(feature, selection_object, output_path, s3_env):  # Determine if write can be skipped
     if output_path is None or len(output_path.strip()) == 0:
