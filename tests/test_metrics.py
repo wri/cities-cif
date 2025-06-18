@@ -144,9 +144,8 @@ def test_percent_area_impervious():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 78.51, 100.00, 100, 0)
 
-
 def test_percent_built_area_without_tree_cover():
-    indicator = PercentBuiltAreaWithoutTreeCover().get_data(IDN_JAKARTA_TILED_ZONES)
+    indicator = PercentBuiltAreaWithoutTreeCover().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size

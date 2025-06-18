@@ -17,7 +17,7 @@ class PercentBuiltAreaWithoutTreeCover(Metric):
         super().__init__(**kwargs)
         self.height = height
 
-    def get_data(self,
+    def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         """
