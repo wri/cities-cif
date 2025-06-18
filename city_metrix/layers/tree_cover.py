@@ -1,30 +1,26 @@
-from .layer import Layer, get_image_collection
-
-from dask.diagnostics import ProgressBar
-import xarray as xr
-import xee
 import ee
 
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class TreeCover(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["min_tree_cover", "max_tree_cover"]
+    MINOR_NAMING_ATTS = None
+    NO_DATA_VALUE = 255
+
     """
     Merged tropical and nontropical tree cover from WRI
     Attributes:
         min_tree_cover: minimum tree-cover values used for filtering results
         max_tree_cover: maximum tree-cover values used for filtering results
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
-    NO_DATA_VALUE = 255
-
     def __init__(self, min_tree_cover=None, max_tree_cover=None, **kwargs):
         super().__init__(**kwargs)
         self.min_tree_cover = min_tree_cover
         self.max_tree_cover = max_tree_cover
-
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):

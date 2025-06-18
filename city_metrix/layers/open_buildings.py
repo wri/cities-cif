@@ -4,11 +4,19 @@ import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon, MultiPolygon
 
-from .layer import Layer, WGS_CRS
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, WGS_CRS, GeoExtent
+from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class OpenBuildings(Layer):
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["country"]
+    MINOR_NAMING_ATTS = None
+
+    """
+    Attributes:
+        countr: 3-letter code for country
+    """
     def __init__(self, country='USA', **kwargs):
         super().__init__(**kwargs)
         self.country = country
@@ -24,7 +32,7 @@ class OpenBuildings(Layer):
         openbuilds = geemap.ee_to_gdf(open_buildings).reset_index()
 
         # filter out geom_type GeometryCollection
-        gc_openbuilds = openbuilds[openbuilds.geom_type == 'GeometryCollection']
+        gc_openbuilds = openbuilds[openbuilds.geom_type == 'GeometryCollection'].copy()
         if len(gc_openbuilds) > 0:
             # select Polygons and Multipolygons from GeometryCollection
             gc_openbuilds['geometries'] = gc_openbuilds.apply(lambda x: [g for g in x.geometry.geoms], axis=1)

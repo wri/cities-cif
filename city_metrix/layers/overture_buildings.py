@@ -2,15 +2,20 @@ import geopandas as gpd
 import subprocess
 from io import StringIO
 
-from .layer import Layer
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, GeoExtent
+from ..constants import GEOJSON_FILE_EXTENSION
 
 
 class OvertureBuildings(Layer):
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 force_data_refresh=False):
         #Note: spatial_resolution and resampling_method arguments are ignored.
 
         geographic_box = bbox.as_geographic_bbox()

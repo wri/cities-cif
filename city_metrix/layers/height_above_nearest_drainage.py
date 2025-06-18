@@ -1,22 +1,21 @@
-from dask.diagnostics import ProgressBar
-import xarray as xr
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class HeightAboveNearestDrainage(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["river_head"]
+    MINOR_NAMING_ATTS = ["thresh"]
+
     """
     Attributes:
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
-                            default is 30, other options - 90
         river_head: number of river head threshold cells
                     default is 1000, other options - 100, 5000
-        thresh: flow accumuation threshold, default is 1
+        thresh: flow accumulation threshold, default is 1
     """
-
     def __init__(self, river_head=1000, thresh=1, **kwargs):
         super().__init__(**kwargs)
         self.river_head = river_head

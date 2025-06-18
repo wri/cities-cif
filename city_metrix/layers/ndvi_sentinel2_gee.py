@@ -1,20 +1,25 @@
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class NdviSentinel2(Layer):
     """"
     NDVI = Sentinel-2 Normalized Difference Vegetation Index
-    Attributes:
-        year: The satellite imaging year.
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     return: a rioxarray-format DataArray
     Author of associated Jupyter notebook: Ted.Wong@wri.org
     Notebook: https://github.com/wri/cities-cities4forests-indicators/blob/dev-eric/scripts/extract-VegetationCover.ipynb
     Reference: https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index
+    """
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
+    """
+    Attributes:
+        year: The satellite imaging year.
     """
     def __init__(self, year=2021, **kwargs):
         super().__init__(**kwargs)

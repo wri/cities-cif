@@ -1,18 +1,28 @@
 import odc.stac
 import pystac_client
-from city_metrix.layers.layer_geometry import GeoExtent
-
-from .layer import Layer
+from city_metrix.metrix_model import Layer, GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 
 class Sentinel2Level2(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["bands"]
+    MINOR_NAMING_ATTS = None
+
+    """
+    Attributes:
+        bands:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+    """
     def __init__(self, bands, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.bands = bands
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 force_data_refresh=False):
         if spatial_resolution is not None:
             raise Exception('spatial_resolution can not be specified.')
         if resampling_method is not None:
@@ -57,4 +67,6 @@ class Sentinel2Level2(Layer):
         cloud_masked = s2.where(s2 != 0).where(s2.scl != 3).where(s2.scl != 8).where(s2.scl != 9).where(
             s2.scl != 10)
 
-        return cloud_masked.drop_vars("scl")
+        data =  cloud_masked.drop_vars("scl")
+
+        return data

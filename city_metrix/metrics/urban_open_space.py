@@ -1,13 +1,26 @@
-from geopandas import GeoDataFrame, GeoSeries
+from geopandas import GeoSeries
 
+from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import EsaWorldCover, EsaWorldCoverClass, OpenStreetMap, OpenStreetMapClass
+from city_metrix.metrix_model import Metric, GeoZone
 
 
-def urban_open_space(zones: GeoDataFrame) -> GeoSeries:
-    built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
-    open_space = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE)
+class UrbanOpenSpace(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
-    open_space_in_built_land = open_space.mask(built_up_land).groupby(zones).count()
-    built_land_counts = built_up_land.groupby(zones).count()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-    return open_space_in_built_land.fillna(0) / built_land_counts
+    def get_metric(self,
+                 geo_zone: GeoZone,
+                 spatial_resolution:int = None) -> GeoSeries:
+
+        built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
+        open_space = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE)
+
+        open_space_in_built_land = open_space.mask(built_up_land).groupby(geo_zone).count()
+        built_land_counts = built_up_land.groupby(geo_zone).count()
+
+        return open_space_in_built_land.fillna(0) / built_land_counts

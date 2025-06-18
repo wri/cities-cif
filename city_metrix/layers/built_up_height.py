@@ -1,18 +1,14 @@
-from dask.diagnostics import ProgressBar
-import xarray as xr
-import xee
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
 class BuiltUpHeight(Layer):
-    """
-    Attributes:
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
-    """
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

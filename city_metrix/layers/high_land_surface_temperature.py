@@ -1,23 +1,23 @@
-from .landsat_collection_2 import LandsatCollection2
-from .land_surface_temperature import LandSurfaceTemperature
-from .layer import Layer
-from shapely.geometry import box
 import datetime
 import ee
 
-from .layer_geometry import GeoExtent
+from .land_surface_temperature import LandSurfaceTemperature
+from city_metrix.metrix_model import Layer, GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class HighLandSurfaceTemperature(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+    THRESHOLD_ADD = 3
+
     """
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-    THRESHOLD_ADD = 3
-
     def __init__(self, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
@@ -35,10 +35,11 @@ class HighLandSurfaceTemperature(Layer):
 
         ee_rectangle = bbox.to_ee_rectangle()
         lst = (LandSurfaceTemperature(start_date, end_date)
-               .get_data(bbox, spatial_resolution))
+               .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution))
 
         lst_mean = lst.mean(dim=['x', 'y'])
         high_lst = lst.where(lst >= (lst_mean + self.THRESHOLD_ADD))
+
         return high_lst
 
     def get_hottest_date(self, bbox):

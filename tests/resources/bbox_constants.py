@@ -1,6 +1,5 @@
 # File defines bboxes using in the test code
-from city_metrix.layers.layer import WGS_CRS
-from city_metrix.layers.layer_geometry import GeoExtent
+from city_metrix.metrix_model import WGS_CRS, GeoZone, GeoExtent, construct_city_aoi_json
 
 BBOX_BRA_LAURO_DE_FREITAS_1 = GeoExtent(
     bbox=(-38.35530428121955, -12.821710300686393, -38.33813814352424, -12.80363249765361), crs=WGS_CRS
@@ -29,3 +28,20 @@ BBOX_IDN_JAKARTA = GeoExtent(bbox=(106.7, -6.3, 106.8, -6.2), crs=WGS_CRS)
 BBOX_IDN_JAKARTA_LARGE = GeoExtent(bbox=(106, -7, 107, -6), crs=WGS_CRS)
 
 BBOX_IND_BHOPAL = GeoExtent(bbox=(77.41791, 23.20914, 77.42856, 23.21651), crs=WGS_CRS)
+
+# A medium city
+geo_extent = construct_city_aoi_json("BRA-Florianopolis", "city_admin_level")
+GEOEXTENT_FLORIANOPOLIS_WGS84 = GeoExtent(bbox=geo_extent)
+GEOEXTENT_FLORIANOPOLIS_UTM = GeoExtent(bbox=geo_extent, crs='EPSG:32722')
+
+geo_zone = construct_city_aoi_json("BRA-Florianopolis", "city_admin_level")
+GEOZONE_FLORIANOPOLIS_WGS84 = GeoZone(geo_zone=geo_zone)
+
+# A small city. Saif recommended Teresina since it's small and has all layers available
+geo_extent = construct_city_aoi_json("BRA-Teresina", "city_admin_level")
+GEOEXTENT_TERESINA_WGS84 = GeoExtent(bbox=geo_extent)
+GEOEXTENT_TERESINA_UTM = GeoExtent(bbox=geo_extent, crs='EPSG:32722')
+
+geo_zone = construct_city_aoi_json("BRA-Teresina", "city_admin_level")
+GEOZONE_TERESINA_WGS84 = GeoZone(geo_zone=geo_zone)
+

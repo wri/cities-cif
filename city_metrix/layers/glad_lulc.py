@@ -1,24 +1,28 @@
 import xarray as xr
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class LandCoverGlad(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     """
     Attributes:
         year: year used for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
     def __init__(self, year=2020, **kwargs):
         super().__init__(**kwargs)
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
         lcluc_ic = ee.ImageCollection(ee.Image(f'projects/glad/GLCLU2020/LCLUC_{self.year}'))
         ee_rectangle  = bbox.to_ee_rectangle()
         data = get_image_collection(
@@ -32,18 +36,23 @@ class LandCoverGlad(Layer):
 
 
 class LandCoverSimplifiedGlad(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     """
     Attributes:
         year: year used for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
     def __init__(self, year=2020,  **kwargs):
         super().__init__(**kwargs)
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
+
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
         glad = LandCoverGlad(year=self.year).get_data(bbox, spatial_resolution=spatial_resolution)
         # Copy the original data
         data = glad.copy(deep=True)
@@ -72,18 +81,23 @@ class LandCoverSimplifiedGlad(Layer):
 
 
 class LandCoverHabitatGlad(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     """
     Attributes:
         year: year used for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
     def __init__(self, year=2020, **kwargs):
         super().__init__(**kwargs)
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
+
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
         simplified_glad = (LandCoverSimplifiedGlad(year=self.year)
                            .get_data(bbox, spatial_resolution=spatial_resolution))
         # Copy the original data
@@ -99,13 +113,15 @@ class LandCoverHabitatGlad(Layer):
 
 
 class LandCoverHabitatChangeGlad(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     """
     Attributes:
         start_year: baseline year for habitat change
         end_year: target year for habitat change
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
     def __init__(self, start_year=2000, end_year=2020, **kwargs):
         super().__init__(**kwargs)
         self.start_year = start_year
@@ -113,6 +129,9 @@ class LandCoverHabitatChangeGlad(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
+
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
         habitat_glad_start = (LandCoverHabitatGlad(year=self.start_year)
                               .get_data(bbox, spatial_resolution=spatial_resolution))
         habitat_glad_end = (LandCoverHabitatGlad(year=self.end_year)

@@ -1,21 +1,20 @@
-from .landsat_collection_2 import LandsatCollection2
-from .layer import Layer, get_image_collection
-from dask.diagnostics import ProgressBar
 import ee
-import xarray
 
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class LandSurfaceTemperature(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     """
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
     def __init__(self, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date

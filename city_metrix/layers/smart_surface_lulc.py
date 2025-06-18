@@ -1,20 +1,18 @@
 import xarray as xr
 import numpy as np
 import pandas as pd
-import geopandas as gpd
 from shapely.geometry import CAP_STYLE, JOIN_STYLE
-from shapely.geometry import box
 from exactextract import exact_extract
 from geocube.api.core import make_geocube
 import warnings
 from rasterio.enums import Resampling
 from xrspatial.classify import reclassify
 
-from .layer_geometry import GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
-from .layer import Layer
+from city_metrix.metrix_model import Layer, GeoExtent
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .average_net_building_height import AverageNetBuildingHeight
@@ -24,6 +22,14 @@ from .overture_buildings import OvertureBuildings
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class SmartSurfaceLULC(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["land_cover_class"]
+    MINOR_NAMING_ATTS = None
+
+    """
+    Attributes:
+        land_cover_class:
+    """
     def __init__(self, land_cover_class=None, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
@@ -37,7 +43,7 @@ class SmartSurfaceLULC(Layer):
         utm_crs = bbox.as_utm_bbox().crs
 
         # ESA world cover
-        esa_world_cover = EsaWorldCover(year=2021).get_data(bbox, spatial_resolution = spatial_resolution)
+        esa_world_cover = EsaWorldCover(year=2021).get_data(bbox=bbox, spatial_resolution = spatial_resolution)
         # ESA reclass and upsample
         def get_data_esa_reclass(esa_world_cover):
             reclass_map = {
@@ -73,17 +79,17 @@ class SmartSurfaceLULC(Layer):
 
 
         # Open space
-        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).reset_index()
+        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox=bbox).reset_index()
         open_space_osm['Value'] = 10
 
 
         # Water
-        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox).reset_index()
+        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox=bbox).reset_index()
         water_osm['Value'] = 20
 
 
         # Roads
-        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox).reset_index()
+        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox=bbox).reset_index()
         if len(roads_osm) > 0:
             roads_osm['lanes'] = pd.to_numeric(roads_osm['lanes'], errors='coerce')
             # Get the average number of lanes per highway class

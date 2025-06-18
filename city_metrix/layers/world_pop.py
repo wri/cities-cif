@@ -1,11 +1,8 @@
-from dask.diagnostics import ProgressBar
-import xarray as xr
-import xee
 import ee
 from enum import Enum
 
-from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
@@ -18,15 +15,17 @@ class WorldPopClass(Enum):
 
 
 class WorldPop(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["agesex_classes"]
+    MINOR_NAMING_ATTS = None
+
     """
     Attributes:
         agesex_classes: Enum value from WorldPopClass OR
                         list of age-sex classes to retrieve (see https://airtable.com/appDWCVIQlVnLLaW2/tblYpXsxxuaOk3PaZ/viwExxAgTQKZnRfWU/recFjH7WngjltFMGi?blocks=hide)
         year: year used for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
-    def __init__(self, agesex_classes=[], year=2020, **kwargs):
+    def __init__(self, agesex_classes:WorldPopClass=[], year=2020, **kwargs):
         super().__init__(**kwargs)
         # agesex_classes options:
         # M_0, M_1, M_5, M_10, M_15, M_20, M_25, M_30, M_35, M_40, M_45, M_50, M_55, M_60, M_65, M_70, M_75, M_80

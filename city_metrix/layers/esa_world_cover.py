@@ -1,10 +1,8 @@
-from dask.diagnostics import ProgressBar
 from enum import Enum
-import xarray as xr
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 
 class EsaWorldCoverClass(Enum):
@@ -23,18 +21,19 @@ class EsaWorldCoverClass(Enum):
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class EsaWorldCover(Layer):
-    """
-    Attributes:
-        land_cover_class: Enum value from EsaWorldCoverClass
-        year: year used for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
-    """
-
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["land_cover_class"]
+    MINOR_NAMING_ATTS = None
     STAC_CATALOG_URI = "https://services.terrascope.be/stac/"
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"
 
-    def __init__(self, land_cover_class=None, year=2020, **kwargs):
+    """
+    Attributes:
+        land_cover_class: Enum value from EsaWorldCoverClass
+        year: year used for data retrieval
+    """
+    def __init__(self, land_cover_class:EsaWorldCoverClass=None, year=2020, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
         self.year = year

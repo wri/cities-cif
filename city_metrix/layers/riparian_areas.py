@@ -3,13 +3,17 @@ import numpy as np
 import ee
 from scipy.ndimage import distance_transform_edt
 
-from .layer import Layer, get_image_collection
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from .height_above_nearest_drainage import HeightAboveNearestDrainage
-from .layer_geometry import GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
 class RiparianAreas(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["river_head", "thresh"]
+
     """
     Attributes:
         spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
@@ -18,7 +22,6 @@ class RiparianAreas(Layer):
                     default is 1000, other options - 100, 5000
         thresh: flow accumuation threshold, default is 0
     """
-
     def __init__(self, river_head=1000, thresh=0, **kwargs):
         super().__init__(**kwargs)
         self.river_head = river_head
@@ -31,7 +34,9 @@ class RiparianAreas(Layer):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
         # read HAND data to generate drainage paths
-        hand = HeightAboveNearestDrainage(river_head=self.river_head, thresh=self.thresh).get_data(bbox, spatial_resolution=spatial_resolution)
+        # Specify DEFAULT_DEVELOPMENT_ENV since this is not a default layer
+        hand = (HeightAboveNearestDrainage(river_head=self.river_head, thresh=self.thresh)
+                .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution))
 
         # Read surface water occurance
         water = ee.Image('JRC/GSW1_3/GlobalSurfaceWater').select(['occurrence']).gte(50)

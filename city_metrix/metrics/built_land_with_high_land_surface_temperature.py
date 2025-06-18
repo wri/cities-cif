@@ -1,18 +1,34 @@
-from geopandas import GeoDataFrame, GeoSeries
+from geopandas import GeoSeries
 
+from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import HighLandSurfaceTemperature, EsaWorldCoverClass, EsaWorldCover
+from city_metrix.metrix_model import GeoZone, Metric
 
 
-def built_land_with_high_land_surface_temperature(zones: GeoDataFrame) -> GeoSeries:
-    """
-    Get percentage of built up land with low albedo based on Sentinel 2 imagery.
-    :param zones:
-    :return:
-    """
-    built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
-    high_lst = HighLandSurfaceTemperature()
+class BuiltLandWithHighLST(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
-    built_land_counts = built_up_land.groupby(zones).count()
-    built_high_lst_counts = high_lst.mask(built_up_land).groupby(zones).count()
+    def __init__(self,  **kwargs):
+        super().__init__(**kwargs)
 
-    return built_high_lst_counts.fillna(0) / built_land_counts
+    def get_metric(self,
+                 geo_zone: GeoZone,
+                 spatial_resolution:int = None) -> GeoSeries:
+        """
+        Get percentage of built up land with low albedo based on Sentinel 2 imagery.
+        :param geo_zone:
+        :return:
+        """
+        built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
+        high_lst = HighLandSurfaceTemperature()
+
+        built_land_counts = (built_up_land
+                             .groupby(geo_zone, force_data_refresh = False)
+                             .count())
+        built_high_lst_counts = (high_lst.mask(built_up_land)
+                                 .groupby(geo_zone, force_data_refresh = False)
+                                 .count())
+
+        return built_high_lst_counts.fillna(0) / built_land_counts

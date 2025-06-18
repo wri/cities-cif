@@ -1,20 +1,22 @@
 import ee
 
-from .layer import Layer, get_image_collection
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from .albedo import Albedo
-from .layer_geometry import GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 class VegetationWaterMap(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["greenwater_layer"]
+    MINOR_NAMING_ATTS = None
+
     """
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
         greenwater_layer: select returned layer from 'startgreenwaterIndex'/'endgreenwaterIndex'/'lossgreenwaterSlope'/'gaingreenwaterSlope'
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
     def __init__(self, start_date="2016-01-01", end_date="2022-12-31", greenwater_layer='startgreenwaterIndex', **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date

@@ -1,18 +1,14 @@
-from dask.diagnostics import ProgressBar
-import xarray as xr
-import xee
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
 class AverageNetBuildingHeight(Layer):
-    """
-    Attributes:
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
-    """
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -22,6 +18,7 @@ class AverageNetBuildingHeight(Layer):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
 
         # https://ghsl.jrc.ec.europa.eu/ghs_buH2023.php
         # ANBH is the average height of the built surfaces, USE THIS
