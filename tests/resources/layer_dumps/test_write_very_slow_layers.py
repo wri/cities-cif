@@ -13,8 +13,8 @@ BBOX = BBOX_USA_OR_PORTLAND_2
 PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_FractionalVegetation_write_small_bbox(target_folder):
-    file_path = prep_output_path(target_folder, 'layer','FractionalVegetation_small_bbox.tif')
+def test_FractionalVegetationPercent_write_small_bbox(target_folder):
+    file_path = prep_output_path(target_folder, 'layer','FractionalVegetationPercent_small_bbox.tif')
     bbox = get_test_bbox(BBOX)
     layer_obj = FractionalVegetationPercent()
     _write_verify(layer_obj, bbox, file_path)
@@ -34,7 +34,7 @@ def test_OvertureBuildingsDSM_write_small_bbox(target_folder):
     _write_verify(layer_obj, bbox, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_open_urban_write_small_bbox(target_folder):
+def test_OpenUrban_write_small_bbox(target_folder):
     file_path = prep_output_path(target_folder, 'layer','OpenUrban_small_bbox.tif')
     bbox = get_test_bbox(BBOX)
     layer_obj = OpenUrban()
