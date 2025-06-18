@@ -1,4 +1,4 @@
-from .layer import Layer, LayerGroupBy
+from city_metrix.metrix_model import Layer
 from .albedo import Albedo
 from .ndvi_sentinel2_gee import NdviSentinel2
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
