@@ -6,9 +6,8 @@ import requests
 import random, scipy
 from shapely.geometry import Point
 
-from .layer import Layer
 from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
 
 
