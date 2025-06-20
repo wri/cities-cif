@@ -154,10 +154,10 @@ def test_write_percent_area_impervious(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_percent_built_area_without_tree_cover(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric', 'percent_built_area_without_tree_cover.geojson')
+    file_path = prep_output_path(target_folder, 'metric', 'percent_built_area_without_tree_cover.csv')
 
-    PercentBuiltAreaWithoutTreeCover().write(zones, file_path)
-    assert verify_file_is_populated(file_path)
+    metric_obj = PercentBuiltAreaWithoutTreeCover()
+    _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_percent_canopy_covered_population(target_folder):

@@ -24,7 +24,7 @@ from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_admin_boundaries, get_city_boundary)
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
-                                      reproject_units, parse_city_aoi_json, construct_city_aoi_json)
+                                      reproject_units, parse_city_aoi_json, construct_city_aoi_json, buffer_bbox)
 from city_metrix.cache_manager import retrieve_cached_city_data, build_file_key
 
 
@@ -81,6 +81,21 @@ class GeoZone():
         self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
 
 
+def _build_buffered_aoi_from_city_boundaries(city_id, admin_level):
+    # Construct bbox from total bounds of all admin levels
+    # increase the AOI by a small amount to avoid edge issues
+    boundaries = get_city_admin_boundaries(city_id, admin_level)
+    if len(boundaries) == 1:
+        west, south, east, north = boundaries.bounds
+    else:
+        west, south, east, north = boundaries.total_bounds
+
+    buffer_meters = 2
+    bbox = buffer_bbox(west, south, east, north , buffer_meters)
+
+    return bbox
+
+
 class GeoExtent():
     def __init__(self, bbox:Union[tuple[float, float, float, float]|GeoZone|str], crs=WGS_CRS):
         if isinstance(bbox, str) or (isinstance(bbox, GeoZone) and bbox.geo_type == GeoType.CITY):
@@ -108,7 +123,7 @@ class GeoExtent():
             admin_level = city.get(aoi_id, None)
             if not admin_level:
                 raise ValueError(f"City metadata for {self.city_id} does not have geometry for admin_level: 'city_admin_level'")
-            bbox = get_city_boundary(city_id, admin_level)
+            bbox = _build_buffered_aoi_from_city_boundaries(city_id, admin_level)
             self.city_id = city_id
             self.aoi_id = aoi_id
             self.admin_level = admin_level
@@ -604,6 +619,8 @@ class LayerGroupBy:
 
     @staticmethod
     def _rasterize(gdf, snap_to):
+        from shapely.validation import make_valid
+        gdf['geometry'] = gdf['geometry'].apply(make_valid)
         if gdf.empty:
             nan_array = np.full(snap_to.shape, np.nan, dtype=float)
             raster = snap_to.copy(data=nan_array)
