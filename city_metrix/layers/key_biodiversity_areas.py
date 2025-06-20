@@ -7,8 +7,8 @@ S3_KBA_PREFIX = 'devdata/inputdata/KBA'
 
 class KeyBiodiversityAreas(Layer):
     OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = ['SitRecID']
-    MINOR_NAMING_ATTS = []
+    MAJOR_NAMING_ATTS = ['country_code_iso3']
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
@@ -29,7 +29,12 @@ class KeyBiodiversityAreas(Layer):
         utm_crs = bbox.as_utm_bbox().crs
 
         country_data = GeoDataFrame.from_file(f'{AWS_STEM}/{S3_KBA_PREFIX}/KBA_{country_code}.geojson')
-        data = country_data.loc[country_data.intersects(bbox.as_geographic_bbox().polygon)]
-        data = data.to_crs(utm_crs).reset_index()
+        city_data = country_data.loc[country_data.intersects(bbox.as_geographic_bbox().polygon)]
 
+        if len(city_data) > 0:
+            dissolved_data = city_data.dissolve()
+            data = GeoDataFrame({'id': [0], 'is_kba': 1, 'geometry': dissolved_data.geometry}).to_crs(utm_crs)
+        else:  # No KBAs intersect with boundary -- return point to avoid empty gdf
+            data = GeoDataFrame({'id': [0], 'is_kba': 1, 'geometry': [bbox.centroid]}).set_crs(bbox.crs).to_crs(utm_crs)
+        
         return data

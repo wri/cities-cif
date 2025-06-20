@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 from city_metrix.metrics import *
-from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE
+from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, BUENOS_AIRES_ZONE
 
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
@@ -150,6 +150,13 @@ def test_percent_built_area_without_tree_cover():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 36.36, 100, 54, 46)
+
+def test_percent_key_biodiversity_area_protected():
+    indicator = PercentKeyBiodiversityAreaProtected('ARG').get_metric(BUENOS_AIRES_ZONE)
+    expected_zone_size = len(BUENOS_AIRES_ZONE.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0, 99.12, 6, 33)
 
 
 def test_percent_protected_area():
