@@ -167,7 +167,7 @@ def _run_write_metrics_by_city_test(metric_obj, target_folder):
         cache_file_exists = check_if_cache_file_exists(file_uri)
         assert cache_file_exists, "Test failed since file did not upload to s3"
         if cache_file_exists and PRESERVE_RESULTS_ON_OS:
-            metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_STAGING_ENV, output_uri=os_file_path)
+            metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_STAGING_ENV, output_uri=os_file_path, force_data_refresh=FORCE_DATA_REFRESH)
     finally:
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         file_key = None if PRESERVE_RESULTS_ON_S3 else file_key
