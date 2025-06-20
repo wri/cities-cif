@@ -10,6 +10,7 @@ from .percent_area_impervious import PercentAreaImpervious
 from .percent_built_area_without_tree_cover import PercentBuiltAreaWithoutTreeCover
 from .percent_canopy_covered_population import *
 from .percent_protected_area import PercentProtectedArea
+from .percent_water_cover import PercentWaterCover
 from .recreational_space_per_capita import RecreationalSpacePerCapita
 from .urban_open_space import UrbanOpenSpace
 from .vegetation_water_change import *

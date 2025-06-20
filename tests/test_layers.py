@@ -315,6 +315,14 @@ def test_smart_surface_lulc():
     utm_bbox_data = SmartSurfaceLULC().get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
+def test_surface_water():
+    data = SurfaceWater().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 1, 1.0, 1.0, 178, 9619)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+    utm_bbox_data = SmartSurfaceLULC().get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
+
 def test_tree_canopy_cover_mask():
     data = TreeCanopyCoverMask().get_data(BBOX)
     assert np.size(data) > 0

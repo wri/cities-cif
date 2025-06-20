@@ -151,13 +151,20 @@ def test_percent_built_area_without_tree_cover():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 36.36, 100, 54, 46)
 
-
 def test_percent_protected_area():
     indicator = PercentProtectedArea().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.00, 0.00, 100, 0)
+
+def test_percent_water_cover():
+    zones = GeoZone(USA_OR_PORTLAND_ZONE.zones.reset_index())  # No water in Indonesia test zone
+    indicator = PercentWaterCover().get_metric(zones)
+    expected_zone_size = len(zones.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 3.44, 3.44, 1, 0)
 
 def test_recreational_space_per_capita():
     spatial_resolution=100
