@@ -20,6 +20,7 @@ from .landsat_collection_2 import LandsatCollection2
 from .nasa_dem import NasaDEM
 from .natural_areas import NaturalAreas
 from .ndvi_sentinel2_gee import NdviSentinel2
+from .ndwi_sentinel2_gee import NdwiSentinel2
 from .open_buildings import OpenBuildings
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .open_urban import OpenUrban
