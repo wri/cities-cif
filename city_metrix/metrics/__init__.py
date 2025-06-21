@@ -2,6 +2,7 @@ from .built_land_with_high_land_surface_temperature import BuiltLandWithHighLST
 from .built_land_with_low_surface_reflectivity import BuiltLandWithLowSurfaceReflectivity
 from .canopy_area_per_resident import *
 from .era_5_met_preprocessing import Era5MetPreprocessing
+from .habitat_types_restored import HabitatTypesRestored
 from .mean_pm2p5_exposure import *
 from .mean_tree_cover import MeanTreeCover
 from .natural_areas_percent import NaturalAreasPercent
