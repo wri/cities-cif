@@ -45,3 +45,6 @@ GEOEXTENT_TERESINA_UTM = GeoExtent(bbox=geo_extent, crs='EPSG:32722')
 geo_zone = construct_city_aoi_json("BRA-Teresina", "city_admin_level")
 GEOZONE_TERESINA_WGS84 = GeoZone(geo_zone=geo_zone)
 
+# City that intersects with KBAs
+geo_zone = construct_city_aoi_json("ARG-Buenos_Aires", "city_admin_level")
+BUENOS_AIRES_WGS84 = GeoZone(geo_zone=geo_zone)

@@ -15,6 +15,7 @@ from .height_above_nearest_drainage import HeightAboveNearestDrainage
 from .high_land_surface_temperature import HighLandSurfaceTemperature
 from .high_slope import HighSlope
 from .impervious_surface import ImperviousSurface
+from .key_biodiversity_areas import KeyBiodiversityAreas
 from .land_surface_temperature import LandSurfaceTemperature
 from .landsat_collection_2 import LandsatCollection2
 from .nasa_dem import NasaDEM

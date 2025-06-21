@@ -4,7 +4,7 @@ from city_metrix.metrix_model import create_fishnet_grid, WGS_CRS, GeoExtent, Ge
 from geocube.api.core import make_geocube
 
 from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND, BBOX_NLD_AMSTERDAM, BBOX_IDN_JAKARTA, \
-    BBOX_IDN_JAKARTA_LARGE
+    BBOX_IDN_JAKARTA_LARGE, BUENOS_AIRES_WGS84
 
 # EXECUTE_IGNORED_TESTS is the master control for whether to execute tests decorated with
 # pytest.mark.skipif. These tests are temporarily ignored due to some unresolved issue.
@@ -54,6 +54,9 @@ IDN_JAKARTA_TILED_LARGE_ZONES = GeoZone(IDN_JAKARTA_TILED_LARGE_BBOXES)
 # Test single tiles
 USA_OR_PORTLAND_ZONE = GeoZone(USA_OR_PORTLAND_BBOX)
 NLD_AMSTERDAM_ZONE = GeoZone(NLD_AMSTERDAM_BBOX)
+
+# Test zones for KBA
+BUENOS_AIRES_ZONE = BUENOS_AIRES_WGS84
 
 
 class MockLayer(Layer):
