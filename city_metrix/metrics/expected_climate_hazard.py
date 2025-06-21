@@ -67,7 +67,7 @@ def summeronly(arr_noleap, southern_hem):
         include_indices = [i for i in range(len(arr_noleap)) if i % 365 >= 151 and i % 365 <= 242]
     return arr_noleap[include_indices]
 
-def summer_percentile(latlon, varname, pctl):
+def percentile(latlon, varname, pctl, want_summer_only=True):
     # Returns 90th percentile tasmax over 1980-2014 for June-July_Aug or Dec-Jan_Feb (if SH) for given latlon
     southern_hem = latlon[0] < 0
     dataset = ee.ImageCollection("ECMWF/ERA5/DAILY")
@@ -84,8 +84,11 @@ def summer_percentile(latlon, varname, pctl):
             if retries >= 10:
                 raise Except('Too many fetch-ERA5 retries')
     alldays_noleap = removeLeapDays(alldays, HIST_START, HIST_END, southern_hem)
-    summer_only = summeronly(alldays_noleap, southern_hem)     
-    return np.percentile(summer_only, pctl)
+    if want_summer_only:
+        summer_only = summeronly(alldays_noleap, southern_hem)     
+        return np.percentile(summer_only, pctl)
+    else:
+        return np.percentile(alldays_noleap)
 
 def count_runs(tf_array, min_runsize):
     falses = np.zeros(tf_array.shape[0]).reshape((tf_array.shape[0],1))
@@ -231,7 +234,7 @@ def future_heatwave_frequency(zones: GeoDataFrame, start_year:int=2040, end_year
         print(rownum, 'of', len(zones))
         zone = zones.iloc[[rownum]]
         bbox = GeoExtent(zone.total_bounds)
-        threshold = summer_percentile((bbox.centroid.y, bbox.centroid.x), 'tasmax', HEATWAVE_INTENSITY_PERCENTILE)
+        threshold = percentile((bbox.centroid.y, bbox.centroid.x), 'tasmax', HEATWAVE_INTENSITY_PERCENTILE, True)
         haz = Tempwave_count(MIN_HEATWAVE_DURATION, threshold)
         data = data_layer.get_data(bbox)
         for model_rank in range(len(list(data.keys()))):
@@ -246,7 +249,7 @@ def future_heatwave_maxduration(zones: GeoDataFrame, start_year:int=2040, end_ye
         print(rownum, 'of', len(zones))
         zone = zones.iloc[[rownum]]
         bbox = GeoExtent(zone.total_bounds)
-        threshold = summer_percentile((bbox.centroid.y, bbox.centroid.x), 'tasmax', HEATWAVE_INTENSITY_PERCENTILE)
+        threshold = percentile((bbox.centroid.y, bbox.centroid.x), 'tasmax', HEATWAVE_INTENSITY_PERCENTILE, True)
         haz = Tempwave_duration(threshold)
         data = data_layer.get_data(bbox)
         for model_rank in range(len(list(data.keys()))):
@@ -276,6 +279,21 @@ def future_annual_maxtemp(zones: GeoDataFrame, start_year:int=2040, end_year:int
         zone = zones.iloc[[rownum]]
         bbox = GeoExtent(zone.total_bounds)
         haz = AnnualVal('max')
+        data = data_layer.get_data(bbox)
+        for model_rank in range(len(list(data.keys()))):
+            model = list(data.keys())[model_rank]
+            results[f'model_{model_rank+1}'].append(haz.get_expectedval((bbox.centroid.y, bbox.centroid.x), data[model], start_year, end_year))
+    return pd.DataFrame({key: [round(i, 1) for i in results[key]] for key in results.keys()})
+
+def future_extreme_precipitation_days(zones: GeoDataFrame, start_year:int=2040, end_year:int=2049):
+    data_layer = NexGddpCmip6(varname='pr', start_year=start_year, end_year=end_year)
+    results = defaultdict(list)
+    for rownum in range(len(zones)):
+        print(rownum, 'of', len(zones))
+        zone = zones.iloc[[rownum]]
+        bbox = GeoExtent(zone.total_bounds)
+        pctl_90 = percentile((bbox.centroid.y, bbox.centroid.x), 'pr', 90, False)
+        haz = ThresholdDays(pctl_90)
         data = data_layer.get_data(bbox)
         for model_rank in range(len(list(data.keys()))):
             model = list(data.keys())[model_rank]
