@@ -167,3 +167,4 @@ def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_z
     finally:
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         # Note: Do not delete S3 files in order to avoid collisions with concurrent tests
+        cleanup_cache_files('layer', None, None, cleanup_os_file_path)

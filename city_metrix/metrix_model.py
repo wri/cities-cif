@@ -694,7 +694,6 @@ class Layer():
 
         with tempfile.TemporaryDirectory() as temp_dir:
             array_list = []
-            print("\n")
             for index, row in fishnet.iterrows():
                 tile_bounds = row['geometry'].bounds
                 geo_extent = GeoExtent(tile_bounds, crs)
@@ -704,6 +703,8 @@ class Layer():
 
                 file_name = f'layer{index}.tif'
                 temp_file = os.path.join(temp_dir, file_name)
+
+                # clip to bounds
                 write_layer(tile_data, temp_file, self.OUTPUT_FILE_FORMAT)
                 array_list.append(temp_file)
 
@@ -713,7 +714,7 @@ class Layer():
             temp_file_uri = 'file://' + output_file_path
             data = read_geotiff_from_cache(temp_file_uri)
 
-            # clip to bounds
+            # clip to AOI bounds
             west, south, east, north = utm_box.bounds
             longitude_range = slice(west, east)
             latitude_range = slice(north, south)

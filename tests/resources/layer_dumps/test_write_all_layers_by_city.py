@@ -276,18 +276,19 @@ def test_WorldPop_write_by_city(target_folder):
 
 
 def _run_write_layers_by_city_test(layer_obj, target_folder):
-    cache_scheme = 's3'
     geo_extent = PROCESSING_CITY
     file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
 
-    os_file_path = prep_output_path(target_folder, 'layer', layer_id)
+    if PRESERVE_RESULTS_ON_OS:
+        os_file_path = prep_output_path(target_folder, 'layer', layer_id)
+    else:
+        os_file_path = None
     try:
         # Do not force data refresh to avoid collisions with concurrent tests
-        layer_obj.write(bbox=geo_extent, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True)
+        layer_obj.write(bbox=geo_extent, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri= os_file_path, force_data_refresh=True)
         cache_file_exists = check_if_cache_file_exists(file_uri)
         assert cache_file_exists, "Test failed since file did not upload to s3"
-        if cache_file_exists and PRESERVE_RESULTS_ON_OS:
-            layer_obj.write(bbox=geo_extent, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=os_file_path)
     finally:
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         # Note: Do not delete S3 files in order to avoid collisions with concurrent tests
+        cleanup_cache_files('layer', None, None, cleanup_os_file_path)
