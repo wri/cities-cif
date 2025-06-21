@@ -15,8 +15,8 @@ def test_city_extent():
     city_geo_extent = GEOEXTENT_TERESINA_WGS84
     geom = city_geo_extent.centroid
     rounded_boundary_centroid = get_rounded_geometry(geom, 1)
-    assert city_geo_extent.projection_type == ProjectionType.GEOGRAPHIC
-    assert rounded_boundary_centroid == 'POINT (-42.8 -5.1)'
+    assert city_geo_extent.projection_type == ProjectionType.UTM
+    assert rounded_boundary_centroid == 'POINT (745795.0 9437061.5)'
 
 def test_nasa_dem_city_id_wgs84():
     data = NasaDEM().get_data(GEOEXTENT_TERESINA_WGS84)

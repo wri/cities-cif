@@ -85,15 +85,27 @@ def _build_buffered_aoi_from_city_boundaries(city_id, admin_level):
     # Construct bbox from total bounds of all admin levels
     # increase the AOI by a small amount to avoid edge issues
     boundaries = get_city_admin_boundaries(city_id, admin_level)
+
     if len(boundaries) == 1:
         west, south, east, north = boundaries.bounds
     else:
         west, south, east, north = boundaries.total_bounds
 
-    buffer_meters = 2
-    bbox = buffer_bbox(west, south, east, north , buffer_meters)
+    # project to UTM
+    centroid = shapely.box(west, south, east, north).centroid
+    utm_crs = get_utm_zone_from_latlon_point(centroid)
+    reproj_bbox = reproject_units(south, west, north, east, WGS_CRS, utm_crs)
 
-    return bbox
+    # Add buffer and round coordinates to whole meters to avoid GEE bbox query issues
+    buffer_meters = 2
+    buff_west = math.floor(reproj_bbox[1] - buffer_meters)
+    buff_south = math.floor(reproj_bbox[0] - buffer_meters)
+    buff_east = math.ceil(reproj_bbox[3] + buffer_meters)
+    buff_north = math.ceil(reproj_bbox[2] + buffer_meters)
+
+    bbox = (buff_west, buff_south, buff_east, buff_north)
+
+    return bbox, utm_crs
 
 
 class GeoExtent():
@@ -113,6 +125,7 @@ class GeoExtent():
                 self.bbox = bbox.total_bounds
             else:
                 self.bbox = bbox
+            self.crs = crs
         else:
             if isinstance(bbox, GeoZone):
                 city_json = construct_city_aoi_json(bbox.city_id, "city_admin_level")
@@ -123,21 +136,17 @@ class GeoExtent():
             admin_level = city.get(aoi_id, None)
             if not admin_level:
                 raise ValueError(f"City metadata for {self.city_id} does not have geometry for admin_level: 'city_admin_level'")
-            bbox = _build_buffered_aoi_from_city_boundaries(city_id, admin_level)
             self.city_id = city_id
             self.aoi_id = aoi_id
             self.admin_level = admin_level
-            if get_projection_type(crs) == ProjectionType.GEOGRAPHIC:
-                self.bbox = bbox
-            else:
-                reproj_bbox = reproject_units(bbox[1], bbox[0], bbox[3], bbox[2], WGS_CRS, crs)
-                self.bbox = (reproj_bbox[1], reproj_bbox[0], reproj_bbox[3], reproj_bbox[2])
 
-        self.crs = crs
-        self.bounds = self.bbox
+            # get AOI from composite of admin areas and project to UTM
+            self.bbox, self.crs = _build_buffered_aoi_from_city_boundaries(city_id, admin_level)
+
         self.epsg_code = int(self.crs.split(':')[1])
-        self.projection_type = get_projection_type(crs)
+        self.projection_type = get_projection_type(self.crs)
         self.units = "degrees" if self.projection_type == ProjectionType.GEOGRAPHIC else "meters"
+        self.bounds = self.bbox
 
         self.min_x = self.bbox[0]
         self.min_y = self.bbox[1]
@@ -229,14 +238,10 @@ class GeoExtent():
         if self.projection_type == ProjectionType.GEOGRAPHIC:
             return self
         else:
-            if self.geo_type == GeoType.CITY:
-                geo_extent = construct_city_aoi_json(self.city_id, self.aoi_id)
-                bbox = GeoExtent(bbox=geo_extent, crs=WGS_CRS)
-            else:
-                reproj_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, self.crs, WGS_CRS)
-                # round to minimize drift
-                rounded_box = (reproj_bbox[0], reproj_bbox[1], reproj_bbox[2], reproj_bbox[3])
-                bbox = GeoExtent(bbox=rounded_box, crs=WGS_CRS)
+            reproj_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, self.crs, WGS_CRS)
+            # round to minimize drift
+            rounded_box = (reproj_bbox[0], reproj_bbox[1], reproj_bbox[2], reproj_bbox[3])
+            bbox = GeoExtent(bbox=rounded_box, crs=WGS_CRS)
             return bbox
 
 
