@@ -148,7 +148,7 @@ def test_impervious_surface():
 def test_key_biodiversity_areas():
     data = KeyBiodiversityAreas('USA').get_data(BBOX)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'area_in_meters', 1, 8.1, 15967.0, 1111, 0)
+    assert_vector_stats(data, 'is_kba', 1, 8.1, 15967.0, 1111, 0)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
     utm_bbox_data = OpenBuildings(COUNTRY_CODE_FOR_BBOX).get_data(BBOX_AS_UTM)
     assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
