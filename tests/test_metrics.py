@@ -89,10 +89,9 @@ def test_era_5_met_preprocess():
     # TODO Add value testing
 
 def test_future_annual_maxtemp():
-    indicator = future_annual_maxtemp(IDN_JAKARTA_TILED_ZONES.iloc[:3])
-    expected_zone_size = IDN_JAKARTA_TILED_ZONES.iloc[:3].geometry.size
+    indicator = FutureAnnualMaxtemp().get_metric(IDN_JAKARTA_TILED_ZONES)
     actual_indicator_size = indicator.size
-    assert 3 * expected_zone_size == actual_indicator_size   # Returns three columns
+    assert actual_indicator_size == 3   # Returns three columns
 
 
 def test_mean_pm2p5_exposure_popweighted_children():
