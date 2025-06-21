@@ -1,20 +1,36 @@
 from geopandas import GeoDataFrame
+from geocube.api.core import make_geocube
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
-from ..constants import GEOJSON_FILE_EXTENSION
+from city_metrix.layers.world_pop import WorldPop
+from ..constants import GTIFF_FILE_EXTENSION
+import numpy as np
 
 AWS_STEM = 'https://wri-cities-indicators.s3.us-east-1.amazonaws.com'
 COUNTRYBBOXES_PATH = 'devdata/inputdata/country_bboxes.geojson'
 COUNTRYBOUNDS_PATH = 'devdata/inputdata/country_boundaries.geojson'
 S3_KBA_PREFIX = 'devdata/inputdata/KBA'
 
+def _rasterize(gdf, snap_to):
+    if gdf.empty:
+        nan_array = np.full(snap_to.shape, np.nan, dtype=float)
+        raster = snap_to.copy(data=nan_array)
+    else:
+        raster = make_geocube(
+            vector_data=gdf,
+            measurements=["index"],
+            like=snap_to,
+        ).index
+
+    return raster.rio.reproject_match(snap_to)
+
 class KeyBiodiversityAreas(Layer):
-    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ['country_code_iso3']
     MINOR_NAMING_ATTS = None
 
     """
     Attributes:
-        SitRecID: ID num at BirdLife International
+        country_code_iso3 must be one of the countries currently supported in Cities Data (plus USA for testing)
     """
 
     def __init__(self, country_code_iso3=None, **kwargs):
@@ -38,10 +54,12 @@ class KeyBiodiversityAreas(Layer):
         country_kba_data = GeoDataFrame.from_file(f'{AWS_STEM}/{S3_KBA_PREFIX}/KBA_{country_code}.geojson')
         city_kba_data = country_kba_data.loc[country_kba_data.intersects(bbox.as_geographic_bbox().polygon)]
 
+        worldpop_data = WorldPop().get_data(bbox)
         if len(city_kba_data) > 0:
             dissolved_kba_data = city_kba_data.dissolve()
             data = GeoDataFrame({'id': [0], 'is_kba': 1, 'geometry': dissolved_kba_data.geometry}).to_crs(utm_crs)
-        else:  # No KBAs intersect with boundary -- return point to avoid empty gdf
-            data = GeoDataFrame({'id': [0], 'is_kba': 1, 'geometry': [bbox.centroid]}).set_crs(bbox.crs).to_crs(utm_crs)
-        
-        return data
+            result = _rasterize(data.reset_index(), worldpop_data).assign_attrs(worldpop_data.attrs)
+        else:  # No KBAs intersect with boundary -- return all-NAN array
+            result = (worldpop_data * np.nan).assign_attrs(worldpop_data.attrs)
+        result = result.rename('is_kba').assign_attrs({'id': 'is_kba'})
+        return result
