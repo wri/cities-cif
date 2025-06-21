@@ -5,7 +5,8 @@ import numpy as np
 from geopandas import GeoDataFrame, GeoSeries
 import pandas as pd
 from city_metrix.layers import NexGddpCmip6
-from city_metrix.layers.layer_geometry import GeoExtent
+from city_metrix.metrix_model import GeoExtent
+
 
 VARIABLES = {
     'tas': {
