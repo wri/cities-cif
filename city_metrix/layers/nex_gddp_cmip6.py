@@ -5,8 +5,7 @@ import xee
 import ee
 import numpy as np
 import pandas as pd
-from .layer import Layer, get_image_collection
-from city_metrix.metrix_model import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 
 DEFAULT_SPATIAL_RESOLUTION = 27830
 
