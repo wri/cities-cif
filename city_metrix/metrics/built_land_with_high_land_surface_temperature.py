@@ -31,4 +31,7 @@ class BuiltLandWithHighLST(Metric):
                                  .groupby(geo_zone, force_data_refresh = False)
                                  .count())
 
-        return built_high_lst_counts.fillna(0) / built_land_counts
+        if not isinstance(built_high_lst_counts, (int, float)):
+            built_high_lst_counts = built_high_lst_counts.fillna(0)
+
+        return built_high_lst_counts / built_land_counts

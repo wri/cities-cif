@@ -17,7 +17,7 @@ class PercentBuiltAreaWithoutTreeCover(Metric):
         super().__init__(**kwargs)
         self.height = height
 
-    def get_data(self,
+    def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
         """
@@ -35,5 +35,8 @@ class PercentBuiltAreaWithoutTreeCover(Metric):
         built_land = urban_land_use.groupby(geo_zone).count()
         built_land_with_tree_cover = urban_land_use.mask(tree_canopy_height).groupby(geo_zone).count()
 
-        indicator = 100 * (1 - (built_land_with_tree_cover.fillna(0) / built_land))
+        if not isinstance(built_land_with_tree_cover, (int, float)):
+            built_land_with_tree_cover = built_land_with_tree_cover.fillna(0)
+
+        indicator = 100 * (1 - (built_land_with_tree_cover / built_land))
         return indicator

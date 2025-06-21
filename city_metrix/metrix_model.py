@@ -12,6 +12,7 @@ import shapely
 from abc import abstractmethod
 from pathlib import Path
 from typing import Union
+from dask.dataframe import DataFrame
 from dask.diagnostics import ProgressBar
 from ee import ImageCollection
 from geocube.api.core import make_geocube
@@ -21,17 +22,16 @@ from shapely import geometry
 from shapely.geometry import box
 from xrspatial import zonal_stats
 
+from city_metrix.cache_manager import retrieve_city_cache, build_file_key
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, DEFAULT_STAGING_ENV, GTIFF_FILE_EXTENSION
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_admin_boundaries, get_city_boundary, read_geotiff_from_cache)
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
-                                      reproject_units, parse_city_aoi_json, construct_city_aoi_json,
+                                      parse_city_aoi_json, reproject_units, buffer_bbox, construct_city_aoi_json,
                                       standardize_y_dimension_direction)
-from city_metrix.cache_manager import retrieve_city_cache, build_file_key
 
 
-# ============= GeoZone ======================================
 class GeoZone():
     def __init__(self, geo_zone: Union[GeoDataFrame | str], crs=WGS_CRS):
         if isinstance(geo_zone, str):
@@ -85,6 +85,21 @@ class GeoZone():
         self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
 
 
+def _build_buffered_aoi_from_city_boundaries(city_id, admin_level):
+    # Construct bbox from total bounds of all admin levels
+    # increase the AOI by a small amount to avoid edge issues
+    boundaries = get_city_admin_boundaries(city_id, admin_level)
+    if len(boundaries) == 1:
+        west, south, east, north = boundaries.bounds
+    else:
+        west, south, east, north = boundaries.total_bounds
+
+    buffer_meters = 2
+    bbox = buffer_bbox(west, south, east, north , buffer_meters)
+
+    return bbox
+
+
 class GeoExtent():
     def __init__(self, bbox: Union[tuple[float, float, float, float] | GeoZone | str], crs=WGS_CRS):
         if isinstance(bbox, str) or (isinstance(bbox, GeoZone) and bbox.geo_type == GeoType.CITY):
@@ -113,7 +128,7 @@ class GeoExtent():
             if not admin_level:
                 raise ValueError(
                     f"City metadata for {self.city_id} does not have geometry for admin_level: 'city_admin_level'")
-            bbox = get_city_boundary(city_id, admin_level)
+            bbox = _build_buffered_aoi_from_city_boundaries(city_id, admin_level)
             self.city_id = city_id
             self.aoi_id = aoi_id
             self.admin_level = admin_level
@@ -397,7 +412,7 @@ def create_fishnet_grid(bbox: GeoExtent,
 
 
 # ================= LayerGroupBy ==============
-MAX_TILE_SIZE_DEGREES = 0.1 # TODO How was this value selected?
+MAX_TILE_SIZE_DEGREES = 0.25
 
 class LayerGroupBy:
     def __init__(self, aggregate, geo_zone: GeoZone, spatial_resolution=None, layer=None, force_data_refresh=True,
@@ -435,10 +450,10 @@ class LayerGroupBy:
 
         # if area of zone is within tolerance, then query as a single tile, otherwise sub-tile
         if box_area <= MAX_TILE_SIZE_DEGREES**2:
-            stats = LayerGroupBy._zonal_stats_tile([stats_func], geo_zone, None, zones, aggregate,
+            stats = LayerGroupBy._zonal_stats_tile([stats_func], geo_zone, zones, aggregate,
                                                    layer, masks, spatial_resolution, force_data_refresh)
         else:
-            stats = LayerGroupBy._zonal_stats_fishnet(stats_func, geo_zone, zones, aggregate, layer,
+            stats = LayerGroupBy._zonal_stats_fishnet(stats_func, zones, aggregate, layer,
                                                       masks, spatial_resolution)
 
         if layer is not None:
@@ -456,16 +471,16 @@ class LayerGroupBy:
 
             return stats
 
-        result_series = stats[[stats_func]].squeeze()
+        result_series = stats[stats_func]
 
         return result_series
 
     @staticmethod
-    def _zonal_stats_fishnet(stats_func, geo_zone, zones, aggregate, layer, masks, spatial_resolution):
+    def _zonal_stats_fishnet(stats_func, zones, aggregate, layer, masks, spatial_resolution):
         # fishnet GeoDataFrame into smaller tiles
         crs = zones.crs.srs
         bounds = zones.total_bounds
-        city_admin = geo_zone
+
         if crs == WGS_CRS:
             bbox = GeoExtent(bbox=tuple(bounds), crs=WGS_CRS)
             output_as = ProjectionType.GEOGRAPHIC
@@ -494,7 +509,7 @@ class LayerGroupBy:
         tile_stats = pd.concat([
             LayerGroupBy._zonal_stats_tile(tile_funcs,
                                            LayerGroupBy._merge_tile_geometry_into_query_gdf(tile_gdf, zones),
-                                           geo_zone, zones, aggregate, layer, masks, spatial_resolution, False)
+                                           zones, aggregate, layer, masks, spatial_resolution, False)
             for tile_gdf in tile_gdfs
         ])
 
@@ -507,9 +522,7 @@ class LayerGroupBy:
         if None in aggregated.columns:
             aggregated.rename(columns={None: stats_func}, inplace=True)
 
-        aggregated.reset_index(inplace=True)
-
-        return aggregated
+        return aggregated.reset_index()
 
     @staticmethod
     def _aggregate_stats(df, stats_func):
@@ -537,35 +550,23 @@ class LayerGroupBy:
         return adjusted_gdf
 
     @staticmethod
-    def _zonal_stats_tile(stats_func, geo_zone, city_geo_zone, zones, aggregate, layer, masks, spatial_resolution,
-                          force_data_refresh):
+    def _zonal_stats_tile(stats_func, geo_zone, zones, aggregate, layer, masks, spatial_resolution, force_data_refresh):
         bbox = GeoExtent(geo_zone)
 
-        aggregate_data = aggregate.get_data(bbox=bbox,spatial_resolution=spatial_resolution)
+        aggregate_data = aggregate.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
+                                                         spatial_resolution=spatial_resolution,
+                                                         force_data_refresh=force_data_refresh)
 
-        mask_datum = [mask.get_data(bbox=bbox, spatial_resolution=spatial_resolution) for mask in masks]
+        mask_datum = [mask.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
+                                                 spatial_resolution=spatial_resolution,
+                                                 force_data_refresh=force_data_refresh) for mask in masks]
 
         if layer is not None:
-            layer_data = layer.get_data(bbox=bbox,spatial_resolution=spatial_resolution)
+            layer_data = layer.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
+                                                     spatial_resolution=spatial_resolution,
+                                                     force_data_refresh=force_data_refresh)
         else:
             layer_data = None
-
-        # aggregate_data = aggregate.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
-        #                                                  city_geo_zone=city_geo_zone,
-        #                                                  spatial_resolution=spatial_resolution,
-        #                                                  force_data_refresh=force_data_refresh)
-        #
-        # mask_datum = [mask.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, city_geo_zone=city_geo_zone,
-        #                                          spatial_resolution=spatial_resolution,
-        #                                          force_data_refresh=force_data_refresh) for mask in masks]
-        #
-        # if layer is not None:
-        #     layer_data = layer.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
-        #                                              city_geo_zone=city_geo_zone,
-        #                                              spatial_resolution=spatial_resolution,
-        #                                              force_data_refresh=force_data_refresh)
-        # else:
-        #     layer_data = None
 
         # align to highest resolution raster, which should be the largest raster
         # since all are clipped to the extent
@@ -643,6 +644,8 @@ class LayerGroupBy:
 
     @staticmethod
     def _rasterize(gdf, snap_to):
+        from shapely.validation import make_valid
+        gdf['geometry'] = gdf['geometry'].apply(make_valid)
         if gdf.empty:
             nan_array = np.full(snap_to.shape, np.nan, dtype=float)
             raster = snap_to.copy(data=nan_array)
@@ -674,7 +677,6 @@ class Layer():
         :param bbox: a tuple of floats representing the bounding box, (min x, min y, max x, max y)
         :param spatial_resolution: resolution of continuous raster data in meters
         :param resampling_method: interpolation method for continuous raster layers (bilinear, bicubic, nearest)
-        :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
         :return: A rioxarray-format DataArray or a GeoPandas DataFrame
         """
         ...
@@ -683,11 +685,11 @@ class Layer():
         # TODO: Code currently only handles raster data
         from osgeo import gdal
 
-        length_units = bbox.units
         output_as = ProjectionType.UTM
-        crs = bbox.crs
+        utm_box = bbox.as_utm_bbox()
+        crs = utm_box.crs
 
-        fishnet = create_fishnet_grid(bbox, tile_side_length=tile_side_m, length_units=length_units,
+        fishnet = create_fishnet_grid(utm_box, tile_side_length=tile_side_m, length_units='meters',
                                       spatial_resolution=spatial_resolution, output_as=output_as)
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -712,7 +714,7 @@ class Layer():
             data = read_geotiff_from_cache(temp_file_uri)
 
             # clip to bounds
-            west, south, east, north = bbox.as_utm_bbox().bounds
+            west, south, east, north = utm_box.bounds
             longitude_range = slice(west, east)
             latitude_range = slice(north, south)
             clipped_data = data.sel(x=longitude_range, y=latitude_range)
@@ -722,13 +724,16 @@ class Layer():
 
         return clipped_data
 
-    def get_data_with_caching(self, bbox: GeoExtent, s3_env: str, city_geo_zone=None,
+    def get_data_with_caching(self, bbox: GeoExtent, s3_env: str,
                               spatial_resolution: int = None, force_data_refresh: bool = False) -> Union[
         xr.DataArray, gpd.GeoDataFrame]:
+        """
+        Extract the data from the S3 cache otherwise source and return it in a way we can compare to other layers.
+        :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
+        """
 
         standard_env = standardize_s3_env(self, s3_env)
-        city_geo_extent = GeoExtent(city_geo_zone) if city_geo_zone is not None else None
-        retrieved_cached_data, _, file_uri = retrieve_city_cache(self.aggregate, bbox, standard_env, city_geo_extent,
+        retrieved_cached_data, _, file_uri = retrieve_city_cache(self.aggregate, bbox, standard_env,
                                                                  force_data_refresh)
         if retrieved_cached_data is None:
             if hasattr(self.aggregate, 'PROCESSING_TILE_SIDE_M'):
@@ -949,18 +954,20 @@ class Metric():
                                 force_data_refresh: bool = False) -> [Union[xr.DataArray, gpd.GeoDataFrame], str]:
 
         standard_env = standardize_s3_env(self, s3_env)
-        retrieved_cached_data, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, standard_env, None,
+        retrieved_cached_data, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, standard_env,
                                                                           force_data_refresh)
         if retrieved_cached_data is None:
-            result_metric = self.metric.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
+            result_metric = self.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
         else:
-            result_metric = retrieved_cached_data.squeeze()
+            result_metric = retrieved_cached_data
 
         zones = geo_zone.zones
         if 'geo_level' in zones.columns and isinstance(result_metric, Series):
             result_metric.name = 'value'
-            results = zones.join(result_metric)
-            result_metric = _thin_metrics_df_to_core_columns(results)
+            results_metric_df = zones.join(result_metric)
+            if 'metric_id' not in results_metric_df.columns:
+                results_metric_df = results_metric_df.assign(metric_id=feature_id)
+            result_metric = _standardize_city_metrics_columns(results_metric_df, None)
 
         if retrieved_cached_data is None and geo_zone.geo_type == GeoType.CITY:
             write_metric(result_metric, file_uri, self.OUTPUT_FILE_FORMAT)
@@ -991,6 +998,9 @@ class Metric():
         if not skip_write:
             Metric._verify_extension(output_uri, f".{CSV_FILE_EXTENSION}")
 
+            if  isinstance(indicator, (float, int)):
+                indicator = pd.Series([indicator])
+
             if  isinstance(indicator, Series):
                 indicator.name = 'value'
 
@@ -1003,7 +1013,10 @@ class Metric():
                 indicator_df = indicator_df.assign(metric_id=feature_id)
 
             if 'geo_id' in indicator_df.columns:
-                indicator_df = _thin_metrics_df_to_core_columns(indicator_df)
+                indicator_df = _standardize_city_metrics_columns(indicator_df, None)
+
+            if isinstance(indicator_df, gpd.GeoDataFrame):
+                indicator_df = indicator_df.drop(columns="geometry")
 
             write_metric(indicator_df, output_uri, CSV_FILE_EXTENSION)
 
@@ -1027,27 +1040,44 @@ class Metric():
 
         if not skip_write:
             Metric._verify_extension(output_uri, f".{GEOJSON_FILE_EXTENSION}")
-            indicator.name = 'value'
+
+            if isinstance(indicator, (int, float)):
+                indicator = pd.Series([indicator])
+            if isinstance(indicator, Series):
+                indicator.name = 'value'
 
             result_df = geo_zone.zones
-            if 'geo_id' in result_df.columns:
-                result_df = result_df[['geo_id', 'geo_name', 'geo_level', 'geometry']]
+            if isinstance(indicator, pd.DataFrame):
+                indicator_df = pd.concat([result_df['geometry'], indicator], axis=1)
+            elif not isinstance(indicator, gpd.GeoDataFrame):
+                indicator_df = pd.concat([result_df, indicator], axis=1)
+            else:
+                indicator_df = indicator
 
-            result_df = result_df.assign(metric_id=feature_id)
+            if 'metric_id' not in indicator_df.columns:
+                indicator_df = indicator_df.assign(metric_id=feature_id)
 
-            indicator_df = pd.concat([result_df, indicator], axis=1)
-            write_metric(indicator_df, output_uri, GEOJSON_FILE_EXTENSION)
+            if 'geo_id' in indicator_df.columns:
+                indicator_df = _standardize_city_metrics_columns(indicator_df, 'geometry')
+
+            if not isinstance(indicator_df, gpd.GeoDataFrame):
+                indicator_gdf = gpd.GeoDataFrame(indicator_df, geometry='geometry')
+            else:
+                indicator_gdf = indicator_df
+
+            write_metric(indicator_gdf, output_uri, GEOJSON_FILE_EXTENSION)
 
     @staticmethod
     def _verify_extension(file_path, extension):
         if Path(file_path).suffix != extension:
             raise ValueError(f"File name must have '{extension}' extension")
 
-def _thin_metrics_df_to_core_columns(metrics_df):
-    if 'metric_id' in metrics_df.columns:
-        result_df = metrics_df[['geo_id', 'geo_name', 'geo_level', 'metric_id', 'value']]
-    else:
-        result_df = metrics_df[['geo_id', 'geo_name', 'geo_level', 'value']]
+def _standardize_city_metrics_columns(metrics_df, supplemental_column):
+    columns = ['geo_id', 'geo_name', 'geo_level', 'metric_id', 'value']
+    if supplemental_column is not None:
+        columns.append(supplemental_column)
+
+    result_df = metrics_df[columns]
     return result_df
 
 def decide_if_write_can_be_skipped(feature, selection_object, output_path, s3_env):  # Determine if write can be skipped

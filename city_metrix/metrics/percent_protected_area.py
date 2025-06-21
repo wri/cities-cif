@@ -30,4 +30,7 @@ class PercentProtectedArea(Metric):
         protect_area_in_world_cover = world_cover.mask(protect_area).groupby(geo_zone).count()
         world_cover_counts = world_cover.groupby(geo_zone).count()
 
-        return 100 * protect_area_in_world_cover.fillna(0) / world_cover_counts
+        if not isinstance(protect_area_in_world_cover, (int, float)):
+            protect_area_in_world_cover = protect_area_in_world_cover.fillna(0)
+
+        return 100 * protect_area_in_world_cover / world_cover_counts

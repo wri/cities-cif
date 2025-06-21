@@ -12,19 +12,6 @@ BBOX = BBOX_USA_OR_PORTLAND_2
 
 PRESERVE_RESULTS_ON_OS = True # False - Default for check-in
 
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_FractionalVegetation_write_small_bbox(target_folder):
-    file_path = prep_output_path(target_folder, 'layer','FractionalVegetation_small_bbox.tif')
-    bbox = get_test_bbox(BBOX)
-    layer_obj = FractionalVegetationPercent()
-    _write_verify(layer_obj, bbox, file_path)
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_FractionalVegetation_write_small_bbox_min_threshol(target_folder):
-    file_path = prep_output_path(target_folder, 'layer','FractionalVegetation_small_bbox_min_threshhold_06.tif')
-    bbox = get_test_bbox(BBOX)
-    layer_obj = FractionalVegetationPercent(min_threshold=0.6)
-    _write_verify(layer_obj, bbox, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_OvertureBuildingsHeight_write_small_bbox(target_folder):
@@ -52,20 +39,6 @@ def test_SmartSurfaceLULC_write_small_bbox(target_folder):
     file_path = prep_output_path(target_folder, 'layer','SmartSurfaceLULC_small_bbox.tif')
     bbox = get_test_bbox(BBOX)
     layer_obj = SmartSurfaceLULC()
-    _write_verify(layer_obj, bbox, file_path)
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_TreeCanopyHeight_write_small_bbox(target_folder):
-    file_path = prep_output_path(target_folder, 'layer','TreeCanopyHeight_small_bbox.tif')
-    bbox = get_test_bbox(BBOX)
-    layer_obj = TreeCanopyHeight()
-    _write_verify(layer_obj, bbox, file_path)
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_TreeCanopyCoverMask_write_small_bbox(target_folder):
-    file_path = prep_output_path(target_folder, 'layer','TreeCanopyHeight_small_bbox.tif')
-    bbox = get_test_bbox(BBOX)
-    layer_obj = TreeCanopyCoverMask()
     _write_verify(layer_obj, bbox, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")

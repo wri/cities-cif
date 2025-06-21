@@ -26,11 +26,10 @@ def build_file_key(output_env, class_obj, geo_extent):
 
     return file_uri, file_key, feature_id, is_custom_object
 
-def retrieve_city_cache(class_obj, geo_extent, output_env, city_geo_extent, force_data_refresh: bool):
-    search_geo_extent = geo_extent if city_geo_extent is None else city_geo_extent
-    file_uri, file_key, feature_id, is_custom_layer = build_file_key(output_env, class_obj, search_geo_extent)
+def retrieve_city_cache(class_obj, geo_extent, output_env, force_data_refresh: bool):
+    file_uri, file_key, feature_id, is_custom_layer = build_file_key(output_env, class_obj, geo_extent)
 
-    if force_data_refresh or search_geo_extent.geo_type == GeoType.GEOMETRY or not check_if_cache_file_exists(file_uri):
+    if force_data_refresh or geo_extent.geo_type == GeoType.GEOMETRY or not check_if_cache_file_exists(file_uri):
         return None, feature_id, file_uri
 
     # Retrieve from cache
@@ -46,15 +45,6 @@ def retrieve_city_cache(class_obj, geo_extent, output_env, city_geo_extent, forc
         data = read_csv_from_s3(file_uri)
     else:
         raise Exception(f"Unrecognized file_format of '{file_format}'")
-
-    # if city_geo_extent is not None:
-    #     # clip to bounds
-    #     west, south, east, north = geo_extent.as_utm_bbox().bounds
-    #     longitude_range = slice(west, east)
-    #     latitude_range = slice(north, south)
-    #     result_data = data.sel(x=longitude_range, y=latitude_range)
-    # else:
-    #     result_data = data
 
     return data, feature_id, file_uri
 

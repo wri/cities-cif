@@ -23,4 +23,7 @@ class UrbanOpenSpace(Metric):
         open_space_in_built_land = open_space.mask(built_up_land).groupby(geo_zone).count()
         built_land_counts = built_up_land.groupby(geo_zone).count()
 
-        return open_space_in_built_land.fillna(0) / built_land_counts
+        if not isinstance(open_space_in_built_land, (int, float)):
+            open_space_in_built_land = open_space_in_built_land.fillna(0)
+
+        return open_space_in_built_land / built_land_counts

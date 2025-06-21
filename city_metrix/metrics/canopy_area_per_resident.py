@@ -37,7 +37,10 @@ class CanopyAreaPerResident(Metric):
             world_pop_sum = world_pop.groupby(geo_zone).sum()
             tree_canopy_height_count = tree_canopy_height.groupby(geo_zone).count()
 
-        return tree_canopy_height_count.fillna(0) / world_pop_sum
+        if not isinstance(tree_canopy_height_count, (int, float)):
+            tree_canopy_height_count = tree_canopy_height_count.fillna(0)
+
+        return tree_canopy_height_count/ world_pop_sum
 
 
 class CanopyAreaPerResidentChildren(Metric):

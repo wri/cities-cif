@@ -90,7 +90,7 @@ class FractionalVegetationPercent(Layer):
             vegNDVI = (
                 ndvi.updateMask(dwClass.eq(1))
                 .reduceRegion(
-                    reducer=ee.Reducer.percentile([PCTL_FULLVEG]),
+                    reducer=ee.Reducer.percentile([vegpctl]),
                     geometry=aoi,
                     scale=10,
                     maxPixels=10e13,

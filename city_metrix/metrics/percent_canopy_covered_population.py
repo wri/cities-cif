@@ -41,7 +41,10 @@ class PercentCanopyCoveredPopulation(Metric):
         access_pop = pop_layer.groupby(geo_zone).sum()
         total_pop = WorldPop(agesex_classes=self.worldpop_agesex_classes).groupby(geo_zone).sum()
 
-        return 100 * access_pop.fillna(0) / total_pop
+        if not isinstance(access_pop, (int, float)):
+            access_pop = access_pop.fillna(0)
+
+        return 100 * access_pop / total_pop
 
 
 class PercentCanopyCoveredPopulationChildren(Metric):
