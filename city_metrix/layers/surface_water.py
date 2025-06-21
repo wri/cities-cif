@@ -43,7 +43,7 @@ class SurfaceWater(Layer):
             return convolved[1:-1]
 
         ndwi_data = NdwiSentinel2(year=self.year).get_data(bbox)
-        histo = np.histogram(ndwi_data, bins=100, range=None, density=None, weights=None)
+        histo = np.histogram(ndwi_data, bins=1000, range=None, density=None, weights=None)
         data_y = histo[0]
         data_x = [(histo[1][i] + histo[1][i+1]) / 2 for i in range(len(histo[1]) - 1)]
 

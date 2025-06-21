@@ -164,7 +164,7 @@ def test_percent_water_cover():
     expected_zone_size = len(zones.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 3.44, 3.44, 1, 0)
+    assert_metric_stats(indicator, 2, 3.35, 3.35, 1, 0)
 
 def test_recreational_space_per_capita():
     spatial_resolution=100
