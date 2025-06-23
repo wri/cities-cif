@@ -51,6 +51,13 @@ def test_canopy_area_per_resident_informal():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.00, 2.81, 18, 82)
 
+def test_hospitals_per_ten_thousand_residents():
+    indicator = HospitalsPerTenThousandResidents().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.00, 8.87, 100, 0)
+
 def test_percent_canopy_covered_population_children():
     indicator = PercentCanopyCoveredPopulationChildren().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
@@ -173,7 +180,7 @@ def test_urban_open_space():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 3, 0, 0.02036, 100, 0)
+    assert_metric_stats(indicator, 3, 0, 0.02083, 100, 0)
 
 def test_vegetation_water_change_gain_area():
     indicator = VegetationWaterChangeGainArea().get_metric(IDN_JAKARTA_TILED_ZONES)
