@@ -18,7 +18,7 @@ class PercentLandNearNaturalDrainage(Metric):
                  geo_zone: GeoZone,
                  spatial_resolution:int = DEFAULT_SPATIAL_RESOLUTION) -> GeoSeries:
 
-        neardrainage_area = HeightAboveNearestDrainage(nanval=None).groupby(geo_zone).count()
+        neardrainage_area = HeightAboveNearestDrainage(thresh=1, nanval=None).groupby(geo_zone).count()
         total_area = HeightAboveNearestDrainage(nanval=0).groupby(geo_zone).count()
 
         return 100 * neardrainage_area / total_area
