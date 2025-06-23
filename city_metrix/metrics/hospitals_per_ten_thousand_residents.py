@@ -3,7 +3,7 @@ from geopandas import GeoSeries
 
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import OpenStreetMap, OpenStreetMapClass, WorldPop
-from city_metrix.metrix_model import GeoExtent, GeoZone, Metric
+from city_metrix.metrix_model import GeoZone, Metric
 
 
 class HospitalsPerTenThousandResidents(Metric):
@@ -11,24 +11,17 @@ class HospitalsPerTenThousandResidents(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self,
-                 **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
 
     def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> GeoSeries:
 
-        
+        world_pop = WorldPop()
+        hospitals = OpenStreetMap(osm_class=OpenStreetMapClass.HOSPITAL)
 
-        hospitals = OpenStreetMap(OpenStreetMapClass.HOSPITAL).get_data(GeoExtent(geo_zone))
-        hospital_count = []
-        for rownum in range(len(geo_zone.zones)):
-            zone = geo_zone.zones.iloc[[rownum]]
-            hospital_count.append(len(hospitals.loc[hospitals.to_crs('EPSG:4326').intersects(zone.geometry[rownum])]))
-        hospital_count_series = Series(hospital_count)
+        hospital_count = hospitals.mask(world_pop).groupby(geo_zone).count()
+        world_pop_sum = world_pop.groupby(geo_zone).sum()
 
-        worldpop_layer = WorldPop(agesex_classes=[])
-        return 10000 * hospital_count_series / worldpop_layer.groupby(geo_zone).sum()
-        
+        return 10000 * hospital_count.fillna(0) / world_pop_sum

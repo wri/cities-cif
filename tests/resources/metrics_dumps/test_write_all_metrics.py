@@ -80,6 +80,14 @@ def test_write_era_5_met_preprocessing(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_hospitals_per_ten_thousand_residents(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric','hospitals_per_ten_thousand_residents.csv')
+
+    metric_obj = HospitalsPerTenThousandResidents()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_mean_pm2p5_exposure(target_folder):
     zones = SAMPLE_TILED_LARGE_ZONES
     file_path = prep_output_path(target_folder, 'metric','mean_pm2p5_exposure.csv')
