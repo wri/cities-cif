@@ -11,5 +11,6 @@ from .percent_built_area_without_tree_cover import PercentBuiltAreaWithoutTreeCo
 from .percent_canopy_covered_population import *
 from .percent_protected_area import PercentProtectedArea
 from .recreational_space_per_capita import RecreationalSpacePerCapita
+from .tree_carbon_flux import TreeCarbonFlux
 from .urban_open_space import UrbanOpenSpace
 from .vegetation_water_change import *
