@@ -68,6 +68,12 @@ def test_write_Era5MetPreprocessing(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_HospitalsPerTenThousandResidents(target_folder):
+    metric_obj = HospitalsPerTenThousandResidents()
+    _run_write_metrics_by_city_test(metric_obj, target_folder)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_MeanPM2P5Exposure(target_folder):
     metric_obj = MeanPM2P5Exposure()
     _run_write_metrics_by_city_test(metric_obj, target_folder)
