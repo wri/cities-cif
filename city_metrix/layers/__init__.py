@@ -6,6 +6,7 @@ from .aqueduct_flood import AqueductFlood
 from .average_net_building_height import AverageNetBuildingHeight
 from .built_up_height import BuiltUpHeight
 from .cams import Cams
+from .carbon_flux_from_trees import CarbonFluxFromTrees
 from .era_5_hottest_day import Era5HottestDay
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .fab_dem import FabDEM
