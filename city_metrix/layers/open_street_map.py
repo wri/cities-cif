@@ -34,6 +34,8 @@ class OpenStreetMapClass(Enum):
                          'amenity': ['dentist', 'doctors', 'hospital', 'nursing_home', 'pharmacy', 'social_facility']}
     MEDICAL = {'building': ['clinic', 'hospital'],
                'amenity': ['doctors', 'hospital']}
+    HOSPITAL = {'building': ['hospital'],
+                'amenity': ['hospital']}
     AGRICULTURE = {'building': ['poultry_house'],
                    'landuse': ['animal_keeping', 'aquaculture', 'farm', 'farmyard', 'greenhouse_horticulture', 'orchard', 'paddy', 'plant_nursury', 'vinyard'],
                    'amenity': ['animal_breeding']}
