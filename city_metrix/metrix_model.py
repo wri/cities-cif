@@ -12,7 +12,6 @@ import shapely
 from abc import abstractmethod
 from pathlib import Path
 from typing import Union
-from dask.dataframe import DataFrame
 from dask.diagnostics import ProgressBar
 from ee import ImageCollection
 from geocube.api.core import make_geocube
@@ -85,19 +84,28 @@ class GeoZone():
         self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
 
 
-def _build_buffered_aoi_from_city_boundaries(city_id, admin_level):
+def _build_aoi_from_city_boundaries(city_id, admin_level):
     # Construct bbox from total bounds of all admin levels
-    # increase the AOI by a small amount to avoid edge issues
     boundaries = get_city_admin_boundaries(city_id, admin_level)
     if len(boundaries) == 1:
         west, south, east, north = boundaries.bounds
     else:
         west, south, east, north = boundaries.total_bounds
 
-    buffer_meters = 2
-    bbox = buffer_bbox(west, south, east, north , buffer_meters)
+    # project to UTM
+    centroid = shapely.box(west, south, east, north).centroid
+    utm_crs = get_utm_zone_from_latlon_point(centroid)
+    reproj_bbox = reproject_units(south, west, north, east, WGS_CRS, utm_crs)
 
-    return bbox
+    # increase the AOI by a small amount to avoid edge issues
+    buff_west = math.floor(reproj_bbox[1])
+    buff_south = math.floor(reproj_bbox[0])
+    buff_east = math.ceil(reproj_bbox[3])
+    buff_north = math.ceil(reproj_bbox[2])
+
+    bbox = (buff_west, buff_south, buff_east, buff_north)
+
+    return bbox, utm_crs
 
 
 class GeoExtent():
@@ -117,6 +125,7 @@ class GeoExtent():
                 self.bbox = bbox.total_bounds
             else:
                 self.bbox = bbox
+            self.crs = crs
         else:
             if isinstance(bbox, GeoZone):
                 city_json = construct_city_aoi_json(bbox.city_id, "city_admin_level")
@@ -128,21 +137,17 @@ class GeoExtent():
             if not admin_level:
                 raise ValueError(
                     f"City metadata for {self.city_id} does not have geometry for admin_level: 'city_admin_level'")
-            bbox = _build_buffered_aoi_from_city_boundaries(city_id, admin_level)
             self.city_id = city_id
             self.aoi_id = aoi_id
             self.admin_level = admin_level
-            if get_projection_type(crs) == ProjectionType.GEOGRAPHIC:
-                self.bbox = bbox
-            else:
-                reproj_bbox = reproject_units(bbox[1], bbox[0], bbox[3], bbox[2], WGS_CRS, crs)
-                self.bbox = (reproj_bbox[1], reproj_bbox[0], reproj_bbox[3], reproj_bbox[2])
 
-        self.crs = crs
-        self.bounds = self.bbox
+            # get AOI from composite of admin areas and project to UTM
+            self.bbox, self.crs = _build_aoi_from_city_boundaries(city_id, admin_level)
+
         self.epsg_code = int(self.crs.split(':')[1])
-        self.projection_type = get_projection_type(crs)
+        self.projection_type = get_projection_type(self.crs)
         self.units = "degrees" if self.projection_type == ProjectionType.GEOGRAPHIC else "meters"
+        self.bounds = self.bbox
 
         self.min_x = self.bbox[0]
         self.min_y = self.bbox[1]
@@ -232,21 +237,16 @@ class GeoExtent():
         if self.projection_type == ProjectionType.GEOGRAPHIC:
             return self
         else:
-            if self.geo_type == GeoType.CITY:
-                geo_extent = construct_city_aoi_json(self.city_id, self.aoi_id)
-                bbox = GeoExtent(bbox=geo_extent, crs=WGS_CRS)
-            else:
-                reproj_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, self.crs, WGS_CRS)
-                # round to minimize drift
-                rounded_box = (reproj_bbox[0], reproj_bbox[1], reproj_bbox[2], reproj_bbox[3])
-                bbox = GeoExtent(bbox=rounded_box, crs=WGS_CRS)
+            reproj_bbox = reproject_units(self.min_x, self.min_y, self.max_x, self.max_y, self.crs, WGS_CRS)
+            # round to minimize drift
+            rounded_box = (reproj_bbox[0], reproj_bbox[1], reproj_bbox[2], reproj_bbox[3])
+            bbox = GeoExtent(bbox=rounded_box, crs=WGS_CRS)
             return bbox
 
 
 # =========== Fishnet ====================================================
 MAX_SIDE_LENGTH_METERS = 50000  # This values should cover most situations
 MAX_SIDE_LENGTH_DEGREES = 0.5  # Given that for latitude, 50000m * (1deg/111000m)
-
 
 def _truncate_to_nearest_interval(tile_side_meters, spatial_resolution):
     # Snap the cell increment to the closest whole increment
@@ -471,9 +471,14 @@ class LayerGroupBy:
 
             return stats
 
-        result_series = stats[stats_func]
+        if 'geo_level' in zones.columns:
+            result_stats = stats[['zone',stats_func]]
+            result_stats = result_stats.rename(columns={stats_func: 'value'})
+        else:
+            result_stats = stats[stats_func]
 
-        return result_series
+        return result_stats
+
 
     @staticmethod
     def _zonal_stats_fishnet(stats_func, zones, aggregate, layer, masks, spatial_resolution):
@@ -801,7 +806,7 @@ class Layer():
                                                                 force_data_refresh=force_data_refresh)
 
             # Determine if write can be skipped
-            skip_write = decide_if_write_can_be_skipped(self.aggregate, bbox, output_uri, standard_env)
+            skip_write = _decide_if_write_can_be_skipped(self.aggregate, bbox, output_uri, standard_env)
             if not skip_write:
                 write_layer(clipped_data, output_uri, file_format)
         else:
@@ -944,7 +949,7 @@ class Metric():
             self.metric = self
 
     @abstractmethod
-    def get_metric(self, geo_zone: GeoZone, spatial_resolution: int) -> pd.Series:
+    def get_metric(self, geo_zone: GeoZone, spatial_resolution: int) -> Union[pd.Series, pd.DataFrame]:
         """
         Construct polygonal dataset using baser layers
         :return: A rioxarray-format GeoPandas DataFrame
@@ -952,7 +957,7 @@ class Metric():
         ...
 
     def get_metric_with_caching(self, geo_zone: GeoZone, s3_env: str, spatial_resolution: int = None,
-                                force_data_refresh: bool = False) -> [Union[xr.DataArray, gpd.GeoDataFrame], str]:
+                                force_data_refresh: bool = False) -> tuple[Union[pd.Series, pd.DataFrame], str]:
 
         standard_env = standardize_s3_env(self, s3_env)
         retrieved_cached_data, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, standard_env,
@@ -963,9 +968,8 @@ class Metric():
             result_metric = retrieved_cached_data
 
         zones = geo_zone.zones
-        if 'geo_level' in zones.columns and isinstance(result_metric, Series):
-            result_metric.name = 'value'
-            results_metric_df = zones.join(result_metric)
+        if isinstance(result_metric, pd.DataFrame) and 'zone' in result_metric.columns:
+            results_metric_df = pd.merge(zones, result_metric, left_on='index', right_on='zone', how='left')
             if 'metric_id' not in results_metric_df.columns:
                 results_metric_df = results_metric_df.assign(metric_id=feature_id)
             result_metric = _standardize_city_metrics_columns(results_metric_df, None)
@@ -994,15 +998,15 @@ class Metric():
             raise NotImplementedError("Data not available for this geo_zone.")
 
         # Determine if write can be skipped
-        skip_write = decide_if_write_can_be_skipped(self.metric, geo_zone, output_uri, standard_env)
+        skip_write = _decide_if_write_can_be_skipped(self.metric, geo_zone, output_uri, standard_env)
 
         if not skip_write:
             Metric._verify_extension(output_uri, f".{CSV_FILE_EXTENSION}")
 
-            if  isinstance(indicator, (float, int)):
+            if isinstance(indicator, (float, int)):
                 indicator = pd.Series([indicator])
 
-            if  isinstance(indicator, Series):
+            if isinstance(indicator, Series):
                 indicator.name = 'value'
 
                 result_df = geo_zone.zones
@@ -1037,7 +1041,7 @@ class Metric():
             raise NotImplementedError("Data not available for this geo_zone.")
 
         # Determine if write can be skipped
-        skip_write = decide_if_write_can_be_skipped(self.metric, geo_zone, output_uri, standard_env)
+        skip_write = _decide_if_write_can_be_skipped(self.metric, geo_zone, output_uri, standard_env)
 
         if not skip_write:
             Metric._verify_extension(output_uri, f".{GEOJSON_FILE_EXTENSION}")
@@ -1073,6 +1077,7 @@ class Metric():
         if Path(file_path).suffix != extension:
             raise ValueError(f"File name must have '{extension}' extension")
 
+
 def _standardize_city_metrics_columns(metrics_df, supplemental_column):
     columns = ['geo_id', 'geo_name', 'geo_level', 'metric_id', 'value']
     if supplemental_column is not None:
@@ -1081,7 +1086,7 @@ def _standardize_city_metrics_columns(metrics_df, supplemental_column):
     result_df = metrics_df[columns]
     return result_df
 
-def decide_if_write_can_be_skipped(feature, selection_object, output_path, s3_env):  # Determine if write can be skipped
+def _decide_if_write_can_be_skipped(feature, selection_object, output_path, s3_env):  # Determine if write can be skipped
     if output_path is None or len(output_path.strip()) == 0:
         skip_write = True
     elif selection_object.geo_type == GeoType.CITY:

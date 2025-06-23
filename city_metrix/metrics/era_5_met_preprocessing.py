@@ -1,7 +1,7 @@
 from datetime import datetime
 import pandas as pd
 import numpy as np
-from geopandas import GeoSeries
+from pandas import DataFrame
 
 from city_metrix.constants import CSV_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV
 from city_metrix.layers import Era5HottestDay
@@ -18,7 +18,7 @@ class Era5MetPreprocessing(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> pd.DataFrame:
         """
         Get ERA 5 data for the hottest day
         :param geo_zone: GeoZone with geometries to collect zonal stats on

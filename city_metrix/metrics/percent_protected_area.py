@@ -1,5 +1,5 @@
-from geopandas import GeoSeries
-
+import pandas as pd
+from typing import Union
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import ProtectedAreas, EsaWorldCover
 from city_metrix.metrix_model import Metric, GeoZone
@@ -22,7 +22,7 @@ class PercentProtectedArea(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
 
         world_cover = EsaWorldCover(year=2021)
         protect_area = ProtectedAreas(status=self.status, status_year=self.status_year, iucn_cat=self.iucn_cat)
@@ -33,4 +33,11 @@ class PercentProtectedArea(Metric):
         if not isinstance(protect_area_in_world_cover, (int, float)):
             protect_area_in_world_cover = protect_area_in_world_cover.fillna(0)
 
-        return 100 * protect_area_in_world_cover / world_cover_counts
+        if isinstance(protect_area_in_world_cover, pd.DataFrame):
+            result = protect_area_in_world_cover.copy()
+            result['value'] = 100 * (protect_area_in_world_cover['value'] / world_cover_counts['value'])
+        else:
+            result = 100 * protect_area_in_world_cover / world_cover_counts
+
+        return result
+

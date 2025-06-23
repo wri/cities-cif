@@ -10,7 +10,7 @@ from ..bbox_constants import GEOZONE_TERESINA_WGS84, GEOEXTENT_TERESINA_WGS84, G
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from ..tools import prep_output_path, cleanup_cache_files
 
-PRESERVE_RESULTS_ON_OS = True  # False - Default for check-in
+PRESERVE_RESULTS_ON_OS = False  # False - Default for check-in
 
 SLOW_TEST_TIMEOUT_SECONDS = 1500  # seconds
 
@@ -153,18 +153,19 @@ def test_write_VegetationWaterChangeGainLossRatio(target_folder):
 
 
 def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_zone):
-    cache_scheme = 's3'
     file_key, file_uri, metric_id, _ = get_test_cache_variables(metric_obj, geo_extent)
+
+    # file_path = '/tmp/test_result_tif_files/metric/temp.geojson'
+    # metric_obj.write_as_geojson(geo_zone=geo_zone, s3_env=DEFAULT_STAGING_ENV, output_uri=file_path, force_data_refresh=True)
 
     os_file_path = prep_output_path(target_folder, 'metric', metric_id)
     try:
         # Do not force data refresh to avoid collisions with concurrent tests
-        metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_STAGING_ENV, force_data_refresh=True)
+        metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_STAGING_ENV, output_uri=os_file_path,
+                         force_data_refresh=True)
         cache_file_exists = check_if_cache_file_exists(file_uri)
         assert cache_file_exists, "Test failed since file did not upload to s3"
-        if cache_file_exists and PRESERVE_RESULTS_ON_OS:
-            metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_STAGING_ENV, output_uri=os_file_path)
     finally:
-        cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         # Note: Do not delete S3 files in order to avoid collisions with concurrent tests
+        cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         cleanup_cache_files('layer', None, None, cleanup_os_file_path)

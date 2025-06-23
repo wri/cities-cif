@@ -1,5 +1,5 @@
-from geopandas import GeoSeries
-
+import pandas as pd
+from typing import Union
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import Metric, GeoZone
 from city_metrix.layers import (
@@ -24,9 +24,7 @@ class PercentCanopyCoveredPopulation(Metric):
         self.percentage = percentage
         self.informal_only = informal_only
 
-    def get_metric(
-        self, geo_zone: GeoZone, spatial_resolution: int = None
-    ) -> GeoSeries:
+    def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
         coverage_mask = TreeCanopyCoverMask(height=self.height, percentage=self.percentage)
 
@@ -44,7 +42,13 @@ class PercentCanopyCoveredPopulation(Metric):
         if not isinstance(access_pop, (int, float)):
             access_pop = access_pop.fillna(0)
 
-        return 100 * access_pop / total_pop
+        if isinstance(access_pop, pd.DataFrame):
+            result = access_pop.copy()
+            result['value'] = 100 * (access_pop['value'] / total_pop['value'])
+        else:
+            result = 100 * access_pop / total_pop
+
+        return result
 
 
 class PercentCanopyCoveredPopulationChildren(Metric):
@@ -58,9 +62,7 @@ class PercentCanopyCoveredPopulationChildren(Metric):
         self.percentage = percentage
         self.informal_only = informal_only
 
-    def get_metric(
-        self, geo_zone: GeoZone, spatial_resolution: int = None
-    ) -> GeoSeries:
+    def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         percent_canopy_covered_children = PercentCanopyCoveredPopulation(
             worldpop_agesex_classes=WorldPopClass.CHILDREN,
             height=self.height,
@@ -81,9 +83,7 @@ class PercentCanopyCoveredPopulationElderly(Metric):
         self.percentage = percentage
         self.informal_only = informal_only
 
-    def get_metric(
-        self, geo_zone: GeoZone, spatial_resolution: int = None
-    ) -> GeoSeries:
+    def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         percent_canopy_covered_elderly = PercentCanopyCoveredPopulation(
             worldpop_agesex_classes=WorldPopClass.ELDERLY,
             height=self.height,
@@ -104,9 +104,7 @@ class PercentCanopyCoveredPopulationFemale(Metric):
         self.percentage = percentage
         self.informal_only = informal_only
 
-    def get_metric(
-        self, geo_zone: GeoZone, spatial_resolution: int = None
-    ) -> GeoSeries:
+    def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         percent_canopy_covered_female = PercentCanopyCoveredPopulation(
             worldpop_agesex_classes=WorldPopClass.FEMALE,
             height=self.height,
@@ -127,9 +125,7 @@ class PercentCanopyCoveredPopulationInformal(Metric):
         self.height = height
         self.percentage = percentage
 
-    def get_metric(
-        self, geo_zone: GeoZone, spatial_resolution: int = None
-    ) -> GeoSeries:
+    def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         percent_canopy_covered_informal = PercentCanopyCoveredPopulation(
             worldpop_agesex_classes=self.worldpop_agesex_classes,
             height=self.height,

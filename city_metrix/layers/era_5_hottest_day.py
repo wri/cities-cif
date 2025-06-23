@@ -53,7 +53,7 @@ class Era5HottestDay(Layer):
 
             return image.set('hourly_mean_temperature', hourly_mean)
 
-        ee_rectangle = bbox.to_ee_rectangle()
+        ee_rectangle = geographic_bbox.to_ee_rectangle()
         era5 = ee.ImageCollection(dataset
                                   .filterBounds(ee_rectangle['ee_geometry'])
                                   .filterDate(self.start_date, self.end_date)

@@ -29,27 +29,29 @@ class HighLandSurfaceTemperature(Layer):
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        hottest_date = self.get_hottest_date(bbox)
+        geographic_bbox = bbox.as_geographic_bbox()
+
+        hottest_date = self.get_hottest_date(geographic_bbox)
         start_date = (hottest_date - datetime.timedelta(days=45)).strftime("%Y-%m-%d")
         end_date = (hottest_date + datetime.timedelta(days=45)).strftime("%Y-%m-%d")
 
-        ee_rectangle = bbox.to_ee_rectangle()
+
         lst = (LandSurfaceTemperature(start_date, end_date)
-               .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution))
+               .get_data_with_caching(bbox=geographic_bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution))
 
         lst_mean = lst.mean(dim=['x', 'y'])
         high_lst = lst.where(lst >= (lst_mean + self.THRESHOLD_ADD))
 
         return high_lst
 
-    def get_hottest_date(self, bbox):
-        geographic_centroid = bbox.as_geographic_bbox().centroid
+    def get_hottest_date(self, wgs84_bbox):
+        geographic_centroid = wgs84_bbox.centroid
         center_lon = geographic_centroid.x
         center_lat = geographic_centroid.y
 
         dataset = ee.ImageCollection("ECMWF/ERA5/DAILY")
 
-        ee_rectangle = bbox.to_ee_rectangle()
+        ee_rectangle = wgs84_bbox.to_ee_rectangle()
         AirTemperature = (
             dataset
             .filter(

@@ -1,5 +1,5 @@
-from geopandas import GeoSeries
-
+import pandas as pd
+from typing import Union
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import Metric, GeoZone
 from city_metrix.layers import FractionalVegetationPercent
@@ -16,8 +16,17 @@ class PercentAreaFracvegExceedsThreshold(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         fracveg_all_layer = FractionalVegetationPercent(min_threshold=None, year=self.year)
         fracveg_gte_thresh_layer = FractionalVegetationPercent(min_threshold=self.min_threshold, year=self.year)
 
-        return fracveg_gte_thresh_layer.groupby(geo_zone).sum() / fracveg_all_layer.groupby(geo_zone).count()
+        fracveg_gte_thresh_sum = fracveg_gte_thresh_layer.groupby(geo_zone).sum()
+        fracveg_all_count = fracveg_all_layer.groupby(geo_zone).count()
+
+        if isinstance(fracveg_gte_thresh_sum, pd.DataFrame):
+            result = fracveg_gte_thresh_sum.copy()
+            result['value'] = fracveg_gte_thresh_sum['value'] / fracveg_all_count['value']
+        else:
+            result = fracveg_gte_thresh_sum / fracveg_all_count
+
+        return result
