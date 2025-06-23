@@ -254,9 +254,8 @@ def test_UrbanLandUse_write_by_city(target_folder):
     layer_obj = UrbanLandUse()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
-# # TODO Very slow processing
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_UtGlobus_write_by_city(target_folder):
     layer_obj = UtGlobus(CITY_UT_NAME)
     _run_write_layers_by_city_test(layer_obj, target_folder)
