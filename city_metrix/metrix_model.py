@@ -87,6 +87,7 @@ class GeoZone():
 def _build_aoi_from_city_boundaries(city_id, admin_level):
     # Construct bbox from total bounds of all admin levels
     boundaries = get_city_admin_boundaries(city_id, admin_level)
+
     if len(boundaries) == 1:
         west, south, east, north = boundaries.bounds
     else:
