@@ -9,6 +9,7 @@ from .percent_area_fracveg_exceeds_threshold import PercentAreaFracvegExceedsThr
 from .percent_area_impervious import PercentAreaImpervious
 from .percent_built_area_without_tree_cover import PercentBuiltAreaWithoutTreeCover
 from .percent_canopy_covered_population import *
+from .percent_land_near_natural_drainage import PercentLandNearNaturalDrainage
 from .percent_protected_area import PercentProtectedArea
 from .recreational_space_per_capita import RecreationalSpacePerCapita
 from .urban_open_space import UrbanOpenSpace
