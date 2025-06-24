@@ -12,7 +12,7 @@ from ..tools import prep_output_path, cleanup_cache_files
 
 PRESERVE_RESULTS_ON_OS = False  # False - Default for check-in
 
-SLOW_TEST_TIMEOUT_SECONDS = 1500  # seconds
+SLOW_TEST_TIMEOUT_SECONDS = 3000 # seconds = 50 minutes (Duration needed for fractional vegetation)
 
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)

@@ -413,7 +413,7 @@ def create_fishnet_grid(bbox: GeoExtent,
 
 
 # ================= LayerGroupBy ==============
-MAX_TILE_SIZE_DEGREES = 0.25
+MAX_TILE_SIZE_DEGREES = 0.1
 
 class LayerGroupBy:
     def __init__(self, aggregate, geo_zone: GeoZone, spatial_resolution=None, layer=None, force_data_refresh=True,
@@ -980,6 +980,20 @@ class Metric():
 
         return result_metric, feature_id
 
+    def _create_dummy_results(self, geo_zone: GeoZone) -> Union[pd.DataFrame, pd.Series]:
+        if geo_zone.geo_type == GeoType.CITY:
+            admin_count = len(geo_zone.zones)
+            dummy_rows = pd.Series([''] * admin_count)
+            # dummy_rows = pd.DataFrame({
+            #     'zone': range(admin_count + 1),
+            #     'value': '' * (admin_count + 1)
+            # })
+        else:
+            dummy_rows = pd.Series([''] * 1)
+
+        return dummy_rows
+
+
     def write(self, geo_zone: GeoZone, s3_env: str, output_uri: str = None,
               spatial_resolution: int = None, force_data_refresh: bool = False, **kwargs):
         """
@@ -996,7 +1010,7 @@ class Metric():
                                                                     spatial_resolution, force_data_refresh)
 
         if indicator is None:
-            raise NotImplementedError("Data not available for this geo_zone.")
+            indicator = self._create_dummy_results(geo_zone)
 
         # Determine if write can be skipped
         skip_write = _decide_if_write_can_be_skipped(self.metric, geo_zone, output_uri, standard_env)
@@ -1039,7 +1053,7 @@ class Metric():
                                                                     spatial_resolution, force_data_refresh)
 
         if indicator is None:
-            raise NotImplementedError("Data not available for this geo_zone.")
+            indicator = self._create_dummy_results(geo_zone)
 
         # Determine if write can be skipped
         skip_write = _decide_if_write_can_be_skipped(self.metric, geo_zone, output_uri, standard_env)
