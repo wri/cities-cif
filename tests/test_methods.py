@@ -66,15 +66,13 @@ def test_group_by_layer():
     assert all([count == {1: 50.0, 2: 50.0} for count in counts])
 
 
-# TODO Commenting out for now untill issue can be later resolved.
-# As is, most values are 50, but a few are 48 or 52
-# def test_group_by_large_layer():
-#     counts = (
-#         MockLargeLayer()
-#         .groupby(IDN_JAKARTA_TILED_LARGE_ZONES, layer=MockLargeGroupByLayer())
-#         .count()
-#     )
-#     assert all([count == {1: 50.0, 2: 50.0} for count in counts])
+def test_group_by_large_layer():
+    counts = (
+        MockLargeLayer()
+        .groupby(IDN_JAKARTA_TILED_LARGE_ZONES, layer=MockLargeGroupByLayer())
+        .count()
+    )
+    assert all([count == {1: 50.0, 2: 50.0} for count in counts])
 
 def convert_to_series(data):
     if 'zone' in data.columns:
