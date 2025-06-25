@@ -225,7 +225,7 @@ def write_tile_grid(tile_grid, output_path, target_file_name):
         os.makedirs(output_path)
 
     tile_grid_file_path = str(os.path.join(output_path, target_file_name))
-    tg = tile_grid.drop(columns='fishnet_geometry', axis=1)
+    tg = tile_grid.drop(columns='immutable_fishnet_geometry', axis=1)
     tg.to_file(tile_grid_file_path)
 
 

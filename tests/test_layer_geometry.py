@@ -6,24 +6,24 @@ from city_metrix.layers import NasaDEM
 from city_metrix.metrix_model import WGS_CRS, GeoExtent, create_fishnet_grid, get_degree_offsets_for_meter_units, \
     get_haversine_distance
 from tests.conftest import USA_OR_PORTLAND_BBOX
-from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84, GEOEXTENT_TERESINA_UTM
+from tests.resources.bbox_constants import GEOEXTENT_TERESINA
 from tests.tools.spatial_tools import get_rounded_geometry
 
 USA_OR_PORTLAND_LATLON_BBOX = GeoExtent(USA_OR_PORTLAND_BBOX.total_bounds, USA_OR_PORTLAND_BBOX.crs.srs)
 
 def test_city_extent():
-    city_geo_extent = GEOEXTENT_TERESINA_WGS84
+    city_geo_extent = GEOEXTENT_TERESINA
     geom = city_geo_extent.centroid
     rounded_boundary_centroid = get_rounded_geometry(geom, 1)
     assert city_geo_extent.projection_type == ProjectionType.UTM
-    assert rounded_boundary_centroid == 'POINT (745795.0 9437061.5)'
+    assert rounded_boundary_centroid == 'POINT (745779.5 9437062.5)'
 
 def test_nasa_dem_city_id_wgs84():
-    data = NasaDEM().get_data(GEOEXTENT_TERESINA_WGS84)
+    data = NasaDEM().get_data(GEOEXTENT_TERESINA)
     assert np.size(data) > 0
 
 def test_nasa_dem_city_id_utm():
-    data = NasaDEM().get_data(GEOEXTENT_TERESINA_UTM)
+    data = NasaDEM().get_data(GEOEXTENT_TERESINA)
     assert np.size(data) > 0
 
 def test_centroid_property():

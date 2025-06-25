@@ -6,14 +6,14 @@ from city_metrix.layers import *
 from city_metrix.cache_manager import check_if_cache_file_exists
 from ...tools.general_tools import get_test_cache_variables
 from tests.resources.tools import cleanup_cache_files, prep_output_path
-from ..bbox_constants import GEOEXTENT_TERESINA_WGS84
+from ..bbox_constants import GEOEXTENT_TERESINA
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 
 PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
 
 SLOW_TEST_TIMEOUT_SECONDS = 2100 # seconds = 35 minutes (Duration needed for fractional vegegation)
 
-PROCESSING_CITY = GEOEXTENT_TERESINA_WGS84
+PROCESSING_CITY = GEOEXTENT_TERESINA
 CITY_UT_NAME = 'teresina'
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)

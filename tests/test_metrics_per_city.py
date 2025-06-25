@@ -1,23 +1,23 @@
 from city_metrix.metrics import *
-from tests.resources.bbox_constants import GEOZONE_TERESINA_WGS84
+from tests.resources.bbox_constants import GEOZONE_TERESINA
 
 # TODO - Consider adding other metrics
 
 def test_city_values_BuiltLandWithHighLST():
     metric_obj = BuiltLandWithHighLST()
-    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA_WGS84)
-    _evaluate_metric_values(metric_values, 2, 0, 0.11, 0.03, 138, 5, True)
+    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
+    _evaluate_metric_values(metric_values, 2, 0, 0.1, 0.03, 138, 6, True)
 
 # TODO The current specified value for continuity should be true, but specified here as False so the test passes. Count is also wrong.
 def test_city_values_mean_pm2p5_exposure():
     metric_obj = MeanPM2P5Exposure()
-    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA_WGS84)
-    _evaluate_metric_values(metric_values, 2, 11.23, 14.11, 12.41, 110, 0, False)
+    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
+    _evaluate_metric_values(metric_values, 2, 11.21, 14.11, 12.43, 112, 0, False)
 
 def test_city_values_NaturalAreasPercent():
     metric_obj = NaturalAreasPercent()
-    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA_WGS84)
-    _evaluate_metric_values(metric_values, 2, 1.77, 97.16, 36.9, 138, 0, True)
+    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
+    _evaluate_metric_values(metric_values, 2, 1.99, 97.25, 36.91, 138, 0, True)
 
 
 def _evaluate_metric_values(metric_values, digits, expected_min, expected_max, expected_mean, expected_count, expected_zero_count, expect_zone_continuity):

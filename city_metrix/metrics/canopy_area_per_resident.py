@@ -8,6 +8,7 @@ from city_metrix.metrix_model import GeoZone, Metric
 
 class CanopyAreaPerResident(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    CUSTOM_TILE_SIDE_M = 10000
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
@@ -32,11 +33,11 @@ class CanopyAreaPerResident(Metric):
         if self.informal_only:
             # urban land use class 3 for Informal
             urban_land_use = UrbanLandUse(ulu_class=3)
-            world_pop_sum = world_pop.mask(urban_land_use).groupby(geo_zone).sum()
-            tree_canopy_height_count = tree_canopy_height.mask(urban_land_use).groupby(geo_zone).count()
+            world_pop_sum = world_pop.mask(urban_land_use).groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).sum()
+            tree_canopy_height_count = tree_canopy_height.mask(urban_land_use).groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).count()
         else:
-            world_pop_sum = world_pop.groupby(geo_zone).sum()
-            tree_canopy_height_count = tree_canopy_height.groupby(geo_zone).count()
+            world_pop_sum = world_pop.groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).sum()
+            tree_canopy_height_count = tree_canopy_height.groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).count()
 
         if not isinstance(tree_canopy_height_count, (int, float)):
             tree_canopy_height_count = tree_canopy_height_count.fillna(0)

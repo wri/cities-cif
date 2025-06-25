@@ -45,31 +45,24 @@ class GeoZone():
             self.admin_level = None
             self.zones = geo_zone
             self.bbox = geo_zone.total_bounds
+            self.crs = crs
         else:
             city_json = geo_zone
-            city_id, aoi_id = parse_city_aoi_json(city_json)
-            city = get_city(city_id)
-            admin_level = city.get(aoi_id, None)
-            if not admin_level:
+            self.city_id, self.aoi_id = parse_city_aoi_json(city_json)
+            # Admin from city_id and aoi_id
+            city_data = get_city(self.city_id)
+            self.admin_level = city_data.get(self.aoi_id, None)
+            if not self.admin_level:
                 raise ValueError(
                     f"City metadata for {self.city_id} does not have geometry for admin_level: 'city_admin_level'")
-            self.zones = get_city_admin_boundaries(city_id, admin_level)
-            self.city_id = city_id
-            self.aoi_id = aoi_id
-            self.admin_level = admin_level
-            epsg_code = self.zones.crs.to_epsg()
-            crs = f'EPSG:{epsg_code}'
-            bounds = self.zones.total_bounds
-            if get_projection_type(crs) == ProjectionType.GEOGRAPHIC:
-                self.bbox = bounds
-            else:
-                reproj_bbox = reproject_units(bounds[1], bounds[0], bounds[3], bounds[2], WGS_CRS, crs)
-                self.bbox = (reproj_bbox[1], reproj_bbox[0], reproj_bbox[3], reproj_bbox[2])
 
-        self.crs = crs
+            # get city bbox from composite of admin areas and project
+            # bbox is always projected to UTM
+            self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
+
         self.bounds = self.bbox
         self.epsg_code = int(self.crs.split(':')[1])
-        self.projection_type = get_projection_type(crs)
+        self.projection_type = get_projection_type(self.crs)
         self.units = "degrees" if self.projection_type == ProjectionType.GEOGRAPHIC else "meters"
 
         self.min_x = self.bbox[0]
@@ -78,35 +71,34 @@ class GeoZone():
         self.max_y = self.bbox[3]
 
         self.coords = (self.min_x, self.min_y, self.max_x, self.max_y)
-
-        self.centroid = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y).centroid
-
         self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
+        self.centroid = self.polygon.centroid
 
 
 def _build_aoi_from_city_boundaries(city_id, admin_level):
     # Construct bbox from total bounds of all admin levels
-    boundaries = get_city_admin_boundaries(city_id, admin_level)
+    boundaries_gdf = get_city_admin_boundaries(city_id, admin_level)
 
-    if len(boundaries) == 1:
-        west, south, east, north = boundaries.bounds
+    if len(boundaries_gdf) == 1:
+        west, south, east, north = boundaries_gdf.bounds
     else:
-        west, south, east, north = boundaries.total_bounds
+        west, south, east, north = boundaries_gdf.total_bounds
 
-    # project to UTM
+    # determine UTM CRS
     centroid = shapely.box(west, south, east, north).centroid
     utm_crs = get_utm_zone_from_latlon_point(centroid)
-    reproj_bbox = reproject_units(south, west, north, east, WGS_CRS, utm_crs)
 
-    # increase the AOI by a small amount to avoid edge issues
-    buff_west = math.floor(reproj_bbox[1])
-    buff_south = math.floor(reproj_bbox[0])
-    buff_east = math.ceil(reproj_bbox[3])
-    buff_north = math.ceil(reproj_bbox[2])
+    # reproject geodataframe to UTM
+    gdf_reprojected = boundaries_gdf.to_crs(utm_crs)
+    if len(boundaries_gdf) == 1:
+        reproj_west, reproj_south, reproj_east, reproj_north = gdf_reprojected.bounds
+    else:
+        reproj_west, reproj_south, reproj_east, reproj_north = gdf_reprojected.total_bounds
 
-    bbox = (buff_west, buff_south, buff_east, buff_north)
+    # Round coordinates to whole units
+    bbox = (math.floor(reproj_west), math.floor(reproj_south), math.ceil(reproj_east), math.ceil(reproj_north))
 
-    return bbox, utm_crs
+    return bbox, utm_crs, gdf_reprojected
 
 
 class GeoExtent():
@@ -126,40 +118,48 @@ class GeoExtent():
                 self.bbox = bbox.total_bounds
             else:
                 self.bbox = bbox
-            self.crs = crs
-        else:
-            if isinstance(bbox, GeoZone):
-                city_json = construct_city_aoi_json(bbox.city_id, "city_admin_level")
+            if hasattr(bbox, 'crs'):
+                box_crs = bbox.crs
+                if hasattr(box_crs, 'srs'):
+                    self.crs = box_crs.srs
+                else:
+                    self.crs = box_crs
             else:
-                city_json = bbox
-            city_id, aoi_id = parse_city_aoi_json(city_json)
-            city = get_city(city_id)
-            admin_level = city.get(aoi_id, None)
-            if not admin_level:
-                raise ValueError(
-                    f"City metadata for {self.city_id} does not have geometry for admin_level: 'city_admin_level'")
-            self.city_id = city_id
-            self.aoi_id = aoi_id
-            self.admin_level = admin_level
+                self.crs = crs
 
-            # get AOI from composite of admin areas and project to UTM
-            self.bbox, self.crs = _build_aoi_from_city_boundaries(city_id, admin_level)
+            try:
+                self.epsg_code = int(self.crs.split(':')[1])
+            except:
+                b=2
+            self.projection_type = get_projection_type(self.crs)
+            self.units = "degrees" if self.projection_type == ProjectionType.GEOGRAPHIC else "meters"
+            self.bounds = self.bbox
 
-        self.epsg_code = int(self.crs.split(':')[1])
-        self.projection_type = get_projection_type(self.crs)
-        self.units = "degrees" if self.projection_type == ProjectionType.GEOGRAPHIC else "meters"
-        self.bounds = self.bbox
+            self.min_x = self.bbox[0]
+            self.min_y = self.bbox[1]
+            self.max_x = self.bbox[2]
+            self.max_y = self.bbox[3]
 
-        self.min_x = self.bbox[0]
-        self.min_y = self.bbox[1]
-        self.max_x = self.bbox[2]
-        self.max_y = self.bbox[3]
+            self.coords = (self.min_x, self.min_y, self.max_x, self.max_y)
+            self.centroid = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y).centroid
+            self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
 
-        self.coords = (self.min_x, self.min_y, self.max_x, self.max_y)
+        else:
+            geo_zone = bbox if isinstance(bbox, GeoZone) else GeoZone(geo_zone=bbox)
+            self.city_id = geo_zone.city_id
+            self.aoi_id = geo_zone.aoi_id
+            self.admin_level = geo_zone.admin_level
+            self.bbox = geo_zone.bbox
+            self.crs = geo_zone.crs
+            self.epsg_code = geo_zone.epsg_code
+            self.projection_type = geo_zone.projection_type
+            self.units = geo_zone.units
+            self.bounds = geo_zone.bounds
+            self.min_x, self.min_y, self.max_x, self.max_y = geo_zone.bounds
+            self.coords = geo_zone.coords
+            self.centroid = geo_zone.centroid
+            self.polygon = geo_zone.polygon
 
-        self.centroid = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y).centroid
-
-        self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
 
     def to_ee_rectangle(self):
         """
@@ -318,11 +318,17 @@ def _get_bounding_coords(bbox, output_as):
     return start_x_coord, start_y_coord, end_x_coord, end_y_coord
 
 
-def _build_tile_geometry(x_coord, y_coord, x_tile_side_units, y_tile_side_units, tile_buffer_units):
+def _build_tile_geometry(x_coord, y_coord, end_x_coord, end_y_coord, x_tile_side_units, y_tile_side_units, tile_buffer_units):
     cell_min_x = x_coord - tile_buffer_units
     cell_min_y = y_coord - tile_buffer_units
-    cell_max_x = x_coord + x_tile_side_units + tile_buffer_units
-    cell_max_y = y_coord + y_tile_side_units + tile_buffer_units
+
+    tile_max_x = x_coord + x_tile_side_units
+    cell_max_x = tile_max_x if tile_max_x < end_x_coord else end_x_coord
+    cell_max_x = cell_max_x + tile_buffer_units
+
+    tile_max_y = y_coord + y_tile_side_units
+    cell_max_y = tile_max_y if tile_max_y < end_y_coord else end_y_coord
+    cell_max_y = cell_max_y + tile_buffer_units
 
     geom = geometry.Polygon(
         [
@@ -393,7 +399,7 @@ def create_fishnet_grid(bbox: GeoExtent,
     y_coord = start_y_coord
     while y_coord < end_y_coord:
         while x_coord < end_x_coord:
-            geom = _build_tile_geometry(x_coord, y_coord, x_tile_side_units, y_tile_side_units, tile_buffer_units)
+            geom = _build_tile_geometry(x_coord, y_coord, end_x_coord, end_y_coord, x_tile_side_units, y_tile_side_units, tile_buffer_units)
             geom_array.append(geom)
             x_coord += x_tile_side_units
         x_coord = start_x_coord
@@ -408,19 +414,22 @@ def create_fishnet_grid(bbox: GeoExtent,
         grid_crs = bbox.crs
 
     fishnet = gpd.GeoDataFrame(geom_array, columns=["geometry"]).set_crs(grid_crs)
-    fishnet["fishnet_geometry"] = fishnet["geometry"]
+    # Make a copy of the geometry to preserve the full extent of the tile as immutable_fishnet_geometry, since the geometry
+    # column is modified in other processing.
+    fishnet["immutable_fishnet_geometry"] = fishnet["geometry"]
     return fishnet
 
 
 # ================= LayerGroupBy ==============
-MAX_TILE_SIZE_DEGREES = 0.1
+DEFAULT_MAX_TILE_SIZE_M = 15000
 
 class LayerGroupBy:
-    def __init__(self, aggregate, geo_zone: GeoZone, spatial_resolution=None, layer=None, force_data_refresh=True,
-                 masks=[]):
+    def __init__(self, aggregate, geo_zone: GeoZone, spatial_resolution=None, layer=None, custom_tile_size_m=None,
+                 force_data_refresh=True, masks=[]):
         self.aggregate = aggregate
         self.masks = masks
         self.geo_zone = geo_zone
+        self.custom_tile_size_m = custom_tile_size_m
         self.spatial_resolution = spatial_resolution
         self.layer = layer
         self.force_data_refresh = force_data_refresh
@@ -436,26 +445,32 @@ class LayerGroupBy:
 
     def _compute_statistic(self, stats_func):
         return self._zonal_stats(stats_func, self.geo_zone, self.aggregate, self.layer, self.masks,
-                                 self.spatial_resolution, self.force_data_refresh)
+                                 self.custom_tile_size_m, self.spatial_resolution, self.force_data_refresh)
 
     @staticmethod
-    def _zonal_stats(stats_func, geo_zone, aggregate, layer, masks, spatial_resolution, force_data_refresh):
+    def _zonal_stats(stats_func, geo_zone, aggregate, layer, masks, custom_tile_size_m, spatial_resolution, force_data_refresh):
         zones = geo_zone.zones.reset_index(drop=True)
         # Get area of zone in square degrees
         if zones.crs == WGS_CRS:
             box_area = box(*zones.total_bounds).area
+            # TODO
+            # bounds = zones.total_bounds
+            # centroid = Point((bounds[0] + bounds[2])/2, (bounds[1] + bounds[3])/2)
+            # utm_crs = get_utm_zone_from_latlon_point(centroid)
+            # minx, miny, maxx, maxy = reproject_units(bounds[0], bounds[1], bounds[2], bounds[3], WGS_CRS, utm_crs)
+            # box_area = box(minx, miny, maxx, maxy).area
         else:
-            bounds = zones.total_bounds
-            minx, miny, maxx, maxy = reproject_units(bounds[0], bounds[1], bounds[2], bounds[3], zones.crs, WGS_CRS)
-            box_area = box(minx, miny, maxx, maxy).area
+            box_area = box(*zones.total_bounds).area
+
+        tile_size_degrees = custom_tile_size_m if custom_tile_size_m is not None else DEFAULT_MAX_TILE_SIZE_M
 
         # if area of zone is within tolerance, then query as a single tile, otherwise sub-tile
-        if box_area <= MAX_TILE_SIZE_DEGREES**2:
+        if box_area <= tile_size_degrees**2:
             stats = LayerGroupBy._zonal_stats_tile([stats_func], geo_zone, zones, aggregate,
                                                    layer, masks, spatial_resolution, force_data_refresh)
         else:
-            stats = LayerGroupBy._zonal_stats_fishnet(stats_func, zones, aggregate, layer,
-                                                      masks, spatial_resolution)
+            stats = LayerGroupBy._zonal_stats_fishnet(stats_func, geo_zone, zones, aggregate, layer,
+                                                      masks, tile_size_degrees, spatial_resolution)
 
         if layer is not None:
             # decode zone and layer value using bit operations
@@ -482,23 +497,30 @@ class LayerGroupBy:
 
 
     @staticmethod
-    def _zonal_stats_fishnet(stats_func, zones, aggregate, layer, masks, spatial_resolution):
+    def _zonal_stats_fishnet(stats_func, geo_zone, zones, aggregate, layer, masks, tile_size_m, spatial_resolution):
         # fishnet GeoDataFrame into smaller tiles
         crs = zones.crs.srs
-        bounds = zones.total_bounds
 
         if crs == WGS_CRS:
-            bbox = GeoExtent(bbox=tuple(bounds), crs=WGS_CRS)
+            bbox = GeoExtent(bbox=geo_zone, crs=WGS_CRS)
             output_as = ProjectionType.GEOGRAPHIC
         else:
-            bbox = GeoExtent(bbox=tuple(bounds), crs=crs)
+            bbox = GeoExtent(bbox=geo_zone, crs=crs)
             output_as = ProjectionType.UTM
-        fishnet = create_fishnet_grid(bbox, tile_side_length=MAX_TILE_SIZE_DEGREES, length_units="degrees",
+
+        fishnet = create_fishnet_grid(bbox=bbox, tile_side_length=tile_size_m, length_units="meters",
                                       spatial_resolution=spatial_resolution, output_as=output_as)
 
+        # ------- Use below for testing
+        # file = '/tmp/test_result_tif_files/scratch/fishet_grid.geojson'
+        # saveable_fishnet = fishnet.drop(columns=['immutable_fishnet_geometry'])
+        # saveable_fishnet.to_file(file, driver='GeoJSON')
+        # ------- Use above for testing
+
         # spatial join with fishnet grid and then intersect geometries with fishnet tiles
+        # this processing reduces the tile extent to cover the extent needed for the contained zone polygons
         joined = zones.sjoin(fishnet)
-        joined["geometry"] = joined.intersection(joined["fishnet_geometry"])
+        joined["geometry"] = joined.intersection(joined["immutable_fishnet_geometry"])
 
         # remove linestring artifacts due to float precision
         gdf = joined[joined.geometry.type.isin(['Polygon', 'MultiPolygon'])]
@@ -695,8 +717,16 @@ class Layer():
         utm_box = bbox.as_utm_bbox()
         crs = utm_box.crs
 
-        fishnet = create_fishnet_grid(utm_box, tile_side_length=tile_side_m, length_units='meters',
+        fishnet = create_fishnet_grid(bbox=utm_box, tile_side_length=tile_side_m, length_units='meters',
                                       spatial_resolution=spatial_resolution, output_as=output_as)
+
+        # ------- Use below for testing
+        # import uuid
+        # guid = uuid.uuid4()
+        # file = f'/tmp/test_result_tif_files/scratch/fishet_layer_tile_grid_{guid}.geojson'
+        # saveable_fishnet = fishnet.drop(columns=['immutable_fishnet_geometry'])
+        # saveable_fishnet.to_file(file, driver='GeoJSON')
+        # ------- Use above for testing
 
         with tempfile.TemporaryDirectory() as temp_dir:
             array_list = []
@@ -726,6 +756,14 @@ class Layer():
             latitude_range = slice(north, south)
             clipped_data = data.sel(x=longitude_range, y=latitude_range)
 
+            # ------- Use below for testing
+            # import uuid
+            # guid = uuid.uuid4()
+            # file_id = f'{self.aggregate.__class__.__name__}_{guid}'
+            # tile_file_uri = f'/tmp/test_result_tif_files/scratch/{file_id}'
+            # write_layer(clipped_data, tile_file_uri, self.OUTPUT_FILE_FORMAT)
+            # ------- Use above for testing
+
             if bbox.geo_type == GeoType.CITY:
                 write_layer(clipped_data, file_uri, self.OUTPUT_FILE_FORMAT)
 
@@ -742,6 +780,7 @@ class Layer():
         standard_env = standardize_s3_env(self, s3_env)
         retrieved_cached_data, _, file_uri = retrieve_city_cache(self.aggregate, bbox, standard_env,
                                                                  force_data_refresh)
+
         if retrieved_cached_data is None:
             if hasattr(self.aggregate, 'PROCESSING_TILE_SIDE_M'):
                 tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
@@ -749,10 +788,10 @@ class Layer():
                 tile_side_m = None
             bbox_area = bbox.as_utm_bbox().polygon.area
             if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
-                result_data = self.get_data_by_fishnet_tiles(bbox, tile_side_m, spatial_resolution, file_uri)
+                result_data = self.get_data_by_fishnet_tiles(bbox=bbox, tile_side_m=tile_side_m,
+                                                             spatial_resolution=spatial_resolution, file_uri=file_uri)
             else:
                 result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
-
                 # Write to cache
                 if bbox.geo_type == GeoType.CITY:
                     write_layer(result_data, file_uri, self.OUTPUT_FILE_FORMAT)
@@ -769,7 +808,7 @@ class Layer():
         """
         return Layer(aggregate=self, masks=self.masks + list(layers))
 
-    def groupby(self, geo_zone, spatial_resolution=None, layer=None, force_data_refresh=False):
+    def groupby(self, geo_zone, spatial_resolution=None, layer=None, custom_tile_size_m=None, force_data_refresh=False):
         """
         Group layers by zones.
         :param geo_zone: GeoZone containing geometries to group by.
@@ -777,7 +816,8 @@ class Layer():
         :param layer: Additional categorical layer to group by
         :return: LayerGroupBy object that can be aggregated.
         """
-        return LayerGroupBy(self.aggregate, geo_zone, spatial_resolution, layer, force_data_refresh, self.masks)
+        return LayerGroupBy(self.aggregate, geo_zone, spatial_resolution, layer, custom_tile_size_m,
+                            force_data_refresh, self.masks)
 
     def write(self, bbox: GeoExtent, s3_env: str, output_uri: str = None,
               tile_side_length: int = None, buffer_size: int = None, length_units: str = None,
@@ -811,14 +851,14 @@ class Layer():
             if not skip_write:
                 write_layer(clipped_data, output_uri, file_format)
         else:
-            tile_grid_gdf = create_fishnet_grid(bbox, tile_side_length=tile_side_length, tile_buffer_size=0,
+            tile_grid_gdf = create_fishnet_grid(bbox=bbox, tile_side_length=tile_side_length, tile_buffer_size=0,
                                                 length_units=length_units, spatial_resolution=spatial_resolution)
             tile_grid_gdf = Layer._add_tile_name_column(tile_grid_gdf)
 
             buffered_tile_grid_gdf = None
             if buffer_size and buffer_size > 0:
                 buffered_tile_grid_gdf = (
-                    create_fishnet_grid(bbox, tile_side_length=tile_side_length, tile_buffer_size=buffer_size,
+                    create_fishnet_grid(bbox=bbox, tile_side_length=tile_side_length, tile_buffer_size=buffer_size,
                                         length_units=length_units, spatial_resolution=spatial_resolution))
                 buffered_tile_grid_gdf = Layer._add_tile_name_column(buffered_tile_grid_gdf)
 
@@ -984,10 +1024,6 @@ class Metric():
         if geo_zone.geo_type == GeoType.CITY:
             admin_count = len(geo_zone.zones)
             dummy_rows = pd.Series([''] * admin_count)
-            # dummy_rows = pd.DataFrame({
-            #     'zone': range(admin_count + 1),
-            #     'value': '' * (admin_count + 1)
-            # })
         else:
             dummy_rows = pd.Series([''] * 1)
 
