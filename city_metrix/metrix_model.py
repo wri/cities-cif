@@ -663,20 +663,45 @@ class LayerGroupBy:
             raise NotImplementedError("Can only align DataArray or GeoDataFrame")
 
     @staticmethod
-    def _rasterize(gdf, snap_to):
+    def _rasterize(gdf, snap_to: xr.DataArray):
         from shapely.validation import make_valid
+        from rasterio.features import rasterize
+
         gdf['geometry'] = gdf['geometry'].apply(make_valid)
         if gdf.empty:
             nan_array = np.full(snap_to.shape, np.nan, dtype=float)
             raster = snap_to.copy(data=nan_array)
+            raster_da = raster.rio.reproject_match(snap_to)
         else:
-            raster = make_geocube(
-                vector_data=gdf,
-                measurements=["index"],
-                like=snap_to,
-            ).index
+            crs = snap_to.rio.crs
+            reproj_gdf = gdf.to_crs(crs)
 
-        return raster.rio.reproject_match(snap_to)
+            # Extract spatial dimensions and transform from the xarray
+            transform = snap_to.rio.transform()
+            out_shape = (snap_to.rio.height, snap_to.rio.width)
+
+            # Prepare the geometries and values for rasterization
+            shapes = [(geom, value) for geom, value in zip(reproj_gdf.geometry, reproj_gdf['index'])]
+
+            # Perform rasterization
+            raster1 = rasterize(
+                shapes=shapes,
+                out_shape=out_shape,
+                transform=transform,
+                fill=np.nan,  # Fill value for areas outside polygons
+                dtype='float32'
+            )
+
+            raster_da = xr.DataArray(
+                raster1,
+                dims=("y", "x"),
+                coords={"y": snap_to["y"], "x": snap_to["x"]},
+                attrs={"name": "index"}
+            ).rio.write_crs(reproj_gdf.crs)
+
+            raster_da = raster_da.rio.reproject_match(snap_to)
+
+        return raster_da
 
 
 class Layer():
@@ -788,6 +813,7 @@ class Layer():
                 if bbox.geo_type == GeoType.CITY:
                     write_layer(result_data, file_uri, self.OUTPUT_FILE_FORMAT)
         else:
+            print(f">>>Reading {self.aggregate.__class__.__name__} layer data from cache..")
             result_data = retrieved_cached_data
 
         return result_data
@@ -998,6 +1024,7 @@ class Metric():
         if retrieved_cached_data is None:
             result_metric = self.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
         else:
+            print(f">>>Reading {self.__class__.__name__} metric data from cache..")
             result_metric = retrieved_cached_data
 
         zones = geo_zone.zones
