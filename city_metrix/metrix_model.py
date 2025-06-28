@@ -451,26 +451,17 @@ class LayerGroupBy:
     def _zonal_stats(stats_func, geo_zone, aggregate, layer, masks, custom_tile_size_m, spatial_resolution, force_data_refresh):
         zones = geo_zone.zones.reset_index(drop=True)
         # Get area of zone in square degrees
-        if zones.crs == WGS_CRS:
-            box_area = box(*zones.total_bounds).area
-            # TODO
-            # bounds = zones.total_bounds
-            # centroid = Point((bounds[0] + bounds[2])/2, (bounds[1] + bounds[3])/2)
-            # utm_crs = get_utm_zone_from_latlon_point(centroid)
-            # minx, miny, maxx, maxy = reproject_units(bounds[0], bounds[1], bounds[2], bounds[3], WGS_CRS, utm_crs)
-            # box_area = box(minx, miny, maxx, maxy).area
-        else:
-            box_area = box(*zones.total_bounds).area
+        box_area = box(*zones.total_bounds).area
 
-        tile_size_degrees = custom_tile_size_m if custom_tile_size_m is not None else DEFAULT_MAX_TILE_SIZE_M
+        tile_size_meters = custom_tile_size_m if custom_tile_size_m is not None else DEFAULT_MAX_TILE_SIZE_M
 
         # if area of zone is within tolerance, then query as a single tile, otherwise sub-tile
-        if box_area <= tile_size_degrees**2:
+        if box_area <= tile_size_meters**2:
             stats = LayerGroupBy._zonal_stats_tile([stats_func], geo_zone, zones, aggregate,
                                                    layer, masks, spatial_resolution, force_data_refresh)
         else:
             stats = LayerGroupBy._zonal_stats_fishnet(stats_func, geo_zone, zones, aggregate, layer,
-                                                      masks, tile_size_degrees, spatial_resolution)
+                                                      masks, tile_size_meters, spatial_resolution)
 
         if layer is not None:
             # decode zone and layer value using bit operations
@@ -547,6 +538,7 @@ class LayerGroupBy:
                       .apply(LayerGroupBy._aggregate_stats, stats_func)
                       )
 
+        # Rename column to statistical function
         if None in aggregated.columns:
             aggregated.rename(columns={None: stats_func}, inplace=True)
 
@@ -578,8 +570,8 @@ class LayerGroupBy:
         return adjusted_gdf
 
     @staticmethod
-    def _zonal_stats_tile(stats_func, geo_zone, zones, aggregate, layer, masks, spatial_resolution, force_data_refresh):
-        bbox = GeoExtent(geo_zone)
+    def _zonal_stats_tile(stats_func, tile_gdf, zones, aggregate, layer, masks, spatial_resolution, force_data_refresh):
+        bbox = GeoExtent(tile_gdf)
 
         aggregate_data = aggregate.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
                                                          spatial_resolution=spatial_resolution,
@@ -610,10 +602,10 @@ class LayerGroupBy:
             aggregate_data = aggregate_data.where(~np.isnan(mask))
 
         # Get zones differently for single or multiple tiles
-        if isinstance(geo_zone, GeoDataFrame):
-            tile_gdf = geo_zone
+        if isinstance(tile_gdf, GeoDataFrame):
+            tile_gdf = tile_gdf
         else:
-            tile_gdf = geo_zone.zones
+            tile_gdf = tile_gdf.zones
 
         result_stats = None
         if 'geo_level' not in zones.columns:
@@ -1020,14 +1012,14 @@ class Metric():
 
         return result_metric, feature_id
 
-    def _create_dummy_results(self, geo_zone: GeoZone) -> Union[pd.DataFrame, pd.Series]:
+    def _expand_empty_results_to_results_with_null_value(self, geo_zone: GeoZone) -> Union[pd.DataFrame, pd.Series]:
         if geo_zone.geo_type == GeoType.CITY:
             admin_count = len(geo_zone.zones)
-            dummy_rows = pd.Series([''] * admin_count)
+            padded_rows = pd.Series([''] * admin_count)
         else:
-            dummy_rows = pd.Series([''] * 1)
+            padded_rows = pd.Series([''] * 1)
 
-        return dummy_rows
+        return padded_rows
 
 
     def write(self, geo_zone: GeoZone, s3_env: str, output_uri: str = None,
@@ -1046,7 +1038,7 @@ class Metric():
                                                                     spatial_resolution, force_data_refresh)
 
         if indicator is None:
-            indicator = self._create_dummy_results(geo_zone)
+            indicator = self._expand_empty_results_to_results_with_null_value(geo_zone)
 
         # Determine if write can be skipped
         skip_write = _decide_if_write_can_be_skipped(self.metric, geo_zone, output_uri, standard_env)
@@ -1089,7 +1081,7 @@ class Metric():
                                                                     spatial_resolution, force_data_refresh)
 
         if indicator is None:
-            indicator = self._create_dummy_results(geo_zone)
+            indicator = self._expand_empty_results_to_results_with_null_value(geo_zone)
 
         # Determine if write can be skipped
         skip_write = _decide_if_write_can_be_skipped(self.metric, geo_zone, output_uri, standard_env)
