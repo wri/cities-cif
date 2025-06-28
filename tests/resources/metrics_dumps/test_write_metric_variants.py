@@ -5,7 +5,7 @@ import pytest
 
 from city_metrix.constants import WGS_CRS, RW_TESTING_S3_BUCKET_URI, DEFAULT_STAGING_ENV
 from city_metrix.metrics import *
-from tests.resources.bbox_constants import GEOZONE_FLORIANOPOLIS_WGS84
+from tests.resources.bbox_constants import GEOZONE_FLORIANOPOLIS
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.tools import prep_output_path, verify_file_is_populated, cleanup_cache_files
 
@@ -20,7 +20,7 @@ IDN_Jakarta_zone = GeoZone(gpd.GeoDataFrame([Polygon(jakarta_crude_boundary)], c
                     .set_crs(WGS_CRS)
                     .reset_index())
 
-ZONE = GEOZONE_FLORIANOPOLIS_WGS84
+ZONE = GEOZONE_FLORIANOPOLIS
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_large_city(target_folder):

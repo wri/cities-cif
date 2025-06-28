@@ -26,27 +26,27 @@ def build_file_key(output_env, class_obj, geo_extent):
 
     return file_uri, file_key, feature_id, is_custom_object
 
-def retrieve_cached_city_data(class_obj, geo_extent, output_env, force_data_refresh: bool):
+def retrieve_city_cache(class_obj, geo_extent, output_env, force_data_refresh: bool):
     file_uri, file_key, feature_id, is_custom_layer = build_file_key(output_env, class_obj, geo_extent)
 
     if force_data_refresh or geo_extent.geo_type == GeoType.GEOMETRY or not check_if_cache_file_exists(file_uri):
         return None, feature_id, file_uri
 
     # Retrieve from cache
-    result_data = None
+    data = None
     file_format = class_obj.OUTPUT_FILE_FORMAT
     if file_format == GTIFF_FILE_EXTENSION:
-        result_data = read_geotiff_from_cache(file_uri)
+        data = read_geotiff_from_cache(file_uri)
     elif file_format == GEOJSON_FILE_EXTENSION:
-        result_data = read_geojson_from_cache(file_uri)
+        data = read_geojson_from_cache(file_uri)
     elif file_format == NETCDF_FILE_EXTENSION:
-        result_data = read_netcdf_from_cache(file_uri)
+        data = read_netcdf_from_cache(file_uri)
     elif file_format == CSV_FILE_EXTENSION:
-        result_data = read_csv_from_s3(file_uri)
+        data = read_csv_from_s3(file_uri)
     else:
         raise Exception(f"Unrecognized file_format of '{file_format}'")
 
-    return result_data, feature_id, file_uri
+    return data, feature_id, file_uri
 
 # ============ Object naming ================================
 DATE_ATTRIBUTES = ['year', 'start_year', 'start_date', 'end_year', 'end_date']

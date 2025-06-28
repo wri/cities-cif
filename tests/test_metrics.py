@@ -1,5 +1,4 @@
 import math
-import pandas as pd
 import pytest
 
 from city_metrix.metrics import *
@@ -158,7 +157,6 @@ def test_percent_built_area_without_tree_cover():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 36.36, 100, 54, 46)
 
-
 def test_percent_protected_area():
     indicator = PercentProtectedArea().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
@@ -234,6 +232,11 @@ def compare_nullable_numbers(a, b):
     return a == b
 
 def assert_metric_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, notnull_count:int, null_count:int):
+    if 'zone' in data.columns:
+        data = data.drop(columns=['zone'])
+
+    data = data.squeeze()
+
     min_val = data.dropna().min()
     data_min_notnull_val = None if pd.isna(min_val) else min_val
     max_val = data.dropna().max()

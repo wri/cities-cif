@@ -29,15 +29,15 @@ class HighLandSurfaceTemperature(Layer):
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        wgs84_bbox = bbox.as_geographic_bbox()
+        geographic_bbox = bbox.as_geographic_bbox()
 
-        hottest_date = self.get_hottest_date(wgs84_bbox)
+        hottest_date = self.get_hottest_date(geographic_bbox)
         start_date = (hottest_date - datetime.timedelta(days=45)).strftime("%Y-%m-%d")
         end_date = (hottest_date + datetime.timedelta(days=45)).strftime("%Y-%m-%d")
 
 
         lst = (LandSurfaceTemperature(start_date, end_date)
-               .get_data_with_caching(bbox=wgs84_bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution))
+               .get_data_with_caching(bbox=geographic_bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution))
 
         lst_mean = lst.mean(dim=['x', 'y'])
         high_lst = lst.where(lst >= (lst_mean + self.THRESHOLD_ADD))

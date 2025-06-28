@@ -1,4 +1,5 @@
-from geopandas import GeoSeries
+import pandas as pd
+from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import AcagPM2p5, PopWeightedPM2p5, UrbanLandUse, WorldPopClass
@@ -18,7 +19,7 @@ class MeanPM2P5Exposure(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
 
         pm2p5_layer = AcagPM2p5()
 
@@ -46,8 +47,7 @@ class MeanPM2P5ExposurePopWeighted(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
-
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         pop_weighted_pm2p5 = PopWeightedPM2p5(worldpop_agesex_classes=self.worldpop_agesex_classes)
 
         if self.informal_only:
@@ -69,7 +69,7 @@ class MeanPM2P5ExposurePopWeightedChildren(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         pop_weighted_pm2p5_children = (MeanPM2P5ExposurePopWeighted(worldpop_agesex_classes=WorldPopClass.CHILDREN,
                                                                     informal_only=False))
 
@@ -86,7 +86,7 @@ class MeanPM2P5ExposurePopWeightedElderly(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         pop_weighted_pm2p5_elderly = (MeanPM2P5ExposurePopWeighted(worldpop_agesex_classes=WorldPopClass.ELDERLY,
                                                                     informal_only=False))
 
@@ -103,7 +103,7 @@ class MeanPM2P5ExposurePopWeightedFemale(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         pop_weighted_pm2p5_female = (MeanPM2P5ExposurePopWeighted(worldpop_agesex_classes=WorldPopClass.FEMALE,
                                                                   informal_only=False))
 
@@ -120,7 +120,7 @@ class MeanPM2P5ExposurePopWeightedInformal(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         pop_weighted_pm2p5_informal = (MeanPM2P5ExposurePopWeighted(worldpop_agesex_classes=[],
                                                                   informal_only=True))
 

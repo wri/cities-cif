@@ -123,6 +123,14 @@ def get_class_from_instance(obj):
     return cls
 
 
+# def meters_to_approximate_degrees(meters):
+#     # Earth's radius in meters
+#     earth_radius = 6371000
+#     # Convert meters to degrees
+#     degrees = (meters / (2 * math.pi * earth_radius)) * 360
+#     return degrees
+
+
 def buffer_bbox(lat_min, lon_min, lat_max, lon_max, buffer_meters):
     # Approximate conversion from meters to degrees at a given latitude
     def meters_to_degrees_lat(meters):
