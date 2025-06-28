@@ -2,12 +2,14 @@ import ee
 import numpy as np
 import pytest
 
+from city_metrix import AcagPM2p5
 from city_metrix.constants import ProjectionType, WGS_CRS
 from city_metrix.layers import NdviSentinel2, TreeCover, Albedo, AlosDSM, UtGlobus, OvertureBuildingsHeight
 from city_metrix.metrix_tools import get_projection_type
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_2
 from city_metrix.metrix_model import get_image_collection, GeoExtent
 from tests.test_layers import assert_vector_stats
+from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 EE_IMAGE_DIMENSION_TOLERANCE = 1  # Tolerance compensates for variable results from GEE service
 COUNTRY_CODE_FOR_BBOX = 'BRA'
@@ -129,6 +131,17 @@ def test_overture_height_rio():
     data = OvertureBuildingsHeight(city).get_data(rio_bbox)
     assert np.size(data) > 0
     assert_vector_stats(data, 'height', 1, 3.5, 436, 43, 0)
+
+
+def test_wgs_utm_equivalency():
+    BBOX = BBOX_USA_OR_PORTLAND_2
+    BBOX_AS_UTM = BBOX.as_utm_bbox()
+
+    data = AcagPM2p5().get_data(BBOX)
+    assert np.size(data) > 0
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+    utm_bbox_data = AcagPM2p5().get_data(BBOX_AS_UTM)
+    assert get_rounded_gdf_geometry(data, 1).equals(get_rounded_gdf_geometry(utm_bbox_data, 1))
 
 
 def _convert_fraction_to_rounded_percent(fraction):
