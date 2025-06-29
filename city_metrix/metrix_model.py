@@ -25,9 +25,9 @@ from city_metrix.cache_manager import retrieve_city_cache, build_file_key
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, DEFAULT_STAGING_ENV, GTIFF_FILE_EXTENSION
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
-                                    get_city, get_city_admin_boundaries, get_city_boundary, read_geotiff_from_cache)
+                                    get_city, get_city_admin_boundaries, read_geotiff_from_cache)
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
-                                      parse_city_aoi_json, reproject_units, buffer_bbox, construct_city_aoi_json,
+                                      parse_city_aoi_json, reproject_units, construct_city_aoi_json,
                                       standardize_y_dimension_direction)
 
 

@@ -4,7 +4,7 @@ from enum import Enum
 
 from city_metrix import s3_client
 from city_metrix.constants import GeoType, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION, \
-    CSV_FILE_EXTENSION, LOCAL_REPO_URI, DEFAULT_PRODUCTION_ENV, RW_CACHE_S3_BUCKET_URI
+    CSV_FILE_EXTENSION, LOCAL_CACHE_URI, DEFAULT_PRODUCTION_ENV, RW_CACHE_S3_BUCKET_URI
 from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_cache, \
     read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_bucket_name_from_s3_uri, read_csv_from_s3
 from city_metrix.metrix_tools import get_class_from_instance
@@ -235,7 +235,7 @@ def check_if_cache_file_exists(file_uri):
         return os.path.exists(uri_path)
 
 def get_cached_file_uri(file_key, is_custom_layer):
-    uri = LOCAL_REPO_URI if is_custom_layer else RW_CACHE_S3_BUCKET_URI
+    uri = LOCAL_CACHE_URI if is_custom_layer else RW_CACHE_S3_BUCKET_URI
 
     if get_uri_scheme(uri) in ('s3', 'file'):
         file_uri = f"{uri}/{file_key}"

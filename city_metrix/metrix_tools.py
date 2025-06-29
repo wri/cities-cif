@@ -1,4 +1,6 @@
 import math
+import os
+
 import utm
 from typing import Union
 from pyproj import CRS
@@ -151,5 +153,3 @@ def buffer_bbox(lat_min, lon_min, lat_max, lon_max, buffer_meters):
         lat_max + lat_buffer,
         lon_max + lon_buffer
     )
-
-

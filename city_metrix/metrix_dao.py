@@ -4,6 +4,7 @@ import requests
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
+import json
 from pathlib import Path
 from geopandas import GeoDataFrame
 from rioxarray import rioxarray
@@ -11,7 +12,7 @@ from urllib.parse import urlparse
 
 from city_metrix import s3_client
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
-    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI, RW_CACHE_S3_BUCKET_URI
+    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI, RW_CACHE_S3_BUCKET_URI, LOCAL_CACHE_URI
 from city_metrix.metrix_tools import get_crs_from_data, standardize_y_dimension_direction
 
 
@@ -234,42 +235,80 @@ def _get_file_key_from_url(s3_url):
     return file_key
 
 
-def get_city(city_id: str):
-    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
-    try:
-        city = requests.get(query)
-        if city.status_code in range(200, 206):
-            return city.json()
-    except Exception as e_msg:
-        raise Exception(f"API call for city failed with error: {e_msg}")
-
 # == API queries ==
-def get_city_boundary(city_id: str, admin_level: str):
-    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
-    try:
-        city_boundary = requests.get(query)
-        if city_boundary.status_code in range(200, 206):
-            tuple_str = city_boundary.json()['bounding_box'][admin_level]
-            bounds = _string_to_float_tuple(tuple_str)
-            return bounds
-    except Exception as e_msg:
-        raise Exception(f"API call for city boundary failed with error: {e_msg}")
+def _verify_api_cache_file(query_uri, qualifier, file_extension):
+    cache_base = query_uri.replace('https://', '').replace('/', '_').replace('.','_')
+    cache_filename = f'{cache_base}_{qualifier}.{file_extension}'
+
+    cache_path = os.path.join(Path('/'),_get_file_key_from_url(LOCAL_CACHE_URI), 'api')
+    cache_file_path = os.path.join(cache_path, cache_filename)
+    if os.path.exists(cache_file_path) and  _is_file_less_than_one_day_old(cache_file_path):
+        is_cache_file_usable = True
+    else:
+        is_cache_file_usable = False
+
+    cache_uri = os.path.join(LOCAL_CACHE_URI, 'api', cache_filename)
+
+    return is_cache_file_usable, cache_uri, cache_file_path
+
+
+def get_city(city_id: str):
+    query_uri = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
+    is_cache_file_usable, _, cache_file_path = _verify_api_cache_file(query_uri, 'city_details', 'json')
+
+    city_json = None
+    if is_cache_file_usable:
+        with open(cache_file_path, 'r') as file:
+            city_json = json.load(file)
+    else:
+        try:
+            city = requests.get(query_uri)
+            if city.status_code in range(200, 206):
+                city_json =  city.json()
+        except Exception as e_msg:
+            raise Exception(f"API call for city failed with error: {e_msg}")
+
+        with open(cache_file_path, "w") as file:
+            json.dump(city_json, file)
+
+    return city_json
 
 
 def get_city_admin_boundaries(city_id: str, admin_level: str) -> GeoDataFrame:
-    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
-    try:
-        city_boundary = requests.get(query)
-        if city_boundary.status_code in range(200, 206):
-            boundaries_uri = city_boundary.json()['layers_url']['geojson']
-            boundaries_geojson = read_geojson_from_cache(boundaries_uri)
+    query_uri = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
+    is_cache_file_usable, cache_uri, _ = _verify_api_cache_file(query_uri, 'admin_boundaries', GEOJSON_FILE_EXTENSION)
 
-            geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
-            boundaries = boundaries_geojson[geom_columns]
-            boundaries_with_index = boundaries.reset_index()
-            return boundaries_with_index
-    except Exception as e_msg:
-        raise Exception(f"API call for city-admin boundary failed with error: {e_msg}")
+    boundaries_geojson = None
+    if is_cache_file_usable:
+        boundaries_geojson = read_geojson_from_cache(cache_uri)
+    else:
+        try:
+            city_boundary = requests.get(query_uri)
+            if city_boundary.status_code in range(200, 206):
+                boundaries_uri = city_boundary.json()['layers_url']['geojson']
+                boundaries_geojson = read_geojson_from_cache(boundaries_uri)
+        except Exception as e_msg:
+            raise Exception(f"API call for city-admin boundary failed with error: {e_msg}")
+
+        write_geojson(boundaries_geojson, cache_uri)
+
+    geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
+    boundaries = boundaries_geojson[geom_columns]
+    boundaries_with_index = boundaries.reset_index()
+    return boundaries_with_index
+
+
+def _is_file_less_than_one_day_old(file_path):
+    import time
+    from datetime import datetime, timedelta
+    # Get the file's modification time
+    file_mod_time = os.path.getmtime(file_path)
+    # Convert it to a datetime object
+    file_mod_datetime = datetime.fromtimestamp(file_mod_time)
+    # Calculate the time difference
+    one_day_ago = datetime.now() - timedelta(days=1)
+    # Check if the file is less than 1 day old
+    return file_mod_datetime > one_day_ago
 
 
 def _string_to_float_tuple(string_tuple):
