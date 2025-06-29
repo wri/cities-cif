@@ -254,7 +254,7 @@ def _verify_api_cache_file(query_uri, qualifier, file_extension):
 
 def get_city(city_id: str):
     query_uri = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
-    is_cache_file_usable, _, cache_file_path = _verify_api_cache_file(query_uri, 'city_details', 'json')
+    is_cache_file_usable, cache_uri, cache_file_path = _verify_api_cache_file(query_uri, 'city_details', 'json')
 
     city_json = None
     if is_cache_file_usable:
@@ -268,6 +268,8 @@ def get_city(city_id: str):
         except Exception as e_msg:
             raise Exception(f"API call for city failed with error: {e_msg}")
 
+        uri_path = os.path.normpath(get_file_path_from_uri(cache_uri))
+        _create_local_target_folder(uri_path)
         with open(cache_file_path, "w") as file:
             json.dump(city_json, file)
 
