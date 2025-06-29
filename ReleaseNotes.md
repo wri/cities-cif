@@ -1,5 +1,9 @@
 # Release Notes
 
+## 2025/06/28
+1. Added local API results caching
+2. Renamed local cache to 
+
 ## 2025/06/24
 1. Added sub-tiling of layers as configured by the optional PROCESSING_TILE_SIDE_M constant in layer classes
 2. Added metric-specific sub-tiling using the optional CUSTOM_TILE_SIDE_M constant in metric classes
