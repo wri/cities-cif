@@ -7,6 +7,7 @@ import cdsapi
 import os
 import xarray as xr
 import glob
+from datetime import timedelta
 
 from city_metrix.constants import WGS_CRS, NETCDF_FILE_EXTENSION
 from city_metrix.metrix_model import Layer, GeoExtent
@@ -134,6 +135,8 @@ class Era5HottestDay(Layer):
                 # Subset times for the day
                 times = [time.astype('datetime64[s]').astype(datetime).replace(tzinfo=pytz.UTC) for time in ds['time'].values]
                 indices = [i for i, value in enumerate(times) if value in utc_times]
+                if len(indices) == 0:
+                    indices = [i for i, value in enumerate(times) if (value + timedelta(minutes=30)) in utc_times]
                 subset_ds = ds.isel(time=indices).load()
 
             an_list.append(subset_ds)
