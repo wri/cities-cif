@@ -3,7 +3,7 @@ import ee
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
-DEFAULT_SPATIAL_RESOLUTION = 1113.1949  # 10 degrees of earth circumference
+DEFAULT_SPATIAL_RESOLUTION = 10
 
 
 class AcagPM2p5(Layer):

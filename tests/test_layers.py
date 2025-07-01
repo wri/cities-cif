@@ -18,7 +18,7 @@ BBOX = BBOX_USA_OR_PORTLAND_2
 def test_acag_pm2p5():
     data = AcagPM2p5().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 6.18, 6.18, 1, 0)
+    assert_raster_stats(data, 2, 5.89, 6.53, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_albedo_cloud_masked():
