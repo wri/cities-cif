@@ -7,6 +7,7 @@ import cdsapi
 import os
 import xarray as xr
 import glob
+from datetime import timedelta
 
 from city_metrix.constants import WGS_CRS, NETCDF_FILE_EXTENSION
 from city_metrix.metrix_model import Layer, GeoExtent
@@ -89,9 +90,15 @@ class Era5HottestDay(Layer):
         for i in range(0, 24):
             local_time_hourly = local_tz.localize(datetime(local_date.year, local_date.month, local_date.day, i, 0))
             utc_time_hourly = local_time_hourly.astimezone(pytz.utc)
-            utc_times.append(utc_time_hourly)
-
-        utc_dates = list(set([dt.date() for dt in utc_times]))
+            # Rounded due to half hour offset in some cities
+            # See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for the range of possible values
+            # ERA5 only accepts whole hour UTC times
+            # if > 30 minutes, bump up an hour
+            if utc_time_hourly.minute > 30:
+                utc_time_hourly = utc_time_hourly + timedelta(hours=1)
+            utc_times.append(utc_time_hourly.replace(minute=0))
+        
+        utc_dates = sorted(list(set([dt.date() for dt in utc_times])))
 
         # {"dataType": "an"(analysis)/"fc"(forecast)/"pf"(perturbed forecast)}
         an_list = []

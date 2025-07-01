@@ -4,12 +4,13 @@ import pytest
 
 from city_metrix import AcagPM2p5
 from city_metrix.constants import ProjectionType, WGS_CRS
-from city_metrix.layers import NdviSentinel2, TreeCover, Albedo, AlosDSM, UtGlobus, OvertureBuildingsHeight
+from city_metrix.layers import NdviSentinel2, TreeCover, Albedo, AlosDSM, Era5HottestDay, UtGlobus, OvertureBuildingsHeight
 from city_metrix.metrix_tools import get_projection_type
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_2
 from city_metrix.metrix_model import get_image_collection, GeoExtent
 from tests.test_layers import assert_vector_stats
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
+from tests.conftest import EXECUTE_IGNORED_TESTS
 
 EE_IMAGE_DIMENSION_TOLERANCE = 1  # Tolerance compensates for variable results from GEE service
 COUNTRY_CODE_FOR_BBOX = 'BRA'
@@ -95,7 +96,16 @@ def test_alos_dsm_values():
     assert actual_min_value == expected_min_value
     assert actual_max_value == expected_max_value
 
-    
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_era_5_hottest_day_utc_30minute_offset():
+    # Bhopal with timezone of UTC+5:30
+    bbox = GeoExtent(bbox=(77.3886757, 23.2243898, 77.40987, 23.2427476), crs=WGS_CRS)
+    data = Era5HottestDay(start_date="2023-01-01", end_date="2024-01-01").get_data(bbox=bbox)
+
+    assert data.time.values[0] == np.datetime64('2023-05-12T18')
+
+
 def test_ndvi_values():
     data = NdviSentinel2(year=2023).get_data(BBOX)
 
