@@ -581,7 +581,7 @@ class LayerGroupBy:
                                                          spatial_resolution=spatial_resolution,
                                                          force_data_refresh=force_data_refresh)
 
-        if aggregate_data.data.size == 0:
+        if isinstance(aggregate_data, xr.DataArray) and aggregate_data.data.size == 0:
             return None
         else:
             mask_datum = [mask.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
