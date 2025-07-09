@@ -22,7 +22,7 @@ setup(
         "geopandas",
         "xarray",
         "s3fs",
-        "dask[complete]<=2025.2.0",
+        "dask[complete]",
         "boto3",
         "cdsapi",
         "timezonefinder",
