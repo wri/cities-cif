@@ -47,14 +47,12 @@ elif credentials_file_path.exists() or config_file_path.exists():
         s3_client = session.client('s3')
     except Exception as e:
         raise Exception(f"Could not initialize S3 client with profile '{aws_profile}': {e}")
-elif credentials_file_path.exists() or config_file_path.exists():
+else:
     try:
         session = boto3.Session()
         s3_client = session.client('s3')
     except Exception as e:
         raise Exception(f"Could not initialize S3 client without a profile: {e}")
-else:
-    raise Exception("Could not establish AWS credentials")
 
 # set for AWS requests
 os.environ["AWS_REQUEST_PAYER"] = "requester"
