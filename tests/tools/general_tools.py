@@ -12,7 +12,10 @@ def is_valid_path(path: str):
 
 def create_target_folder(folder_path, delete_existing_files: bool):
     if os.path.isdir(folder_path) is False:
-        os.makedirs(folder_path)
+        try:
+            os.makedirs(folder_path)
+        except OSError as e:
+            print(e)
     elif delete_existing_files is True:
         remove_all_files_in_directory(folder_path)
 

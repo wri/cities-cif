@@ -6,9 +6,9 @@ from city_metrix.layers import AcagPM2p5, Era5HottestDay, UrbanExtents, OpenStre
 from city_metrix.cache_manager import check_if_cache_file_exists
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.tools.general_tools import get_test_cache_variables
-from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84
+from tests.resources.bbox_constants import GEOEXTENT_TERESINA
 
-GEO_EXTENT_PROCESSING_CITY = GEOEXTENT_TERESINA_WGS84
+GEO_EXTENT_PROCESSING_CITY = GEOEXTENT_TERESINA
 CITY_UT_NAME = 'teresina'
 
 

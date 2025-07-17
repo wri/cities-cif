@@ -5,7 +5,7 @@ dependencies:
   - python=3.10.16
   - earthengine-api=1.5.9
   - geocube=0.7.1
-  - geopandas=1.0.1
+  - geopandas=1.1.1
   - gdal=3.10.2
   - xarray=2025.3.1
   - rioxarray=0.18.2

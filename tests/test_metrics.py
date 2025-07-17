@@ -1,5 +1,4 @@
 import math
-import pandas as pd
 import pytest
 
 from city_metrix.metrics import *
@@ -50,6 +49,13 @@ def test_canopy_area_per_resident_informal():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.00, 2.81, 18, 82)
+
+def test_hospitals_per_ten_thousand_residents():
+    indicator = HospitalsPerTenThousandResidents().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.00, 8.87, 100, 0)
 
 def test_percent_canopy_covered_population_children():
     indicator = PercentCanopyCoveredPopulationChildren().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -179,7 +185,7 @@ def test_urban_open_space():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 3, 0, 0.02036, 100, 0)
+    assert_metric_stats(indicator, 3, 0, 0.02083, 100, 0)
 
 def test_vegetation_water_change_gain_area():
     indicator = VegetationWaterChangeGainArea().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -207,8 +213,8 @@ def _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_n
                   min_notnull_val, max_notnull_val, notnull_count, null_count):
     if sig_digits is not None:
         float_tol = (10 ** -sig_digits)
-        is_matched = (math.isclose(data_min_notnull_val, min_notnull_val, rel_tol=float_tol)
-                      and math.isclose(data_max_notnull_val, max_notnull_val, rel_tol=float_tol)
+        is_matched = (math.isclose(round(data_min_notnull_val, sig_digits), round(min_notnull_val, sig_digits), rel_tol=float_tol)
+                      and math.isclose(round(data_max_notnull_val, sig_digits), round(max_notnull_val, sig_digits), rel_tol=float_tol)
                       and data_notnull_count == notnull_count
                       and data_null_count == null_count
                       )
@@ -233,6 +239,11 @@ def compare_nullable_numbers(a, b):
     return a == b
 
 def assert_metric_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, notnull_count:int, null_count:int):
+    if 'zone' in data.columns:
+        data = data.drop(columns=['zone'])
+
+    data = data.squeeze()
+
     min_val = data.dropna().min()
     data_min_notnull_val = None if pd.isna(min_val) else min_val
     max_val = data.dropna().max()

@@ -1,5 +1,15 @@
 # Release Notes
 
+## 2025/06/28
+1. Added local API results caching
+2. Renamed local cache to 
+
+## 2025/06/24
+1. Added sub-tiling of layers as configured by the optional PROCESSING_TILE_SIDE_M constant in layer classes
+2. Added metric-specific sub-tiling using the optional CUSTOM_TILE_SIDE_M constant in metric classes
+3. Redesigned the GeoZone class for improved efficiency and to consistently process city-based metrics in UTM coordinates.
+4. Modified the create_fishnet_grid function to enclose all tiles fully within the specified AOI by trimming extents of files in NE corner to the AOI.
+
 ## 2025/06/01
 1. CDB-262: Updated written-file naming conventions.
 
