@@ -16,10 +16,11 @@ class HeightAboveNearestDrainage(Layer):
                     default is 1000, other options - 100, 5000
         thresh: flow accumulation threshold, default is 1
     """
-    def __init__(self, river_head=1000, thresh=1, **kwargs):
+    def __init__(self, river_head=1000, thresh=1, nanval=None, **kwargs):
         super().__init__(**kwargs)
         self.river_head = river_head
         self.thresh = thresh
+        self.nanval = nanval
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -57,5 +58,8 @@ class HeightAboveNearestDrainage(Layer):
             spatial_resolution,
             "height above nearest drainage"
         ).b1
+
+        if self.nanval is not None:
+            data = data.fillna(self.nanval)
 
         return data
