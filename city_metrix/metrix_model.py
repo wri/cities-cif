@@ -131,10 +131,7 @@ class GeoExtent():
             else:
                 self.crs = crs
 
-            try:
-                self.epsg_code = int(self.crs.split(':')[1])
-            except:
-                b=2
+            self.epsg_code = int(self.crs.split(':')[1])
             self.projection_type = get_projection_type(self.crs)
             self.units = "degrees" if self.projection_type == ProjectionType.GEOGRAPHIC else "meters"
             self.bounds = self.bbox
@@ -666,8 +663,8 @@ class LayerGroupBy:
                     "x": align_to.x,
                     "y": align_to.y,
                 })
-            except Exception as e:
-                b=2
+            except Exception as e_msg:
+                raise Exception(f"Unable to align data due to exception: {e_msg}")
         elif isinstance(data_layer, gpd.GeoDataFrame):
             gdf = data_layer.to_crs(align_to.rio.crs).reset_index()
             return LayerGroupBy._rasterize(gdf, align_to)
