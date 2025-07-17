@@ -15,7 +15,7 @@ PRESERVE_RESULTS_ON_OS = False  # False - Default for check-in
 OUTPUT_RESULTS_FORMAT = 'csv' # Default for check-in
 # OUTPUT_RESULTS_FORMAT = 'geojson'
 
-SLOW_TEST_TIMEOUT_SECONDS = 3000 # seconds = 50 minutes (Duration needed for fractional vegetation)
+SLOW_TEST_TIMEOUT_SECONDS = 3600 # seconds = 1 hour (Duration needed for fractional vegetation)
 
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
@@ -79,6 +79,11 @@ def test_write_MeanPM2P5Exposure(target_folder):
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_MeanPM2P5ExposurePopWeighted(target_folder):
+    metric_obj = MeanPM2P5ExposurePopWeighted()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_MeanPM2P5ExposurePopWeightedElderly(target_folder):
     metric_obj = MeanPM2P5ExposurePopWeightedElderly()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
@@ -109,7 +114,7 @@ def test_write_NaturalAreasPercent(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_PercentAreaFracvegExceedsThreshold(target_folder):
+def test_write_PercentAreaFracVegExceedsThreshold(target_folder):
     metric_obj = PercentAreaFracvegExceedsThreshold()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
 
