@@ -4,6 +4,7 @@ import requests
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
+import json
 from pathlib import Path
 from geopandas import GeoDataFrame
 from rioxarray import rioxarray
@@ -11,8 +12,9 @@ from urllib.parse import urlparse
 
 from city_metrix import s3_client
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
-    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI, RW_CACHE_S3_BUCKET_URI
+    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI, RW_CACHE_S3_BUCKET_URI, LOCAL_CACHE_URI
 from city_metrix.metrix_tools import get_crs_from_data, standardize_y_dimension_direction
+
 
 def _read_geojson_from_s3(s3_bucket, file_key):
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -20,6 +22,7 @@ def _read_geojson_from_s3(s3_bucket, file_key):
         s3_client.download_file(s3_bucket, file_key, temp_file_path)
         result_data = gpd.read_file(temp_file_path)
     return result_data
+
 
 def read_geojson_from_cache(uri):
     if get_uri_scheme(uri) == 's3':
@@ -36,6 +39,7 @@ def read_geojson_from_cache(uri):
         result_data = gpd.read_file(file_path)
 
     return result_data
+
 
 def read_geotiff_from_cache(file_uri):
     if get_uri_scheme(file_uri) == 'file':
@@ -61,6 +65,7 @@ def read_geotiff_from_cache(file_uri):
 
     return result_data
 
+
 def read_netcdf_from_cache(file_uri):
     result_data = None
     if get_uri_scheme(file_uri) == 's3':
@@ -76,6 +81,7 @@ def read_netcdf_from_cache(file_uri):
         result_data = xr.open_dataarray(file_path)
 
     return result_data
+
 
 def read_csv_from_s3(file_uri):
     s3_bucket = remove_scheme_from_uri(RW_CACHE_S3_BUCKET_URI)
@@ -96,7 +102,7 @@ def write_metric(data, uri, file_format):
         elif file_format == GEOJSON_FILE_EXTENSION:
             write_geojson(data, uri)
     elif data is None:
-        raise NotImplementedError("No data found for selection area.")
+        print("No data found for selection area.")
     else:
         raise NotImplementedError("Can only write Series or Dataframe Indicator data.")
 
@@ -116,6 +122,7 @@ def write_layer(data, uri, file_format):
         write_geojson(data, uri)
     else:
         raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
+
 
 def _write_file_to_s3(data, uri, file_extension):
     import shutil
@@ -145,6 +152,7 @@ def _write_file_to_s3(data, uri, file_extension):
 
     shutil.rmtree(temp_dir)
 
+
 def write_csv(data, uri):
     _verify_datatype('write_csv()', data, [pd.Series, pd.DataFrame], is_spatial=False)
     if get_uri_scheme(uri) == 's3':
@@ -154,6 +162,7 @@ def write_csv(data, uri):
         _create_local_target_folder(uri_path)
         data.to_csv(uri, header=True, index=False)
 
+
 def write_geojson(data, uri):
     _verify_datatype('write_geojson()', data, [gpd.GeoDataFrame], is_spatial=True)
     if get_uri_scheme(uri) == 's3':
@@ -162,6 +171,7 @@ def write_geojson(data, uri):
         uri_path = os.path.normpath(get_file_path_from_uri(uri))
         _create_local_target_folder(uri_path)
         data.to_file(uri, driver="GeoJSON")
+
 
 def _write_geotiff(data, uri):
     _verify_datatype('write_geotiff()', data, [xr.DataArray], is_spatial=True)
@@ -173,6 +183,7 @@ def _write_geotiff(data, uri):
         _create_local_target_folder(uri_path)
         standardized_array.rio.to_raster(raster_path=uri_path, driver="GTiff")
 
+
 def _write_netcdf(data, uri):
     _verify_datatype('write_netcdf()', data, [xr.DataArray], is_spatial=False)
     if get_uri_scheme(uri) == 's3':
@@ -182,17 +193,19 @@ def _write_netcdf(data, uri):
         _create_local_target_folder(uri_path)
         data.to_netcdf(uri_path)
 
+
 def _create_local_target_folder(uri_path):
     output_path = os.path.dirname(uri_path)
     if not os.path.exists(output_path):
         os.makedirs(output_path)
+
 
 def _write_dataset(data, uri):
     _verify_datatype('write_dataset()', data, [xr.Dataset], is_spatial=True)
     raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 
 
-def _verify_datatype(function_name:str, data, verification_classes:list, is_spatial:bool = False):
+def _verify_datatype(function_name: str, data, verification_classes: list, is_spatial: bool = False):
     data_datatype_name = type(data).__name__
 
     verification_class_names = [cls.__name__ for cls in verification_classes]
@@ -213,48 +226,92 @@ def write_tile_grid(tile_grid, output_path, target_file_name):
         os.makedirs(output_path)
 
     tile_grid_file_path = str(os.path.join(output_path, target_file_name))
-    tg = tile_grid.drop(columns='fishnet_geometry', axis=1)
+    tg = tile_grid.drop(columns='immutable_fishnet_geometry', axis=1)
     tg.to_file(tile_grid_file_path)
+
 
 def _get_file_key_from_url(s3_url):
     file_key = '/'.join(s3_url.split('/')[3:])
     return file_key
 
-def get_city(city_id: str):
-    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
-    try:
-        city = requests.get(query)
-        if city.status_code in range(200, 206):
-            return city.json()
-    except Exception as e_msg:
-        raise Exception(f"API call for city failed with error: {e_msg}")
 
 # == API queries ==
-def get_city_boundary(city_id: str, admin_level: str):
-    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
-    try:
-        city_boundary = requests.get(query)
-        if city_boundary.status_code in range(200, 206):
-            tuple_str = city_boundary.json()['bounding_box'][admin_level]
-            bounds = _string_to_float_tuple(tuple_str)
-            return bounds
-    except Exception as e_msg:
-        raise Exception(f"API call for city boundary failed with error: {e_msg}")
+def _verify_api_cache_file(query_uri, qualifier, file_extension):
+    cache_base = query_uri.replace('https://', '').replace('/', '_').replace('.','_')
+    cache_filename = f'{cache_base}_{qualifier}.{file_extension}'
+
+    cache_path = os.path.join(Path('/'),_get_file_key_from_url(LOCAL_CACHE_URI), 'api')
+    cache_file_path = os.path.join(cache_path, cache_filename)
+    if os.path.exists(cache_file_path) and  _is_file_less_than_one_day_old(cache_file_path):
+        is_cache_file_usable = True
+    else:
+        is_cache_file_usable = False
+
+    cache_uri = os.path.join(LOCAL_CACHE_URI, 'api', cache_filename)
+
+    return is_cache_file_usable, cache_uri, cache_file_path
+
+
+def get_city(city_id: str):
+    query_uri = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
+    is_cache_file_usable, cache_uri, cache_file_path = _verify_api_cache_file(query_uri, 'city_details', 'json')
+
+    city_json = None
+    if is_cache_file_usable:
+        with open(cache_file_path, 'r') as file:
+            city_json = json.load(file)
+    else:
+        try:
+            city = requests.get(query_uri)
+            if city.status_code in range(200, 206):
+                city_json =  city.json()
+        except Exception as e_msg:
+            raise Exception(f"API call for city failed with error: {e_msg}")
+
+        uri_path = os.path.normpath(get_file_path_from_uri(cache_uri))
+        _create_local_target_folder(uri_path)
+        with open(cache_file_path, "w") as file:
+            json.dump(city_json, file)
+
+    return city_json
+
 
 def get_city_admin_boundaries(city_id: str, admin_level: str) -> GeoDataFrame:
-    query = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
-    try:
-        city_boundary = requests.get(query)
-        if city_boundary.status_code in range(200, 206):
-            boundaries_uri = city_boundary.json()['layers_url']['geojson']
-            boundaries_geojson = read_geojson_from_cache(boundaries_uri)
+    query_uri = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
+    is_cache_file_usable, cache_uri, _ = _verify_api_cache_file(query_uri, 'admin_boundaries', GEOJSON_FILE_EXTENSION)
 
-            geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
-            boundaries = boundaries_geojson[geom_columns]
-            boundaries_with_index = boundaries.reset_index()
-            return boundaries_with_index
-    except Exception as e_msg:
-        raise Exception(f"API call for city-admin boundary failed with error: {e_msg}")
+    boundaries_geojson = None
+    if is_cache_file_usable:
+        boundaries_geojson = read_geojson_from_cache(cache_uri)
+    else:
+        try:
+            city_boundary = requests.get(query_uri)
+            if city_boundary.status_code in range(200, 206):
+                boundaries_uri = city_boundary.json()['layers_url']['geojson']
+                boundaries_geojson = read_geojson_from_cache(boundaries_uri)
+        except Exception as e_msg:
+            raise Exception(f"API call for city-admin boundary failed with error: {e_msg}")
+
+        write_geojson(boundaries_geojson, cache_uri)
+
+    geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
+    boundaries = boundaries_geojson[geom_columns]
+    boundaries_with_index = boundaries.reset_index()
+    return boundaries_with_index
+
+
+def _is_file_less_than_one_day_old(file_path):
+    import time
+    from datetime import datetime, timedelta
+    # Get the file's modification time
+    file_mod_time = os.path.getmtime(file_path)
+    # Convert it to a datetime object
+    file_mod_datetime = datetime.fromtimestamp(file_mod_time)
+    # Calculate the time difference
+    one_day_ago = datetime.now() - timedelta(days=1)
+    # Check if the file is less than 1 day old
+    return file_mod_datetime > one_day_ago
+
 
 def _string_to_float_tuple(string_tuple):
     string_tuple = string_tuple.replace("[", "").replace("]", "")
@@ -284,7 +341,7 @@ def get_file_path_from_uri(uri):
     elif get_uri_scheme(uri) == "file":
         p1 = parsed_url.netloc
         p2 = parsed_url.path
-        file_path = os.path.normpath(p1+p2)
+        file_path = os.path.normpath(p1 + p2)
     else:
         # assume it's a local path
         file_path = uri
@@ -299,6 +356,7 @@ def get_bucket_name_from_s3_uri(uri):
         return uri.split('/')[2]
     else:
         raise ValueError("Invalid S3 URI")
+
 
 def remove_scheme_from_uri(uri):
     parsed_uri = urlparse(uri)

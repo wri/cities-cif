@@ -1,4 +1,5 @@
-from geopandas import GeoSeries
+import pandas as pd
+from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import TreeCanopyHeight, WorldPop, WorldPopClass, UrbanLandUse
@@ -7,6 +8,7 @@ from city_metrix.metrix_model import GeoZone, Metric
 
 class CanopyAreaPerResident(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    CUSTOM_TILE_SIDE_M = 10000
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
@@ -22,7 +24,7 @@ class CanopyAreaPerResident(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
 
         world_pop = WorldPop(agesex_classes=self.agesex_classes)
         # tree canopy height has default spatial resolution of 1, count equals area
@@ -31,15 +33,22 @@ class CanopyAreaPerResident(Metric):
         if self.informal_only:
             # urban land use class 3 for Informal
             urban_land_use = UrbanLandUse(ulu_class=3)
-            world_pop_sum = world_pop.mask(urban_land_use).groupby(geo_zone).sum()
-            tree_canopy_height_count = tree_canopy_height.mask(urban_land_use).groupby(geo_zone).count()
+            world_pop_sum = world_pop.mask(urban_land_use).groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).sum()
+            tree_canopy_height_count = tree_canopy_height.mask(urban_land_use).groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).count()
         else:
-            world_pop_sum = world_pop.groupby(geo_zone).sum()
-            tree_canopy_height_count = tree_canopy_height.groupby(geo_zone).count()
+            world_pop_sum = world_pop.groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).sum()
+            tree_canopy_height_count = tree_canopy_height.groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).count()
 
-        canopy_area_per_resident = tree_canopy_height_count.fillna(0) / world_pop_sum.fillna(0)
+        if not isinstance(tree_canopy_height_count, (int, float)):
+            tree_canopy_height_count = tree_canopy_height_count.fillna(0)
 
-        return canopy_area_per_resident.where(world_pop_sum.fillna(0) != 0)
+        if isinstance(tree_canopy_height_count, pd.DataFrame):
+            result = tree_canopy_height_count.copy()
+            result['value'] = tree_canopy_height_count['value'] / world_pop_sum['value']
+        else:
+            result = tree_canopy_height_count / world_pop_sum
+
+        return result
 
 
 class CanopyAreaPerResidentChildren(Metric):
@@ -53,7 +62,7 @@ class CanopyAreaPerResidentChildren(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident(WorldPopClass.CHILDREN,
                                      self.height,
                                      False)
@@ -71,7 +80,7 @@ class CanopyAreaPerResidentElderly(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident(WorldPopClass.ELDERLY,
                                      self.height,
                                      False)
@@ -89,7 +98,7 @@ class CanopyAreaPerResidentFemale(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident(WorldPopClass.FEMALE,
                                      self.height,
                                      False)
@@ -106,7 +115,7 @@ class CanopyAreaPerResidentInformal(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident([],
                                      self.height,
                                      True)

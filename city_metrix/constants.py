@@ -18,10 +18,10 @@ RO_DASHBOARD_LAYER_S3_BUCKET_URI = 's3://wri-cities-data-api'
 RW_CACHE_S3_BUCKET_URI = 's3://cities-test-sandbox' # 's3://cities-cache-store'
 RW_TESTING_S3_BUCKET_URI = 's3://cities-test-sandbox'
 
-repo_directory = os.path.join(Path.home(), 'CIF_layer_repository')
-LOCAL_REPO_URI = f'file://{repo_directory}'
+local_cache_directory = os.path.join(Path.home(), 'CIF_local_cache')
+LOCAL_CACHE_URI = f'file://{local_cache_directory}'
 
-CITIES_DATA_API_URL = "cities-data-api.wri.org"
+CITIES_DATA_API_URL = "cities-data-api.wri.org"  # "dev.cities-data-api.wri.org"
 
 class GeoType(Enum):
     CITY = 0
