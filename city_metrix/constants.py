@@ -10,26 +10,29 @@ GEOJSON_FILE_EXTENSION = 'geojson'
 NETCDF_FILE_EXTENSION = 'nc'
 CSV_FILE_EXTENSION = 'csv'
 
-DEFAULT_PRODUCTION_ENV = 'prd' # 'prd'
-DEFAULT_DEVELOPMENT_ENV = 'dev'
-DEFAULT_STAGING_ENV = 'staging'
+DEFAULT_PRODUCTION_ENV = 'published'  # 'prd'
+DEFAULT_DEVELOPMENT_ENV = 'pre-release'  # 'dev'
+DEFAULT_STAGING_ENV = 'staging'  # not used in new file storage structure
 
 RO_DASHBOARD_LAYER_S3_BUCKET_URI = 's3://wri-cities-data-api'
-RW_CACHE_S3_BUCKET_URI = 's3://cities-test-sandbox' # 's3://cities-cache-store'
-RW_TESTING_S3_BUCKET_URI = 's3://cities-test-sandbox'
+RW_CACHE_S3_BUCKET_URI = 's3://wri-cities-indicators'  # 's3://cities-test-sandbox' # 's3://cities-cache-store'
+RW_TESTING_S3_BUCKET_URI = 's3://cities-test-sandbox'  # not used in new file storage structure
 
 local_cache_directory = os.path.join(Path.home(), 'CIF_local_cache')
 LOCAL_CACHE_URI = f'file://{local_cache_directory}'
 
 CITIES_DATA_API_URL = "cities-data-api.wri.org"  # "dev.cities-data-api.wri.org"
 
+
 class GeoType(Enum):
     CITY = 0
     GEOMETRY = 1
 
+
 class ProjectionType(Enum):
     GEOGRAPHIC = 0
     UTM = 1
+
 
 class ModelClassName(Enum):
     LAYER = 0

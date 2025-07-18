@@ -246,7 +246,7 @@ def get_cached_file_uri(file_key, is_custom_layer):
 
 def get_cached_file_key(feature_based_class_name, output_env, feature_name, city_id, admin_level, feature_id, file_format):
     if feature_based_class_name.lower() == 'layer':
-        file_key = f"data/{output_env}/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}.{file_format}"
+        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}.{file_format}"
     else:
-        file_key = f"metrics/{output_env}/{city_id}/{city_id}__{feature_id}.{file_format}"
+        file_key = f"data/{output_env}/metrics/{city_id}/{city_id}__{feature_id}.{file_format}"
     return file_key
