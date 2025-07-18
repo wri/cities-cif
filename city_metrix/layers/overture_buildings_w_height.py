@@ -32,13 +32,22 @@ class OvertureBuildingsHeight(Layer):
         # Specify DEFAULT_DEVELOPMENT_ENV since below are not Dashboard layers
         overture_buildings = OvertureBuildings().get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV)
         ut_globus = UtGlobus(self.city).get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV)
-        ut_globus = ut_globus.to_crs(overture_buildings.crs)
+        if len(ut_globus) == 0:
+            result_building_heights = overture_buildings
+            result_building_heights.rename(
+                columns={"height": "overture_height"},
+                inplace=True,
+            )
+            result_building_heights['height'] = result_building_heights['overture_height']
+            result_building_heights['height_source'] = 'Overture'
+        else:
+            ut_globus = ut_globus.to_crs(overture_buildings.crs)
 
-        # Use the logic described in this page to determine height settings.
-        # https://gfw.atlassian.net/wiki/spaces/CIT/pages/1971912734/Primary+Raster+Layers+for+Thermal+Comfort+Modeling
+            # Use the logic described in this page to determine height settings.
+            # https://gfw.atlassian.net/wiki/spaces/CIT/pages/1971912734/Primary+Raster+Layers+for+Thermal+Comfort+Modeling
 
-        # Step 1 and 2 Get heights from UTGlobus and Overture
-        result_building_heights = _join_overture_and_utglobus(overture_buildings, ut_globus)
+            # Step 1 and 2 Get heights from UTGlobus and Overture
+            result_building_heights = _join_overture_and_utglobus(overture_buildings, ut_globus)
 
         # Step 3 and 4 Get heights based on two simple assumptions
         empty_height_blgs = result_building_heights[result_building_heights['height'].isna() |
