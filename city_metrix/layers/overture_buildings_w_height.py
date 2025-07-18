@@ -45,14 +45,18 @@ class OvertureBuildingsHeight(Layer):
                                                     (result_building_heights['height'] == 0)]
         if len(empty_height_blgs) > 0:
             # Determine height from num_floors column in Overture
-            storied_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].notna()].copy()
-            storied_bldgs['height'] = storied_bldgs['num_floors'] * STANDARD_BUILDING_FLOOR_HEIGHT_M
-            storied_bldgs['height_source'] = 'Overture_floors'
-            result_building_heights.loc[storied_bldgs.index, ['height', 'height_source']] = (
-                storied_bldgs)[['height', 'height_source']]
+            if 'num_floors' in empty_height_blgs.columns:
+                storied_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].notna()].copy()
+                storied_bldgs['height'] = storied_bldgs['num_floors'] * STANDARD_BUILDING_FLOOR_HEIGHT_M
+                storied_bldgs['height_source'] = 'Overture_floors'
+                result_building_heights.loc[storied_bldgs.index, ['height', 'height_source']] = (
+                    storied_bldgs)[['height', 'height_source']]
 
             # Set height base on assumption about size of small, one-storied buildings
-            unstoried_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].isna()].copy()
+            if 'num_floors' in empty_height_blgs.columns:
+                unstoried_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].isna()].copy()
+            else:
+                unstoried_bldgs = empty_height_blgs
             unstoried_bldgs = unstoried_bldgs[unstoried_bldgs.geometry.area <= STANDARD_SINGLE_STORY_BUILDING_SQM]
             unstoried_bldgs['height'] = STANDARD_BUILDING_FLOOR_HEIGHT_M
             unstoried_bldgs['height_source'] = 'Overture_small_area'

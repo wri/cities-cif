@@ -44,7 +44,11 @@ class GeoZone():
             self.aoi_id = None
             self.admin_level = None
             self.zones = geo_zone
-            self.bbox = geo_zone.total_bounds
+            if hasattr(geo_zone, 'total_bounds'):
+                self.bbox = geo_zone.total_bounds
+            else:
+                self.bbox = geo_zone.bounds
+
             self.crs = crs
         else:
             city_json = geo_zone
@@ -127,10 +131,7 @@ class GeoExtent():
             else:
                 self.crs = crs
 
-            try:
-                self.epsg_code = int(self.crs.split(':')[1])
-            except:
-                b=2
+            self.epsg_code = int(self.crs.split(':')[1])
             self.projection_type = get_projection_type(self.crs)
             self.units = "degrees" if self.projection_type == ProjectionType.GEOGRAPHIC else "meters"
             self.bounds = self.bbox
@@ -577,65 +578,70 @@ class LayerGroupBy:
                                                          spatial_resolution=spatial_resolution,
                                                          force_data_refresh=force_data_refresh)
 
-        mask_datum = [mask.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
-                                                 spatial_resolution=spatial_resolution,
-                                                 force_data_refresh=force_data_refresh) for mask in masks]
-
-        if layer is not None:
-            layer_data = layer.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
+        if isinstance(aggregate_data, xr.DataArray) and aggregate_data.data.size == 0:
+            return None
+        else:
+            mask_datum = [mask.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
                                                      spatial_resolution=spatial_resolution,
-                                                     force_data_refresh=force_data_refresh)
-        else:
-            layer_data = None
+                                                     force_data_refresh=force_data_refresh) for mask in masks]
 
-        # align to highest resolution raster, which should be the largest raster
-        # since all are clipped to the extent
-        raster_data = [data for data in mask_datum + [aggregate_data] + [layer_data] if isinstance(data, xr.DataArray)]
-        align_to = sorted(raster_data, key=lambda data: data.size, reverse=True).pop()
-        aggregate_data = LayerGroupBy._align(aggregate_data, align_to)
-        mask_datum = [LayerGroupBy._align(data, align_to) for data in mask_datum]
+            if layer is not None:
+                layer_data = layer.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
+                                                         spatial_resolution=spatial_resolution,
+                                                         force_data_refresh=force_data_refresh)
+            else:
+                layer_data = None
 
-        if layer is not None:
-            layer_data = LayerGroupBy._align(layer_data, align_to)
+            # align to highest resolution raster, which should be the largest raster
+            # since all are clipped to the extent
+            raster_data = [data for data in mask_datum + [aggregate_data] + [layer_data] if isinstance(data, xr.DataArray)]
+            align_to = sorted(raster_data, key=lambda data: data.size, reverse=True).pop()
+            aligned_aggregate_data = LayerGroupBy._align(aggregate_data, align_to)
+            aligned_mask_datum = [LayerGroupBy._align(data, align_to) for data in mask_datum]
 
-        for mask in mask_datum:
-            aggregate_data = aggregate_data.where(~np.isnan(mask))
+            if layer is not None:
+                aligned_layer_data = LayerGroupBy._align(layer_data, align_to)
+            else:
+                aligned_layer_data = None
 
-        # Get zones differently for single or multiple tiles
-        if isinstance(tile_gdf, GeoDataFrame):
-            tile_gdf = tile_gdf
-        else:
-            tile_gdf = tile_gdf.zones
+            for mask in aligned_mask_datum:
+                aligned_aggregate_data = aligned_aggregate_data.where(~np.isnan(mask))
 
-        result_stats = None
-        if 'geo_level' not in zones.columns:
-            result_stats = LayerGroupBy._compute_zonal_stats(stats_func, layer, tile_gdf, align_to, layer_data,
-                                                             aggregate_data)
-        else:
-            geo_levels = zones['geo_level'].unique()
-            for index, level in enumerate(geo_levels):
-                level_gdf = tile_gdf[tile_gdf['geo_level'] == level]
+            # Get zones differently for single or multiple tiles
+            if isinstance(tile_gdf, GeoDataFrame):
+                tile_gdf = tile_gdf
+            else:
+                tile_gdf = tile_gdf.zones
 
-                stats = LayerGroupBy._compute_zonal_stats(stats_func, layer, level_gdf, align_to, layer_data,
-                                                          aggregate_data)
+            result_stats = None
+            if 'geo_level' not in zones.columns:
+                result_stats = LayerGroupBy._compute_zonal_stats(stats_func, layer, tile_gdf, align_to, aligned_layer_data,
+                                                                 aligned_aggregate_data)
+            else:
+                geo_levels = zones['geo_level'].unique()
+                for index, level in enumerate(geo_levels):
+                    level_gdf = tile_gdf[tile_gdf['geo_level'] == level]
 
-                # combine stats from each geo_level
-                if result_stats is None:
-                    result_stats = stats
-                else:
-                    # if metric values for a prior level are already in the results data, then merge in the new stats,
-                    # then combine them into a single column.
-                    merged_df = pd.merge(result_stats, stats, on='zone', how='outer')
+                    stats = LayerGroupBy._compute_zonal_stats(stats_func, layer, level_gdf, align_to, aligned_layer_data,
+                                                              aligned_aggregate_data)
 
-                    for func in stats_func:
-                        func_x_col = f"{func}_x"
-                        func_y_col = f"{func}_y"
-                        merged_df[func] = merged_df[func_x_col].combine_first(merged_df[func_y_col])
+                    # combine stats from each geo_level
+                    if result_stats is None:
+                        result_stats = stats
+                    else:
+                        # if metric values for a prior level are already in the results data, then merge in the new stats,
+                        # then combine them into a single column.
+                        merged_df = pd.merge(result_stats, stats, on='zone', how='outer')
 
-                        merged_df = merged_df.drop(columns=[func_x_col, func_y_col])
-                    result_stats = merged_df
+                        for func in stats_func:
+                            func_x_col = f"{func}_x"
+                            func_y_col = f"{func}_y"
+                            merged_df[func] = merged_df[func_x_col].combine_first(merged_df[func_y_col])
 
-        return result_stats
+                            merged_df = merged_df.drop(columns=[func_x_col, func_y_col])
+                        result_stats = merged_df
+
+            return result_stats
 
     @staticmethod
     def _compute_zonal_stats(stats_func, layer, tile_gdf, align_to, layer_data, aggregate_data):
@@ -652,10 +658,13 @@ class LayerGroupBy:
     @staticmethod
     def _align(data_layer, align_to):
         if isinstance(data_layer, xr.DataArray):
-            return data_layer.rio.reproject_match(align_to).assign_coords({
-                "x": align_to.x,
-                "y": align_to.y,
-            })
+            try:
+                return data_layer.rio.reproject_match(align_to).assign_coords({
+                    "x": align_to.x,
+                    "y": align_to.y,
+                })
+            except Exception as e_msg:
+                raise Exception(f"Unable to align data due to exception: {e_msg}")
         elif isinstance(data_layer, gpd.GeoDataFrame):
             gdf = data_layer.to_crs(align_to.rio.crs).reset_index()
             return LayerGroupBy._rasterize(gdf, align_to)
