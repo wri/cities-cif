@@ -1195,15 +1195,8 @@ def get_param_info(func):
 
 
 def standardize_s3_env(obj, output_env):
-    if isinstance(obj, Layer):
-        standard_env = DEFAULT_PRODUCTION_ENV if output_env is None else output_env.lower()
-        if standard_env not in (DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV):
-            raise ValueError(f"Invalid output environment ({output_env}) for Layer")
-        else:
-            return standard_env
+    standard_env = DEFAULT_PRODUCTION_ENV if output_env is None else output_env.lower()
+    if standard_env not in (DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV):
+        raise ValueError(f"Invalid output environment ({output_env}) for Layer")
     else:
-        standard_env = DEFAULT_STAGING_ENV if output_env is None else output_env.lower()
-        if standard_env != DEFAULT_STAGING_ENV:
-            raise ValueError(f"Invalid output environment ({output_env}) for Metric")
-        else:
-            return standard_env
+        return standard_env
