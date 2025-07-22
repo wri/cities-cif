@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from city_metrix.constants import RW_TESTING_S3_BUCKET_URI, DEFAULT_DEVELOPMENT_ENV
+from city_metrix.constants import CIF_TESTING_S3_BUCKET_URI, DEFAULT_DEVELOPMENT_ENV
 from city_metrix.layers import AcagPM2p5, Era5HottestDay, UrbanExtents, OpenStreetMapClass, OpenStreetMap
 from city_metrix.cache_manager import check_if_cache_file_exists
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel

@@ -15,8 +15,8 @@ DEFAULT_DEVELOPMENT_ENV = 'pre-release'  # 'dev'
 DEFAULT_STAGING_ENV = 'staging'  # not used in new file storage structure
 
 RO_DASHBOARD_LAYER_S3_BUCKET_URI = 's3://wri-cities-data-api'
-RW_CACHE_S3_BUCKET_URI = 's3://wri-cities-indicators'  # 's3://cities-test-sandbox' # 's3://cities-cache-store'
-RW_TESTING_S3_BUCKET_URI = 's3://cities-test-sandbox'  # not used in new file storage structure
+CIF_CACHE_S3_BUCKET_URI = 's3://wri-cities-indicators'  # 's3://cities-test-sandbox' # 's3://cities-cache-store'
+CIF_TESTING_S3_BUCKET_URI = 's3://cities-test-sandbox'  # not used in new file storage structure
 
 local_cache_directory = os.path.join(Path.home(), 'CIF_local_cache')
 LOCAL_CACHE_URI = f'file://{local_cache_directory}'

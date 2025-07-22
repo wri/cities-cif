@@ -3,7 +3,7 @@
 import geopandas as gpd
 import pytest
 
-from city_metrix.constants import WGS_CRS, RW_TESTING_S3_BUCKET_URI, DEFAULT_STAGING_ENV
+from city_metrix.constants import WGS_CRS, CIF_TESTING_S3_BUCKET_URI, DEFAULT_STAGING_ENV
 from city_metrix.metrics import *
 from tests.resources.bbox_constants import GEOZONE_FLORIANOPOLIS
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
