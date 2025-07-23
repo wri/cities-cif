@@ -803,7 +803,7 @@ class Layer():
         :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
         """
 
-        standard_env = standardize_s3_env(self, s3_env)
+        standard_env = standardize_s3_env(s3_env)
         retrieved_cached_data, _, file_uri = retrieve_city_cache(self.aggregate, bbox, standard_env,
                                                                  force_data_refresh)
 
@@ -864,7 +864,7 @@ class Layer():
         :return:
         """
 
-        standard_env = standardize_s3_env(self, s3_env)
+        standard_env = standardize_s3_env(s3_env)
         file_format = self.OUTPUT_FILE_FORMAT
 
         if tile_side_length is None:
@@ -1027,7 +1027,7 @@ class Metric():
     def get_metric_with_caching(self, geo_zone: GeoZone, s3_env: str, spatial_resolution: int = None,
                                 force_data_refresh: bool = False) -> tuple[Union[pd.Series, pd.DataFrame], str]:
 
-        standard_env = standardize_s3_env(self, s3_env)
+        standard_env = standardize_s3_env(s3_env)
         retrieved_cached_data, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, standard_env,
                                                                           force_data_refresh)
         if retrieved_cached_data is None:
@@ -1068,7 +1068,7 @@ class Metric():
         :param spatial_resolution: resolution of continuous raster data in meters
         :param force_data_refresh: forces layer data to be pulled from source instead of cache
         """
-        standard_env = standardize_s3_env(self, s3_env)
+        standard_env = standardize_s3_env(s3_env)
 
         indicator, feature_id = self.metric.get_metric_with_caching(geo_zone, standard_env,
                                                                     spatial_resolution, force_data_refresh)
@@ -1111,7 +1111,7 @@ class Metric():
         Write the metric to a path. Does not apply masks.
         :return:
         """
-        standard_env = standardize_s3_env(self, s3_env)
+        standard_env = standardize_s3_env(s3_env)
 
         indicator, feature_id = self.metric.get_metric_with_caching(geo_zone, standard_env,
                                                                     spatial_resolution, force_data_refresh)
@@ -1194,7 +1194,7 @@ def get_param_info(func):
     return default_values
 
 
-def standardize_s3_env(obj, output_env):
+def standardize_s3_env(output_env):
     standard_env = DEFAULT_PRODUCTION_ENV if output_env is None else output_env.lower()
     if standard_env not in (DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV):
         raise ValueError(f"Invalid output environment ({output_env}) for Layer")

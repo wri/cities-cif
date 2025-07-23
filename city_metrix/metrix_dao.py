@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 
 from city_metrix import s3_client
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
-    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, RO_DASHBOARD_LAYER_S3_BUCKET_URI, CIF_CACHE_S3_BUCKET_URI, LOCAL_CACHE_URI
+    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, CIF_DASHBOARD_LAYER_S3_BUCKET_URI, CIF_CACHE_S3_BUCKET_URI, LOCAL_CACHE_URI
 from city_metrix.metrix_tools import get_crs_from_data, standardize_y_dimension_direction
 
 
@@ -30,8 +30,8 @@ def read_geojson_from_cache(uri):
         file_key = _get_file_key_from_url(uri)
         result_data = _read_geojson_from_s3(s3_bucket, file_key)
     elif get_uri_scheme(uri) == 'https':
-        # Hard-coded to pull data from RO_dashboard_layer_s3_bucket_uri
-        s3_bucket = Path(RO_DASHBOARD_LAYER_S3_BUCKET_URI).parts[1]
+        # Hard-coded to pull data from CIF_dashboard_layer_s3_bucket_uri
+        s3_bucket = Path(CIF_DASHBOARD_LAYER_S3_BUCKET_URI).parts[1]
         file_key = _get_file_key_from_url(uri)
         result_data = _read_geojson_from_s3(s3_bucket, file_key)
     else:

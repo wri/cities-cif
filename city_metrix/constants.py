@@ -14,7 +14,7 @@ DEFAULT_PRODUCTION_ENV = 'published'  # 'prd'
 DEFAULT_DEVELOPMENT_ENV = 'pre-release'  # 'dev'
 DEFAULT_STAGING_ENV = 'staging'  # not used in new file storage structure
 
-RO_DASHBOARD_LAYER_S3_BUCKET_URI = 's3://wri-cities-data-api'
+CIF_DASHBOARD_LAYER_S3_BUCKET_URI = 's3://wri-cities-data-api'
 CIF_CACHE_S3_BUCKET_URI = 's3://wri-cities-indicators'  # 's3://cities-test-sandbox' # 's3://cities-cache-store'
 CIF_TESTING_S3_BUCKET_URI = 's3://cities-test-sandbox'  # not used in new file storage structure
 
