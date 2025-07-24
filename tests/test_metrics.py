@@ -70,6 +70,18 @@ def test_era_5_met_preprocess():
     assert len(indicator) == 24
     # TODO Add value testing
 
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_era_5_met_preprocess_v2():
+    # Useful site: https://projects.oregonlive.com/weather/temps/
+    indicator = Era5MetPreprocessingV2().get_metric(USA_OR_PORTLAND_ZONE)
+    non_nullable_variables = ['Year', 'Month', 'Day', 'Hour', 'Minute', 'DHI', 'DNI', 
+                              'GHI', 'Clearsky DHI', 'Clearsky DNI','Clearsky GHI', 
+                              'Wind Speed', 'Relative Humidity', 'Temperature', 'Pressure']
+    has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
+    assert has_empty_required_cells == False
+    assert len(indicator) == 24
+    # TODO Add value testing
+
 def test_mean_pm2p5_exposure_popweighted_children():
     indicator = MeanPM2P5ExposurePopWeightedChildren().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
