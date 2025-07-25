@@ -33,15 +33,15 @@ class Era5MetPreprocessingV2(Metric):
         u10_var = era_5_data.sel(variable='u10').values
         v10_var = era_5_data.sel(variable='v10').values
         sp_var = era_5_data.sel(variable='sp').values
-        ssr_var = era_5_data.sel(variable='ssr').values
-        str_var = era_5_data.sel(variable='str').values
-        ssrc_var = era_5_data.sel(variable='ssrc').values
-        strc_var = era_5_data.sel(variable='strc').values
+        ssrd_var = era_5_data.sel(variable='ssrd').values
+        fdir_var = era_5_data.sel(variable='fdir').values
+        ssrdc_var = era_5_data.sel(variable='ssrdc').values
+        cdir_var = era_5_data.sel(variable='cdir').values
         time_var = era_5_data['valid_time'].values
         lat_var = era_5_data['latitude'].values
         lon_var = era_5_data['longitude'].values
 
-        # temps go from K to C; surface radiation goes from J/m^2 to W/m^2; wind speed from vectors (pythagorean)
+        # temps go from K to C; surface radiation goes from J/m^2 to W/m^2 (divide by 3600); wind speed from vectors (pythagorean)
         # rh calculated from temp and dew point; ghi = dni * cos(z) + dhi; z=solar zenith angle
         times = [time.astype('datetime64[s]').astype(datetime) for time in time_var]
         years = [dt.year for dt in times]
@@ -54,10 +54,10 @@ class Era5MetPreprocessingV2(Metric):
         rh_vals = (100*(np.exp((17.625*d2m_vals)/(243.04+d2m_vals))/np.exp((17.625*t2m_vals)/(243.04+t2m_vals))))
         sp_vals = (sp_var[:]/100)
         wind_vals = (np.sqrt(((np.square(u10_var[:]))+(np.square(v10_var[:])))))
-        dhi_vals = (str_var[:]/3600)
-        dni_vals = (ssr_var[:]/3600)
-        clear_sky_dhi_vals = (strc_var[:]/3600)
-        clear_sky_dni_vals = (ssrc_var[:]/3600)
+        ghi_vals = (ssrd_var[:]/3600)
+        dni_vals = (fdir_var[:]/3600)
+        clear_sky_ghi_vals = (ssrdc_var[:]/3600)
+        clear_sky_dni_vals = (cdir_var[:]/3600)
 
         times_utc = pd.to_datetime(time_var).tz_localize('UTC')
         zenith = np.empty((len(times), len(lat_var), len(lon_var)), dtype=float)
@@ -66,8 +66,8 @@ class Era5MetPreprocessingV2(Metric):
                 solpos = solarposition.get_solarposition(times_utc, lat, lon)
                 zenith[:, i, j] = solpos['zenith'].values
         cos_z = np.cos(np.deg2rad(zenith))
-        ghi_vals = dni_vals * cos_z + dhi_vals
-        clear_sky_ghi_vals = clear_sky_dni_vals * cos_z + clear_sky_dhi_vals
+        dhi_vals = ghi_vals - dni_vals * cos_z
+        clear_sky_dhi_vals = clear_sky_ghi_vals - clear_sky_dni_vals * cos_z
 
         # make lat/lon grid
         latitudes = lat_var[:]

@@ -121,10 +121,9 @@ class Era5HottestDay(Layer):
                         'sea_surface_temperature',
                         'total_precipitation',
                         "surface_pressure",
-                        "surface_net_solar_radiation",
-                        "surface_net_thermal_radiation",
-                        "surface_net_solar_radiation_clear_sky",
-                        "surface_net_thermal_radiation_clear_sky"
+                        "total_sky_direct_solar_radiation_at_surface",
+                        "surface_solar_radiation_downwards",
+                        "surface_solar_radiation_downward_clear_sky",
                     ],
                     'year': utc_dates[i].year,
                     'month': utc_dates[i].month,
