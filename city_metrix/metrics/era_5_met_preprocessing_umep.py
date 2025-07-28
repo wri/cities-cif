@@ -8,7 +8,7 @@ from city_metrix.layers import Era5HottestDay
 from city_metrix.metrix_model import GeoExtent, Metric, GeoZone
 
 
-class Era5MetPreprocessing(Metric):
+class Era5MetPreprocessingUmep(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None

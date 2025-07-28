@@ -32,7 +32,8 @@ setup(
         "scipy",
         "numpy",
         "overturemaps",
-        "ipython"
+        "ipython",
+        "pvlib"
     ],
     package_data={
         'city_metrix': ['ut_globus_city_handler/global_ut_globus_cities.gpkg']
