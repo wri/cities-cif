@@ -1,5 +1,8 @@
 # Release Notes
 
+# 2025/07/31
+1. Added year parameter to Era5MetPreprocessingUmep and Era5MetPreprocessingUpenn metrics classes
+
 ## 2025/06/28
 1. Added local API results caching
 2. Renamed local cache to 
