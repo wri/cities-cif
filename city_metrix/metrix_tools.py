@@ -1,5 +1,6 @@
 import math
 import os
+from datetime import datetime
 
 import utm
 from typing import Union
@@ -153,3 +154,17 @@ def buffer_bbox(lat_min, lon_min, lat_max, lon_max, buffer_meters):
         lat_max + lat_buffer,
         lon_max + lon_buffer
     )
+
+def determine_meteorological_sampling_date_range(year):
+    if year is None:
+        # choose the prior year
+        sampling_year = datetime.now().year - 1
+    elif isinstance(year, int) and 1000 <= year <= 2500:
+        sampling_year = year
+    else:
+        raise Exception('Invalid year')
+
+    start_date = datetime(sampling_year, 1, 1).strftime('%Y-%m-%d')
+    end_date = datetime(sampling_year, 12, 31).strftime('%Y-%m-%d')
+
+    return start_date, end_date

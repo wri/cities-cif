@@ -6,6 +6,7 @@ from pandas import DataFrame
 from city_metrix.constants import CSV_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV
 from city_metrix.layers import Era5HottestDay
 from city_metrix.metrix_model import GeoExtent, Metric, GeoZone
+from city_metrix.metrix_tools import determine_meteorological_sampling_date_range
 
 
 class Era5MetPreprocessingUmep(Metric):
@@ -13,8 +14,9 @@ class Era5MetPreprocessingUmep(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, year:int=2023, **kwargs):
         super().__init__(**kwargs)
+        self.year = year
 
     def get_metric(self,
                  geo_zone: GeoZone,
@@ -25,7 +27,10 @@ class Era5MetPreprocessingUmep(Metric):
         :return: Pandas Dataframe of data
         """
         bbox = GeoExtent(geo_zone.bounds, geo_zone.crs)
-        era_5_data = Era5HottestDay().get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution)
+        start_date, end_date= determine_meteorological_sampling_date_range(self.year)
+
+        era_5_data = (Era5HottestDay(start_date=start_date, end_date=end_date)
+                      .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution))
 
         t2m_var = era_5_data.sel(variable='t2m').values
         u10_var = era_5_data.sel(variable='u10').values

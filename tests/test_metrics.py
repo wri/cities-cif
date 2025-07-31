@@ -60,7 +60,7 @@ def test_hospitals_per_ten_thousand_residents():
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_umep():
     # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = Era5MetPreprocessingUmep().get_metric(USA_OR_PORTLAND_ZONE)
+    indicator = Era5MetPreprocessingUmep(year=2023).get_metric(USA_OR_PORTLAND_ZONE)
     non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
     has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
     # p1= indicator[non_nullable_variables].isnull().any()
@@ -73,7 +73,7 @@ def test_era_5_met_preprocess_umep():
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_upenn():
     # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = Era5MetPreprocessingUPenn().get_metric(USA_OR_PORTLAND_ZONE)
+    indicator = Era5MetPreprocessingUPenn(year=2023).get_metric(USA_OR_PORTLAND_ZONE)
     non_nullable_variables = ['Year', 'Month', 'Day', 'Hour', 'Minute', 'DHI', 'DNI', 
                               'GHI', 'Clearsky DHI', 'Clearsky DNI','Clearsky GHI', 
                               'Wind Speed', 'Relative Humidity', 'Temperature', 'Pressure']
