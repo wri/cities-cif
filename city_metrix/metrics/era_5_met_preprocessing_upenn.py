@@ -7,7 +7,7 @@ from pvlib import solarposition
 from city_metrix.constants import CSV_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV
 from city_metrix.layers import Era5HottestDay
 from city_metrix.metrix_model import GeoExtent, Metric, GeoZone
-from city_metrix.metrix_tools import determine_meteorological_sampling_date_range
+from city_metrix.metrix_tools import determine_era5_meteorological_sampling_date_range
 
 
 class Era5MetPreprocessingUPenn(Metric):
@@ -28,7 +28,7 @@ class Era5MetPreprocessingUPenn(Metric):
         :return: Pandas Dataframe of data
         """
         bbox = GeoExtent(geo_zone.bounds, geo_zone.crs)
-        start_date, end_date = determine_meteorological_sampling_date_range(self.year)
+        start_date, end_date = determine_era5_meteorological_sampling_date_range(self.year)
 
         era_5_data = (Era5HottestDay(start_date=start_date, end_date=end_date)
                       .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution))
