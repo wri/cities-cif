@@ -57,6 +57,13 @@ def test_hospitals_per_ten_thousand_residents():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.00, 8.87, 100, 0)
 
+def test_percent_impervious_surface_on_urbanized_land():
+    indicator = PercentImperviousSurfaceOnUrbanizedLand().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 78.512, 100, 100, 0)
+
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_umep():
     # Useful site: https://projects.oregonlive.com/weather/temps/
