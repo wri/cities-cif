@@ -64,7 +64,7 @@ def test_cams():
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
-    data = Era5HottestDay().get_data(BBOX)
+    data = Era5HottestDay(utc_offset=-8).get_data(BBOX)
     assert np.size(data) > 0
 
 def test_esa_world_cover():

@@ -1,13 +1,10 @@
 import ee
-from timezonefinder import TimezoneFinder
-from pytz import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 import cdsapi
 import os
 import xarray as xr
 import glob
-from datetime import timedelta
 
 from city_metrix.constants import WGS_CRS, NETCDF_FILE_EXTENSION
 from city_metrix.metrix_model import Layer, GeoExtent
@@ -23,10 +20,11 @@ class Era5HottestDay(Layer):
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
     """
-    def __init__(self, start_date="2023-01-01", end_date="2024-01-01", **kwargs):
+    def __init__(self, start_date="2023-01-01", end_date="2024-01-01", utc_offset:float=0, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
+        self.utc_offset = utc_offset
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  force_data_refresh=False):
@@ -73,23 +71,17 @@ class Era5HottestDay(Layer):
         day = highest_temperature_day[6:8]
         time = highest_temperature_day[-2:]
 
-        # Initialize TimezoneFinder
-        tf = TimezoneFinder()
-        # Find the timezone of the center point
-        tz_name = tf.timezone_at(lng=center_lon, lat=center_lat)
-        # Get the timezone object
-        local_tz = timezone(tz_name)
         # Define the UTC time
         utc_time = datetime.strptime(f'{year}-{month}-{day} {time}:00:00', "%Y-%m-%d %H:%M:%S")
-
-        # Convert UTC time to local time
-        local_time = utc_time.replace(tzinfo=pytz.utc).astimezone(local_tz)
+        # apply utc offset to utc time to get local time
+        local_time = utc_time + timedelta(hours=self.utc_offset)
         local_date = local_time.date()
 
         utc_times = []
         for i in range(0, 24):
-            local_time_hourly = local_tz.localize(datetime(local_date.year, local_date.month, local_date.day, i, 0))
-            utc_time_hourly = local_time_hourly.astimezone(pytz.utc)
+            local_time_hour = datetime(local_date.year, local_date.month, local_date.day, i, 0)
+            inverse_utc_offset = -self.utc_offset
+            utc_time_hourly = pytz.utc.localize(local_time_hour + timedelta(hours=inverse_utc_offset))
             # Rounded due to half hour offset in some cities
             # See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for the range of possible values
             # ERA5 only accepts whole hour UTC times

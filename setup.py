@@ -25,7 +25,6 @@ setup(
         "dask[complete]",
         "boto3",
         "cdsapi",
-        "timezonefinder<=6.5.9",
         "scikit-image>=0.25.2",
         "exactextract>=0.2.0",
         "cfgrib",

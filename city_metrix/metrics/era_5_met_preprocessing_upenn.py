@@ -14,8 +14,9 @@ class Era5MetPreprocessingUPenn(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, utc_offset:float=0, **kwargs):
         super().__init__(**kwargs)
+        self.utc_offset = utc_offset
 
     def get_metric(self,
                  geo_zone: GeoZone,
@@ -26,7 +27,7 @@ class Era5MetPreprocessingUPenn(Metric):
         :return: Pandas Dataframe of data
         """
         bbox = GeoExtent(geo_zone.bounds, geo_zone.crs)
-        era_5_data = Era5HottestDay().get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution)
+        era_5_data = Era5HottestDay(utc_offset=self.utc_offset).get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution)
 
         t2m_var = era_5_data.sel(variable='t2m').values
         d2m_var = era_5_data.sel(variable='d2m').values
