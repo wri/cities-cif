@@ -26,7 +26,6 @@ dependencies:
   - pip=25.0.1
   - boto3=1.37.1
   - cdsapi=0.7.5
-  - timezonefinder=6.5.9
   - scikit-image=0.25.2
   - exactextract=0.2.1
   - cfgrib=0.9.15.0

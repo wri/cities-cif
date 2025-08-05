@@ -62,8 +62,8 @@ def test_write_CanopyAreaPerResidentInformal(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_Era5MetPreprocessing(target_folder):
-    metric_obj = Era5MetPreprocessing()
+def test_write_Era5MetPreprocessingUmep(target_folder):
+    metric_obj = Era5MetPreprocessingUmep(seasonal_utc_offset=-3)
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)

@@ -101,7 +101,7 @@ def test_alos_dsm_values():
 def test_era_5_hottest_day_utc_30minute_offset():
     # Bhopal with timezone of UTC+5:30
     bbox = GeoExtent(bbox=(77.3886757, 23.2243898, 77.40987, 23.2427476), crs=WGS_CRS)
-    data = Era5HottestDay(start_date="2023-01-01", end_date="2024-01-01").get_data(bbox=bbox)
+    data = Era5HottestDay(start_date="2023-01-01", end_date="2024-01-01", seasonal_utc_offset=5.5).get_data(bbox=bbox)
 
     assert data.time.values[0] == np.datetime64('2023-05-12T18')
 
