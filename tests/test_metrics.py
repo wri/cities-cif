@@ -58,7 +58,7 @@ def test_hospitals_per_ten_thousand_residents():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.00, 8.87, 100, 0)
 
-# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_umep():
     # Useful site: https://projects.oregonlive.com/weather/temps/
     indicator = Era5MetPreprocessingUmep(seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset).get_metric(USA_OR_PORTLAND_ZONE)
@@ -71,7 +71,7 @@ def test_era_5_met_preprocess_umep():
     assert len(indicator) == 24
     assert_metric_stats(indicator[['temp']], 2, 19.19, 41.36, 24, 0)
 
-# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_upenn():
     # Useful site: https://projects.oregonlive.com/weather/temps/
     indicator = Era5MetPreprocessingUPenn(seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset).get_metric(USA_OR_PORTLAND_ZONE)
