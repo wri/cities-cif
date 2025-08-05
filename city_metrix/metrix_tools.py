@@ -155,18 +155,13 @@ def buffer_bbox(lat_min, lon_min, lat_max, lon_max, buffer_meters):
         lon_max + lon_buffer
     )
 
-def determine_era5_meteorological_sampling_date_range(year):
-    record_start_year = 1940 # For ERA5 https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels?tab=overview
-    last_year = datetime.now().year - 1
-    if year is None:
-        # choose the prior year
-        sampling_year = last_year
-    elif isinstance(year, int) and record_start_year <= year <= last_year:
-        sampling_year = year
-    else:
-        raise Exception('Invalid year')
+def is_date(string):
+    from dateutil.parser import parse
+    if string is None:
+        return False
 
-    start_date = datetime(sampling_year, 1, 1).strftime('%Y-%m-%d')
-    end_date = datetime(sampling_year, 12, 31).strftime('%Y-%m-%d')
-
-    return start_date, end_date
+    try:
+        parse(string, False)
+        return True
+    except ValueError:
+        return False

@@ -1,50 +1,11 @@
 import pytest
 
-from datetime import datetime
-from city_metrix import Era5MetPreprocessingUPenn, Era5MetPreprocessingUmep
-from tests.conftest import USA_OR_PORTLAND_ZONE, EXECUTE_IGNORED_TESTS
+from city_metrix import Era5MetPreprocessingUPenn
+from tests.conftest import USA_OR_PORTLAND_ZONE
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_upenn_none_year():
-    indicator = Era5MetPreprocessingUPenn(year=None).get_metric(USA_OR_PORTLAND_ZONE)
-    assert len(indicator) == 24
-    retrieved_year = indicator.loc[0,'Year']
-    expected_year = datetime.now().year - 1
-    assert retrieved_year == expected_year
-
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_era_5_met_preprocess_umep_none_year():
-    indicator = Era5MetPreprocessingUmep(year=None).get_metric(USA_OR_PORTLAND_ZONE)
-    assert len(indicator) == 24
-    retrieved_year = indicator.loc[0, 'time'].year
-    expected_year = datetime.now().year - 1
-    assert retrieved_year == expected_year
-
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_era_5_met_preprocess_upenn_no_year():
-    import inspect
-    signature = inspect.signature(Era5MetPreprocessingUPenn)
-    param = signature.parameters.get('year')
-    expected_year = param.default
-
-    indicator = Era5MetPreprocessingUPenn().get_metric(USA_OR_PORTLAND_ZONE)
-    assert len(indicator) == 24
-    retrieved_year = indicator.loc[0,'Year']
-
-    assert retrieved_year == expected_year
-
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_era_5_met_preprocess_upenn_year_2020():
-    sampling_year = 2020
-    indicator = Era5MetPreprocessingUPenn(year=sampling_year).get_metric(USA_OR_PORTLAND_ZONE)
-    assert len(indicator) == 24
-    retrieved_year = indicator.loc[0,'Year']
-    assert retrieved_year == sampling_year
-
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_era_5_met_preprocess_umep_year_2020():
-    sampling_year = 2020
-    indicator = Era5MetPreprocessingUmep(year=sampling_year).get_metric(USA_OR_PORTLAND_ZONE)
-    assert len(indicator) == 24
-    retrieved_year = indicator.loc[0, 'time'].year
-    assert retrieved_year == sampling_year
+    with pytest.raises(Exception) as e_info:
+        Era5MetPreprocessingUPenn(start_date=None, end_date=None).get_metric(USA_OR_PORTLAND_ZONE)
+    expected_exception = "Invalid date specification: start_date:None, end_date:None."
+    msg_correct = False if str(e_info.value).find(expected_exception) == -1 else True
+    assert msg_correct
