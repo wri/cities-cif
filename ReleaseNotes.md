@@ -1,7 +1,7 @@
 # Release Notes
 
 ## 2025/08/05
-1. Added utc_offset parameter to ERA5 classes
+1. Added seasonal_utc_offset parameter to ERA5 classes
 2. Removed timezonefinder dependency
 
 ## 2025/06/28

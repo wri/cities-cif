@@ -20,11 +20,11 @@ class Era5HottestDay(Layer):
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
     """
-    def __init__(self, start_date="2023-01-01", end_date="2024-01-01", utc_offset:float=0, **kwargs):
+    def __init__(self, start_date="2023-01-01", end_date="2024-01-01", seasonal_utc_offset:float=0, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
-        self.utc_offset = utc_offset
+        self.seasonal_utc_offset = seasonal_utc_offset
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  force_data_refresh=False):
@@ -73,15 +73,15 @@ class Era5HottestDay(Layer):
 
         # Define the UTC time
         utc_time = datetime.strptime(f'{year}-{month}-{day} {time}:00:00', "%Y-%m-%d %H:%M:%S")
-        # apply utc offset to utc time to get local time
-        local_time = utc_time + timedelta(hours=self.utc_offset)
-        local_date = local_time.date()
+        # apply utc offset to utc time to get local date
+        local_date = (utc_time + timedelta(hours=self.seasonal_utc_offset)).date()
 
         utc_times = []
         for i in range(0, 24):
             local_time_hour = datetime(local_date.year, local_date.month, local_date.day, i, 0)
-            inverse_utc_offset = -self.utc_offset
-            utc_time_hourly = pytz.utc.localize(local_time_hour + timedelta(hours=inverse_utc_offset))
+            # Convert local hour back to UTC and cast as UTC time
+            inverse_seasonal_utc_offset = -self.seasonal_utc_offset
+            utc_time_hourly = pytz.utc.localize(local_time_hour + timedelta(hours=inverse_seasonal_utc_offset))
             # Rounded due to half hour offset in some cities
             # See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for the range of possible values
             # ERA5 only accepts whole hour UTC times

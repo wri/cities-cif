@@ -3,7 +3,7 @@ import pytest
 
 from city_metrix.metrics import *
 from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE
-PORTLAND_DST_UTC_OFFSET = -8
+PORTLAND_DST_seasonal_utc_offset = -8
 
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
@@ -58,10 +58,10 @@ def test_hospitals_per_ten_thousand_residents():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.00, 8.87, 100, 0)
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_umep():
     # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = Era5MetPreprocessingUmep(utc_offset=PORTLAND_DST_UTC_OFFSET).get_metric(USA_OR_PORTLAND_ZONE)
+    indicator = Era5MetPreprocessingUmep(seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset).get_metric(USA_OR_PORTLAND_ZONE)
     non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
     has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
     # p1= indicator[non_nullable_variables].isnull().any()
@@ -71,10 +71,10 @@ def test_era_5_met_preprocess_umep():
     assert len(indicator) == 24
     assert_metric_stats(indicator[['temp']], 2, 19.19, 41.36, 24, 0)
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_upenn():
     # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = Era5MetPreprocessingUPenn(utc_offset=PORTLAND_DST_UTC_OFFSET).get_metric(USA_OR_PORTLAND_ZONE)
+    indicator = Era5MetPreprocessingUPenn(seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset).get_metric(USA_OR_PORTLAND_ZONE)
     non_nullable_variables = ['Year', 'Month', 'Day', 'Hour', 'Minute', 'DHI', 'DNI', 
                               'GHI', 'Clearsky DHI', 'Clearsky DNI','Clearsky GHI', 
                               'Wind Speed', 'Relative Humidity', 'Temperature', 'Pressure']
