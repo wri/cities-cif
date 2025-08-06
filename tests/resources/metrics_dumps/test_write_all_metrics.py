@@ -72,11 +72,11 @@ def test_write_canopy_area_per_resident_informal(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_era_5_met_preprocessing(target_folder):
+def test_write_era_5_met_preprocessingUmep(target_folder):
     zones = SAMPLE_TILED_SINGLE_ZONE
     file_path = prep_output_path(target_folder, 'metric','era_5_met_preprocessing.csv')
 
-    metric_obj = Era5MetPreprocessing()
+    metric_obj = Era5MetPreprocessingUmep(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=-8)
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")

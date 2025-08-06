@@ -13,11 +13,17 @@ class Era5MetPreprocessingUmep(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, start_date:str=None, end_date:str=None, **kwargs):
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+        seasonal_utc_offset: UTC-offset in hours as determined for AOI and DST usage.
+    """
+    def __init__(self, start_date:str=None, end_date:str=None, seasonal_utc_offset:float=0, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
-
+        self.seasonal_utc_offset = seasonal_utc_offset
 
     def get_metric(self,
                  geo_zone: GeoZone,
@@ -32,7 +38,7 @@ class Era5MetPreprocessingUmep(Metric):
 
         bbox = GeoExtent(geo_zone.bounds, geo_zone.crs)
 
-        era_5_data = (Era5HottestDay(start_date=self.start_date, end_date=self.end_date)
+        era_5_data = (Era5HottestDay(start_date=self.start_date, end_date=self.end_date, seasonal_utc_offset=self.seasonal_utc_offset)
                       .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution))
 
         t2m_var = era_5_data.sel(variable='t2m').values
