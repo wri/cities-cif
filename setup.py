@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="city_metrix",
-    version="0.2.1",
+    version="0.3.0",
     description="Module to calculate various metrics on cities.",
     packages=find_packages(),
     author="Justin Terry, Kenn Cartier",
@@ -34,4 +34,8 @@ setup(
         "overturemaps",
         "ipython"
     ],
+    package_data={
+        'city_metrix': ['ut_globus_city_handler/global_ut_globus_cities.gpkg']
+    },
 )
+

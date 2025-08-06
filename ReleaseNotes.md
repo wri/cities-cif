@@ -1,10 +1,66 @@
 # Release Notes
 
+## 2025/06/28
+1. Added local API results caching
+2. Renamed local cache to 
+
+## 2025/06/24
+1. Added sub-tiling of layers as configured by the optional PROCESSING_TILE_SIDE_M constant in layer classes
+2. Added metric-specific sub-tiling using the optional CUSTOM_TILE_SIDE_M constant in metric classes
+3. Redesigned the GeoZone class for improved efficiency and to consistently process city-based metrics in UTM coordinates.
+4. Modified the create_fishnet_grid function to enclose all tiles fully within the specified AOI by trimming extents of files in NE corner to the AOI.
+
+## 2025/06/01
+1. CDB-262: Updated written-file naming conventions.
+
+## 2025/05/30
+1. Added s3_env parameters to write functions
+1. Changed write/read for metrics to CSV format, instead of geojson.
+1. Adjusted temp-file handling for both windows and Linux.
+1. Improved caching logic.
+
+## 2025/05/24
+1. CDB-322. Fixed error in UTGlobus-to-Overture conflation that had produced many-to-one matches and resulting errors in height computation.
+2. Modified computation of UTGlobus heights to use mode or median computation. See updated https://gfw.atlassian.net/wiki/spaces/CIT/pages/1971912734/Primary+Raster+Layers+for+Thermal+Comfort+Modeling
+
+## 2025/05/12
+1. Moved OpenUrban layer from C-TCM to CIF. Former location: https://github.com/wri/cities-thermal-comfort-modeling/blob/main/src/workers/open_urban.py
+
+## 2025/05/09
+1. Re-implemented OvertureBuildingsDSM to fix a bug and improve cross-tile correspondence in building elevation.
+
+## 2025/04/30
+1. Updated NasaDEM and AlosDSM to emit smoother surface interpolations for non-default resolutions.
+
+## 2025/04/25
+1. Renamed overture_buildings_w_height_raster to overture_buildings_dsm and updated to return raster of Overture buildings combined with DEM.
+1. Added ut_globus_city_handler package for storing geopackage and query function for UT Globus cities.
+   2. This is a temporary solution until we have time to develop a service for finding Globus city by geometry.
+   
+
+## 2025/04/21
+1. Combined all bases classes into one file
+1. Removed retrieve_cached_city_data function call from derived classes
+1. Removed allow_cache_retrieval argument from get_data() method in layers 
+1. Removed CifCacheSettings
+1. Updated zonal statistics to handle large, tiled retrievals
+1. Updated zonal statistics to handle multi-level city and admin polygons
+1. Added test_write_all_metrics_by_city.py to write metrics by city
+1. Converted some functions to static class methods to improve performance
+1. Changed AWS profile for credentials file to "cities-data-dev"
+1. TODOs:
+   1. Performance of large cities needs to be tested since only small and moderate size have been run so far
+   2. Update the naming conventions wiki: https://gfw.atlassian.net/wiki/spaces/CIT/pages/1886126084/Proposal+for+layer-id+naming
+
 ## 2025/04/14
 1. Added timeout_decorator to environment.yml
 2. Warning: Some tests in tests/resources folder write intermediate results to a shared S3 bucket, so there is some potential for collision between concurrent runs.
 3. Simplified tests and renamed some tests
 4. Refocused layer-write tests on query by city name instead of by bbox.
+
+## 2025/04/9
+1. Merged some Layers and Metrics functions
+2. Increased granularity for controling whether individual tests are run by converting the old EXECUTE_IGNORED_TESTS boolean values into enums.
 
 ## 2025/04/7
 1. Created a Metric base class with get_data() and two write functions

@@ -7,17 +7,16 @@ import cdsapi
 import os
 import xarray as xr
 import glob
+from datetime import timedelta
 
 from city_metrix.constants import WGS_CRS, NETCDF_FILE_EXTENSION
-from .layer import Layer
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, GeoExtent
 
 
 class Era5HottestDay(Layer):
     OUTPUT_FILE_FORMAT = NETCDF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = None
-    MINOR_LAYER_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
     """
     Attributes:
@@ -30,13 +29,8 @@ class Era5HottestDay(Layer):
         self.end_date = end_date
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 allow_cache_retrieval=False):
+                 force_data_refresh=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         geographic_bbox = bbox.as_geographic_bbox()
 
@@ -60,7 +54,7 @@ class Era5HottestDay(Layer):
 
             return image.set('hourly_mean_temperature', hourly_mean)
 
-        ee_rectangle = bbox.to_ee_rectangle()
+        ee_rectangle = geographic_bbox.to_ee_rectangle()
         era5 = ee.ImageCollection(dataset
                                   .filterBounds(ee_rectangle['ee_geometry'])
                                   .filterDate(self.start_date, self.end_date)
@@ -96,9 +90,15 @@ class Era5HottestDay(Layer):
         for i in range(0, 24):
             local_time_hourly = local_tz.localize(datetime(local_date.year, local_date.month, local_date.day, i, 0))
             utc_time_hourly = local_time_hourly.astimezone(pytz.utc)
-            utc_times.append(utc_time_hourly)
-
-        utc_dates = list(set([dt.date() for dt in utc_times]))
+            # Rounded due to half hour offset in some cities
+            # See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for the range of possible values
+            # ERA5 only accepts whole hour UTC times
+            # if > 30 minutes, bump up an hour
+            if utc_time_hourly.minute > 30:
+                utc_time_hourly = utc_time_hourly + timedelta(hours=1)
+            utc_times.append(utc_time_hourly.replace(minute=0))
+        
+        utc_dates = sorted(list(set([dt.date() for dt in utc_times])))
 
         # {"dataType": "an"(analysis)/"fc"(forecast)/"pf"(perturbed forecast)}
         an_list = []

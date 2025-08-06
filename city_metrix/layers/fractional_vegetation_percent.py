@@ -1,22 +1,18 @@
-import geopandas as gpd
 import xarray as xr
 import numpy as np
-import pandas as pd
-import shapely
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
 
-class FractionalVegetation(Layer):
+class FractionalVegetationPercent(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["min_threshold"]
-    MINOR_LAYER_NAMING_ATTS = None
+    PROCESSING_TILE_SIDE_M = 5000
+    MAJOR_NAMING_ATTS = ["min_threshold"]
+    MINOR_NAMING_ATTS = None
 
     def __init__(self, min_threshold=None, year=2024, **kwargs):
         super().__init__(**kwargs)
@@ -24,15 +20,10 @@ class FractionalVegetation(Layer):
         self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None, allow_cache_retrieval=False):
+                 resampling_method=None):
         if resampling_method is not None:
             raise Exception("resampling_method can not be specified.")
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-
-        # Attempt to retrieve cached file based on layer_id.
-        retrieved_cached_data = retrieve_cached_city_data(self, bbox, allow_cache_retrieval)
-        if retrieved_cached_data is not None:
-            return retrieved_cached_data
 
         dw = ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1")
         S2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
@@ -99,7 +90,7 @@ class FractionalVegetation(Layer):
             vegNDVI = (
                 ndvi.updateMask(dwClass.eq(1))
                 .reduceRegion(
-                    reducer=ee.Reducer.percentile([PCTL_FULLVEG]),
+                    reducer=ee.Reducer.percentile([vegpctl]),
                     geometry=aoi,
                     scale=10,
                     maxPixels=10e13,
@@ -135,6 +126,8 @@ class FractionalVegetation(Layer):
                 .divide(vegNDVI.subtract(soilNDVI))
                 .pow(2)
                 .min(1)
+                .multiply(100)
+                .toUint8()
                 .rename("Fr")
             )
 
@@ -161,8 +154,8 @@ class FractionalVegetation(Layer):
                 bbox_ee,
                 spatial_resolution,
                 "fractional vegetation",
-            ).Fr
+            ).astype(np.uint8).Fr
             if self.min_threshold is not None:
-                data = xr.where(data >= self.min_threshold, 1, np.nan).rio.write_crs(data.crs)
+                data = xr.where(data >= self.min_threshold, 1, 0).astype(np.uint8).rio.write_crs(data.crs)
 
         return data
