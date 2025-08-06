@@ -1,5 +1,9 @@
 # Release Notes
 
+# 2025/08/06
+1. Added start_date and end_date parameters to Era5MetPreprocessingUmep and Era5MetPreprocessingUpenn metrics classes
+2. Changed default date values for Era5HottestDay layer to None since we do not hard-coded default values.
+
 ## 2025/08/05
 1. Added seasonal_utc_offset parameter to ERA5 classes
 2. Removed timezonefinder dependency

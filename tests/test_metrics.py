@@ -61,7 +61,8 @@ def test_hospitals_per_ten_thousand_residents():
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_umep():
     # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = Era5MetPreprocessingUmep(seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset).get_metric(USA_OR_PORTLAND_ZONE)
+    indicator = (Era5MetPreprocessingUmep(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset)
+                 .get_metric(USA_OR_PORTLAND_ZONE))
     non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
     has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
     # p1= indicator[non_nullable_variables].isnull().any()
@@ -74,7 +75,9 @@ def test_era_5_met_preprocess_umep():
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_upenn():
     # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = Era5MetPreprocessingUPenn(seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset).get_metric(USA_OR_PORTLAND_ZONE)
+    indicator = (Era5MetPreprocessingUPenn(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset)
+                 .get_metric(USA_OR_PORTLAND_ZONE))
+
     non_nullable_variables = ['Year', 'Month', 'Day', 'Hour', 'Minute', 'DHI', 'DNI', 
                               'GHI', 'Clearsky DHI', 'Clearsky DNI','Clearsky GHI', 
                               'Wind Speed', 'Relative Humidity', 'Temperature', 'Pressure']

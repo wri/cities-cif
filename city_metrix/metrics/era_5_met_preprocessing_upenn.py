@@ -1,12 +1,12 @@
-from datetime import datetime
 import pandas as pd
 import numpy as np
-from pandas import DataFrame
+from datetime import datetime
 from pvlib import solarposition
 
 from city_metrix.constants import CSV_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV
 from city_metrix.layers import Era5HottestDay
 from city_metrix.metrix_model import GeoExtent, Metric, GeoZone
+from city_metrix.metrix_tools import is_date
 
 
 class Era5MetPreprocessingUPenn(Metric):
@@ -14,8 +14,17 @@ class Era5MetPreprocessingUPenn(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, seasonal_utc_offset:float=0, **kwargs):
+
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+        seasonal_utc_offset: UTC-offset in hours as determined for AOI and DST usage.
+    """
+    def __init__(self, start_date:str=None, end_date:str=None, seasonal_utc_offset:float=0, **kwargs):
         super().__init__(**kwargs)
+        self.start_date = start_date
+        self.end_date = end_date
         self.seasonal_utc_offset = seasonal_utc_offset
 
     def get_metric(self,
@@ -26,8 +35,13 @@ class Era5MetPreprocessingUPenn(Metric):
         :param geo_zone: GeoZone with geometries to collect zonal stats on
         :return: Pandas Dataframe of data
         """
+        if not is_date(self.start_date) or not is_date(self.end_date):
+            raise Exception(f"Invalid date specification: start_date:{self.start_date}, end_date:{self.end_date}.")
+
         bbox = GeoExtent(geo_zone.bounds, geo_zone.crs)
-        era_5_data = Era5HottestDay(seasonal_utc_offset=self.seasonal_utc_offset).get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution)
+
+        era_5_data = (Era5HottestDay(start_date=self.start_date, end_date=self.end_date, seasonal_utc_offset=self.seasonal_utc_offset)
+                      .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution))
 
         t2m_var = era_5_data.sel(variable='t2m').values
         d2m_var = era_5_data.sel(variable='d2m').values

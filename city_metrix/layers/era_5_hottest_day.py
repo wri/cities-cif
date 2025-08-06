@@ -8,6 +8,7 @@ import glob
 
 from city_metrix.constants import WGS_CRS, NETCDF_FILE_EXTENSION
 from city_metrix.metrix_model import Layer, GeoExtent
+from city_metrix.metrix_tools import is_date
 
 
 class Era5HottestDay(Layer):
@@ -19,8 +20,9 @@ class Era5HottestDay(Layer):
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
+        seasonal_utc_offset: UTC-offset in hours as determined for AOI and DST usage.
     """
-    def __init__(self, start_date="2023-01-01", end_date="2024-01-01", seasonal_utc_offset:float=0, **kwargs):
+    def __init__(self, start_date:str=None, end_date:str=None, seasonal_utc_offset:float=0, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
@@ -29,6 +31,8 @@ class Era5HottestDay(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  force_data_refresh=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
+        if not is_date(self.start_date) or not is_date(self.end_date) :
+            raise Exception(f"Invalid date specification: start_date:{self.start_date}, end_date:{self.end_date}.")
 
         geographic_bbox = bbox.as_geographic_bbox()
 
