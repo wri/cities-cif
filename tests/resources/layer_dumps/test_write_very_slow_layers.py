@@ -1,6 +1,6 @@
 import pytest
 
-from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, DEFAULT_STAGING_ENV
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
 from city_metrix.layers import *
 from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_2
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
