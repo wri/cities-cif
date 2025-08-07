@@ -2,7 +2,9 @@ import ee
 
 from city_metrix.metrix_model import (Layer, get_image_collection, set_resampling_for_continuous_raster,
                                       validate_raster_resampling_method, GeoExtent)
+from .albedo import get_albedo_default_date_range
 from ..constants import GTIFF_FILE_EXTENSION
+
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 DEFAULT_RESAMPLING_METHOD = "bilinear"
@@ -20,7 +22,7 @@ class AlbedoCloudMasked(Layer):
         zonal_stats: use 'mean' or 'median' for albedo zonal stats
     """
 
-    def __init__(self, start_date="2023-01-01", end_date="2024-01-01", zonal_stats='median', **kwargs):
+    def __init__(self, start_date:str=None, end_date:str=None, zonal_stats='median', **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
@@ -47,6 +49,9 @@ class AlbedoCloudMasked(Layer):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
+
+        if self.start_date is None or self.end_date is None:
+            self.start_date, self.end_date = get_albedo_default_date_range(bbox)
 
         # calculate albedo for images
         # weights derived from
