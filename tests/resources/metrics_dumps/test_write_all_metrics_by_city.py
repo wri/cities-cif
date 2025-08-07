@@ -3,7 +3,7 @@ import os
 import pytest
 import timeout_decorator
 
-from city_metrix.constants import DEFAULT_STAGING_ENV
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
 from city_metrix.metrics import *
 from city_metrix.cache_manager import check_if_cache_file_exists
 from ...tools.general_tools import get_test_cache_variables
@@ -174,13 +174,13 @@ def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_z
     try:
         if OUTPUT_RESULTS_FORMAT == 'csv':
             os_file_path = prep_output_path(target_folder, 'metric', metric_id)
-            metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_STAGING_ENV, output_uri=os_file_path,
+            metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=os_file_path,
                              force_data_refresh=True)
             cache_file_exists = check_if_cache_file_exists(file_uri)
         else:
             metric_name = metric_obj.__class__.__name__
             os_file_path = f'{metric_geojson_path}/{metric_name}.geojson'
-            metric_obj.write_as_geojson(geo_zone=geo_zone, s3_env=DEFAULT_STAGING_ENV, output_uri=os_file_path,
+            metric_obj.write_as_geojson(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=os_file_path,
                                         force_data_refresh=True)
             cache_file_exists = check_if_cache_file_exists(file_uri)
 
@@ -197,6 +197,3 @@ def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_z
         # Note: Do not delete S3 files in order to avoid collisions with concurrent tests
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         cleanup_cache_files('layer', None, None, cleanup_os_file_path)
-
-
-
