@@ -4,11 +4,12 @@ import pytest
 
 from city_metrix import AcagPM2p5
 from city_metrix.constants import ProjectionType, WGS_CRS
-from city_metrix.layers import NdviSentinel2, TreeCover, Albedo, AlosDSM, Era5HottestDay, UtGlobus, OvertureBuildingsHeight
+from city_metrix.layers import NdviSentinel2, TreeCover, Albedo, AlosDSM, Era5HottestDay, UtGlobus, \
+    OvertureBuildingsHeight, AlbedoCloudMasked
 from city_metrix.metrix_tools import get_projection_type
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_2
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_2, BBOX_IDN_JAKARTA
 from city_metrix.metrix_model import get_image_collection, GeoExtent
-from tests.test_layers import assert_vector_stats
+from tests.test_layers import assert_vector_stats, assert_raster_stats
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 from tests.conftest import EXECUTE_IGNORED_TESTS
 
@@ -56,7 +57,7 @@ def test_read_image_collection_scale():
 
 def test_albedo_metrics_default_resampling():
     # Default resampling_method is bilinear
-    data = Albedo().get_data(BBOX, spatial_resolution=10)
+    data = Albedo(start_date="2021-01-01", end_date="2022-01-01").get_data(BBOX, spatial_resolution=10)
 
     # Bounding values
     expected_min_value = _convert_fraction_to_rounded_percent(0.03)
@@ -68,9 +69,18 @@ def test_albedo_metrics_default_resampling():
     assert actual_min_value == expected_min_value
     assert actual_max_value == expected_max_value
 
+def test_albedo_cloud_masked_southern_hemisphere():
+    data = AlbedoCloudMasked().get_data(BBOX_IDN_JAKARTA)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, 0.0029, 1, 1223220, 0)
+
+def test_albedo_southern_hemisphere():
+    data = Albedo().get_data(BBOX_IDN_JAKARTA)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, 0.00911, 1.10034, 1212980, 10240)
 
 def test_albedo_metrics_no_resampling():
-    data = Albedo().get_data(BBOX, spatial_resolution=10, resampling_method= None)
+    data = Albedo(start_date="2021-01-01", end_date="2022-01-01").get_data(BBOX, spatial_resolution=10, resampling_method= None)
 
     # Bounding values
     expected_min_value = _convert_fraction_to_rounded_percent(0.03)
@@ -81,6 +91,17 @@ def test_albedo_metrics_no_resampling():
     # Value range
     assert actual_min_value == expected_min_value
     assert actual_max_value == expected_max_value
+
+
+def test_albedo_metrics_default_date_range():
+    data = Albedo().get_data(BBOX)
+
+    # Representative values
+    expected_median_value = _convert_fraction_to_rounded_percent(0.17500776)
+    actual_median_value = _convert_fraction_to_rounded_percent(np.median(data.values[0]))
+
+    # Value range
+    assert actual_median_value == expected_median_value
 
 
 def test_alos_dsm_values():
