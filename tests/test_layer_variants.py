@@ -57,7 +57,7 @@ def test_read_image_collection_scale():
 
 def test_albedo_metrics_default_resampling():
     # Default resampling_method is bilinear
-    data = Albedo().get_data(BBOX, spatial_resolution=10)
+    data = Albedo(start_date="2021-01-01", end_date="2022-01-01").get_data(BBOX, spatial_resolution=10)
 
     # Bounding values
     expected_min_value = _convert_fraction_to_rounded_percent(0.03)
@@ -80,7 +80,7 @@ def test_albedo_southern_hemisphere():
     assert_raster_stats(data, 2, 0.00911, 1.10034, 1212980, 10240)
 
 def test_albedo_metrics_no_resampling():
-    data = Albedo().get_data(BBOX, spatial_resolution=10, resampling_method= None)
+    data = Albedo(start_date="2021-01-01", end_date="2022-01-01").get_data(BBOX, spatial_resolution=10, resampling_method= None)
 
     # Bounding values
     expected_min_value = _convert_fraction_to_rounded_percent(0.03)
@@ -91,6 +91,17 @@ def test_albedo_metrics_no_resampling():
     # Value range
     assert actual_min_value == expected_min_value
     assert actual_max_value == expected_max_value
+
+
+def test_albedo_metrics_default_date_range():
+    data = Albedo().get_data(BBOX)
+
+    # Representative values
+    expected_median_value = _convert_fraction_to_rounded_percent(0.17500776)
+    actual_median_value = _convert_fraction_to_rounded_percent(np.median(data.values[0]))
+
+    # Value range
+    assert actual_median_value == expected_median_value
 
 
 def test_alos_dsm_values():
