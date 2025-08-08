@@ -52,6 +52,7 @@ class AlbedoCloudMasked(Layer):
 
         if self.start_date is None or self.end_date is None:
             self.start_date, self.end_date = get_albedo_default_date_range(bbox)
+            print("Date range was not specified for Albedo, so auto-setting to previous-year summer months as appropriate for hemisphere.")
 
         # calculate albedo for images
         # weights derived from

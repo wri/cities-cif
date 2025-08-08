@@ -97,6 +97,7 @@ class Albedo(Layer):
 
         if self.start_date is None or self.end_date is None:
             self.start_date, self.end_date = get_albedo_default_date_range(bbox)
+            print("Date range was not specified for Albedo, so auto-setting to previous-year summer months as appropriate for hemisphere.")
 
         # calculate albedo for images
         # weights derived from
@@ -153,21 +154,31 @@ class Albedo(Layer):
 
         return data
 
+"""
+Determines last day of February since the date varies for leap and non-leap years.
+"""
 def last_date_of_february(year):
     march_first = datetime(year, 3, 1)
     last_february_date = march_first - timedelta(days=1)
     return last_february_date.strftime("%Y-%m-%d")
 
-
+"""
+Function used by both Albedo and AlbedoCloudMasked layers to determine 3-month time windows for summer in the
+northern and southern hemispheres.
+"""
 def get_albedo_default_date_range(bbox: GeoExtent):
     geo_bbox = bbox.as_geographic_bbox()
     aoi_centroid = geo_bbox.centroid
     this_year = datetime.now().year
+    one_year_ago_offset = this_year - 1
+    two_years_ago_offset = this_year - 2
     if aoi_centroid.y >= 0:
-        start_date = f"{this_year - 1}-06-01"
-        end_date = f"{this_year - 1}-08-31"
+        # Get summer months for northern-hemisphere in middle of calendar year
+        start_date = f"{one_year_ago_offset}-06-01"
+        end_date = f"{one_year_ago_offset}-08-31"
     else:
-        start_date = f"{this_year - 2}-12-01"
-        end_date = last_date_of_february(this_year - 1)
+        # Get summer months for southern-hemisphere at start of the previous calendar year
+        start_date = f"{two_years_ago_offset}-12-01"
+        end_date = last_date_of_february(one_year_ago_offset)
 
     return start_date, end_date
