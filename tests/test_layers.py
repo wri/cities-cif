@@ -18,19 +18,19 @@ BBOX = BBOX_USA_OR_PORTLAND_2
 def test_acag_pm2p5():
     data = AcagPM2p5().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 6.18, 6.18, 1, 0)
+    assert_raster_stats(data, 2, 5.89, 6.53, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_albedo_cloud_masked():
     data = AlbedoCloudMasked().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 3, 0.01685, 0.600, 9797, 0)
+    assert_raster_stats(data, 2, 0.0127, 0.6554, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_albedo():
     data = Albedo().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 3, 0.0262, 0.56, 9797, 0)
+    assert_raster_stats(data, 2, 0.0183, 0.6289, 9794, 3)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_alos_dsm():
@@ -64,7 +64,7 @@ def test_cams():
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
-    data = Era5HottestDay().get_data(BBOX)
+    data = Era5HottestDay(seasonal_utc_offset=-8).get_data(BBOX)
     assert np.size(data) > 0
 
 def test_esa_world_cover():

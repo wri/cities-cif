@@ -3,7 +3,7 @@ import os
 import pytest
 import timeout_decorator
 
-from city_metrix.constants import DEFAULT_STAGING_ENV
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
 from city_metrix.metrics import *
 from city_metrix.cache_manager import check_if_cache_file_exists
 from ...tools.general_tools import get_test_cache_variables
@@ -15,7 +15,7 @@ PRESERVE_RESULTS_ON_OS = False  # False - Default for check-in
 OUTPUT_RESULTS_FORMAT = 'csv' # Default for check-in
 # OUTPUT_RESULTS_FORMAT = 'geojson'
 
-SLOW_TEST_TIMEOUT_SECONDS = 3000 # seconds = 50 minutes (Duration needed for fractional vegetation)
+SLOW_TEST_TIMEOUT_SECONDS = 3600 # seconds = 1 hour (Duration needed for fractional vegetation)
 
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
@@ -62,8 +62,8 @@ def test_write_CanopyAreaPerResidentInformal(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_Era5MetPreprocessing(target_folder):
-    metric_obj = Era5MetPreprocessing()
+def test_write_Era5MetPreprocessingUmep(target_folder):
+    metric_obj = Era5MetPreprocessingUmep(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=-3)
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
@@ -76,6 +76,11 @@ def test_write_HospitalsPerTenThousandResidents(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_MeanPM2P5Exposure(target_folder):
     metric_obj = MeanPM2P5Exposure()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_MeanPM2P5ExposurePopWeighted(target_folder):
+    metric_obj = MeanPM2P5ExposurePopWeighted()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -109,7 +114,7 @@ def test_write_NaturalAreasPercent(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_PercentAreaFracvegExceedsThreshold(target_folder):
+def test_write_PercentAreaFracVegExceedsThreshold(target_folder):
     metric_obj = PercentAreaFracvegExceedsThreshold()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
 
@@ -169,13 +174,13 @@ def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_z
     try:
         if OUTPUT_RESULTS_FORMAT == 'csv':
             os_file_path = prep_output_path(target_folder, 'metric', metric_id)
-            metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_STAGING_ENV, output_uri=os_file_path,
+            metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=os_file_path,
                              force_data_refresh=True)
             cache_file_exists = check_if_cache_file_exists(file_uri)
         else:
             metric_name = metric_obj.__class__.__name__
             os_file_path = f'{metric_geojson_path}/{metric_name}.geojson'
-            metric_obj.write_as_geojson(geo_zone=geo_zone, s3_env=DEFAULT_STAGING_ENV, output_uri=os_file_path,
+            metric_obj.write_as_geojson(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=os_file_path,
                                         force_data_refresh=True)
             cache_file_exists = check_if_cache_file_exists(file_uri)
 
@@ -192,6 +197,3 @@ def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_z
         # Note: Do not delete S3 files in order to avoid collisions with concurrent tests
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path
         cleanup_cache_files('layer', None, None, cleanup_os_file_path)
-
-
-

@@ -8,11 +8,10 @@ def test_city_values_BuiltLandWithHighLST():
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
     _evaluate_metric_values(metric_values, 2, 0, 0.11, 0.03, 138, 10, True)
 
-# TODO The current specified value for continuity should be true, but specified here as False so the test passes. Count is also wrong.
 def test_city_values_mean_pm2p5_exposure():
     metric_obj = MeanPM2P5Exposure()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
-    _evaluate_metric_values(metric_values, 2, 11.13, 14.09, 12.4, 107, 0, False)
+    _evaluate_metric_values(metric_values, 2, 11.18, 14.04, 12.45, 138, 0, True)
 
 def test_city_values_NaturalAreasPercent():
     metric_obj = NaturalAreasPercent()

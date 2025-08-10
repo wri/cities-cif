@@ -22,14 +22,6 @@ def test_default_name_for_layer_with_start_end_years():
     assert is_custom_layer == False
     assert layer_id == 'LandCoverHabitatChangeGlad__StartYear_2000_EndYear_2020.tif'
 
-def test_default_name_for_layer_with_start_end_dates():
-    geo_extent = GEOEXTENT_TERESINA
-    layer_obj = Albedo()
-    file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
-
-    assert is_custom_layer == False
-    assert layer_id == 'Albedo__StartYear_2021_EndYear_2021.tif'
-
 def test_default_name_for_layer_with_start_end_dates_in_same_year():
     geo_extent = GEOEXTENT_TERESINA
     layer_obj = Cams()
@@ -57,11 +49,11 @@ def test_default_name_for_metric_with_start_end_dates():
 
 def test_custom_name_for_layer_with_start_end_dates():
     geo_extent = GEOEXTENT_TERESINA
-    layer_obj = Albedo(threshold=0.2)
+    layer_obj = Albedo(start_date='2023-01-01', end_date='2023-12-31', threshold=0.2)
     file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
 
     assert is_custom_layer == True
-    assert layer_id == 'Albedo__Threshold_02__StartDate_2021-01-01_EndDate_2022-01-01.tif'
+    assert layer_id == 'Albedo__Threshold_02__StartDate_2023-01-01_EndDate_2023-12-31.tif'
 
 def test_custom_name_for_layer_with_one_custom_minor_param():
     geo_extent = GEOEXTENT_TERESINA
