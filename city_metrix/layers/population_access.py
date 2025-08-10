@@ -42,7 +42,7 @@ class AccessibleCount(Layer):
         ds0 = gdal.Open(url)
         crs = CRS.from_string(ds0.GetProjection())
         ds.rio.write_crs(crs.to_string(), inplace=True)
-        ds_clipped = ds.rio.clip_box(*bbox.as_utm_bbox().coords)
+        ds_clipped = ds.rio.clip_box(*bbox.as_utm_bbox().coords).squeeze()
         return ds_clipped
 
 class AccessibleRegion(Layer):
@@ -63,33 +63,37 @@ class AccessibleRegion(Layer):
                  resampling_method=None, allow_cache_retrieval=False):
         accessible_count = AccessibleCount(amenity=self.amenity, city_id=self.city_id, level=self.level, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit).get_data(bbox)
         ds = xr.where(accessible_count > 0, 1, np.nan, True)
-        ds.rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
+        ds.rio.write_crs(bbox.as_utm_bbox().crs, inplace=True).squeeze()
         return ds
 
-# class AccessibleCountPopWeighted(Layer):
-    # def __init__(self, city_id='KEN-Nairobi', level='adminbound', amenity='jobs', travel_mode='walk', threshold=15, unit='minutes', worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False, **kwargs):
-        # super().__init__(**kwargs)
-        # self.city_id = city_id
-        # self.level = level
-        # self.amenity = amenity
-        # self.travel_mode = travel_mode
-        # self.threshold = threshold
-        # self.unit = unit
-        # self.buffered_and_simplified = False
-        # self.dissolved = False
-        # self.worldpop_agesex_classes = worldpop_agesex_classes
-        # self.worldpop_year = worldpop_year
-        # self.informal_only = informal_only
+class AccessibleCountPopWeighted(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["amenity", "city_id", "level", "travel_mode", "threshold", "unit", "worldpop_agesex_classes", "worldpop_year", "informal_only"]
+    MINOR_NAMING_ATTS = None
 
-    # def get_data(self, bbox: GeoExtent, spatial_resolution:int=WORLDPOP_SPATIAL_RESOLUTION,
-                 # resampling_method=None, allow_cache_retrieval=False):
-        # population_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year)
-        # if self.informal_only:
-            # informal_layer = UrbanLandUse(return_value=INFORMAL_CLASS)
-            # population_layer.masks.append(informal_layer)
-        # population_data = population_layer.get_data(bbox, spatial_resolution=spatial_resolution)
-        # count_layer = AccessibleCount(city_id=self.city_id, amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, align_to=population_data)
-        # count_data = count_layer.get_data(bbox, spatial_resolution=WORLDPOP_SPATIAL_RESOLUTION)
-        # utm_crs = bbox.as_utm_bbox().crs
-        # data = count_data * (population_data / population_data.mean()).rio.write_crs(utm_crs)
-        # return data
+    def __init__(self, amenity='jobs', city_id='KEN-Nairobi', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False, **kwargs):
+        super().__init__(**kwargs)
+        self.city_id = city_id
+        self.level = level
+        self.amenity = amenity
+        self.travel_mode = travel_mode
+        self.threshold = threshold
+        self.unit = unit
+        self.worldpop_agesex_classes = worldpop_agesex_classes
+        self.worldpop_year = worldpop_year
+        self.informal_only = informal_only
+
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=WORLDPOP_SPATIAL_RESOLUTION,
+                 resampling_method=None, allow_cache_retrieval=False):
+        utm_crs = bbox.as_utm_bbox().crs
+        population_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year)
+        if self.informal_only:
+            informal_layer = UrbanLandUse(return_value=INFORMAL_CLASS)
+            population_layer.masks.append(informal_layer)
+        population_data = population_layer.get_data(bbox, spatial_resolution=spatial_resolution)
+        count_layer = AccessibleCount(amenity=self.amenity, city_id=self.city_id, level=self.level, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit)
+        count_data = count_layer.get_data(bbox, spatial_resolution=WORLDPOP_SPATIAL_RESOLUTION)
+        numerator = xr.DataArray(count_data.fillna(0).to_numpy() * population_data.to_numpy(), dims=['y', 'x'], coords={'y': count_data.y, 'x': count_data.x})
+        result = numerator / population_data.mean()
+        result.rio.write_crs(utm_crs, inplace=True)
+        return result
