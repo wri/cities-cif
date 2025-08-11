@@ -66,7 +66,7 @@ def max_n_hr(arr, n):
             max_by_offset = max(max_by_offset, candidate)
     return max_by_offset
 
-class AirPollutantWhoExceedanceDays(Metric):
+class AirPollutantWhoExceedance__Days(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None

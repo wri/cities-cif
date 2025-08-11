@@ -10,7 +10,7 @@ from city_metrix.metrix_model import Metric, GeoExtent, GeoZone
 
 SUPPORTED_SPECIES = [CamsSpecies.CO, CamsSpecies.NO2, CamsSpecies.O3, CamsSpecies.PM10, CamsSpecies.PM25, CamsSpecies.SO2]
 
-class CamsAnnual():
+class CamsAnnual__Tonnes():
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -47,7 +47,7 @@ class CamsAnnual():
     
         return cams_annual
 
-class AirPollutantAnnualDailyStatistic(Metric):
+class AirPollutant__AnnualDailyStatisticStatistic(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -66,7 +66,7 @@ class AirPollutantAnnualDailyStatistic(Metric):
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         bbox = GeoExtent(zones.total_bounds)
-        cams_annual = CamsAnnual(species=self.species, statistic=[self.statistic, 'mean'][int(self.statistic=='cost')], year=self.year).get_data(bbox)
+        cams_annual = CamsAnnual__Tonnes(species=self.species, statistic=[self.statistic, 'mean'][int(self.statistic=='cost')], year=self.year).get_data(bbox)
 
         if self.statistic == 'mean':
             return np.mean(np.mean(cams_annual, axis=1), axis=1)
