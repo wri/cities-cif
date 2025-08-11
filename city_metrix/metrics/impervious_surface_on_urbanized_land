@@ -7,7 +7,7 @@ from city_metrix.layers import UrbanExtents, ImperviousSurface, WorldPop
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
-class PercentImperviousSurfaceOnUrbanizedLand(Metric):
+class ImperviousSurfaceOnUrbanizedLand__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
