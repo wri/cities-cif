@@ -1,20 +1,28 @@
+import pandas as pd
+from typing import Union
+from city_metrix.constants import CSV_FILE_EXTENSION
 from geopandas import GeoDataFrame, GeoSeries
 import numpy as np
 from affine import Affine
 
 from city_metrix.layers import Cams, CamsSpecies
-from city_metrix.metrics.metric import Metric
-from city_metrix.layers.layer_geometry import GeoExtent
+from city_metrix.metrix_model import Metric, GeoExtent
 
 SUPPORTED_SPECIES = [CamsSpecies.CO, CamsSpecies.NO2, CamsSpecies.O3, CamsSpecies.PM10, CamsSpecies.PM25, CamsSpecies.SO2]
 
 class CamsAnnual():
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, species=[], statistic='mean', year=2023):
         self.statistic = statistic
         self.species = species
         self.year = year
 
-    def get_data(self, bbox: GeoExtent):
+    def get_metric(self,
+                 geo_zone: GeoZone,
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         cams = Cams(start_date=f'{self.year}-01-01', end_date=f'{self.year}-12-31', species=self.species).get_data(bbox)
         cams_daily = cams.resample({'valid_time': '1D'}).mean()
 
@@ -40,6 +48,10 @@ class CamsAnnual():
         return cams_annual
 
 class AirPollutantAnnualDailyStatistic(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self,
                  species=[],
                  year=2023,
@@ -50,9 +62,9 @@ class AirPollutantAnnualDailyStatistic(Metric):
         self.statistic = statistic
         self.year = year
 
-    def get_data(self,
-                 zones: GeoDataFrame,
-                 spatial_resolution:int = None) -> GeoSeries:
+    def get_metric(self,
+                 geo_zone: GeoZone,
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         bbox = GeoExtent(zones.total_bounds)
         cams_annual = CamsAnnual(species=self.species, statistic=[self.statistic, 'mean'][int(self.statistic=='cost')], year=self.year).get_data(bbox)
 

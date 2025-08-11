@@ -1,10 +1,11 @@
+import pandas as pd
+from typing import Union
+from city_metrix.constants import CSV_FILE_EXTENSION
 import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries
-import pandas as pd
 import numpy as np
 from city_metrix.layers import Layer, Cams, CamsSpecies
-from city_metrix.metrics.metric import Metric
-from city_metrix.layers.layer_geometry import GeoExtent
+from city_metrix.metrix_model import Metric, GeoExtent
 
 SUPPORTED_SPECIES = [CamsSpecies.CO, CamsSpecies.NO2, CamsSpecies.O3, CamsSpecies.PM10, CamsSpecies.PM25, CamsSpecies.SO2]
 
@@ -66,6 +67,10 @@ def max_n_hr(arr, n):
     return max_by_offset
 
 class AirPollutantWhoExceedanceDays(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self,
                  species=None,
                  year=2023,
@@ -74,9 +79,9 @@ class AirPollutantWhoExceedanceDays(Metric):
         self.species = species
         self.year = year
 
-    def get_data(self,
-                 zones: GeoDataFrame,
-                 spatial_resolution:int = None) -> GeoSeries:
+    def get_metric(self,
+                 geo_zone: GeoZone,
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
     # species is list including these elements: 'co', 'no2', 'o3', 'so2', 'pm2p5', 'pm10'
     # returns GeoSeries with column with number of days any species exceeds WHO guideline
         if self.species is not None:
