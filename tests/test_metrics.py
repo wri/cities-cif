@@ -123,7 +123,7 @@ def test_mean_pm2p5_exposure_popweighted_informal():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 14.968415260314941, 56.377620697021484, 18, 82)
+    assert_metric_stats(indicator, 2, 14.97, 56.38, 18, 82)
 
 def test_mean_tree_cover():
     indicator = MeanTreeCover().get_metric(IDN_JAKARTA_TILED_ZONES)
