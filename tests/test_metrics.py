@@ -102,28 +102,28 @@ def test_mean_pm2p5_exposure_popweighted_children():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 15.40, 62.79, 100, 0)
+    assert_metric_stats(indicator, 2, 15.51, 61.54, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_elderly():
     indicator = MeanPM2P5ExposurePopWeightedElderly().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 15.40, 62.79, 100, 0)
+    assert_metric_stats(indicator, 2, 15.51, 61.54, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_female():
     indicator = MeanPM2P5ExposurePopWeightedFemale().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 15.40, 62.79, 100, 0)
+    assert_metric_stats(indicator, 2, 15.51, 61.54, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_informal():
     indicator = MeanPM2P5ExposurePopWeightedInformal().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, None, None, None, 0, 100)
+    assert_metric_stats(indicator, 14.968415260314941, 56.377620697021484, 18, 82)
 
 def test_mean_tree_cover():
     indicator = MeanTreeCover().get_metric(IDN_JAKARTA_TILED_ZONES)

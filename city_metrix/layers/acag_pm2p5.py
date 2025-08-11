@@ -37,6 +37,6 @@ class AcagPM2p5(Layer):
             "mean pm2.5 concentration"
         ).b1
 
-        data = data.where(data >= self.return_above)
+        data = data.where(data >= self.return_above).rio.write_crs(utm_crs).assign_attrs({'crs': utm_crs})
 
-        return data.rio.write_crs(utm_crs)
+        return data

@@ -39,6 +39,6 @@ class PopWeightedPM2p5(Layer):
 
         utm_crs = bbox.as_utm_bbox().crs
 
-        data = pm2p5 * (world_pop / world_pop.mean()).rio.write_crs(utm_crs)
+        data = pm2p5 * (world_pop / world_pop.mean()).rio.write_crs(utm_crs).assign_attrs({'crs': utm_crs})
 
         return data
