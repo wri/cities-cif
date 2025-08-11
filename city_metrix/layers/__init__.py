@@ -3,7 +3,6 @@ from .albedo_cloud_masked import AlbedoCloudMasked
 from .albedo import Albedo
 from .alos_dsm import AlosDSM
 from .aqueduct_flood import AqueductFlood
-from .area_template import AreaTemplate
 from .average_net_building_height import AverageNetBuildingHeight
 from .built_up_height import BuiltUpHeight
 from .cams import Cams
