@@ -1,4 +1,7 @@
 import math
+import os
+from datetime import datetime
+
 import utm
 from typing import Union
 from pyproj import CRS
@@ -121,3 +124,44 @@ def get_haversine_distance(lon1, lat1, lon2, lat2):
 def get_class_from_instance(obj):
     cls = obj.__class__()
     return cls
+
+
+# def meters_to_approximate_degrees(meters):
+#     # Earth's radius in meters
+#     earth_radius = 6371000
+#     # Convert meters to degrees
+#     degrees = (meters / (2 * math.pi * earth_radius)) * 360
+#     return degrees
+
+
+def buffer_bbox(lat_min, lon_min, lat_max, lon_max, buffer_meters):
+    # Approximate conversion from meters to degrees at a given latitude
+    def meters_to_degrees_lat(meters):
+        return meters / 111320
+
+    def meters_to_degrees_lon(meters, latitude):
+        return meters / (111320 * math.cos(math.radians(latitude)))
+
+    # Use center latitude to approximate longitude degree size
+    center_lat = (lat_min + lat_max) / 2
+
+    lat_buffer = meters_to_degrees_lat(buffer_meters)
+    lon_buffer = meters_to_degrees_lon(buffer_meters, center_lat)
+
+    return (
+        lat_min - lat_buffer,
+        lon_min - lon_buffer,
+        lat_max + lat_buffer,
+        lon_max + lon_buffer
+    )
+
+def is_date(string):
+    from dateutil.parser import parse
+    if string is None:
+        return False
+
+    try:
+        parse(string, False)
+        return True
+    except ValueError:
+        return False
