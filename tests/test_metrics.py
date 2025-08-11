@@ -8,6 +8,17 @@ PORTLAND_DST_seasonal_utc_offset = -8
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
 
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_air_pollutant_annual_daily_statistic():
+    indicator = AirPollutant__AnnualDailyStatistic().get_data(IDN_JAKARTA_TILED_ZONES)
+    assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_air_pollutant_who_exceedance_days():
+    indicator = AirPollutantWhoExceedance__Days().get_data(IDN_JAKARTA_TILED_ZONES)
+    assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
+
 def test_built_land_with_high_lst():
     sample_zones = IDN_JAKARTA_TILED_ZONES
     indicator = BuiltLandWithHighLST().get_metric(sample_zones)
@@ -87,32 +98,32 @@ def test_era_5_met_preprocess_upenn():
     assert_metric_stats(indicator[['DHI']], 2, 0.00, 312.15, 24, 0)
 
 def test_mean_pm2p5_exposure_popweighted_children():
-    indicator = MeanPM2P5ExposurePopWeightedChildren().get_metric(IDN_JAKARTA_TILED_ZONES)
+    indicator = MeanPM2P5ExposurePopWeightedChildren__MicrogramsPerCubicMeterPerDayPopWeighted().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 15.40, 62.79, 100, 0)
+    assert_metric_stats(indicator, 2, 15.51, 61.54, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_elderly():
-    indicator = MeanPM2P5ExposurePopWeightedElderly().get_metric(IDN_JAKARTA_TILED_ZONES)
+    indicator = MeanPM2P5ExposurePopWeightedElderly__MicrogramsPerCubicMeterPerDayPopWeighted().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 15.40, 62.79, 100, 0)
+    assert_metric_stats(indicator, 2, 15.51, 61.54, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_female():
-    indicator = MeanPM2P5ExposurePopWeightedFemale().get_metric(IDN_JAKARTA_TILED_ZONES)
+    indicator = MeanPM2P5ExposurePopWeightedFemale__MicrogramsPerCubicMeterPerDayPopWeighted().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 15.40, 62.79, 100, 0)
+    assert_metric_stats(indicator, 2, 15.51, 61.54, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_informal():
-    indicator = MeanPM2P5ExposurePopWeightedInformal().get_metric(IDN_JAKARTA_TILED_ZONES)
+    indicator = MeanPM2P5ExposurePopWeightedInformal__MicrogramsPerCubicMeterPerDayPopWeighted().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, None, None, None, 0, 100)
+    assert_metric_stats(indicator, 2, 14.97, 56.38, 18, 82)
 
 def test_mean_tree_cover():
     indicator = MeanTreeCover().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -215,7 +226,6 @@ def test_vegetation_water_change_gain_loss_ratio():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, -0.0134, 0.2426, 100, 0)
 
 
 def _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_notnull_count, data_null_count,

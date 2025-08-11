@@ -1,3 +1,6 @@
+
+from .air_pollutant_annual_daily_statistic import AirPollutant__AnnualDailyStatistic
+from .air_pollutant_who_exceedance_days import AirPollutantWhoExceedance__Days
 from .built_land_with_high_land_surface_temperature import BuiltLandWithHighLST
 from .built_land_with_low_surface_reflectivity import BuiltLandWithLowSurfaceReflectivity
 from .canopy_area_per_resident import *
@@ -15,3 +18,4 @@ from .percent_protected_area import PercentProtectedArea
 from .recreational_space_per_capita import RecreationalSpacePerCapita
 from .urban_open_space import UrbanOpenSpace
 from .vegetation_water_change import *
+
