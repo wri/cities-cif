@@ -47,7 +47,7 @@ class CamsAnnual__Tonnes():
     
         return cams_annual
 
-class AirPollutant__AnnualDailyStatisticStatistic(Metric):
+class AirPollutant__AnnualDailyStatistic(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
