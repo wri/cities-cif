@@ -139,8 +139,10 @@ def test_natural_areas():
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
-def test_percent_population_access_all():
-    indicator = AccessPopulationPercentAll('BRA-Belo_Horizonte', 'jobs', 'walk', '15', 'minutes')
+def test_children_access_open_space():
+    from geopandas import GeoDataFrame
+    zones = GeoZone(GeoDataFrame.from_file('https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/ARG-Buenos_Aires.geojson'))
+    indicator = AccessToOpenSpace__ChildrenPercent('ARG-Buenos_Aires', 'adminbound', 'walk', 15, 'minutes').get_metric(zones)
     assert actual_indicator_size > 0
 
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
