@@ -6,7 +6,7 @@ import numpy as np
 from affine import Affine
 
 from city_metrix.layers import Cams, CamsSpecies
-from city_metrix.metrix_model import Metric, GeoExtent
+from city_metrix.metrix_model import Metric, GeoExtent, GeoZone
 
 SUPPORTED_SPECIES = [CamsSpecies.CO, CamsSpecies.NO2, CamsSpecies.O3, CamsSpecies.PM10, CamsSpecies.PM25, CamsSpecies.SO2]
 

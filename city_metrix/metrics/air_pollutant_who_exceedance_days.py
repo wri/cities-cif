@@ -5,7 +5,7 @@ import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries
 import numpy as np
 from city_metrix.layers import Layer, Cams, CamsSpecies
-from city_metrix.metrix_model import Metric, GeoExtent
+from city_metrix.metrix_model import Metric, GeoExtent, GeoZone
 
 SUPPORTED_SPECIES = [CamsSpecies.CO, CamsSpecies.NO2, CamsSpecies.O3, CamsSpecies.PM10, CamsSpecies.PM25, CamsSpecies.SO2]
 
