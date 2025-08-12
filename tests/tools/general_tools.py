@@ -12,7 +12,10 @@ def is_valid_path(path: str):
 
 def create_target_folder(folder_path, delete_existing_files: bool):
     if os.path.isdir(folder_path) is False:
-        os.makedirs(folder_path)
+        try:
+            os.makedirs(folder_path)
+        except OSError as e:
+            print(e)
     elif delete_existing_files is True:
         remove_all_files_in_directory(folder_path)
 
@@ -48,10 +51,7 @@ def convert_ratio_to_percentage(data):
 
 
 def get_test_cache_variables(class_obj, geo_extent):
-    if isinstance(class_obj, Layer):
-        s3_env = DEFAULT_DEVELOPMENT_ENV
-    else:
-        s3_env = DEFAULT_STAGING_ENV
+    s3_env = DEFAULT_DEVELOPMENT_ENV
     file_uri, file_key, feature_id, is_custom_object = build_file_key(s3_env, class_obj, geo_extent)
     file_format = class_obj.OUTPUT_FILE_FORMAT
     feature_with_extension = f"{feature_id}.{file_format}"

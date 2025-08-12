@@ -1,5 +1,26 @@
 # Release Notes
 
+# 2025/08/07
+1. Added default date range for Albedo layers
+
+# 2025/08/06
+1. Added start_date and end_date parameters to Era5MetPreprocessingUmep and Era5MetPreprocessingUpenn metrics classes
+2. Changed default date values for Era5HottestDay layer to None since we do not hard-coded default values.
+
+## 2025/08/05
+1. Added seasonal_utc_offset parameter to ERA5 classes
+2. Removed timezonefinder dependency
+
+## 2025/06/28
+1. Added local API results caching
+2. Renamed local cache to 
+
+## 2025/06/24
+1. Added sub-tiling of layers as configured by the optional PROCESSING_TILE_SIDE_M constant in layer classes
+2. Added metric-specific sub-tiling using the optional CUSTOM_TILE_SIDE_M constant in metric classes
+3. Redesigned the GeoZone class for improved efficiency and to consistently process city-based metrics in UTM coordinates.
+4. Modified the create_fishnet_grid function to enclose all tiles fully within the specified AOI by trimming extents of files in NE corner to the AOI.
+
 ## 2025/06/01
 1. CDB-262: Updated written-file naming conventions.
 
