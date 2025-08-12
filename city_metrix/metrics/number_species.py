@@ -1,12 +1,13 @@
-from geopandas import GeoDataFrame, GeoSeries
-from pandas import Series
-
+import pandas as pd
+from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import SpeciesRichness, GBIFTaxonClass
-from city_metrix.layers.layer_geometry import GeoExtent
-from city_metrix.metrics.metric import Metric
+from city_metrix.metrics.metric import Metric, GeoZone, GeoExtent
 
 
-class NumberSpecies(Metric):
+class _NumberSpecies(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
     def __init__(
         self, taxon=GBIFTaxonClass.BIRDS, start_year=2019, end_year=2024, **kwargs
     ):
@@ -15,9 +16,9 @@ class NumberSpecies(Metric):
         self.start_year = start_year
         self.end_year = end_year
 
-    def get_data(
-        self, zones: GeoDataFrame, spatial_resolution: int = None
-    ) -> GeoSeries:
+    def get_metric(
+        self, zones: GeoZone, spatial_resolution: int = None
+    ) -> pd.Series:
 
         speciesrichness_layer = SpeciesRichness(taxon=self.taxon, start_year=self.start_year, end_year=self.end_year)
 
@@ -29,16 +30,20 @@ class NumberSpecies(Metric):
         return Series(results)
 
 
-class NumberSpeciesBirds(Metric):
+class BirdRichness__Species(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, start_year=2019, end_year=2024, **kwargs):
         super().__init__(**kwargs)
         self.start_year = start_year
         self.end_year = end_year
 
-    def get_data(
-        self, zones: GeoDataFrame, spatial_resolution: int = None
-    ) -> GeoSeries:
-        number_species = NumberSpecies(
+    def get_metric(
+        self, zones: GeoZone, spatial_resolution: int = None
+    ) -> pd.Series:
+        number_species = _NumberSpecies(
             taxon=GBIFTaxonClass.BIRDS,
             start_year=self.start_year,
             end_year=self.end_year,
@@ -47,16 +52,20 @@ class NumberSpeciesBirds(Metric):
         return number_species.get_data(zones)
 
 
-class NumberSpeciesArthropods(Metric):
+class ArthropodRichness__Species(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, start_year=2019, end_year=2024, **kwargs):
         super().__init__(**kwargs)
         self.start_year = start_year
         self.end_year = end_year
 
-    def get_data(
-        self, zones: GeoDataFrame, spatial_resolution: int = None
-    ) -> GeoSeries:
-        number_species = NumberSpecies(
+    def get_metric(
+        self, zones: GeoZone, spatial_resolution: int = None
+    ) -> pd.Series:
+        number_species = _NumberSpecies(
             taxon=GBIFTaxonClass.ARTHROPODS,
             start_year=self.start_year,
             end_year=self.end_year,
@@ -65,16 +74,20 @@ class NumberSpeciesArthropods(Metric):
         return number_species.get_data(zones)
 
 
-class NumberSpeciesVascularPlants(Metric):
+class VascularPlantRichness__Species(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, start_year=2019, end_year=2024, **kwargs):
         super().__init__(**kwargs)
         self.start_year = start_year
         self.end_year = end_year
 
-    def get_data(
+    def get_metric(
         self, zones: GeoDataFrame, spatial_resolution: int = None
     ) -> GeoSeries:
-        number_species = NumberSpecies(
+        number_species = _NumberSpecies(
             taxon=GBIFTaxonClass.VASCULAR_PLANTS,
             start_year=self.start_year,
             end_year=self.end_year,

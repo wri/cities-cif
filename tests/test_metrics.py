@@ -129,21 +129,21 @@ def test_natural_areas():
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
 
 def test_number_species_birds():
-    indicator = NumberSpeciesBirds().get_data(USA_OR_PORTLAND_ZONE)
+    indicator = BirdRichness__Species().get_data(USA_OR_PORTLAND_ZONE)
     expected_zone_size = USA_OR_PORTLAND_ZONE.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 15, 15, 1, 0)
 
 def test_number_species_arthropods():
-    indicator = NumberSpeciesArthropods().get_data(USA_OR_PORTLAND_ZONE)
+    indicator = ArthropodRichness_Species().get_data(USA_OR_PORTLAND_ZONE)
     expected_zone_size = USA_OR_PORTLAND_ZONE.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 53, 53, 1, 0)
 
 def test_number_species_vascular_plants():
-    indicator = NumberSpeciesVascularPlants().get_data(USA_OR_PORTLAND_ZONE)
+    indicator = VascularPlantRichness__Species().get_data(USA_OR_PORTLAND_ZONE)
     expected_zone_size = USA_OR_PORTLAND_ZONE.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
