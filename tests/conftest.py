@@ -23,7 +23,7 @@ def create_fishnet_gdf_for_testing(coords, tile_side_length):
     wgs_bbox = GeoExtent(bbox=bbox, crs=WGS_CRS)
     fishnet_gdf = create_fishnet_grid(wgs_bbox, tile_side_length=tile_side_length, length_units='degrees',
                                       output_as=ProjectionType.GEOGRAPHIC)
-    fishnet_gdf.drop('fishnet_geometry', axis=1, inplace=True)
+    fishnet_gdf.drop('immutable_fishnet_geometry', axis=1, inplace=True)
     fishnet_gdf['id'] = fishnet_gdf.index.map(lambda idx: f"{idx}")
     fishnet_gdf['geo_id'] = fishnet_gdf.index.map(lambda idx: f"ZZZ-City_Name_ADM-2_{idx}")
     fishnet_gdf['geo_name'] = "ADM2 Name"
