@@ -15,9 +15,9 @@ class _HabitatConnectivity(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self,  indicator_name: str, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.indicator_name == indicator_name
+        self.indicator_name = None
 
     def get_metric(self,
                 geo_zone: GeoZone,
@@ -61,7 +61,10 @@ class _HabitatConnectivity(Metric):
             for i in clusters:
                 cluster_areas.append(sum([na_gdf.loc[[j]]['geometry'].area[j] for j in i]))
             if total_area > 0:
-                result.append(sum([i**2 for i in cluster_areas]) / (total_area**({'EMS': 1, 'coherence': 2}[indicator_name])))
+                if self.indicator_name == 'EMS':
+                    result.append((sum([i**2 for i in cluster_areas]) / total_area) / 10000)
+                else: #self.indicator_name == 'coherence'
+                    esult.append((sum([i**2 for i in cluster_areas]) / (total_area**2)) * 100)
             else:
                 result.append(0)
                 
