@@ -1,14 +1,14 @@
 import numpy as np
 import pytest
 
-from city_metrix.constants import RW_TESTING_S3_BUCKET_URI, DEFAULT_DEVELOPMENT_ENV
+from city_metrix.constants import CIF_TESTING_S3_BUCKET_URI, DEFAULT_DEVELOPMENT_ENV
 from city_metrix.layers import AcagPM2p5, Era5HottestDay, UrbanExtents, OpenStreetMapClass, OpenStreetMap
 from city_metrix.cache_manager import check_if_cache_file_exists
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.tools.general_tools import get_test_cache_variables
-from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84
+from tests.resources.bbox_constants import GEOEXTENT_TERESINA
 
-GEO_EXTENT_PROCESSING_CITY = GEOEXTENT_TERESINA_WGS84
+GEO_EXTENT_PROCESSING_CITY = GEOEXTENT_TERESINA
 CITY_UT_NAME = 'teresina'
 
 
@@ -39,13 +39,13 @@ def test_geotiff_custom_param_val():
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_netcdf_default_param_val():
-    layer_obj = Era5HottestDay()
+    layer_obj = Era5HottestDay(seasonal_utc_offset=-8)
     is_custom_layer = _run_cache_test(layer_obj)
     assert is_custom_layer == False
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_netcdf_custom_param_val():
-    layer_obj = Era5HottestDay(start_date="2023-02-01")
+    layer_obj = Era5HottestDay(start_date="2023-02-01", seasonal_utc_offset=-8)
     is_custom_layer = _run_cache_test(layer_obj)
     assert is_custom_layer == True
 

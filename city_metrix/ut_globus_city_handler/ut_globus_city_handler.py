@@ -1,5 +1,5 @@
 import os
-import sys
+import re
 import geopandas as gpd
 
 def search_for_ut_globus_city_by_contained_polygon(query_polygon):
@@ -16,7 +16,10 @@ def search_for_ut_globus_city_by_contained_polygon(query_polygon):
         return None
     else:
         label = max_overlap_record['Label']
+        # remove leading underscore and tif extension
         city_name = label.lstrip("_").rstrip(".tif").lower()
+        # remove trailing number with undersore
+        city_name = re.sub(r'_\d+$', '', city_name)
         return city_name
 
 # Example run
