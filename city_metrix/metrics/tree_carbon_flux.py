@@ -1,5 +1,4 @@
-from geopandas import GeoSeries
-
+import pandas as pd
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import CarbonFluxFromTrees
 from city_metrix.metrix_model import GeoZone, Metric
@@ -20,7 +19,7 @@ class TreeCarbonFlux__Tonnes(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> pd.Series:
 
         flux = CarbonFluxFromTrees().groupby(geo_zone).sum()
 
