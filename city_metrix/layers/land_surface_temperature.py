@@ -1,24 +1,31 @@
-from .landsat_collection_2 import LandsatCollection2
-from .layer import Layer, get_utm_zone_epsg, get_image_collection
-from dask.diagnostics import ProgressBar
 import ee
-import xarray
+
+from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from ..constants import GTIFF_FILE_EXTENSION
+
+DEFAULT_SPATIAL_RESOLUTION = 30
 
 class LandSurfaceTemperature(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     """
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
     """
-
-    def __init__(self, start_date="2013-01-01", end_date="2023-01-01", spatial_resolution=30, **kwargs):
+    def __init__(self, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
-        self.spatial_resolution = spatial_resolution
 
-    def get_data(self, bbox):
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
         def cloud_mask(image):
             qa = image.select('QA_PIXEL')
 
@@ -31,10 +38,11 @@ class LandSurfaceTemperature(Layer):
 
         l8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
 
+        ee_rectangle = bbox.to_ee_rectangle()
         l8_st = (l8
                  .select('ST_B10', 'QA_PIXEL')
                  .filter(ee.Filter.date(self.start_date, self.end_date))
-                 .filterBounds(ee.Geometry.BBox(*bbox))
+                 .filterBounds(ee_rectangle['ee_geometry'])
                  .map(cloud_mask)
                  .map(apply_scale_factors)
                  .reduce(ee.Reducer.mean())
@@ -43,8 +51,8 @@ class LandSurfaceTemperature(Layer):
         l8_st_ic = ee.ImageCollection(l8_st)
         data = get_image_collection(
             l8_st_ic,
-            bbox,
-            self.spatial_resolution,
+            ee_rectangle,
+            spatial_resolution,
             "LST"
         ).ST_B10_mean
 

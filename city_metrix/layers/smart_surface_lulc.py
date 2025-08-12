@@ -1,35 +1,49 @@
 import xarray as xr
 import numpy as np
 import pandas as pd
-import geopandas as gpd
 from shapely.geometry import CAP_STYLE, JOIN_STYLE
-from shapely.geometry import box
 from exactextract import exact_extract
 from geocube.api.core import make_geocube
 import warnings
 from rasterio.enums import Resampling
 from xrspatial.classify import reclassify
+
+from ..constants import GTIFF_FILE_EXTENSION
+
 warnings.filterwarnings('ignore', category=UserWarning)
 
-from .layer import Layer, get_utm_zone_epsg
+from city_metrix.metrix_model import Layer, GeoExtent
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .average_net_building_height import AverageNetBuildingHeight
 from .urban_land_use import UrbanLandUse
 from .overture_buildings import OvertureBuildings
 
+DEFAULT_SPATIAL_RESOLUTION = 10
 
 class SmartSurfaceLULC(Layer):
-    def __init__(self, land_cover_class=None, spatial_resolution=10, **kwargs):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["land_cover_class"]
+    MINOR_NAMING_ATTS = None
+
+    """
+    Attributes:
+        land_cover_class:
+    """
+    def __init__(self, land_cover_class=None, **kwargs):
         super().__init__(**kwargs)
         self.land_cover_class = land_cover_class
-        self.spatial_resolution = spatial_resolution
 
-    def get_data(self, bbox):
-        crs = get_utm_zone_epsg(bbox)
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        utm_crs = bbox.as_utm_bbox().crs
 
         # ESA world cover
-        esa_world_cover = EsaWorldCover(year=2021, spatial_resolution = self.spatial_resolution).get_data(bbox)
+        esa_world_cover = EsaWorldCover(year=2021).get_data(bbox=bbox, spatial_resolution = spatial_resolution)
         # ESA reclass and upsample
         def get_data_esa_reclass(esa_world_cover):
             reclass_map = {
@@ -54,7 +68,7 @@ class SmartSurfaceLULC(Layer):
             )
 
             esa_1m = reclassified_esa.rio.reproject(
-                dst_crs=crs,
+                dst_crs=utm_crs,
                 resolution=1,
                 resampling=Resampling.nearest
             )
@@ -65,17 +79,17 @@ class SmartSurfaceLULC(Layer):
 
 
         # Open space
-        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox).reset_index()
+        open_space_osm = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE_HEAT).get_data(bbox=bbox).reset_index()
         open_space_osm['Value'] = 10
 
 
         # Water
-        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox).reset_index()
+        water_osm = OpenStreetMap(osm_class=OpenStreetMapClass.WATER).get_data(bbox=bbox).reset_index()
         water_osm['Value'] = 20
 
 
         # Roads
-        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox).reset_index()
+        roads_osm = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(bbox=bbox).reset_index()
         if len(roads_osm) > 0:
             roads_osm['lanes'] = pd.to_numeric(roads_osm['lanes'], errors='coerce')
             # Get the average number of lanes per highway class
@@ -83,7 +97,7 @@ class SmartSurfaceLULC(Layer):
                      .drop(columns='geometry')
                      .groupby('highway')
                      # Calculate average and round up
-                     .agg(avg_lanes=('lanes', lambda x: np.ceil(np.nanmean(x)) if not np.isnan(x).all() else np.NaN))
+                     .agg(avg_lanes=('lanes', lambda x: np.ceil(np.nanmean(x)) if not np.isnan(x).all() else np.nan))
                      )
             # Handle NaN values in avg_lanes
             lanes['avg_lanes'] = lanes['avg_lanes'].fillna(2)
@@ -126,17 +140,17 @@ class SmartSurfaceLULC(Layer):
         for from_val, to_val in mapping.items():
             ulu_lulc = ulu_lulc.where(ulu_lulc != from_val, to_val)
         ulu_lulc_1m = ulu_lulc.rio.reproject(
-            dst_crs=crs, 
-            shape=esa_1m.shape, 
-            resampling=Resampling.nearest, 
+            dst_crs=utm_crs,
+            shape=esa_1m.shape,
+            resampling=Resampling.nearest,
             nodata=0
         )
 
         # Load ANBH layer
         anbh_data = AverageNetBuildingHeight().get_data(bbox)
         anbh_1m = anbh_data.rio.reproject_match(
-            match_data_array=esa_1m, 
-            resampling=Resampling.nearest, 
+            match_data_array=esa_1m,
+            resampling=Resampling.nearest,
             nodata=0
         )
 

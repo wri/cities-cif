@@ -1,32 +1,52 @@
 import ee
-from timezonefinder import TimezoneFinder
-from pytz import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 import cdsapi
 import os
 import xarray as xr
 import glob
 
-from .layer import Layer
+from city_metrix.constants import WGS_CRS, NETCDF_FILE_EXTENSION
+from city_metrix.metrix_model import Layer, GeoExtent
+from city_metrix.metrix_tools import is_date
 
 
 class Era5HottestDay(Layer):
-    def __init__(self, start_date="2023-01-01", end_date="2024-01-01", **kwargs):
+    OUTPUT_FILE_FORMAT = NETCDF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+        seasonal_utc_offset: UTC-offset in hours as determined for AOI and DST usage.
+    """
+    def __init__(self, start_date:str=None, end_date:str=None, seasonal_utc_offset:float=0, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
+        self.seasonal_utc_offset = seasonal_utc_offset
 
-    def get_data(self, bbox):
-        min_lon, min_lat, max_lon, max_lat = bbox
-        center_lon = (min_lon + max_lon) / 2
-        center_lat = (min_lat + max_lat) / 2
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 force_data_refresh=False):
+        # Note: spatial_resolution and resampling_method arguments are ignored.
+        if not is_date(self.start_date) or not is_date(self.end_date) :
+            raise Exception(f"Invalid date specification: start_date:{self.start_date}, end_date:{self.end_date}.")
+
+        geographic_bbox = bbox.as_geographic_bbox()
+
+        geographic_centroid = geographic_bbox.centroid
+        center_lon = geographic_centroid.x
+        center_lat = geographic_centroid.y
+
+        min_lon, min_lat, max_lon, max_lat = geographic_bbox.bounds
 
         dataset = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY")
 
         # Function to find the city mean temperature of each hour
         def hourly_mean_temperature(image):
-            point_crs = 'EPSG:4326'
+            point_crs = WGS_CRS
             hourly_mean = image.select('temperature_2m').reduceRegion(
                 reducer=ee.Reducer.mean(),
                 geometry=ee.Geometry.Point([center_lon, center_lat], point_crs),
@@ -36,8 +56,9 @@ class Era5HottestDay(Layer):
 
             return image.set('hourly_mean_temperature', hourly_mean)
 
+        ee_rectangle = geographic_bbox.to_ee_rectangle()
         era5 = ee.ImageCollection(dataset
-                                  .filterBounds(ee.Geometry.BBox(*bbox))
+                                  .filterBounds(ee_rectangle['ee_geometry'])
                                   .filterDate(self.start_date, self.end_date)
                                   .select('temperature_2m')
                                   )
@@ -54,31 +75,31 @@ class Era5HottestDay(Layer):
         day = highest_temperature_day[6:8]
         time = highest_temperature_day[-2:]
 
-        # Initialize TimezoneFinder
-        tf = TimezoneFinder()
-        # Find the timezone of the center point
-        tz_name = tf.timezone_at(lng=center_lon, lat=center_lat)
-        # Get the timezone object
-        local_tz = timezone(tz_name)
         # Define the UTC time
         utc_time = datetime.strptime(f'{year}-{month}-{day} {time}:00:00', "%Y-%m-%d %H:%M:%S")
-
-        # Convert UTC time to local time
-        local_time = utc_time.replace(tzinfo=pytz.utc).astimezone(local_tz)
-        local_date = local_time.date()
+        # apply utc offset to utc time to get local date
+        local_date = (utc_time + timedelta(hours=self.seasonal_utc_offset)).date()
 
         utc_times = []
         for i in range(0, 24):
-            local_time_hourly = local_tz.localize(datetime(local_date.year, local_date.month, local_date.day, i, 0))
-            utc_time_hourly = local_time_hourly.astimezone(pytz.utc)
-            utc_times.append(utc_time_hourly)
-
-        utc_dates = list(set([dt.date() for dt in utc_times]))
+            local_time_hour = datetime(local_date.year, local_date.month, local_date.day, i, 0)
+            # Convert local hour back to UTC and cast as UTC time
+            inverse_seasonal_utc_offset = -self.seasonal_utc_offset
+            utc_time_hourly = pytz.utc.localize(local_time_hour + timedelta(hours=inverse_seasonal_utc_offset))
+            # Rounded due to half hour offset in some cities
+            # See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for the range of possible values
+            # ERA5 only accepts whole hour UTC times
+            # if > 30 minutes, bump up an hour
+            if utc_time_hourly.minute > 30:
+                utc_time_hourly = utc_time_hourly + timedelta(hours=1)
+            utc_times.append(utc_time_hourly.replace(minute=0))
+        
+        utc_dates = sorted(list(set([dt.date() for dt in utc_times])))
 
         # {"dataType": "an"(analysis)/"fc"(forecast)/"pf"(perturbed forecast)}
         an_list = []
         fc_list = []
-        c = cdsapi.Client()
+        c = cdsapi.Client(url='https://cds.climate.copernicus.eu/api')
         for i in range(len(utc_dates)):
             target_file = f'download_{i}.grib'
             c.retrieve(
@@ -95,6 +116,10 @@ class Era5HottestDay(Layer):
                         'mean_surface_downward_long_wave_radiation_flux_clear_sky',
                         'sea_surface_temperature',
                         'total_precipitation',
+                        "surface_pressure",
+                        "total_sky_direct_solar_radiation_at_surface",
+                        "surface_solar_radiation_downwards",
+                        "surface_solar_radiation_downward_clear_sky",
                     ],
                     'year': utc_dates[i].year,
                     'month': utc_dates[i].month,

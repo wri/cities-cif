@@ -2,32 +2,40 @@ from setuptools import find_packages, setup
 
 setup(
     name="city_metrix",
-    version="0.1.2",
+    version="0.3.0",
     description="Module to calculate various metrics on cities.",
     packages=find_packages(),
-    author="Justin Terry",
+    author="Justin Terry, Kenn Cartier",
     license="MIT",
     install_requires=[
         "earthengine-api",
         "geocube",
         "odc-stac",
-        "geemap",
+        "geemap>=0.35.2",
         "pystac-client",
+        "xarray",
         "xarray-spatial",
         "xee",
         "rioxarray",
         "utm",
-        "osmnx>=2.0.0",
+        "osmnx>=2.0.1",
         "geopandas",
         "xarray",
         "s3fs",
-        "dask>=2023.11.0",
+        "dask[complete]",
         "boto3",
-        "overturemaps",
         "cdsapi",
-        "timezonefinder",
-        "scikit-image>=0.24.0",
+        "scikit-image>=0.25.2",
         "exactextract>=0.2.0",
-        "cfgrib"
+        "cfgrib",
+        "scipy",
+        "numpy",
+        "overturemaps",
+        "ipython",
+        "pvlib"
     ],
+    package_data={
+        'city_metrix': ['ut_globus_city_handler/global_ut_globus_cities.gpkg']
+    },
 )
+
