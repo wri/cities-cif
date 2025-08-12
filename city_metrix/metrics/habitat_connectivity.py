@@ -69,10 +69,10 @@ class _HabitatConnectivity(Metric):
 class HabitatConnectivityEffectiveMeshSize__Hectares(_HabitatConnectivity):
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
-        self.indicator_name == 'EMS'
+        self.indicator_name = 'EMS'
 
 class HabitatConnectivityCoherence__Percent(_HabitatConnectivity):
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
-        self.indicator_name == 'coherence'
+        self.indicator_name = 'coherence'
 
