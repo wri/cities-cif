@@ -1,5 +1,6 @@
 import math
 import os
+from datetime import datetime
 
 import utm
 from typing import Union
@@ -153,3 +154,14 @@ def buffer_bbox(lat_min, lon_min, lat_max, lon_max, buffer_meters):
         lat_max + lat_buffer,
         lon_max + lon_buffer
     )
+
+def is_date(string):
+    from dateutil.parser import parse
+    if string is None:
+        return False
+
+    try:
+        parse(string, False)
+        return True
+    except ValueError:
+        return False

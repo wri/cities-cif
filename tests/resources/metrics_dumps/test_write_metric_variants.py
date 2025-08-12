@@ -3,7 +3,7 @@
 import geopandas as gpd
 import pytest
 
-from city_metrix.constants import WGS_CRS, RW_TESTING_S3_BUCKET_URI, DEFAULT_STAGING_ENV
+from city_metrix.constants import WGS_CRS, CIF_TESTING_S3_BUCKET_URI, DEFAULT_DEVELOPMENT_ENV
 from city_metrix.metrics import *
 from tests.resources.bbox_constants import GEOZONE_FLORIANOPOLIS
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
@@ -25,7 +25,7 @@ ZONE = GEOZONE_FLORIANOPOLIS
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_large_city(target_folder):
     file_path = prep_output_path(target_folder, 'metric', 'natural_areas_percent.geojson')
-    NaturalAreasPercent().write_as_geojson(ZONE, s3_env=DEFAULT_STAGING_ENV, output_uri=file_path)
+    NaturalAreasPercent().write_as_geojson(ZONE, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
     assert verify_file_is_populated(file_path)
     cleanup_cache_files(None, None, None, file_path)
 
@@ -34,7 +34,7 @@ def test_write_polygonal_zones(target_folder):
     zone = IDN_Jakarta_zone
     file_path = prep_output_path(target_folder, 'metric', 'IDN_Jakarta_natural_areas_polygon.geojson')
 
-    NaturalAreasPercent().write_as_geojson(zone, s3_env=DEFAULT_STAGING_ENV, output_uri=file_path)
+    NaturalAreasPercent().write_as_geojson(zone, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
     assert verify_file_is_populated(file_path)
 
     indicator = NaturalAreasPercent().get_metric(zone)
@@ -48,7 +48,7 @@ def test_write_data_series_as_geojson(target_folder):
     zones = IDN_Jakarta_zone
 
     file_path = prep_output_path(target_folder, 'metric', 'data_series_csv.geojson')
-    BuiltLandWithHighLST().write_as_geojson(zones, s3_env=DEFAULT_STAGING_ENV, output_uri=file_path)
+    BuiltLandWithHighLST().write_as_geojson(zones, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
     assert verify_file_is_populated(file_path)
     cleanup_cache_files(None, None, None, file_path)
 
@@ -57,6 +57,6 @@ def test_write_data_series_as_csv(target_folder):
     zones = IDN_Jakarta_zone
 
     file_path = prep_output_path(target_folder, 'metric', 'data_series_csv.csv')
-    BuiltLandWithHighLST().write(zones, s3_env=DEFAULT_STAGING_ENV, output_uri=file_path)
+    BuiltLandWithHighLST().write(zones, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
     assert verify_file_is_populated(file_path)
     cleanup_cache_files(None, None, None, file_path)
