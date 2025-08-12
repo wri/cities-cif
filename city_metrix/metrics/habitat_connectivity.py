@@ -15,9 +15,9 @@ class _HabitatConnectivity(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, indicator_name:str, **kwargs):
         super().__init__(**kwargs)
-        self.indicator_name = None
+        self.indicator_name = indicator_name
 
     def get_metric(self,
                 geo_zone: GeoZone,
@@ -64,19 +64,34 @@ class _HabitatConnectivity(Metric):
                 if self.indicator_name == 'EMS':
                     result.append((sum([i**2 for i in cluster_areas]) / total_area) / 10000)
                 else: #self.indicator_name == 'coherence'
-                    esult.append((sum([i**2 for i in cluster_areas]) / (total_area**2)) * 100)
+                    result.append((sum([i**2 for i in cluster_areas]) / (total_area**2)) * 100)
             else:
                 result.append(0)
                 
         return pd.Series(result)
 
-class HabitatConnectivityEffectiveMeshSize__Hectares(_HabitatConnectivity):
-    def __init__(self,  **kwargs):
-        super().__init__(**kwargs)
-        self.indicator_name = 'EMS'
+class HabitatConnectivityEffectiveMeshSize__Hectares(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
 
-class HabitatConnectivityCoherence__Percent(_HabitatConnectivity):
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
-        self.indicator_name = 'coherence'
+
+    def get_metric(self,
+                geo_zone: GeoZone,
+                spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+        return _HabitatConnectivity(indicator_name='EMS').get_metric(geo_zone)
+
+class HabitatConnectivityCoherence__Percent(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+    def __init__(self,  **kwargs):
+        super().__init__(**kwargs)
+
+    def get_metric(self,
+                geo_zone: GeoZone,
+                spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+        return _HabitatConnectivity(indicator_name='coherence').get_metric(geo_zone)
 
