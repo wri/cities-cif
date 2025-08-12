@@ -2,7 +2,7 @@ import os
 import shutil
 
 from city_metrix import s3_client
-from city_metrix.constants import RW_CACHE_S3_BUCKET_URI
+from city_metrix.constants import CIF_CACHE_S3_BUCKET_URI
 from city_metrix.metrix_dao import remove_scheme_from_uri
 from tests.resources.conftest import get_target_folder_path, USE_WGS_BBOX
 from tests.tools.general_tools import create_target_folder
@@ -39,7 +39,7 @@ def cleanup_cache_files(base_class_name, cache_scheme, key_file, file_path):
         delete_path_on_os(file_path)
 
 def delete_cache_file_on_s3(file_key):
-    s3_bucket = remove_scheme_from_uri(RW_CACHE_S3_BUCKET_URI)
+    s3_bucket = remove_scheme_from_uri(CIF_CACHE_S3_BUCKET_URI)
     s3_client.delete_object(Bucket=s3_bucket, Key=file_key)
 
 def delete_path_on_os(path):

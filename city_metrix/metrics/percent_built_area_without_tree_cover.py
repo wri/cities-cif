@@ -1,5 +1,5 @@
-from geopandas import GeoSeries
-
+import pandas as pd
+from typing import Union
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import Metric, GeoZone
 from city_metrix.layers import TreeCanopyHeight, UrbanLandUse
@@ -19,12 +19,12 @@ class PercentBuiltAreaWithoutTreeCover(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
         """
         Get percentage of land (assuming zones are based on urban extents)
         with no tree cover (>3 Global Canopy Height dataset).
         :param geo_zone: GeoDataFrame with geometries to collect zonal stats on
-        :return: Pandas Series of percentages
+        :return: Pandas Series of percentages or DataFrame of value and zone
         """
 
         tree_canopy_height = TreeCanopyHeight(height=self.height)
@@ -35,5 +35,13 @@ class PercentBuiltAreaWithoutTreeCover(Metric):
         built_land = urban_land_use.groupby(geo_zone).count()
         built_land_with_tree_cover = urban_land_use.mask(tree_canopy_height).groupby(geo_zone).count()
 
-        indicator = 100 * (1 - (built_land_with_tree_cover.fillna(0) / built_land))
-        return indicator
+        if not isinstance(built_land_with_tree_cover, (int, float)):
+            built_land_with_tree_cover = built_land_with_tree_cover.fillna(0)
+
+        if isinstance(built_land_with_tree_cover, pd.DataFrame):
+            result = built_land_with_tree_cover.copy()
+            result['value'] = 100 * (1 - (built_land_with_tree_cover['value'] / built_land['value']))
+        else:
+            result = 100 * (1 - (built_land_with_tree_cover / built_land))
+
+        return result
