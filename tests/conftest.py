@@ -56,7 +56,7 @@ USA_OR_PORTLAND_ZONE = GeoZone(USA_OR_PORTLAND_BBOX)
 NLD_AMSTERDAM_ZONE = GeoZone(NLD_AMSTERDAM_BBOX)
 
 # Test zones for KBA
-BUENOS_AIRES_ZONE = BUENOS_AIRES_WGS84
+BUENOS_AIRES_ZONES = GeoZone(create_fishnet_gdf_for_testing(BUENOS_AIRES_WGS84.coords, 0.1).reset_index())
 
 
 class MockLayer(Layer):

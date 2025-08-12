@@ -17,9 +17,9 @@ def _rasterize(gdf, snap_to):
     else:
         raster = make_geocube(
             vector_data=gdf,
-            measurements=["index"],
+            measurements=["is_kba"],
             like=snap_to,
-        ).index
+        ).is_kba
 
     return raster.rio.reproject_match(snap_to)
 
@@ -44,10 +44,10 @@ class KeyBiodiversityAreas(Layer):
         else:
             country_bboxes = GeoDataFrame.from_file(f'{AWS_STEM}/{COUNTRYBBOXES_PATH}')
             matches = country_bboxes.loc[country_bboxes.intersects(bbox.as_geographic_bbox().polygon)]
-            if len(matches > 1):
+            if len(matches) > 1:
                 country_bounds = GeoDataFrame.from_file(f'{AWS_STEM}/{COUNTRYBOUNDS_PATH}')
                 matches = country_bounds.loc[country_bounds.intersects(bbox.as_geographic_bbox().polygon)]
-            country_code_iso3 = matches.countrycode[matches.index[0]]
+            country_code = matches.countrycode[matches.index[0]]
 
         utm_crs = bbox.as_utm_bbox().crs
 
