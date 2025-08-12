@@ -22,17 +22,17 @@ setup(
         "geopandas",
         "xarray",
         "s3fs",
-        "dask[complete]<=2025.2.0",
+        "dask[complete]",
         "boto3",
         "cdsapi",
-        "timezonefinder",
         "scikit-image>=0.25.2",
         "exactextract>=0.2.0",
         "cfgrib",
         "scipy",
         "numpy",
         "overturemaps",
-        "ipython"
+        "ipython",
+        "pvlib"
     ],
     package_data={
         'city_metrix': ['ut_globus_city_handler/global_ut_globus_cities.gpkg']

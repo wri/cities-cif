@@ -32,27 +32,40 @@ class OvertureBuildingsHeight(Layer):
         # Specify DEFAULT_DEVELOPMENT_ENV since below are not Dashboard layers
         overture_buildings = OvertureBuildings().get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV)
         ut_globus = UtGlobus(self.city).get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV)
-        ut_globus = ut_globus.to_crs(overture_buildings.crs)
+        if len(ut_globus) == 0:
+            result_building_heights = overture_buildings
+            result_building_heights.rename(
+                columns={"height": "overture_height"},
+                inplace=True,
+            )
+            result_building_heights['height'] = result_building_heights['overture_height']
+            result_building_heights['height_source'] = 'Overture'
+        else:
+            ut_globus = ut_globus.to_crs(overture_buildings.crs)
 
-        # Use the logic described in this page to determine height settings.
-        # https://gfw.atlassian.net/wiki/spaces/CIT/pages/1971912734/Primary+Raster+Layers+for+Thermal+Comfort+Modeling
+            # Use the logic described in this page to determine height settings.
+            # https://gfw.atlassian.net/wiki/spaces/CIT/pages/1971912734/Primary+Raster+Layers+for+Thermal+Comfort+Modeling
 
-        # Step 1 and 2 Get heights from UTGlobus and Overture
-        result_building_heights = _join_overture_and_utglobus(overture_buildings, ut_globus)
+            # Step 1 and 2 Get heights from UTGlobus and Overture
+            result_building_heights = _join_overture_and_utglobus(overture_buildings, ut_globus)
 
         # Step 3 and 4 Get heights based on two simple assumptions
         empty_height_blgs = result_building_heights[result_building_heights['height'].isna() |
                                                     (result_building_heights['height'] == 0)]
         if len(empty_height_blgs) > 0:
             # Determine height from num_floors column in Overture
-            storied_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].notna()].copy()
-            storied_bldgs['height'] = storied_bldgs['num_floors'] * STANDARD_BUILDING_FLOOR_HEIGHT_M
-            storied_bldgs['height_source'] = 'Overture_floors'
-            result_building_heights.loc[storied_bldgs.index, ['height', 'height_source']] = (
-                storied_bldgs)[['height', 'height_source']]
+            if 'num_floors' in empty_height_blgs.columns:
+                storied_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].notna()].copy()
+                storied_bldgs['height'] = storied_bldgs['num_floors'] * STANDARD_BUILDING_FLOOR_HEIGHT_M
+                storied_bldgs['height_source'] = 'Overture_floors'
+                result_building_heights.loc[storied_bldgs.index, ['height', 'height_source']] = (
+                    storied_bldgs)[['height', 'height_source']]
 
             # Set height base on assumption about size of small, one-storied buildings
-            unstoried_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].isna()].copy()
+            if 'num_floors' in empty_height_blgs.columns:
+                unstoried_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].isna()].copy()
+            else:
+                unstoried_bldgs = empty_height_blgs
             unstoried_bldgs = unstoried_bldgs[unstoried_bldgs.geometry.area <= STANDARD_SINGLE_STORY_BUILDING_SQM]
             unstoried_bldgs['height'] = STANDARD_BUILDING_FLOOR_HEIGHT_M
             unstoried_bldgs['height_source'] = 'Overture_small_area'

@@ -2,7 +2,7 @@
 # Execution configuration is specified in the conftest file
 import pytest
 
-from city_metrix.constants import DEFAULT_STAGING_ENV
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
 from city_metrix.metrics import *
 from tests.conftest import create_fishnet_gdf_for_testing
 from tests.resources.bbox_constants import BBOX_IDN_JAKARTA, BBOX_IDN_JAKARTA_LARGE
@@ -72,11 +72,19 @@ def test_write_canopy_area_per_resident_informal(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_era_5_met_preprocessing(target_folder):
+def test_write_era_5_met_preprocessingUmep(target_folder):
     zones = SAMPLE_TILED_SINGLE_ZONE
     file_path = prep_output_path(target_folder, 'metric','era_5_met_preprocessing.csv')
 
-    metric_obj = Era5MetPreprocessing()
+    metric_obj = Era5MetPreprocessingUmep(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=-8)
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_hospitals_per_ten_thousand_residents(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric','hospitals_per_ten_thousand_residents.csv')
+
+    metric_obj = HospitalsPerTenThousandResidents()
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -154,10 +162,10 @@ def test_write_percent_area_impervious(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_percent_built_area_without_tree_cover(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric', 'percent_built_area_without_tree_cover.geojson')
+    file_path = prep_output_path(target_folder, 'metric', 'percent_built_area_without_tree_cover.csv')
 
-    PercentBuiltAreaWithoutTreeCover().write(zones, file_path)
-    assert verify_file_is_populated(file_path)
+    metric_obj = PercentBuiltAreaWithoutTreeCover()
+    _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_percent_canopy_covered_population(target_folder):
@@ -217,7 +225,7 @@ def test_write_vegetation_water_change_gain_loss_ratio(target_folder):
 
 
 def _write_verify(metric_obj, zones, file_path):
-    metric_obj.write(geo_zone=zones, s3_env=DEFAULT_STAGING_ENV, output_uri=file_path)
+    metric_obj.write(geo_zone=zones, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
     assert verify_file_is_populated(file_path)
     if not PRESERVE_RESULTS_ON_OS:
         cleanup_cache_files(None, None, None, file_path)

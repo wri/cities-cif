@@ -5,10 +5,10 @@ from datetime import datetime
 import pytest
 import xarray as xr
 
-from city_metrix.constants import RW_TESTING_S3_BUCKET_URI, DEFAULT_DEVELOPMENT_ENV
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
 from city_metrix.layers import *
 from city_metrix.metrix_model import get_class_default_spatial_resolution
-from tests.resources.bbox_constants import GEOEXTENT_TERESINA_WGS84, GEOEXTENT_TERESINA_UTM, BBOX_USA_OR_PORTLAND_2
+from tests.resources.bbox_constants import GEOEXTENT_TERESINA, BBOX_USA_OR_PORTLAND_2
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.tools import get_test_bbox, cleanup_cache_files, prep_output_path, verify_file_is_populated, \
     get_file_count_in_folder
@@ -99,7 +99,7 @@ def test_get_nasa_dem_bicubic(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_nasa_dem(target_folder):
     file_path = prep_output_path(target_folder, 'layer','NasaDEM_small_city_wgs84.tif')
-    bbox = get_test_bbox(GEOEXTENT_TERESINA_WGS84)
+    bbox = get_test_bbox(GEOEXTENT_TERESINA)
     NasaDEM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
     assert verify_file_is_populated(file_path)
     cleanup_cache_files(None, None, None, file_path)
@@ -107,7 +107,7 @@ def test_write_nasa_dem(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_nasa_dem_utm(target_folder):
     file_path = prep_output_path(target_folder, 'layer','NasaDEM_small_city_utm.tif')
-    bbox = get_test_bbox(GEOEXTENT_TERESINA_UTM)
+    bbox = get_test_bbox(GEOEXTENT_TERESINA)
     NasaDEM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
     assert verify_file_is_populated(file_path)
     cleanup_cache_files(None, None, None, file_path)
