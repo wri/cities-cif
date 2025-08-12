@@ -3,6 +3,7 @@ import geopandas as gpd
 from typing import Union
 from city_metrix.metrix_model import Metric
 from city_metrix.layers import NaturalAreas
+from city_metrix.constants import CSV_FILE_EXTENSION
 import numpy as np
 import rasterio
 import shapely
