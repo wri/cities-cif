@@ -158,6 +158,10 @@ def test_natural_areas():
     assert_raster_stats(data, 1, 0.0, 1.0, 9797, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
+def test_nexgddpcmip6():
+    data = NexGddpCmip6().get_data(BBOX)
+    assert np.size(data) > 0
+
 def test_ndvi_sentinel2():
     data = NdviSentinel2(year=2023).get_data(BBOX)
     assert np.size(data) > 0
