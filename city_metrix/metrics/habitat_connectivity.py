@@ -35,7 +35,7 @@ class _HabitatConnectivity(Metric):
         zones = geo_zone.zones
         for rownum in range(len(zones)):
             zone = zones.iloc[[rownum]]
-            natarea_dataarray = worldcover_layer.get_data(GeoExtent(bbox=zone.total_bounds, crs=WGS_CRS)
+            natarea_dataarray = worldcover_layer.get_data(GeoExtent(bbox=zone.total_bounds, crs=WGS_CRS))
             natarea_shapes = rasterio.features.shapes(natarea_dataarray, connectivity=8, transform=natarea_dataarray.rio.transform())  # Polygonize the natural-areas raster
             natarea_shapes = list(natarea_shapes)
             na_geoms = [i[0] for i in natarea_shapes if i[1]==1]  # Only want the natural areas
