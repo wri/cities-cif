@@ -182,7 +182,7 @@ def test_percent_protected_area():
 
 def test_percent_water_cover():
     zones = GeoZone(USA_OR_PORTLAND_ZONE.zones.reset_index())  # No water in Indonesia test zone
-    indicator = PercentWaterCover().get_metric(zones)
+    indicator = WaterCover__Percent().get_metric(zones)
     expected_zone_size = len(zones.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
