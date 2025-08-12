@@ -1,15 +1,18 @@
-from geopandas import GeoDataFrame, GeoSeries
 import pandas as pd
-from pandas import DataFrame
+from city_metrix.constants import CSV_FILE_EXTENSION
 
 from city_metrix.layers import CamsGhg
-from city_metrix.metrics.metric import Metric
+from city_metrix.metrics.metric import Metric, GeoZone
 
 SUPPORTED_SPECIES = CamsGhg.SUPPORTED_SPECIES
 SUPPORTED_YEARS = CamsGhg.SUPPORTED_YEARS
 
 
-class GhgEmissions(Metric):
+class GhgEmissions__TonnesPerYear(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, species=None, sector="sum", co2e=True, year=2023, **kwargs):
         super().__init__(**kwargs)
         self.species = species
@@ -17,9 +20,9 @@ class GhgEmissions(Metric):
         self.co2e = co2e
         self.year = year
 
-    def get_data(
-        self, zones: GeoDataFrame, spatial_resolution: int = None
-    ) -> GeoSeries:
+    def get_metric(
+        self, zones: GeoZone, spatial_resolution: int = None
+    ) -> pd.Series:
 
         # supported years: 2010, 2015, 2020, 2023
         if not self.year in SUPPORTED_YEARS:
@@ -32,16 +35,20 @@ class GhgEmissions(Metric):
         return cams_ghg_mean
 
 
-class GhgTimeSeries(Metric):
+class GhgTimeSeries__TonnesPerYear(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
     def __init__(self, species=None, sector="sum", co2e=True, **kwargs):
         super().__init__(**kwargs)
         self.species = species
         self.sector = sector
         self.co2e = co2e
 
-    def get_data(
-        self, zones: GeoDataFrame, spatial_resolution: int = None
-    ) -> DataFrame:
+    def get_metric(
+        self, zones: GeoZone, spatial_resolution: int = None
+    ) -> pd.DataFrame:
 
         results = []
         for year in SUPPORTED_YEARS:

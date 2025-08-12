@@ -87,14 +87,14 @@ def test_era_5_met_preprocess_upenn():
     assert_metric_stats(indicator[['DHI']], 2, 0.00, 312.15, 24, 0)
 
 def test_ghg_emissions():
-    indicator = GhgEmissions().get_data(IDN_JAKARTA_TILED_ZONES)
+    indicator = GhgEmissions__TonnesPerYear().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 3093990.50, 3093990.50, 100, 0)
 
 def test_ghg_time_series():
-    indicator = GhgTimeSeries().get_data(IDN_JAKARTA_TILED_ZONES)
+    indicator = GhgTimeSeries__TonnesPerYear().get_data(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
     actual_indicator_size = indicator.index.size
     assert expected_zone_size == actual_indicator_size
