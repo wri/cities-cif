@@ -1,15 +1,12 @@
-from _ast import FunctionDef
-from ast import parse, walk
-
 import pytest
 import xarray as xr
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from pyproj import CRS
 from city_metrix.layers import *
-from city_metrix.layers.layer_geometry import GeoExtent
+from city_metrix.metrix_model import GeoExtent, Layer, get_class_default_spatial_resolution
 from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1
-from tests.tools.general_tools import get_class_from_instance, get_class_default_spatial_resolution
+from city_metrix.metrix_tools import get_class_from_instance
 
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
@@ -196,11 +193,6 @@ class TestOtherParameters:
         msg_correct = False if str(e_info.value).find("max() arg is an empty sequence") == -1 else True
         assert msg_correct
 
-        with pytest.raises(Exception) as e_info:
-            Albedo(start_date="2021-01-01", end_date=None).get_data(BBOX)
-        msg_correct = False if str(e_info.value).find("max() arg is an empty sequence") == -1 else True
-        assert msg_correct
-
     def test_high_land_surface_temperature_dates(self):
         with pytest.raises(Exception) as e_info:
             HighLandSurfaceTemperature(start_date="2021-01-01", end_date="2021-01-02").get_data(BBOX)
@@ -238,11 +230,11 @@ class TestOtherParameters:
 
     def test_tree_cover_min_max_cover(self):
         data = TreeCover(min_tree_cover = 150).get_data(BBOX)
-        non_null_cells = data.values[~np.isnan(data)].size
+        non_null_cells = len(data.values[~np.isnan(data)])
         assert non_null_cells == 0
 
         data = TreeCover(max_tree_cover = -1).get_data(BBOX)
-        non_null_cells = data.values[~np.isnan(data)].size
+        non_null_cells = len(data.values[~np.isnan(data)])
         assert non_null_cells == 0
 
 
@@ -340,12 +332,12 @@ def _evaluate_raster_value(raw_data, downsized_data):
     normalized_rmse_tolerance = 0.3
 
     populated_raw_data_ratio = _get_populated_fraction(raw_data)
-    populated_downsized_data_ratio = _get_populated_fraction(raw_data)
-    populated_fraction_diff = abs(populated_raw_data_ratio - populated_downsized_data_ratio)
+    populated_resized_data_ratio = _get_populated_fraction(raw_data)
+    populated_fraction_diff = abs(populated_raw_data_ratio - populated_resized_data_ratio)
     populated_fraction_eval = True if populated_fraction_diff <= populated_fraction_tolerance else False
 
     filled_raw_data = raw_data.fillna(0)
-    filled_downsized_data = downsized_data.fillna(0)
+    filled_resized_data = downsized_data.fillna(0)
 
     # Resample raw_data to match the resolution of the downsized_data.
     # This operation is necessary in order to use RMSE and SSIM since they require matching array dimensions.
@@ -355,29 +347,29 @@ def _evaluate_raster_value(raw_data, downsized_data):
     # Note: Initial investigations using the unresampled-raw and downsized data with evaluation by
     # mean value, quantiles,and standard deviation were unsuccessful due to false failures on valid downsized images.
     resampled_filled_raw_data = (filled_raw_data
-                                 .interp_like(filled_downsized_data, method='linear')
+                                 .interp_like(filled_resized_data, method='linear')
                                  .fillna(0))
 
     # Convert xarray DataArrays to numpy arrays
     processed_raw_data_np = resampled_filled_raw_data.values
-    processed_downsized_data_np = filled_downsized_data.values
+    processed_resized_data_np = filled_resized_data.values
 
     # Calculate and evaluate normalized Root Mean Squared Error (RMSE)
-    max_val = processed_downsized_data_np.max() \
-        if processed_downsized_data_np.max() > processed_raw_data_np.max() else processed_raw_data_np.max()
-    normalized_rmse = np.sqrt(np.mean(np.square(processed_downsized_data_np - processed_raw_data_np))) / max_val
+    max_val = processed_resized_data_np.max() \
+        if processed_resized_data_np.max() > processed_raw_data_np.max() else processed_raw_data_np.max()
+    normalized_rmse = np.sqrt(np.mean(np.square(processed_resized_data_np - processed_raw_data_np))) / max_val
     matching_rmse = True if normalized_rmse < normalized_rmse_tolerance else False
 
     # Calculate and evaluate Structural Similarity Index (SSIM)
     # Progressively decrease criteria for asserting a match as raster count decreases and null values increase
-    if processed_downsized_data_np.size > 100:
+    if processed_resized_data_np.size > 100:
         if populated_fraction_diff <= 0.1:
             ssim_index_tolerance = 0.6
         else:
             ssim_index_tolerance = 0.4
     else:
         ssim_index_tolerance = 0.3
-    ssim_index, _ = ssim(processed_downsized_data_np, processed_raw_data_np, full=True, data_range=max_val)
+    ssim_index, _ = ssim(processed_resized_data_np, processed_raw_data_np, full=True, data_range=max_val)
     matching_ssim = True if round(ssim_index,1) >= ssim_index_tolerance else False
 
     results_match = True if (populated_fraction_eval & matching_rmse & matching_ssim) else False

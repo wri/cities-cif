@@ -1,27 +1,45 @@
-from datetime import datetime
 import pandas as pd
 import numpy as np
-from geopandas import GeoDataFrame, GeoSeries
+from datetime import datetime
 
+from city_metrix.constants import CSV_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV
 from city_metrix.layers import Era5HottestDay
-from city_metrix.layers.layer_geometry import GeoExtent
-from city_metrix.metrics.metric import Metric
+from city_metrix.metrix_model import GeoExtent, Metric, GeoZone
+from city_metrix.metrix_tools import is_date
 
 
-class Era5MetPreprocessing(Metric):
-    def __init__(self, **kwargs):
+class Era5MetPreprocessingUmep(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+        seasonal_utc_offset: UTC-offset in hours as determined for AOI and DST usage.
+    """
+    def __init__(self, start_date:str=None, end_date:str=None, seasonal_utc_offset:float=0, **kwargs):
         super().__init__(**kwargs)
+        self.start_date = start_date
+        self.end_date = end_date
+        self.seasonal_utc_offset = seasonal_utc_offset
 
-    def get_data(self,
-                 zones: GeoDataFrame,
-                 spatial_resolution:int = None) -> GeoSeries:
+    def get_metric(self,
+                 geo_zone: GeoZone,
+                 spatial_resolution:int = None) -> pd.DataFrame:
         """
         Get ERA 5 data for the hottest day
-        :param zones: GeoDataFrame with geometries to collect zonal stats on
+        :param geo_zone: GeoZone with geometries to collect zonal stats on
         :return: Pandas Dataframe of data
         """
-        bbox = GeoExtent(zones.total_bounds, zones.crs.srs)
-        era_5_data = Era5HottestDay().get_data(bbox)
+        if not is_date(self.start_date) or not is_date(self.end_date):
+            raise Exception(f"Invalid date specification: start_date:{self.start_date}, end_date:{self.end_date}.")
+
+        bbox = GeoExtent(geo_zone.bounds, geo_zone.crs)
+
+        era_5_data = (Era5HottestDay(start_date=self.start_date, end_date=self.end_date, seasonal_utc_offset=self.seasonal_utc_offset)
+                      .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution))
 
         t2m_var = era_5_data.sel(variable='t2m').values
         u10_var = era_5_data.sel(variable='u10').values
