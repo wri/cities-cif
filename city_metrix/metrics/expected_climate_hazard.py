@@ -229,7 +229,7 @@ class AnnualVal(Hazard):
             result_dist[val] = np.sum(vals == val)
         return result_dist
 
-class FutureHeatwaveFrequency(Metric):
+class FutureHeatwaveFrequency__Heatwaves(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -256,7 +256,7 @@ class FutureHeatwaveFrequency(Metric):
             results[f'model_{model_rank+1}'].append(haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year))
         return pd.DataFrame({key: [round(i, 1) for i in results[key]] for key in results.keys()})
 
-class FutureHeatwaveMaxduration(Metric):
+class FutureHeatwaveMaxduration__Days(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -282,7 +282,7 @@ class FutureHeatwaveMaxduration(Metric):
             results[f'model_{model_rank+1}'].append(haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year))
         return pd.DataFrame({key: [round(i, 1) for i in results[key]] for key in results.keys()})
 
-class FutureDaysAbove35(Metric):
+class FutureDaysAbove35__Days(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -308,7 +308,7 @@ class FutureDaysAbove35(Metric):
             results[f'model_{model_rank+1}'].append(haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year))
         return pd.DataFrame({key: [round(i, 1) for i in results[key]] for key in results.keys()})
 
-class FutureAnnualMaxtemp(Metric):
+class FutureAnnualMaxtemp__DegreesCelsius(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -333,7 +333,7 @@ class FutureAnnualMaxtemp(Metric):
             results[f'model_{model_rank+1}'].append(haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year))
         return pd.DataFrame({key: [round(i, 1) for i in results[key]] for key in results.keys()})
 
-class FutureExtremePrecipitationDays(Metric):
+class FutureExtremePrecipitationDays__Days(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None

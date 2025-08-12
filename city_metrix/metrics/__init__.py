@@ -2,7 +2,7 @@ from .built_land_with_high_land_surface_temperature import BuiltLandWithHighLST
 from .built_land_with_low_surface_reflectivity import BuiltLandWithLowSurfaceReflectivity
 from .canopy_area_per_resident import *
 from .era_5_met_preprocessing import Era5MetPreprocessing
-from .expected_climate_hazard import FutureHeatwaveFrequency, FutureHeatwaveMaxduration, FutureDaysAbove35, FutureAnnualMaxtemp, FutureExtremePrecipitationDays
+from .expected_climate_hazard import FutureHeatwaveFrequency__Heatwaves, FutureHeatwaveMaxduration__Days, FutureDaysAbove35__Days, FutureAnnualMaxtemp__DegreesCelsius, FutureExtremePrecipitationDays__Days
 from .mean_pm2p5_exposure import *
 from .mean_tree_cover import MeanTreeCover
 from .natural_areas_percent import NaturalAreasPercent
