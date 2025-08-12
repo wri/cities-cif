@@ -191,7 +191,7 @@ def test_recreational_space_per_capita():
 
 def test_tree_carbon_flux():
     spatial_resolution=30
-    indicator = (TreeCarbonFlux()
+    indicator = (TreeCarbonFlux__Tonnes()
                  .get_metric(IDN_JAKARTA_TILED_ZONES, spatial_resolution=spatial_resolution))
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)

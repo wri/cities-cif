@@ -10,7 +10,7 @@ See Harris et al. 2021 Nature Climate Change (nature.com/articles/s41558-020-009
 
 """
 
-class TreeCarbonFlux(Metric):
+class TreeCarbonFlux__Tonnes(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
