@@ -24,7 +24,7 @@ class LandNearNaturalDrainage__Percent(Metric):
 
         fraction_area = neardrainage_area / total_area
 
-        isinstance(fraction_area, pd.DataFrame):
+        if isinstance(fraction_area, pd.DataFrame):
             result = fraction_area.copy()
             result['value'] = fraction_area['value'] * 100
         else:
