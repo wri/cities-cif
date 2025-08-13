@@ -1,5 +1,6 @@
 import numpy as np
-from geopandas import GeoSeries
+import pandas as pd
+import geopandas as gpd
 from pandas import Series
 from geocube.api.core import make_geocube
 from city_metrix.constants import CSV_FILE_EXTENSION
@@ -23,7 +24,7 @@ def _rasterize(gdf, snap_to):
 
     return raster.rio.reproject_match(snap_to)
 
-class HabitatTypesRestored(Metric):
+class HabitatTypesRestored__CoverTypes(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -33,7 +34,7 @@ class HabitatTypesRestored(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> GeoSeries:
+                 spatial_resolution:int = None) -> pd.Series:
 
         results = []
 
@@ -46,4 +47,4 @@ class HabitatTypesRestored(Metric):
             restored_cover_inzone = restored_array.where(restored_array==1) * cover_array * (zone_array + 1)
             results.append(len([i for i in np.unique(restored_cover_inzone) if not np.isnan(i)]))
 
-        return Series(results)
+        return pd.Series(results)
