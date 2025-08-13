@@ -8,13 +8,14 @@ class _NumberSpecies(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
+
     def __init__(
-        self, taxon=GBIFTaxonClass.BIRDS, start_year=2019, end_year=2024, **kwargs
+        self, taxon=GBIFTaxonClass.BIRDS, **kwargs
     ):
         super().__init__(**kwargs)
-        self.taxon = taxon
-        self.start_year = start_year
-        self.end_year = end_year
+        self.taxon = None
+        self.start_year = None
+        self.end_year = None
 
     def get_metric(
         self, zones: GeoZone, spatial_resolution: int = None
@@ -27,70 +28,39 @@ class _NumberSpecies(Metric):
             zone = zones.iloc[[rownum]]
             results.append(speciesrichness_layer.get_data(GeoExtent(zone.total_bounds)).species_count[0])
 
-        return Series(results)
+        return pd.Series(results)
 
 
-class BirdRichness__Species(Metric):
+class BirdRichness__Species(_NumberSpecies):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
     def __init__(self, start_year=2019, end_year=2024, **kwargs):
         super().__init__(**kwargs)
+        self.taxon = GBIFTaxonClass.BIRDS
         self.start_year = start_year
         self.end_year = end_year
 
-    def get_metric(
-        self, zones: GeoZone, spatial_resolution: int = None
-    ) -> pd.Series:
-        number_species = _NumberSpecies(
-            taxon=GBIFTaxonClass.BIRDS,
-            start_year=self.start_year,
-            end_year=self.end_year,
-        )
-
-        return number_species.get_data(zones)
-
-
-class ArthropodRichness__Species(Metric):
+class ArthropodRichness__Species(_NumberSpecies):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
     def __init__(self, start_year=2019, end_year=2024, **kwargs):
         super().__init__(**kwargs)
+        self.taxon = GBIFTaxonClass.ARTHROPODS
         self.start_year = start_year
         self.end_year = end_year
 
-    def get_metric(
-        self, zones: GeoZone, spatial_resolution: int = None
-    ) -> pd.Series:
-        number_species = _NumberSpecies(
-            taxon=GBIFTaxonClass.ARTHROPODS,
-            start_year=self.start_year,
-            end_year=self.end_year,
-        )
-
-        return number_species.get_data(zones)
-
-
-class VascularPlantRichness__Species(Metric):
+class VascularPlantRichness__Species(_NumberSpecies):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
     def __init__(self, start_year=2019, end_year=2024, **kwargs):
         super().__init__(**kwargs)
+        self.taxon = GBIFTaxonClass.VASCULAR_PLANTS
         self.start_year = start_year
         self.end_year = end_year
 
-    def get_metric(
-        self, zones: GeoDataFrame, spatial_resolution: int = None
-    ) -> GeoSeries:
-        number_species = _NumberSpecies(
-            taxon=GBIFTaxonClass.VASCULAR_PLANTS,
-            start_year=self.start_year,
-            end_year=self.end_year,
-        )
-
-        return number_species.get_data(zones)
