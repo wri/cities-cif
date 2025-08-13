@@ -182,7 +182,7 @@ def test_percent_protected_area():
 
 def test_percent_water_cover():
     indicator = WaterCover__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0, 0.081, 100, 0)
