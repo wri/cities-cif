@@ -181,12 +181,11 @@ def test_percent_protected_area():
     assert_metric_stats(indicator, 2, 0.00, 0.00, 100, 0)
 
 def test_percent_water_cover():
-    zones = GeoZone(USA_OR_PORTLAND_ZONE.zones.reset_index())  # No water in Indonesia test zone
-    indicator = WaterCover__Percent().get_metric(zones)
+    indicator = WaterCover__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(zones.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 3.35, 3.35, 1, 0)
+    assert_metric_stats(indicator, 2, 0, 0.081, 100, 0)
 
 def test_recreational_space_per_capita():
     spatial_resolution=100
