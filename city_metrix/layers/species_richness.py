@@ -1,7 +1,7 @@
 from enum import Enum
-from geopandas import GeoDataFrame
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 import requests
 import random, scipy
 from shapely.geometry import Point
@@ -52,7 +52,7 @@ class SpeciesRichness(Layer):
             )
         )
         offset = -self.LIMIT
-        observations = GeoDataFrame({"species": [], "geometry": []})
+        observations = gpd.GeoDataFrame({"species": [], "geometry": []})
         while offset == -self.LIMIT or not results["endOfRecords"]:
             offset += self.LIMIT
             url = "{0}?dataset_key={1}&taxon_key={2}&year={3},{4}&geometry={5}&limit={6}&offset={7}&hasCoordinate=true".format(
@@ -99,7 +99,7 @@ class SpeciesRichness(Layer):
             observations = pd.concat(
                 [
                     observations,
-                    GeoDataFrame(
+                    gpd.GeoDataFrame(
                         {
                             "species": [i[0] for i in has_species],
                             "geometry": [i[1] for i in has_species],
@@ -141,4 +141,4 @@ class SpeciesRichness(Layer):
         else:
             count_estimate = -9999
 
-        return GeoDataFrame({"species_count": [count_estimate], "geometry": [bbox.as_utm_bbox().polygon]}, crs=bbox.as_utm_bbox().crs)
+        return gpd.GeoDataFrame({"species_count": [count_estimate], "geometry": [bbox.as_utm_bbox().polygon]}, crs=bbox.as_utm_bbox().crs)

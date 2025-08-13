@@ -137,7 +137,7 @@ def test_number_species_birds():
     # TODO: specify seed
 
 def test_number_species_arthropods():
-    indicator = ArthropodRichness_Species().get_metric(USA_OR_PORTLAND_ZONE)
+    indicator = ArthropodRichness__Species().get_metric(USA_OR_PORTLAND_ZONE)
     expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
