@@ -53,7 +53,7 @@ class GhgTimeSeries__TonnesPerYear(Metric):
         results = []
         for year in SUPPORTED_YEARS:
             cams_ghg = CamsGhg(species=self.species, sector=self.sector, co2e=self.co2e, year=year)
-            results.append(cams_ghg.groupby(zones).mean())
+            results.append(cams_ghg.groupby(zones).mean().value)
         results_df = pd.concat(results, axis=1)
 
         # Update column names

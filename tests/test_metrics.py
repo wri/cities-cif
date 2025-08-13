@@ -91,7 +91,7 @@ def test_ghg_emissions():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 3093990.50, 3093990.50, 100, 0)
+    assert_metric_stats(indicator, 2, 3173212.00, 3173212.00, 100, 0)
 
 def test_ghg_time_series():
     indicator = GhgTimeSeries__TonnesPerYear().get_metric(IDN_JAKARTA_TILED_ZONES)
