@@ -1,9 +1,7 @@
 import xarray as xr
 import ee
 
-from .layer import Layer, get_image_collection
-from .layer_dao import retrieve_cached_city_data
-from .layer_geometry import GeoExtent
+from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 1113.1949  # 10 degrees of earth circumference
