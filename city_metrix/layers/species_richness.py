@@ -4,7 +4,7 @@ import pandas as pd
 import geopandas as gpd
 import requests
 import random, scipy
-from shapely.geometry import Point
+import shapely
 import rasterio
 
 from city_metrix.metrix_model import Layer, GeoExtent
@@ -76,7 +76,7 @@ class SpeciesRichness(Layer):
             has_species = [
                 (
                     result["species"],
-                    Point(
+                    shapely.geometry.Point(
                         float(result["decimalLongitude"]),
                         float(result["decimalLatitude"]),
                     ),

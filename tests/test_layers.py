@@ -241,7 +241,7 @@ def test_species_richness():
     data = SpeciesRichness(taxon=taxon).get_data(BBOX)
     assert np.size(data) > 0
     assert_vector_stats(data, "species_count", 1, 59, 59, 1, 0)
-    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+    assert get_projection_type(data.crs.srs) == ProjectionType.UTM
     random.seed(42)
 
 def test_tree_canopy_cover_mask():
