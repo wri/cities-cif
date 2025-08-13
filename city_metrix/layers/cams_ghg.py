@@ -74,7 +74,7 @@ class CamsGhg(Layer):
         else:  # Sum over all species
             allrasters_list = []
             for species in self.SUPPORTED_SPECIES.keys():
-                data_ic = ee.ImageCollection(f'projects/wri-datalab/cams-glob-ant/{species}')
+                data_ic = ee.ImageCollection(f'projects/wri-datalab/cams-glob-ant/{species}_v6-2')
                 data_im = data_ic.filter(ee.Filter.eq('year', self.year)).first().select('sum')
                 data_im = data_im.multiply(self.SUPPORTED_SPECIES[species]['GWP'])
                 data_im = data_im.multiply(1000000)  # Tg to tonne
