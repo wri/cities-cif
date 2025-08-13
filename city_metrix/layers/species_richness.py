@@ -135,10 +135,10 @@ class SpeciesRichness(Layer):
                 else:
                     asymptotes.append(-1)
             if -1 in asymptotes:
-                count_estimate = -9999
+                count_estimate = np.nan
             else:
                 count_estimate = -round(np.mean(asymptotes))
         else:
-            count_estimate = -9999
+            count_estimate = np.nan
 
         return gpd.GeoDataFrame({"species_count": [count_estimate], "geometry": [bbox.as_utm_bbox().polygon]}, crs=bbox.as_utm_bbox().crs)

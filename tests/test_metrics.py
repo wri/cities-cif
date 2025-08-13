@@ -1,4 +1,4 @@
-import math
+import math, random
 import pytest
 
 from city_metrix.metrics import *
@@ -129,36 +129,36 @@ def test_natural_areas():
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
 
 def test_number_species_birds():
+    random.seed(42)
     indicator = BirdRichness__Species().get_metric(USA_OR_PORTLAND_ZONE)
     expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    # Note: different runs will produce slightly different results because of randomization
-    # TODO: specify seed
+    assert_metric_stats(indicator, 1, 7.0, 15.0, 2, 98)
 
 def test_number_species_arthropods():
+    random.seed(42)
     indicator = ArthropodRichness__Species().get_metric(USA_OR_PORTLAND_ZONE)
     expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    # Note: different runs will produce slightly different results because of randomization
-    # TODO: specify seed
+    assert_metric_stats(indicator, 1, 22.0, 35.0, 2, 98)
 
 def test_number_species_vascular_plants():
+    random.seed(42)
     indicator = VascularPlantRichness__Species().get_metric(USA_OR_PORTLAND_ZONE)
     expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    # Note: different runs will produce slightly different results because of randomization
-    # TODO: specify seed
+    assert_metric_stats(indicator, 1, 8.0, 10.0, 2, 98)
 
 def test_biodiv_in_builtup_areas():
+    random.seed(42)
     indicator = BirdRichnessInBuiltUpArea__Species().get_metric(USA_OR_PORTLAND_ZONE)
     expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    # Note: different runs will produce slightly different results because of randomization
-    # TODO: specify seed
+    assert_metric_stats(indicator, 1, 7.0, 7.0, 1, 99)
 
 def test_percent_area_fracveg_exceeds_threshold():
     indicator = PercentAreaFracvegExceedsThreshold().get_metric(IDN_JAKARTA_TILED_ZONES)
