@@ -34,7 +34,7 @@ class HabitatTypesRestored__CoverTypes(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> pd.Series:
+                 spatial_resolution:int = None) -> pd.DataFrame:
 
         results = []
 
@@ -47,4 +47,6 @@ class HabitatTypesRestored__CoverTypes(Metric):
             restored_cover_inzone = restored_array.where(restored_array==1) * cover_array * (zone_array + 1)
             results.append(len([i for i in np.unique(restored_cover_inzone) if not np.isnan(i)]))
 
-        return pd.Series(results)
+        result_df = geo_zone.copy()
+        result_df['value'] = results
+        return result_df[['id', 'value']]
