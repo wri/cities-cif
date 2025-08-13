@@ -9,8 +9,8 @@ DEFAULT_SPATIAL_RESOLUTION = 1113.1949  # 10 degrees of earth circumference
 
 class CamsGhg(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["species"]
-    MINOR_LAYER_NAMING_ATTS = ["sector", "co2e"]
+    MAJOR_NAMING_ATTS = ["species"]
+    MINOR_NAMING_ATTS = ["sector", "co2e"]
 
     # Returned units: metric tonnes of GHG species or tonnes CO2e
     SUPPORTED_SPECIES = {
