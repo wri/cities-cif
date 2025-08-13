@@ -130,24 +130,32 @@ def test_natural_areas():
 
 def test_number_species_birds():
     indicator = BirdRichness__Species().get_metric(USA_OR_PORTLAND_ZONE)
-    expected_zone_size = USA_OR_PORTLAND_ZONE.geometry.size
-    actual_indicator_size = indicator.size
+    expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
+    actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     # Note: different runs will produce slightly different results because of randomization
     # TODO: specify seed
 
 def test_number_species_arthropods():
     indicator = ArthropodRichness_Species().get_metric(USA_OR_PORTLAND_ZONE)
-    expected_zone_size = USA_OR_PORTLAND_ZONE.geometry.size
-    actual_indicator_size = indicator.size
+    expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
+    actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     # Note: different runs will produce slightly different results because of randomization
     # TODO: specify seed
 
 def test_number_species_vascular_plants():
     indicator = VascularPlantRichness__Species().get_metric(USA_OR_PORTLAND_ZONE)
-    expected_zone_size = USA_OR_PORTLAND_ZONE.geometry.size
-    actual_indicator_size = indicator.size
+    expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    # Note: different runs will produce slightly different results because of randomization
+    # TODO: specify seed
+
+def test_biodiv_in_builtup_areas():
+    indicator = BirdRichnessInBuiltUpArea__Species().get_metric(USA_OR_PORTLAND_ZONE)
+    expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
+    actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     # Note: different runs will produce slightly different results because of randomization
     # TODO: specify seed

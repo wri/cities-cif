@@ -5,6 +5,7 @@ import pandas as pd
 import requests
 import random, scipy
 from shapely.geometry import Point
+import rasterio
 
 from city_metrix.metrix_model import Layer, GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
@@ -33,11 +34,12 @@ class SpeciesRichness(Layer):
 
     NUM_CURVEFITS = 200
 
-    def __init__(self, taxon=GBIFTaxonClass.BIRDS, start_year=2019, end_year=2024, **kwargs):
+    def __init__(self, taxon=GBIFTaxonClass.BIRDS, start_year=2019, end_year=2024, mask_layer=None, **kwargs):
         super().__init__(**kwargs)
         self.taxon = taxon
         self.start_year = start_year
         self.end_year = end_year
+        self.mask_layer = mask_layer
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  allow_cache_retrieval=False):
@@ -82,6 +84,18 @@ class SpeciesRichness(Layer):
                 for result in results["results"]
                 if "species" in result.keys()
             ]
+
+            if self.mask_layer is not None:  # Filter for points within unmasked region
+                mask_raster = (self.mask_layer.get_data(bbox) * 0) + 1
+                valid_shapes = rasterio.features.shapes(mask_raster, connectivity=8, transform=mask_raster.rio.transform())  # Polygonize the natural-areas raster
+                valid_shapes = list(valid_shapes)
+                valid_geoms = [i[0] for i in valid_shapes if i[1]==1]  # Only want the natural areas
+                valid_gdf = gpd.GeoDataFrame({'id': range(len(valid_geoms)), 'geometry': [shapely.Polygon(j['coordinates'][0]) for j in valid_geoms]})
+                valid_gdf_wgs = valid_gdf.dissolve().set_crs(bbox.as_utm_bbox().crs).to_crs('EPSG:4326')
+                has_species = [
+                    obs for obs in has_species if obs[1].intersects(valid_gdf_wgs.geometry.iloc[0])
+                ]
+            
             observations = pd.concat(
                 [
                     observations,
