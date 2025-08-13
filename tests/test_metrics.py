@@ -88,8 +88,8 @@ def test_era_5_met_preprocess_upenn():
 
 def test_habitat_effective_mesh_size():
     indicator = HabitatConnectivityEffectiveMeshSize__Hectares().get_metric(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = IDN_JAKARTA_TILED_ZONES.geometry.size
-    actual_indicator_size = indicator.size
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
 
 def test_mean_pm2p5_exposure_popweighted_children():
