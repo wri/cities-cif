@@ -1,7 +1,7 @@
 import pandas as pd
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import SpeciesRichness, GBIFTaxonClass
-from city_metrix.metrics.metric import Metric, GeoZone, GeoExtent
+from city_metrix.metrix_model import Metric, GeoZone, GeoExtent
 
 
 class _NumberSpecies(Metric):
