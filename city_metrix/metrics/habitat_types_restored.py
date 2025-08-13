@@ -47,6 +47,6 @@ class HabitatTypesRestored__CoverTypes(Metric):
             restored_cover_inzone = restored_array.where(restored_array==1) * cover_array * (zone_array + 1)
             results.append(len([i for i in np.unique(restored_cover_inzone) if not np.isnan(i)]))
 
-        result_df = geo_zone.copy()
+        result_df = geo_zone.zones.copy()
         result_df['value'] = results
         return result_df[['id', 'value']]
