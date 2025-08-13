@@ -2,7 +2,7 @@ import pandas as pd
 from city_metrix.constants import CSV_FILE_EXTENSION
 
 from city_metrix.layers import CamsGhg
-from city_metrix.metrics.metric import Metric, GeoZone
+from city_metrix.metrix_model import Metric, GeoZone
 
 SUPPORTED_SPECIES = CamsGhg.SUPPORTED_SPECIES
 SUPPORTED_YEARS = CamsGhg.SUPPORTED_YEARS
