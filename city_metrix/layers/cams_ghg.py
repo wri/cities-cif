@@ -23,9 +23,9 @@ class CamsGhg(Layer):
         'n2o': {'GWP': 265,  # https://www.ipcc.ch/site/assets/uploads/2018/02/WG1AR5_Chapter08_FINAL.pdf
                 'sectors': ['ags', 'awb', 'ene', 'fef', 'ind', 'ref', 'res', 'slv', 'sum', 'swd', 'tnr', 'tro']
                 },
-        'chlorinated-hydrocarbons': {'GWP': 400,  # Table A2 https://onlinelibrary.wiley.com/doi/pdf/10.1002/0470865172.app2# 
-                                     'sectors': ['ene', 'fef', 'ind', 'res', 'shp', 'slv', 'sum', 'tnr', 'tro']
-                                     }
+        #'chlorinated-hydrocarbons': {'GWP': 400,  # Table A2 https://onlinelibrary.wiley.com/doi/pdf/10.1002/0470865172.app2# 
+        #                             'sectors': ['ene', 'fef', 'ind', 'res', 'shp', 'slv', 'sum', 'tnr', 'tro']
+        #                             }
     }
     SUPPORTED_YEARS = [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
 
