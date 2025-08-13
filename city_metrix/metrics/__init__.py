@@ -1,6 +1,7 @@
 from .built_land_with_high_land_surface_temperature import BuiltLandWithHighLST
 from .built_land_with_low_surface_reflectivity import BuiltLandWithLowSurfaceReflectivity
 from .canopy_area_per_resident import *
+from .ghg_emissions import *
 from .era_5_met_preprocessing_umep import Era5MetPreprocessingUmep
 from .era_5_met_preprocessing_upenn import Era5MetPreprocessingUPenn
 from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResidents

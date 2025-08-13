@@ -86,6 +86,20 @@ def test_era_5_met_preprocess_upenn():
     assert len(indicator) == 24
     assert_metric_stats(indicator[['DHI']], 2, 0.00, 312.15, 24, 0)
 
+def test_ghg_emissions():
+    indicator = GhgEmissions__TonnesPerYear().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 3173212.00, 3173212.00, 100, 0)
+
+def test_ghg_time_series():
+    indicator = GhgTimeSeries__TonnesPerYear().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    # TODO Add value testing
+
 def test_mean_pm2p5_exposure_popweighted_children():
     indicator = MeanPM2P5ExposurePopWeightedChildren().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
@@ -181,7 +195,7 @@ def test_percent_protected_area():
     assert_metric_stats(indicator, 2, 0.00, 0.00, 100, 0)
 
 def test_recreational_space_per_capita():
-    spatial_resolution=100
+    spatial_resolution = 100
     indicator = (RecreationalSpacePerCapita()
                  .get_metric(IDN_JAKARTA_TILED_ZONES, spatial_resolution=spatial_resolution))
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
