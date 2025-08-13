@@ -15,9 +15,9 @@ class _HabitatConnectivity(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, indicator_name:str, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.indicator_name = indicator_name
+        self.indicator_name = None
 
     def get_metric(self,
                 geo_zone: GeoZone,
@@ -70,28 +70,23 @@ class _HabitatConnectivity(Metric):
                 
         return pd.Series(result)
 
-class HabitatConnectivityEffectiveMeshSize__Hectares(Metric):
+class HabitatConnectivityEffectiveMeshSize__Hectares(_HabitatConnectivity):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
+        self.indicator_name = 'EMS'
 
-    def get_metric(self,
-                geo_zone: GeoZone,
-                spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-        return _HabitatConnectivity(indicator_name='EMS').get_metric(geo_zone)
-
-class HabitatConnectivityCoherence__Percent(Metric):
+class HabitatConnectivityCoherence__Percent(_HabitatConnectivity):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
+
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
+        self.indicator_name = 'coherence'
 
-    def get_metric(self,
-                geo_zone: GeoZone,
-                spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-        return _HabitatConnectivity(indicator_name='coherence').get_metric(geo_zone)
+    
 
