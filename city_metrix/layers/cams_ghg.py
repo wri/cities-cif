@@ -58,7 +58,7 @@ class CamsGhg(Layer):
 
         if self.species is not None:
             data_ic = ee.ImageCollection(f'projects/wri-datalab/cams-glob-ant/{self.species}_v6-2')
-            data_im = data_ic.filter(ee.Filter.eq('year', self.year)).select(self.sector).first()
+            data_im = data_ic.filter(ee.Filter.eq('year', self.year)).first().select(self.sector)
             if self.co2e:
                 data_im = data_im.multiply(self.SUPPORTED_SPECIES[self.species]['GWP'])
             data_im = data_im.multiply(1000000)  # Tg to tonne
@@ -69,13 +69,13 @@ class CamsGhg(Layer):
                 ee_rectangle,
                 spatial_resolution,
                 "CAMS GHG"
-            ).b1
+            )['self.species']
 
         else:  # Sum over all species
             allrasters_list = []
             for species in self.SUPPORTED_SPECIES.keys():
                 data_ic = ee.ImageCollection(f'projects/wri-datalab/cams-glob-ant/{species}')
-                data_im = data_ic.filter(ee.Filter.eq('year', self.year)).filter(ee.Filter.eq('sector', 'sum')).first()
+                data_im = data_ic.filter(ee.Filter.eq('year', self.year)).first().select('sum')
                 data_im = data_im.multiply(self.SUPPORTED_SPECIES[species]['GWP'])
                 data_im = data_im.multiply(1000000)  # Tg to tonne
                 allrasters_list.append(data_im)
@@ -89,6 +89,6 @@ class CamsGhg(Layer):
                 ee_rectangle,
                 spatial_resolution,
                 "CAMS GHG"
-            ).b1
+            )['sum']
 
         return data
