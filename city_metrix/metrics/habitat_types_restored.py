@@ -49,4 +49,5 @@ class HabitatTypesRestored__CoverTypes(Metric):
 
         result_df = geo_zone.zones.copy()
         result_df['value'] = results
-        return result_df[['id', 'value']]
+        result_df['zone'] = result_df['id']
+        return result_df[['zone', 'value']]
