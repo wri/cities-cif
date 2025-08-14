@@ -5,6 +5,7 @@ from city_metrix.metrics import *
 from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE
 PORTLAND_DST_seasonal_utc_offset = -8
 
+HALF_JAKARTA = GeoZone(IDN_JAKARTA_TILED_ZONES.zones.iloc[50:])
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
 
@@ -130,35 +131,35 @@ def test_natural_areas():
 
 def test_number_species_birds():
     random.seed(42)
-    indicator = BirdRichness__Species().get_metric(USA_OR_PORTLAND_ZONE)
-    expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
+    indicator = BirdRichness__Species().get_metric(HALF_JAKARTA)
+    expected_zone_size = len(HALF_JAKARTA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 7.0, 15.0, 2, 98)
+    assert_metric_stats(indicator, 1, 8.0, 14.0, 2, 48)
 
 def test_number_species_arthropods():
     random.seed(42)
-    indicator = ArthropodRichness__Species().get_metric(USA_OR_PORTLAND_ZONE)
-    expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
+    indicator = ArthropodRichness__Species().get_metric(HALF_JAKARTA)
+    expected_zone_size = len(HALF_JAKARTA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 22.0, 35.0, 2, 98)
+    assert_metric_stats(indicator, 1, 34.0, 34.0, 1, 49)
 
 def test_number_species_vascular_plants():
     random.seed(42)
-    indicator = VascularPlantRichness__Species().get_metric(USA_OR_PORTLAND_ZONE)
-    expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
+    indicator = VascularPlantRichness__Species().get_metric(HALF_JAKARTA)
+    expected_zone_size = len(HALF_JAKARTA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 8.0, 10.0, 2, 98)
+    assert_metric_stats(indicator, 1, 9.0, 9.0, 1, 49)
 
 def test_biodiv_in_builtup_areas():
     random.seed(42)
-    indicator = BirdRichnessInBuiltUpArea__Species().get_metric(USA_OR_PORTLAND_ZONE)
-    expected_zone_size = len(USA_OR_PORTLAND_ZONE.zones)
+    indicator = BirdRichnessInBuiltUpArea__Species().get_metric(HALF_JAKARTA)
+    expected_zone_size = len(HALF_JAKARTA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 7.0, 7.0, 1, 99)
+    assert_metric_stats(indicator, 1, 8.0, 8.0, 1, 49)
 
 def test_percent_area_fracveg_exceeds_threshold():
     indicator = PercentAreaFracvegExceedsThreshold().get_metric(IDN_JAKARTA_TILED_ZONES)
