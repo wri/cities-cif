@@ -7,6 +7,7 @@ from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResiden
 from .mean_pm2p5_exposure import *
 from .mean_tree_cover import MeanTreeCover
 from .natural_areas_percent import NaturalAreasPercent
+from .number_species import *
 from .percent_area_fracveg_exceeds_threshold import PercentAreaFracvegExceedsThreshold
 from .percent_area_impervious import PercentAreaImpervious
 from .percent_built_area_without_tree_cover import PercentBuiltAreaWithoutTreeCover
