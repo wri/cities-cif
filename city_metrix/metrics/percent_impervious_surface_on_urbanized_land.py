@@ -22,12 +22,16 @@ class PercentImperviousSurfaceOnUrbanizedLand(Metric):
         urban_layer = UrbanExtents()
         area_layer = WorldPop()
 
-        fraction = area_layer.mask(urban_layer).mask(impervious_layer).groupby(geo_zone).count() / area_layer.mask(urban_layer).groupby(geo_zone).count()
+        impervious_area = area_layer.mask(urban_layer).mask(impervious_layer).groupby(geo_zone).count()
+        urban_area = area_layer.mask(urban_layer).groupby(geo_zone).count()
 
-        if isinstance(fraction, pd.DataFrame):
-            result = fraction.copy()
-            result['value'] = fraction['value'] * 100
+        if not isinstance(impervious_area, (int, float)):
+            impervious_area = impervious_area.fillna(0)
+
+        if isinstance(impervious_area, pd.DataFrame):
+            result = impervious_area.copy()
+            result['value'] = 100 * (impervious_area['value'] / urban_area['value'])
         else:
-            result = fraction * 100
+            result = 100 * (impervious_area / urban_area)
 
         return result
