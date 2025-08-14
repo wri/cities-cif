@@ -30,7 +30,10 @@ class _NumberSpecies(Metric):
             zone = zones.iloc[[rownum]]
             results.append(speciesrichness_layer.get_data(GeoExtent(zone.total_bounds)).species_count[0])
 
-        return pd.Series(results)
+        result_gdf = zones.copy()
+        result_gdf['value'] = results
+        result_gdf['zone'] = zones['id']
+        return result_gdf[['zone', 'value']]
 
 
 class BirdRichness__Species(_NumberSpecies):
