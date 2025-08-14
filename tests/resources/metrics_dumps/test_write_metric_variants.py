@@ -24,8 +24,8 @@ ZONE = GEOZONE_FLORIANOPOLIS
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_large_city(target_folder):
-    file_path = prep_output_path(target_folder, 'metric', 'natural_areas_percent.geojson')
-    NaturalAreasPercent().write_as_geojson(ZONE, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
+    file_path = prep_output_path(target_folder, 'metric', 'percent_natural_areas.geojson')
+    PercentNaturalAreas().write_as_geojson(ZONE, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
     assert verify_file_is_populated(file_path)
     cleanup_cache_files(None, None, None, file_path)
 
@@ -34,10 +34,10 @@ def test_write_polygonal_zones(target_folder):
     zone = IDN_Jakarta_zone
     file_path = prep_output_path(target_folder, 'metric', 'IDN_Jakarta_natural_areas_polygon.geojson')
 
-    NaturalAreasPercent().write_as_geojson(zone, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
+    PercentNaturalAreas().write_as_geojson(zone, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
     assert verify_file_is_populated(file_path)
 
-    indicator = NaturalAreasPercent().get_metric(zone)
+    indicator = PercentNaturalAreas().get_metric(zone)
     expected_zone_size = IDN_Jakarta_zone.zones.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size

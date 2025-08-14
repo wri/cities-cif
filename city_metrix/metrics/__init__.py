@@ -4,14 +4,14 @@ from .canopy_area_per_resident import *
 from .era_5_met_preprocessing_umep import Era5MetPreprocessingUmep
 from .era_5_met_preprocessing_upenn import Era5MetPreprocessingUPenn
 from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResidents
-from .impervious_surface_on_urbanized_land import ImperviousSurfaceOnUrbanizedLand__Percent
 from .mean_pm2p5_exposure import *
 from .mean_tree_cover import MeanTreeCover
-from .natural_areas_percent import NaturalAreasPercent
 from .percent_area_fracveg_exceeds_threshold import PercentAreaFracvegExceedsThreshold
 from .percent_area_impervious import PercentAreaImpervious
 from .percent_built_area_without_tree_cover import PercentBuiltAreaWithoutTreeCover
 from .percent_canopy_covered_population import *
+from .percent_impervious_surface_on_urbanized_land import PercentImperviousSurfaceOnUrbanizedLand
+from .percent_natural_areas import PercentNaturalAreas
 from .percent_protected_area import PercentProtectedArea
 from .recreational_space_per_capita import RecreationalSpacePerCapita
 from .urban_open_space import UrbanOpenSpace

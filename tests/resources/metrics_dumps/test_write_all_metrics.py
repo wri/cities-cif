@@ -136,14 +136,6 @@ def test_write_mean_tree_cover(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_natural_areas(target_folder):
-    zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','natural_areas.csv')
-
-    metric_obj = NaturalAreasPercent()
-    _write_verify(metric_obj, zones, file_path)
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_percent_area_fracveg_exceeds_threshold(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(target_folder, 'metric','percent_area_fracveg_exceeds_threshold.csv')
@@ -173,6 +165,22 @@ def test_write_percent_canopy_covered_population(target_folder):
     file_path = prep_output_path(target_folder, 'metric','percent_canopy_covered_population.csv')
 
     metric_obj = PercentCanopyCoveredPopulation()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_natural_areas(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric','percent_impervious_surface_on_urbanized_land.csv')
+
+    metric_obj = PercentImperviousSurfaceOnUrbanizedLand()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_natural_areas(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric','percent_natural_areas.csv')
+
+    metric_obj = PercentNaturalAreas()
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
