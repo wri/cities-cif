@@ -114,13 +114,6 @@ def test_mean_pm2p5_exposure_popweighted_informal():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, None, None, None, 0, 100)
 
-def test_mean_tree_cover():
-    indicator = MeanTreeCover__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 5.7, 32.6, 100, 0)
-
 def test_natural_areas():
     indicator = NaturalAreasPercent().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
@@ -172,6 +165,13 @@ def test_percent_canopy_covered_population_informal():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
+
+def test_percent_mean_tree_cover():
+    indicator = PercentMeanTreeCover().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 1, 5.7, 32.6, 100, 0)
 
 def test_percent_protected_area():
     indicator = PercentProtectedArea().get_metric(IDN_JAKARTA_TILED_ZONES)

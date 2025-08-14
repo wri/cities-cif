@@ -128,14 +128,6 @@ def test_write_mean_pm2p5_exposure_pop_weighted_informal(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_mean_tree_cover(target_folder):
-    zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','mean_tree_cover.csv')
-
-    metric_obj = MeanTreeCover()
-    _write_verify(metric_obj, zones, file_path)
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_natural_areas(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(target_folder, 'metric','natural_areas.csv')
@@ -173,6 +165,14 @@ def test_write_percent_canopy_covered_population(target_folder):
     file_path = prep_output_path(target_folder, 'metric','percent_canopy_covered_population.csv')
 
     metric_obj = PercentCanopyCoveredPopulation()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_percent_mean_tree_cover(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric','percent_mean_tree_cover.csv')
+
+    metric_obj = PercentMeanTreeCover()
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
