@@ -166,8 +166,8 @@ def test_percent_canopy_covered_population_informal():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
 
-def test_percent_mean_tree_cover():
-    indicator = PercentMeanTreeCover().get_metric(IDN_JAKARTA_TILED_ZONES)
+def test_mean_tree_cover__percent():
+    indicator = MeanTreeCover__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
