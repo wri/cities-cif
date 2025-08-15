@@ -6,7 +6,7 @@ from city_metrix.layers import UrbanExtents, ImperviousSurface, WorldPop
 from city_metrix.metrix_model import GeoZone, Metric
 
 
-class PercentImperviousSurfaceOnUrbanizedLand(Metric):
+class ImperviousSurfaceOnUrbanizedLand__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None

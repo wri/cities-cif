@@ -88,6 +88,14 @@ def test_write_hospitals_per_ten_thousand_residents(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_impervious_surface_on_urbanized_land__percent(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric','impervious_surface_on_urbanized_land__percent.csv')
+
+    metric_obj = ImperviousSurfaceOnUrbanizedLand__Percent()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_mean_pm2p5_exposure(target_folder):
     zones = SAMPLE_TILED_LARGE_ZONES
     file_path = prep_output_path(target_folder, 'metric','mean_pm2p5_exposure.csv')
@@ -136,6 +144,14 @@ def test_write_mean_tree_cover(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_natural_areas__percent(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric','natural_areas__percent.csv')
+
+    metric_obj = NaturalAreas__Percent()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_percent_area_fracveg_exceeds_threshold(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(target_folder, 'metric','percent_area_fracveg_exceeds_threshold.csv')
@@ -165,22 +181,6 @@ def test_write_percent_canopy_covered_population(target_folder):
     file_path = prep_output_path(target_folder, 'metric','percent_canopy_covered_population.csv')
 
     metric_obj = PercentCanopyCoveredPopulation()
-    _write_verify(metric_obj, zones, file_path)
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_percent_impervious_surface_on_urbanized_land(target_folder):
-    zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','percent_impervious_surface_on_urbanized_land.csv')
-
-    metric_obj = PercentImperviousSurfaceOnUrbanizedLand()
-    _write_verify(metric_obj, zones, file_path)
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_percent_natural_areas(target_folder):
-    zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','percent_natural_areas.csv')
-
-    metric_obj = PercentNaturalAreas()
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
