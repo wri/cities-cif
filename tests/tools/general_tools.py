@@ -1,9 +1,18 @@
 import os
+<<<<<<< HEAD
 import shapely.geometry as geometry
+=======
+import shutil
+>>>>>>> main
 import numpy as np
 import geopandas as gpd
 from geopandas import GeoDataFrame
 from city_metrix.layers.layer import get_utm_zone_epsg
+
+
+from city_metrix.cache_manager import build_file_key, build_cache_name
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, DEFAULT_STAGING_ENV
+from city_metrix.metrix_model import Layer
 
 
 def is_valid_path(path: str):
@@ -11,7 +20,10 @@ def is_valid_path(path: str):
 
 def create_target_folder(folder_path, delete_existing_files: bool):
     if os.path.isdir(folder_path) is False:
-        os.makedirs(folder_path)
+        try:
+            os.makedirs(folder_path)
+        except OSError as e:
+            print(e)
     elif delete_existing_files is True:
         remove_all_files_in_directory(folder_path)
 
@@ -26,6 +38,7 @@ def remove_all_files_in_directory(directory):
         except Exception as e:
             print(f"Error: {e}")
 
+<<<<<<< HEAD
 def post_process_layer(data, value_threshold=0.4, convert_to_percentage=True):
     """
     Applies the standard post-processing adjustment used for rendering of NDVI including masking
@@ -43,6 +56,8 @@ def post_process_layer(data, value_threshold=0.4, convert_to_percentage=True):
         data = convert_ratio_to_percentage(data)
 
     return data
+=======
+>>>>>>> main
 
 def convert_ratio_to_percentage(data):
     """
@@ -60,11 +75,8 @@ def convert_ratio_to_percentage(data):
 
     return values_as_percent
 
-def get_class_default_spatial_resolution(obj):
-    cls = get_class_from_instance(obj)
-    default_spatial_resolution = cls.spatial_resolution
-    return default_spatial_resolution
 
+<<<<<<< HEAD
 def get_class_from_instance(obj):
     cls = obj.__class__()
     return cls
@@ -111,3 +123,11 @@ def get_zones_from_bbox_info(bbox_info, cell_size):
     max_y = bbox_info.bounds[3]
     zones = create_fishnet_grid(min_x, min_y, max_x, max_y, cell_size)
     return zones
+=======
+def get_test_cache_variables(class_obj, geo_extent):
+    s3_env = DEFAULT_DEVELOPMENT_ENV
+    file_uri, file_key, feature_id, is_custom_object = build_file_key(s3_env, class_obj, geo_extent)
+    file_format = class_obj.OUTPUT_FILE_FORMAT
+    feature_with_extension = f"{feature_id}.{file_format}"
+    return file_key, file_uri, feature_with_extension, is_custom_object
+>>>>>>> main

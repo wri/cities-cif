@@ -1,77 +1,105 @@
 import ee
-import xarray
-from dask.diagnostics import ProgressBar
 
-from .layer import Layer, get_utm_zone_epsg, get_image_collection
+from city_metrix.metrix_model import (Layer, get_image_collection, set_resampling_for_continuous_raster,
+                                      validate_raster_resampling_method, GeoExtent)
+from ..constants import GTIFF_FILE_EXTENSION
+from datetime import datetime, timedelta
+
+DEFAULT_SPATIAL_RESOLUTION = 10
+DEFAULT_RESAMPLING_METHOD = 'bilinear'
 
 class Albedo(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["threshold"]
+    MAX_CLOUD_PROB = 30
+    S2_ALBEDO_EQN = '((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))'
+
     """
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
-        spatial_resolution: raster resolution in meters (see https://github.com/stac-extensions/raster)
         threshold: threshold value for filtering the retrieval
     """
-
-    def __init__(self, start_date="2021-01-01", end_date="2022-01-01", spatial_resolution=10, threshold=None, **kwargs):
+    def __init__(self, start_date:str=None, end_date:str=None, threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
-        self.spatial_resolution = spatial_resolution
         self.threshold = threshold
+    
+    ## METHODS
+    ## get cloudmasked image collection
+    def mask_and_count_clouds(self, s2wc, geom):
+        s2wc = ee.Image(s2wc)
+        geom = ee.Geometry(geom.geometry())
+        is_cloud = (ee.Image(s2wc.get('cloud_mask'))
+                    .gt(self.MAX_CLOUD_PROB)
+                    .rename('is_cloud')
+                    )
 
-    def get_data(self, bbox):
-        S2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
-        S2C = ee.ImageCollection("COPERNICUS/S2_CLOUD_PROBABILITY")
+        nb_cloudy_pixels = is_cloud.reduceRegion(
+            reducer=ee.Reducer.sum().unweighted(),
+            geometry=geom,
+            scale=self.spatial_resolution,
+            maxPixels=1e9
+        )
+        mask = (s2wc
+                .updateMask(is_cloud.eq(0))
+                .set('nb_cloudy_pixels',nb_cloudy_pixels.getNumber('is_cloud'))
+                .divide(10000)
+                )
 
-        MAX_CLOUD_PROB = 30
-        S2_ALBEDO_EQN = '((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))'
+        return mask
 
-        ## METHODS
+    def mask_clouds_and_rescale(self, im):
+        clouds = ee.Image(im.get('cloud_mask')
+                          ).select('probability')
+        mask = im.updateMask(clouds
+                             .lt(self.MAX_CLOUD_PROB)
+                             ).divide(10000)
 
-        ## get cloudmasked image collection
+        return mask
 
-        def mask_and_count_clouds(s2wc, geom):
-            s2wc = ee.Image(s2wc)
-            geom = ee.Geometry(geom.geometry())
-            is_cloud = ee.Image(s2wc.get('cloud_mask')).gt(MAX_CLOUD_PROB).rename('is_cloud')
-            nb_cloudy_pixels = is_cloud.reduceRegion(
-                reducer=ee.Reducer.sum().unweighted(),
-                geometry=geom,
-                scale=self.spatial_resolution,
-                maxPixels=1e9
-            )
-            return s2wc.updateMask(is_cloud.eq(0)).set('nb_cloudy_pixels',
-                                                       nb_cloudy_pixels.getNumber('is_cloud')).divide(10000)
-
-        def mask_clouds_and_rescale(im):
-            clouds = ee.Image(im.get('cloud_mask')).select('probability')
-            return im.updateMask(clouds.lt(MAX_CLOUD_PROB)).divide(10000)
-
-        def get_masked_s2_collection(roi, start, end):
-            criteria = (ee.Filter.And(
-                ee.Filter.date(start, end),
-                ee.Filter.bounds(roi)
-            ))
-            s2 = S2.filter(criteria)  # .select('B2','B3','B4','B8','B11','B12')
-            s2c = S2C.filter(criteria)
-            s2_with_clouds = (ee.Join.saveFirst('cloud_mask').apply(**{
+    def get_masked_s2_collection(self, roi, start, end):
+        criteria = (ee.Filter.And(
+            ee.Filter.date(start, end),
+            ee.Filter.bounds(roi)
+        ))
+        s2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED").filter(criteria)  # .select('B2','B3','B4','B8','B11','B12')
+        s2c = ee.ImageCollection("COPERNICUS/S2_CLOUD_PROBABILITY").filter(criteria)
+        s2_with_clouds = (
+            ee.Join.saveFirst('cloud_mask')
+            .apply(**{
                 'primary': ee.ImageCollection(s2),
                 'secondary': ee.ImageCollection(s2c),
                 'condition': ee.Filter.equals(**{'leftField': 'system:index', 'rightField': 'system:index'})
-            }))
+            })
+        )
 
-            def _mcc(im):
-                return mask_and_count_clouds(im, roi)
-                # s2_with_clouds=ee.ImageCollection(s2_with_clouds).map(_mcc)
+        def _mcc(im):
+            return self.mask_and_count_clouds(im, roi)
+            # s2_with_clouds=ee.ImageCollection(s2_with_clouds).map(_mcc)
 
-            # s2_with_clouds=s2_with_clouds.limit(image_limit,'nb_cloudy_pixels')
-            s2_with_clouds = ee.ImageCollection(s2_with_clouds).map(
-                mask_clouds_and_rescale)  # .limit(image_limit,'CLOUDY_PIXEL_PERCENTAGE')
-            return ee.ImageCollection(s2_with_clouds)
+        # s2_with_clouds=s2_with_clouds.limit(image_limit,'nb_cloudy_pixels')
+        s2_with_clouds = (ee.ImageCollection(s2_with_clouds)
+                          .map(self.mask_clouds_and_rescale)
+                          )  # .limit(image_limit,'CLOUDY_PIXEL_PERCENTAGE')
+
+        s2_with_clouds_ic = ee.ImageCollection(s2_with_clouds)
+
+        return s2_with_clouds_ic
+
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method:str=DEFAULT_RESAMPLING_METHOD):
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
+        validate_raster_resampling_method(resampling_method)
+
+        if self.start_date is None or self.end_date is None:
+            self.start_date, self.end_date = get_albedo_default_date_range(bbox)
+            print("Date range was not specified for Albedo, so auto-setting to previous-year summer months as appropriate for hemisphere.")
 
         # calculate albedo for images
-
         # weights derived from
         # S. Bonafoni and A. Sekertekin, "Albedo Retrieval From Sentinel-2 by New Narrow-to-Broadband Conversion Coefficients," in IEEE Geoscience and Remote Sensing Letters, vol. 17, no. 9, pp. 1618-1622, Sept. 2020, doi: 10.1109/LGRS.2020.2967085.
         def calc_s2_albedo(image):
@@ -89,20 +117,68 @@ class Albedo(Layer):
                 'SWIR1': image.select('B11'),
                 'SWIR2': image.select('B12')
             }
-            return image.expression(S2_ALBEDO_EQN, config).double().rename('albedo')
 
-        ## S2 MOSAIC AND ALBEDO
-        dataset = get_masked_s2_collection(ee.Geometry.BBox(*bbox), self.start_date, self.end_date)
+            albedo = image.expression(self.S2_ALBEDO_EQN, config).double().rename('albedo')
+
+            return albedo
+
+        # S2 MOSAIC AND ALBEDO
+        ee_rectangle = bbox.to_ee_rectangle()
+        dataset = self.get_masked_s2_collection(ee_rectangle['ee_geometry'], self.start_date, self.end_date)
         s2_albedo = dataset.map(calc_s2_albedo)
-        albedo_mean = s2_albedo.reduce(ee.Reducer.mean())
 
-        data = (get_image_collection(
-            ee.ImageCollection(albedo_mean), bbox, self.spatial_resolution, "albedo")
-                .albedo_mean)
+        kernel_convolution = None
+        albedo_mean = (s2_albedo
+                       .map(lambda x:
+                                    set_resampling_for_continuous_raster(x,
+                                                                         resampling_method,
+                                                                         spatial_resolution,
+                                                                         DEFAULT_SPATIAL_RESOLUTION,
+                                                                         kernel_convolution,
+                                                                         ee_rectangle['crs']
+                                                                         )
+                            )
+                       .reduce(ee.Reducer.mean())
+                       )
+
+        albedo_mean_ic = ee.ImageCollection(albedo_mean)
+        data = get_image_collection(
+            albedo_mean_ic,
+            ee_rectangle,
+            spatial_resolution,
+            "albedo"
+        ).albedo_mean
 
         if self.threshold is not None:
             return data.where(data < self.threshold)
 
         return data
 
+"""
+Determines last day of February since the date varies for leap and non-leap years.
+"""
+def last_date_of_february(year):
+    march_first = datetime(year, 3, 1)
+    last_february_date = march_first - timedelta(days=1)
+    return last_february_date.strftime("%Y-%m-%d")
 
+"""
+Function used by both Albedo and AlbedoCloudMasked layers to determine 3-month time windows for summer in the
+northern and southern hemispheres.
+"""
+def get_albedo_default_date_range(bbox: GeoExtent):
+    geo_bbox = bbox.as_geographic_bbox()
+    aoi_centroid = geo_bbox.centroid
+    this_year = datetime.now().year
+    one_year_ago_offset = this_year - 1
+    two_years_ago_offset = this_year - 2
+    if aoi_centroid.y >= 0:
+        # Get summer months for northern-hemisphere in middle of calendar year
+        start_date = f"{one_year_ago_offset}-06-01"
+        end_date = f"{one_year_ago_offset}-08-31"
+    else:
+        # Get summer months for southern-hemisphere at start of the previous calendar year
+        start_date = f"{two_years_ago_offset}-12-01"
+        end_date = last_date_of_february(one_year_ago_offset)
+
+    return start_date, end_date

@@ -1,36 +1,41 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="city_metrix",
-    version="0.1.2",
+    version="0.3.0",
     description="Module to calculate various metrics on cities.",
     packages=find_packages(),
-    include_package_data=True,
-    package_data={
-        'city_metrix.models.building_classifier': [
-            'building_classifier.pkl',
-        ],
-    },
-    author="Justin Terry",
+    author="Justin Terry, Kenn Cartier",
     license="MIT",
     install_requires=[
         "earthengine-api",
         "geocube",
         "odc-stac",
-        "geemap",
+        "geemap>=0.35.2",
         "pystac-client",
+        "xarray",
         "xarray-spatial",
         "xee",
         "rioxarray",
         "utm",
-        "osmnx",
+        "osmnx>=2.0.1",
         "geopandas",
+        "xarray",
         "s3fs",
-        "dask>=2023.11.0",
+        "dask[complete]",
         "boto3",
+        "cdsapi",
+        "scikit-image>=0.25.2",
+        "exactextract>=0.2.0",
+        "cfgrib",
+        "scipy",
+        "numpy",
         "overturemaps",
-        "scikit-learn>=1.5.1",
-        "scikit-image>=0.24.0",
-        "exactextract>=0.2.0"
+        "ipython",
+        "pvlib"
     ],
+    package_data={
+        'city_metrix': ['ut_globus_city_handler/global_ut_globus_cities.gpkg']
+    },
 )
+
