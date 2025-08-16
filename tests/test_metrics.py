@@ -100,6 +100,13 @@ def test_kba_undeveloped():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 40.22, 99.99, 12, 87)
 
+def test_impervious_surface_on_urbanized_land__percent():
+    indicator = ImperviousSurfaceOnUrbanizedLand__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 78.512, 100, 100, 0)
+
 def test_mean_pm2p5_exposure_popweighted_children():
     indicator = MeanPM2P5ExposurePopWeightedChildren().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
@@ -135,8 +142,8 @@ def test_mean_tree_cover():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.057, 0.326, 100, 0)
 
-def test_natural_areas():
-    indicator = NaturalAreasPercent().get_metric(IDN_JAKARTA_TILED_ZONES)
+def test_natural_areas__percent():
+    indicator = NaturalAreas__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
