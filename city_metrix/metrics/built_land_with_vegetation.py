@@ -30,7 +30,7 @@ class BuiltLandWithVegetation__Percent(Metric):
         if isinstance(percent_vegetation_in_built_up_land, pd.DataFrame):
                 result = percent_vegetation_in_built_up_land.copy()
                 result['value'] = percent_vegetation_in_built_up_land['value']
-            else:
-                result = percent_vegetation_in_built_up_land
+        else:
+            result = percent_vegetation_in_built_up_land
 
         return result
