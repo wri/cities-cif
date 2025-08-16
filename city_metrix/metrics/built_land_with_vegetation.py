@@ -16,21 +16,21 @@ class BuiltLandWithVegetation__Percent(Metric):
     def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-    """
-    Get percentage of built up land (using ESA world cover) with NDVI vegetation cover.
-    :param zones: GeoDataFrame with geometries to collect zonal stats on
-    :return: Pandas Series of percentages
-    """
+        """
+        Get percentage of built up land (using ESA world cover) with NDVI vegetation cover.
+        :param zones: GeoDataFrame with geometries to collect zonal stats on
+        :return: Pandas Series of percentages
+        """
 
-    built_land = built_up_land.groupby(zones).count()
-    vegetation_cover_in_built_land = FractionalVegetationPercent.mask(built_up_land).groupby(zones).count()
+        built_land = built_up_land.groupby(zones).count()
+        vegetation_cover_in_built_land = FractionalVegetationPercent.mask(built_up_land).groupby(zones).count()
 
-    fraction_vegetation_in_built_up_land = (vegetation_cover_in_built_land.fillna(0) / built_land)
+        fraction_vegetation_in_built_up_land = (vegetation_cover_in_built_land.fillna(0) / built_land)
 
-    if isinstance(percent_vegetation_in_built_up_land, pd.DataFrame):
-            result = percent_vegetation_in_built_up_land.copy()
-            result['value'] = percent_vegetation_in_built_up_land['value']
-        else:
-            result = percent_vegetation_in_built_up_land
+        if isinstance(percent_vegetation_in_built_up_land, pd.DataFrame):
+                result = percent_vegetation_in_built_up_land.copy()
+                result['value'] = percent_vegetation_in_built_up_land['value']
+            else:
+                result = percent_vegetation_in_built_up_land
 
-    return result
+        return result
