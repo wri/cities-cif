@@ -118,8 +118,8 @@ class FractionalVegetationPercent(Layer):
             vegNDVI = results.getNumber("vegNDVI").multiply(100).toUint8()
             soilNDVI = results.getNumber("soilNDVI").multiply(100).toUint8()
 
-            if vegNDVI.getInfo() is None or soilNDVI.getInfo() is None:
-                return None
+        #    if vegNDVI.getInfo() is None or soilNDVI.getInfo() is None:
+        #        return None
 
             return (
                 ndviImage.subtract(soilNDVI)
