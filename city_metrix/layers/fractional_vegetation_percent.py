@@ -114,9 +114,9 @@ class FractionalVegetationPercent(Layer):
 
         def fracVeg(geom, vegpctl, soilpctl):
             results = calcFr(geom, vegpctl, soilpctl)
-            ndviImage = ee.Image(results.get("ndviImage"))
-            vegNDVI = results.getNumber("vegNDVI")
-            soilNDVI = results.getNumber("soilNDVI")
+            ndviImage = ee.Image(results.get("ndviImage")).multiply(100).toUint8()
+            vegNDVI = results.getNumber("vegNDVI").multiply(100).toUint8()
+            soilNDVI = results.getNumber("soilNDVI").multiply(100).toUint8()
 
             if vegNDVI.getInfo() is None or soilNDVI.getInfo() is None:
                 return None
