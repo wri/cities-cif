@@ -74,6 +74,12 @@ def test_write_HospitalsPerTenThousandResidents(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_ImperviousSurfaceOnUrbanizedLand__Percent(target_folder):
+    metric_obj = ImperviousSurfaceOnUrbanizedLand__Percent()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_MeanPM2P5Exposure(target_folder):
     metric_obj = MeanPM2P5Exposure()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
@@ -108,8 +114,8 @@ def test_write_MeanTreeCover__Percent(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_NaturalAreasPercent(target_folder):
-    metric_obj = NaturalAreasPercent()
+def test_write_NaturalAreas__Percent(target_folder):
+    metric_obj = NaturalAreas__Percent()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)

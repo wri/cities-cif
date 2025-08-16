@@ -4,6 +4,7 @@ from .canopy_area_per_resident import *
 from .era_5_met_preprocessing_umep import Era5MetPreprocessingUmep
 from .era_5_met_preprocessing_upenn import Era5MetPreprocessingUPenn
 from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResidents
+from .impervious_surface_on_urbanized_land__percent import ImperviousSurfaceOnUrbanizedLand__Percent
 from .mean_pm2p5_exposure import *
 from .mean_tree_cover__percent import MeanTreeCover__Percent
 from .natural_areas_percent import NaturalAreasPercent
