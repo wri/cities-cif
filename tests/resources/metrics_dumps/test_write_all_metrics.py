@@ -192,6 +192,14 @@ def test_write_percent_protected_area(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_percent_water_cover(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric','water_cover__percent.csv')
+
+    metric_obj = WaterCover__Percent()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_recreational_space_per_capita(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(target_folder, 'metric','recreational_space_per_capita.csv')
