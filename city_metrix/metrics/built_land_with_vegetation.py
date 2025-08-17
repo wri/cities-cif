@@ -2,7 +2,7 @@ import pandas as pd
 from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
-from geopandas import GeoDataFrame, GeoSeries
+from city_metrix.metrix_model import GeoZone, Metric
 from city_metrix.layers import EsaWorldCoverClass, EsaWorldCover, FractionalVegetationPercent
 
 class BuiltLandWithVegetation__Percent(Metric):
@@ -22,15 +22,15 @@ class BuiltLandWithVegetation__Percent(Metric):
         :return: Pandas Series of percentages
         """
 
-        built_land = built_up_land.groupby(zones).count()
-        vegetation_cover_in_built_land = FractionalVegetationPercent.mask(built_up_land).groupby(zones).count()
+        builtup_layer = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
+        vegetation_layer = FractionalVegetationPercent(min_threshold=50)
+        vegetation_cover_in_built_land = builtup_layer.mask(vegetation_layer).groupby(geo_zone).count()
+        fraction_vegetation_in_built_up_land = (vegetation_cover_in_built_land.fillna(0) / builtup_layer.groupby(geo_zone).count())
 
-        fraction_vegetation_in_built_up_land = (vegetation_cover_in_built_land.fillna(0) / built_land)
-
-        if isinstance(percent_vegetation_in_built_up_land, pd.DataFrame):
-                result = percent_vegetation_in_built_up_land.copy()
-                result['value'] = percent_vegetation_in_built_up_land['value']
+        if isinstance(fraction_vegetation_in_built_up_land, pd.DataFrame):
+            result = fraction_vegetation_in_built_up_land.copy()
+            result['value'] = fraction_vegetation_in_built_up_land['value'] * 100
         else:
-            result = percent_vegetation_in_built_up_land
+            result = fraction_vegetation_in_built_up_land * 100
 
         return result
