@@ -140,12 +140,12 @@ def test_mean_pm2p5_exposure_popweighted_informal():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, None, None, None, 0, 100)
 
-def test_mean_tree_cover():
-    indicator = MeanTreeCover().get_metric(IDN_JAKARTA_TILED_ZONES)
+def test_mean_tree_cover__percent():
+    indicator = MeanTreeCover__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0.057, 0.326, 100, 0)
+    assert_metric_stats(indicator, 1, 5.7, 32.6, 100, 0)
 
 def test_natural_areas__percent():
     indicator = NaturalAreas__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
