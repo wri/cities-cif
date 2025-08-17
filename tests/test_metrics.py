@@ -1,11 +1,9 @@
-<<<<<<< HEAD
 from city_metrix import *
 from city_metrix.metrics.built_land_with_vegetation import built_land_with_vegetation
 from .conftest import ZONES
-=======
 import math
 import pytest
->>>>>>> main
+
 
 from city_metrix.metrics import *
 from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, BUENOS_AIRES_ZONES_TINY
