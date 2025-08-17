@@ -40,6 +40,15 @@ def test_write_built_land_with_low_surface_reflectivity(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_built_land_with_vegetation(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric','built_land_with_vegetation.csv')
+
+    metric_obj = BuiltLandWithVegetation__Percent()
+    _write_verify(metric_obj, zones, file_path)
+
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_canopy_area_per_resident_children(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(target_folder, 'metric','canopy_area_per_resident_children.csv')
