@@ -1,5 +1,4 @@
 from city_metrix import *
-from .conftest import ZONES
 import math
 import pytest
 
