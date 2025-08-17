@@ -7,6 +7,7 @@ from city_metrix.layers import *
 from city_metrix.metrix_tools import get_projection_type
 from tests.conftest import EXECUTE_IGNORED_TESTS
 from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_2
+from tests.conftest import BUENOS_AIRES_BBOX_TINY
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC and is a stable region

@@ -8,7 +8,7 @@ import pytest
 >>>>>>> main
 
 from city_metrix.metrics import *
-from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE
+from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, BUENOS_AIRES_ZONES_TINY
 PORTLAND_DST_seasonal_utc_offset = -8
 
 
@@ -29,23 +29,17 @@ def test_built_land_with_low_surface_reflectivity():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.83, 0.99, 100, 0)
 
-<<<<<<< HEAD
 def test_built_land_with_vegetation():
-    indicator = built_land_with_vegetation(ZONES)
+    indicator = BuiltLandWithVegetation__Percent(BUENOS_AIRES_ZONES_TINY)
     expected_zone_size = ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 1, 6.1, 17.2, 2, 1)
 
-def test_built_land_without_tree_cover():
-    indicator = built_land_without_tree_cover(ZONES)
-    expected_zone_size = ZONES.geometry.size
-    actual_indicator_size = indicator.size
-=======
 def test_canopy_area_per_resident_children():
     indicator = CanopyAreaPerResidentChildren().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
->>>>>>> main
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 5.24, 115.12, 100, 0)
 
@@ -155,11 +149,11 @@ def test_natural_areas__percent():
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
 
 def test_percent_area_fracveg_exceeds_threshold():
-    indicator = PercentAreaFracvegExceedsThreshold().get_metric(IDN_JAKARTA_TILED_ZONES)
+    indicator = AreaFractionalVegetationExceedsThreshold__Percent().get_metric(BUENOS_AIRES_ZONES_TINY)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0.0101, 0.334, 100, 0)
+    assert_metric_stats(indicator, 2, 82.37, 92.23, 3, 0)
 
 def test_percent_area_impervious():
     indicator = PercentAreaImpervious().get_metric(IDN_JAKARTA_TILED_ZONES)
