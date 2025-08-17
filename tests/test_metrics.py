@@ -26,7 +26,7 @@ def test_built_land_with_low_surface_reflectivity():
     assert_metric_stats(indicator, 2, 0.83, 0.99, 100, 0)
 
 def test_built_land_with_vegetation():
-    indicator = BuiltLandWithVegetation__Percent(BUENOS_AIRES_ZONES_TINY)
+    indicator = BuiltLandWithVegetation__Percent().get_metric(BUENOS_AIRES_ZONES_TINY)
     expected_zone_size = ZONES.geometry.size
     actual_indicator_size = indicator.size
     assert expected_zone_size == actual_indicator_size
