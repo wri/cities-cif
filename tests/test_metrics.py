@@ -208,12 +208,6 @@ def test_recreational_space_per_capita():
     assert_metric_stats(indicator, 2, 0, 0.455, 100, 0)
 
 def test_urban_open_space():
-<<<<<<< HEAD
-    indicator = urban_open_space(ZONES)
-    expected_zone_size = ZONES.geometry.size
-    actual_indicator_size = indicator.size
-    assert expected_zone_size == actual_indicator_size
-=======
     indicator = UrbanOpenSpace().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
@@ -290,4 +284,4 @@ def assert_metric_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, 
 
     # template
     # assert_metric_stats(indicator, 2, 0, 0, 1, 0)
->>>>>>> main
+
