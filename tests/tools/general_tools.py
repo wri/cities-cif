@@ -4,7 +4,7 @@ import shutil
 import numpy as np
 import geopandas as gpd
 from geopandas import GeoDataFrame
-from city_metrix.layers.layer import get_utm_zone_epsg
+from city_metrix.metrix_tools import get_utm_zone_from_latlon_point
 
 
 from city_metrix.cache_manager import build_file_key, build_cache_name
@@ -81,8 +81,8 @@ def write_metric(metrics, zones: GeoDataFrame, source_column_name, target_path):
     metrics.rename(columns={source_column_name: 'metric'}, inplace=True)
     
     # Project to local utm
-    zone_bounds = zones.geometry[0].envelope.bounds
-    target_epsg_crs = get_utm_zone_epsg(zone_bounds).partition('EPSG:')[2]
+    zone_centroid = zones.dissolve().geometry[0]
+    target_epsg_crs = get_utm_zone_from_latlon_point(zone_centroid).partition('EPSG:')[2]
     projected_metrics = metrics.to_crs(epsg=target_epsg_crs, inplace=False)
 
     projected_metrics.to_file(target_path)
