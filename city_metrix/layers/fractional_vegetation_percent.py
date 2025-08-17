@@ -114,12 +114,12 @@ class FractionalVegetationPercent(Layer):
 
         def fracVeg(geom, vegpctl, soilpctl):
             results = calcFr(geom, vegpctl, soilpctl)
-            ndviImage = ee.Image(results.get("ndviImage"))
-            vegNDVI = results.getNumber("vegNDVI")
-            soilNDVI = results.getNumber("soilNDVI")
+            ndviImage = ee.Image(results.get("ndviImage")).multiply(100).toUint8()
+            vegNDVI = results.getNumber("vegNDVI").multiply(100).toUint8()
+            soilNDVI = results.getNumber("soilNDVI").multiply(100).toUint8()
 
-            if vegNDVI.getInfo() is None or soilNDVI.getInfo() is None:
-                return None
+        #    if vegNDVI.getInfo() is None or soilNDVI.getInfo() is None:
+        #        return None
 
             return (
                 ndviImage.subtract(soilNDVI)
@@ -156,6 +156,6 @@ class FractionalVegetationPercent(Layer):
                 "fractional vegetation",
             ).astype(np.uint8).Fr
             if self.min_threshold is not None:
-                data = xr.where(data >= self.min_threshold, 1, 0).astype(np.uint8).rio.write_crs(data.crs)
+                data = xr.where(data >= self.min_threshold, 1, np.nan).rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
 
         return data
