@@ -27,8 +27,8 @@ def test_built_land_with_low_surface_reflectivity():
 
 def test_built_land_with_vegetation():
     indicator = BuiltLandWithVegetation__Percent().get_metric(BUENOS_AIRES_ZONES_TINY)
-    expected_zone_size = ZONES.geometry.size
-    actual_indicator_size = indicator.size
+    expected_zone_size = len(BUENOS_AIRES_ZONES_TINY.zones)
+    actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 1, 6.1, 17.2, 2, 1)
 
@@ -146,7 +146,7 @@ def test_natural_areas__percent():
 
 def test_percent_area_fracveg_exceeds_threshold():
     indicator = AreaFractionalVegetationExceedsThreshold__Percent().get_metric(BUENOS_AIRES_ZONES_TINY)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    expected_zone_size = len(BUENOS_AIRES_ZONES_TINY.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 82.37, 92.23, 3, 0)
