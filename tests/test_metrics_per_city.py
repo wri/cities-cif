@@ -9,7 +9,7 @@ def test_city_values_BuiltLandWithHighLST():
     _evaluate_metric_values(metric_values, 2, 0, 0.11, 0.03, 138, 10, True)
 
 def test_city_values_mean_pm2p5_exposure():
-    metric_obj = MeanPM2P5Exposure__MicrogramsPerCubicMeterPerDay()
+    metric_obj = MeanPM2P5Exposure()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
     _evaluate_metric_values(metric_values, 2, 11.18, 14.04, 12.45, 138, 0, True)
 
