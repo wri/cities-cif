@@ -1,9 +1,7 @@
 import ee
-import geopandas as gpd
 
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
-
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
@@ -20,22 +18,20 @@ class CarbonFluxFromTrees(Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 force_data_refresh=False):
-
-        if spatial_resolution is None:
-            spatial_resolution = DEFAULT_SPATIAL_RESOLUTION
-        else:
-            spatial_resolution = spatial_resolution
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None, force_data_refresh=False):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
         netflux_total_ic = ee.ImageCollection('projects/wri-datalab/gfw-data-lake/net-flux-forest-extent-per-ha-v1-2-2-2001-2021/net-flux-global-forest-extent-per-ha-2001-2021')
         netflux_total_img = netflux_total_ic.mosaic()
         netflux_annual_img = netflux_total_img.divide(21).divide(10000).multiply(spatial_resolution**2)  # Divide by 21 years, convert from per-hectare to per pixel-area
 
+        ee_rectangle  = bbox.to_ee_rectangle()
         data = get_image_collection(
-                ee.ImageCollection([netflux_annual_img]),
-                bbox.to_ee_rectangle(),
+                ee.ImageCollection(netflux_annual_img),
+                ee_rectangle,
                 spatial_resolution,
                 "tree carbon flux",
             ).b1.fillna(0)

@@ -196,10 +196,8 @@ def test_recreational_space_per_capita():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0, 0.455, 100, 0)
 
-def test_tree_carbon_flux():
-    spatial_resolution=30
-    indicator = (TreeCarbonFlux__Tonnes()
-                 .get_metric(IDN_JAKARTA_TILED_ZONES, spatial_resolution=spatial_resolution))
+def test_tree_carbon_flux__tonnes():
+    indicator = TreeCarbonFlux__Tonnes().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
