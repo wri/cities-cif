@@ -3,11 +3,13 @@ from .built_land_with_low_surface_reflectivity import BuiltLandWithLowSurfaceRef
 from .canopy_area_per_resident import *
 from .era_5_met_preprocessing_umep import Era5MetPreprocessingUmep
 from .era_5_met_preprocessing_upenn import Era5MetPreprocessingUPenn
+from .habitat_types_restored import HabitatTypesRestored__CoverTypes
 from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResidents
 from .impervious_surface_on_urbanized_land__percent import ImperviousSurfaceOnUrbanizedLand__Percent
+from .land_near_natural_drainage import LandNearNaturalDrainage__Percent
 from .mean_pm2p5_exposure import *
-from .mean_tree_cover import MeanTreeCover
-from .natural_areas__percent import NaturalAreas__Percent
+from .mean_tree_cover import MeanTreeCover__Percent
+from .natural_areas import NaturalAreas__Percent
 from .percent_area_fracveg_exceeds_threshold import PercentAreaFracvegExceedsThreshold
 from .percent_area_impervious import PercentAreaImpervious
 from .percent_built_area_without_tree_cover import PercentBuiltAreaWithoutTreeCover
@@ -16,5 +18,6 @@ from .percent_key_biodiversity_area_not_built_up import KeyBiodiversityAreaUndev
 from .percent_key_biodiversity_area_protected import KeyBiodiversityAreaProtected__Percent
 from .percent_protected_area import PercentProtectedArea
 from .recreational_space_per_capita import RecreationalSpacePerCapita
+from .tree_carbon_flux import TreeCarbonFlux__Tonnes
 from .urban_open_space import UrbanOpenSpace
 from .vegetation_water_change import *
