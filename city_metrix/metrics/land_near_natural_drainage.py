@@ -1,11 +1,10 @@
 import pandas as pd
 from typing import Union
-import geopandas as gpd
+
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import HeightAboveNearestDrainage
 from city_metrix.metrix_model import GeoZone, Metric
 
-DEFAULT_SPATIAL_RESOLUTION = 30
 
 class LandNearNaturalDrainage__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
@@ -22,12 +21,10 @@ class LandNearNaturalDrainage__Percent(Metric):
         neardrainage_area = HeightAboveNearestDrainage(thresh=1, nanval=None).groupby(geo_zone).count()
         total_area = HeightAboveNearestDrainage(nanval=0).groupby(geo_zone).count()
 
-        fraction_area = neardrainage_area / total_area
-
-        if isinstance(fraction_area, pd.DataFrame):
-            result = fraction_area.copy()
-            result['value'] = fraction_area['value'] * 100
+        if isinstance(neardrainage_area, pd.DataFrame):
+            result = neardrainage_area.copy()
+            result['value'] = 100 * (neardrainage_area['value'] / total_area['value'])
         else:
-            result = fraction_area * 100
+            result = 100 * (neardrainage_area / total_area)
 
         return result
