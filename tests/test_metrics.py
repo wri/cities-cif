@@ -93,6 +93,13 @@ def test_impervious_surface_on_urbanized_land__percent():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 78.512, 100, 100, 0)
 
+def test_land_near_natural_drainage__percent():
+    indicator = LandNearNaturalDrainage__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 1.753, 47.389, 98, 2)
+
 def test_mean_pm2p5_exposure_popweighted_children():
     indicator = MeanPM2P5ExposurePopWeightedChildren().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
