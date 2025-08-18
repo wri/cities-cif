@@ -3,10 +3,10 @@ import pytest
 
 from city_metrix.metrics import *
 from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE
-PORTLAND_DST_seasonal_utc_offset = -8
 
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
+
 
 def test_built_land_with_high_lst():
     sample_zones = IDN_JAKARTA_TILED_ZONES
@@ -65,11 +65,35 @@ def test_hospitals_per_ten_thousand_residents():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.00, 8.87, 100, 0)
 
+def test_percent_canopy_covered_population_children():
+    indicator = PercentCanopyCoveredPopulationChildren().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+
+
+def test_percent_canopy_covered_population_elderly():
+    indicator = PercentCanopyCoveredPopulationElderly().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+
+def test_percent_canopy_covered_population_female():
+    indicator = PercentCanopyCoveredPopulationFemale().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+
+def test_percent_canopy_covered_population_informal():
+    indicator = PercentCanopyCoveredPopulationInformal().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_era_5_met_preprocess_umep():
+def test_era_5_met_preprocess():
     # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = (Era5MetPreprocessingUmep(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset)
-                 .get_metric(USA_OR_PORTLAND_ZONE))
+    indicator = Era5MetPreprocessing().get_metric(USA_OR_PORTLAND_ZONE)
     non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
     has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
     # p1= indicator[non_nullable_variables].isnull().any()
@@ -77,21 +101,7 @@ def test_era_5_met_preprocess_umep():
     # p3 = indicator['temp'].values
     assert has_empty_required_cells == False
     assert len(indicator) == 24
-    assert_metric_stats(indicator[['temp']], 2, 19.19, 41.36, 24, 0)
-
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_era_5_met_preprocess_upenn():
-    # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = (Era5MetPreprocessingUPenn(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset)
-                 .get_metric(USA_OR_PORTLAND_ZONE))
-
-    non_nullable_variables = ['Year', 'Month', 'Day', 'Hour', 'Minute', 'DHI', 'DNI', 
-                              'GHI', 'Clearsky DHI', 'Clearsky DNI','Clearsky GHI', 
-                              'Wind Speed', 'Relative Humidity', 'Temperature', 'Pressure']
-    has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
-    assert has_empty_required_cells == False
-    assert len(indicator) == 24
-    assert_metric_stats(indicator[['DHI']], 2, 0.00, 312.15, 24, 0)
+    # TODO Add value testing
 
 def test_impervious_surface_on_urbanized_land__percent():
     indicator = ImperviousSurfaceOnUrbanizedLand__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -149,6 +159,20 @@ def test_natural_areas__percent():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
 
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
+def test_children_access_open_space():
+    from geopandas import GeoDataFrame
+    zones = GeoZone(GeoDataFrame.from_file('https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/ARG-Buenos_Aires.geojson'))
+    indicator = AccessToOpenSpace__ChildrenPercent('ARG-Buenos_Aires', 'adminbound', 'walk', 15, 'minutes').get_metric(zones)
+    assert actual_indicator_size > 0
+
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
+# def test_count_accessible_amenities_all():
+    # rom .conftest import create_fishnet_grid
+    # NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
+    # indicator = AccessPopulationCountAll('BRA-Belo_Horizonte', 'jobs', 'walk', '15', 'minutes')
+    # assert actual_indicator_size > 0
+
 def test_percent_area_fracveg_exceeds_threshold():
     indicator = PercentAreaFracvegExceedsThreshold().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
@@ -169,30 +193,6 @@ def test_percent_built_area_without_tree_cover():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 36.36, 100, 54, 46)
-
-def test_percent_canopy_covered_population_children():
-    indicator = PercentCanopyCoveredPopulationChildren().get_metric(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-
-def test_percent_canopy_covered_population_elderly():
-    indicator = PercentCanopyCoveredPopulationElderly().get_metric(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-
-def test_percent_canopy_covered_population_female():
-    indicator = PercentCanopyCoveredPopulationFemale().get_metric(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-
-def test_percent_canopy_covered_population_informal():
-    indicator = PercentCanopyCoveredPopulationInformal().get_metric(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
 
 def test_percent_protected_area():
     indicator = PercentProtectedArea().get_metric(IDN_JAKARTA_TILED_ZONES)

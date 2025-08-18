@@ -116,6 +116,12 @@ def test_impervious_surface():
     assert_raster_stats(data, 1, 1.0, 1.0, 100, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="AWS redentials needed")
+def test_isoline():
+    layer = Isoline({'cityname': 'KEN-Nairobi', 'amenityname': 'schools', 'travelmode': 'walk', 'threshold_type': 'time', 'threshold_value': '15', 'year': 2023})
+    nairobi_bbox = (36.66446402, -1.44560888, 37.10497899, -1.16058296)
+    data = layer.get_data(nairobi_bbox)
+
 def test_land_cover_glad():
     data = LandCoverGlad().get_data(BBOX)
     assert np.size(data) > 0
