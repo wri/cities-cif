@@ -3,6 +3,7 @@ from .built_land_with_low_surface_reflectivity import BuiltLandWithLowSurfaceRef
 from .canopy_area_per_resident import *
 from .era_5_met_preprocessing_umep import Era5MetPreprocessingUmep
 from .era_5_met_preprocessing_upenn import Era5MetPreprocessingUPenn
+from .flood_risk_area__percent import RiverineOrCoastalFloodRiskArea__Percent
 from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResidents
 from .impervious_surface_on_urbanized_land__percent import ImperviousSurfaceOnUrbanizedLand__Percent
 from .mean_pm2p5_exposure import *

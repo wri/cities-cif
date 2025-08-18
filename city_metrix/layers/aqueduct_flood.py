@@ -1,4 +1,5 @@
 import ee
+import xarray as xr
 
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
@@ -30,7 +31,7 @@ class AqueductFlood(Layer):
                                  options [5, 50]
     """
 
-    def __init__(self, return_period_c="rp0100", return_period_r="rp00100", end_year=2050, climate="rcp4p5", subsidence='nosub', sea_level_rise_scenario=50, **kwargs):
+    def __init__(self, return_period_c="rp0100", return_period_r="rp00100", end_year=2050, climate="rcp4p5", subsidence='nosub', sea_level_rise_scenario=50, report_threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.return_period_c = return_period_c
         self.return_period_r = return_period_r
@@ -38,6 +39,7 @@ class AqueductFlood(Layer):
         self.climate = climate
         self.subsidence = subsidence
         self.sea_level_rise_scenario = sea_level_rise_scenario
+        self.report_threshold = report_threshold
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -87,5 +89,7 @@ class AqueductFlood(Layer):
             spatial_resolution,
             "aqueduct flood"
         ).b1
+        if self.report_threshold is not None:
+            data = xr.where(data >= self.report_threshold, 1, np.nan).assign_attrs(data.attrs)
 
         return data
