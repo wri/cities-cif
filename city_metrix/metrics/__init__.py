@@ -7,7 +7,7 @@ from .era_5_met_preprocessing_upenn import Era5MetPreprocessingUPenn
 from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResidents
 from .impervious_surface_on_urbanized_land__percent import ImperviousSurfaceOnUrbanizedLand__Percent
 from .mean_pm2p5_exposure import *
-from .mean_tree_cover import MeanTreeCover
+from .mean_tree_cover__percent import MeanTreeCover__Percent
 from .natural_areas__percent import NaturalAreas__Percent
 from .percent_area_fracveg_exceeds_threshold import PercentAreaFracvegExceedsThreshold
 from .percent_area_impervious import PercentAreaImpervious
