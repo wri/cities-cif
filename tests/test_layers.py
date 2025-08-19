@@ -62,6 +62,12 @@ def test_cams():
     data = Cams().get_data(BBOX)
     assert np.size(data) > 0
 
+def test_carbon_flux_from_trees():
+    data = CarbonFluxFromTrees().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, -1.173, 0, 1122, 0)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
     data = Era5HottestDay(seasonal_utc_offset=-8).get_data(BBOX)
