@@ -53,7 +53,7 @@ def test_canopy_area_per_resident_informal():
 
 def test_flood_risk_area__percent():
     indicator = RiverineOrCoastalFloodRiskArea__Percent().get_metric(PORTLAND_LARGE_ZONES)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    expected_zone_size = len(PORTLAND_LARGE_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 18.18, 100, 48, 231)
