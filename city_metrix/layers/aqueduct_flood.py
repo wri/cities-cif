@@ -1,4 +1,5 @@
 import ee
+import numpy as np
 import xarray as xr
 
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent

@@ -2,7 +2,7 @@ import math
 import pytest
 
 from city_metrix.metrics import *
-from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE
+from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, PORTLAND_LARGE_ZONES
 PORTLAND_DST_seasonal_utc_offset = -8
 
 
@@ -50,6 +50,13 @@ def test_canopy_area_per_resident_informal():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.00, 2.81, 18, 82)
+
+def test_flood_risk_area__percent():
+    indicator = RiverineOrCoastalFloodRiskArea__Percent().get_metric(PORTLAND_LARGE_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 18.18, 100, 48, 231)
 
 def test_hospitals_per_ten_thousand_residents():
     indicator = HospitalsPerTenThousandResidents().get_metric(IDN_JAKARTA_TILED_ZONES)

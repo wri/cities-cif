@@ -3,7 +3,7 @@ from city_metrix.constants import WGS_EPSG_CODE, ProjectionType
 from city_metrix.metrix_model import create_fishnet_grid, WGS_CRS, GeoExtent, GeoZone, Layer
 from geocube.api.core import make_geocube
 
-from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND, BBOX_NLD_AMSTERDAM, BBOX_IDN_JAKARTA, \
+from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND, BBOX_USA_OR_PORTLAND_1, PORTLAND_BOX_LARGE, BBOX_NLD_AMSTERDAM, BBOX_IDN_JAKARTA, \
     BBOX_IDN_JAKARTA_LARGE
 
 # EXECUTE_IGNORED_TESTS is the master control for whether to execute tests decorated with
@@ -46,11 +46,16 @@ IDN_JAKARTA_TILED_BBOXES = (
 IDN_JAKARTA_TILED_LARGE_BBOXES = (
     create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA_LARGE.coords, 0.1).reset_index())
 USA_OR_PORTLAND_BBOX = create_single_bbox_gdf_for_testing(BBOX_USA_OR_PORTLAND.coords)
+USA_OR_PORTLAND_1_BBOXES = create_fishnet_gdf_for_testing(BBOX_USA_OR_PORTLAND_1.coords, 0.01)
 NLD_AMSTERDAM_BBOX = create_single_bbox_gdf_for_testing(BBOX_NLD_AMSTERDAM.coords)
 
 # Test zones of a regular 0.01x0.01 grid over a 0.1x0.1 extent by degrees
 IDN_JAKARTA_TILED_ZONES = GeoZone(IDN_JAKARTA_TILED_BBOXES)
 IDN_JAKARTA_TILED_LARGE_ZONES = GeoZone(IDN_JAKARTA_TILED_LARGE_BBOXES)
+PORTLAND_1_TINY_ZONES = GeoZone(USA_OR_PORTLAND_1_BBOXES.reset_index())
+PORTLAND_LARGE_BBOXES = create_fishnet_gdf_for_testing(PORTLAND_BOX_LARGE.coords, 0.01).reset_index()
+PORTLAND_LARGE_ZONES = GeoZone(PORTLAND_LARGE_BBOXES)
+
 # Test single tiles
 USA_OR_PORTLAND_ZONE = GeoZone(USA_OR_PORTLAND_BBOX)
 NLD_AMSTERDAM_ZONE = GeoZone(NLD_AMSTERDAM_BBOX)
