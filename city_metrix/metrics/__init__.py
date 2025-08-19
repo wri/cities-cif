@@ -5,7 +5,6 @@ from .era_5_met_preprocessing_umep import Era5MetPreprocessingUmep
 from .era_5_met_preprocessing_upenn import Era5MetPreprocessingUPenn
 from .habitat_types_restored import HabitatTypesRestored__CoverTypes
 from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResidents
-from .impervious_surface_on_urbanized_land__percent import ImperviousSurfaceOnUrbanizedLand__Percent
 from .land_near_natural_drainage import LandNearNaturalDrainage__Percent
 from .mean_pm2p5_exposure import *
 from .mean_tree_cover import MeanTreeCover__Percent
@@ -21,3 +20,4 @@ from .recreational_space_per_capita import RecreationalSpacePerCapita
 from .tree_carbon_flux import TreeCarbonFlux__Tonnes
 from .urban_open_space import UrbanOpenSpace
 from .vegetation_water_change import *
+from .impervious_surface_on_urbanized_land__percent import ImperviousSurfaceOnUrbanizedLand__Percent
