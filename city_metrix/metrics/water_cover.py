@@ -1,9 +1,10 @@
 import pandas as pd
 from typing import Union
-import geopandas as gpd
+
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import NdwiSentinel2, SurfaceWater
 from city_metrix.metrix_model import Metric, GeoZone
+
 
 class WaterCover__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
@@ -23,16 +24,19 @@ class WaterCover__Percent(Metric):
         :param geo_zone: GeoZone with geometries to collect zonal stats on
         :return: Pandas Series of percentages
         """
-
-        total_area_layer = NdwiSentinel2(year=self.year)
         water_layer = SurfaceWater(year=self.year)
+        total_area_layer = NdwiSentinel2(year=self.year)
 
-        water_fraction = water_layer.groupby(geo_zone).count().fillna(0) / total_area_layer.groupby(geo_zone).count()
+        water_area = water_layer.groupby(geo_zone).count()
+        total_area = total_area_layer.groupby(geo_zone).count()
         
-        if isinstance(water_fraction, pd.DataFrame):
-            result = water_fraction.copy()
-            result['value'] = water_fraction['value'] * 100
+        if not isinstance(water_area, (int, float)):
+            water_area = water_area.fillna(0)
+        
+        if isinstance(water_area, pd.DataFrame):
+            result = water_area.copy()
+            result['value'] = (water_area['value'] / total_area['value']) * 100
         else:
-            result = water_fraction * 100
+            result = (water_area / total_area) * 100
 
         return result

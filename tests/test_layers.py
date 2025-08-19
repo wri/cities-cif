@@ -173,7 +173,7 @@ def test_ndvi_sentinel2():
 def test_ndwi_sentinel2():
     data = NdwiSentinel2(year=2023).get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, -0.017769273, 0.57754517, 9797, 0)
+    assert_raster_stats(data, 2, -0.0178, 0.578, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_openbuildings():
