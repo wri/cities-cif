@@ -34,6 +34,11 @@ city_admin = construct_city_aoi_json("BRA-Teresina", "city_admin_level")
 GEOZONE_TERESINA = GeoZone(geo_zone=city_admin)
 GEOEXTENT_TERESINA = GeoExtent(GEOZONE_TERESINA)
 
+# Buenos Aires includes some KBA.
+city_admin = construct_city_aoi_json("ARG-Buenos_Aires", "city_admin_level")
+GEOZONE_BUENOS_AIRES = GeoZone(geo_zone=city_admin)
+GEOEXTENT_BUENOS_AIRES = GeoExtent(GEOZONE_BUENOS_AIRES)
+
 # A medium city
 city_admin = construct_city_aoi_json("BRA-Florianopolis", "city_admin_level")
 GEOZONE_FLORIANOPOLIS = GeoZone(geo_zone=city_admin)
