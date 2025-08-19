@@ -94,14 +94,14 @@ def test_era_5_met_preprocess_upenn():
     assert_metric_stats(indicator[['DHI']], 2, 0.00, 312.15, 24, 0)
 
 def test_kba_protected():
-    indicator = KeyBiodiversityAreaProtected__Percent().get_metric(BUENOS_AIRES_ZONES)
+    indicator = KeyBiodiversityAreaProtected__Percent(country_code_iso3='ARG').get_metric(BUENOS_AIRES_ZONES)
     expected_zone_size = len(BUENOS_AIRES_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 1.19, 100, 15, 84)
 
 def test_kba_undeveloped():
-    indicator = KeyBiodiversityAreaUndeveloped__Percent().get_metric(BUENOS_AIRES_ZONES)
+    indicator = KeyBiodiversityAreaUndeveloped__Percent(country_code_iso3='ARG').get_metric(BUENOS_AIRES_ZONES)
     expected_zone_size = len(BUENOS_AIRES_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
