@@ -268,10 +268,10 @@ def get_city(city_id: str):
         except Exception as e_msg:
             raise Exception(f"API call for city failed with error: {e_msg}")
 
-        uri_path = os.path.normpath(get_file_path_from_uri(cache_uri))
-        _create_local_target_folder(uri_path)
-        with open(cache_file_path, "w") as file:
-            json.dump(city_json, file)
+        # uri_path = os.path.normpath(get_file_path_from_uri(cache_uri))
+        # _create_local_target_folder(uri_path)
+        # with open(cache_file_path, "w") as file:
+        #     json.dump(city_json, file)
 
     return city_json
 

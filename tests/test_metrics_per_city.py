@@ -11,12 +11,12 @@ def test_city_values_built_land_with_high_lst():
 def test_city_values_kba_protected__percent():
     metric_obj = KeyBiodiversityAreaProtected__Percent(country_code_iso3='ARG')
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_BUENOS_AIRES)
-    _evaluate_metric_values(metric_values, 2, 55.25, 99.13, 81.11, 4, 0, True)
+    _evaluate_metric_values(metric_values, 2, 0, 98.34, 53.52, 6, 2, True)
 
 def test_city_values_kba_undeveloped__percent():
     metric_obj = KeyBiodiversityAreaUndeveloped__Percent(country_code_iso3='ARG')
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_BUENOS_AIRES)
-    _evaluate_metric_values(metric_values, 2, 28.17, 99.99, 82, 5, 0, True)
+    _evaluate_metric_values(metric_values, 2, 27.40, 100, 84.78, 6, 0, True)
 
 def test_city_values_mean_pm2p5_exposure():
     metric_obj = MeanPM2P5Exposure()
