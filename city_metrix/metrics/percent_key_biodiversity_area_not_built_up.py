@@ -1,7 +1,7 @@
 import pandas as pd
+import geopandas as gpd
 from typing import Union
 from city_metrix.constants import CSV_FILE_EXTENSION, WGS_CRS
-from geopandas import GeoDataFrame, GeoSeries
 from city_metrix.metrix_model import Metric, GeoZone
 from city_metrix.layers import (
     KeyBiodiversityAreas,
