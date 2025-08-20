@@ -263,6 +263,14 @@ def test_write_vegetation_water_change_gain_loss_ratio(target_folder):
     metric_obj = VegetationWaterChangeGainLossRatio()
     _write_verify(metric_obj, zones, file_path)
 
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_water_cover__percent(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric', 'water_cover__percent.csv')
+
+    metric_obj = WaterCover__Percent()
+    _write_verify(metric_obj, zones, file_path)
+
 
 def _write_verify(metric_obj, zones, file_path):
     metric_obj.write(geo_zone=zones, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
