@@ -1,5 +1,6 @@
 import ee
-
+import xarray as xr
+import numpy as np
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
@@ -15,8 +16,9 @@ class Slope(Layer):
    Unit is degrees
 
     """
-    def __init__(self, **kwargs):
+    def __init__(self, min_threshold=None, **kwargs):
         super().__init__(**kwargs)
+        self.min_threshold = min_threshold
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, force_data_refresh=False):
@@ -33,6 +35,9 @@ class Slope(Layer):
                 ee_rectangle,
                 spatial_resolution,
                 "slope",
-            ).b1
+            ).slope
+
+        if self.min_threshold is not None:
+            data = xr.where(data >= self.min_threshold, 1, np.nan).assign_attrs(data.attrs).rio.write_crs(data.crs)
 
         return data
