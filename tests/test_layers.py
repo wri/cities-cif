@@ -240,6 +240,12 @@ def test_sentinel_2_level2():
     # TODO Add value testing
     assert get_projection_type(data.spatial_ref.crs_wkt) == ProjectionType.UTM
 
+def test_slope():
+    data = Slope().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, 0, 24.76, 1122, 0)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+
 def test_smart_surface_lulc():
     data = SmartSurfaceLULC().get_data(BBOX)
     assert np.size(data) > 0
