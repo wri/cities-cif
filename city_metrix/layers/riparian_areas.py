@@ -69,6 +69,6 @@ class RiparianAreas(Layer):
         birdBuffer = (distance_200 <= (144.0 - halfpixel))
 
         # get riparian mask
-        data = birdBuffer.rio.write_crs(bbox.as_utm_bbox().crs)
+        data = xr.where(birdBuffer, 1, np.nan).rio.write_crs(bbox.as_utm_bbox().crs)
 
         return data

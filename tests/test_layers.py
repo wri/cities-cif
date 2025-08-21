@@ -216,7 +216,7 @@ def test_pop_weighted_pm2p5():
 def test_riparian_areas():
     data = RiparianAreas().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, False, True, 1122, 0)
+    assert_raster_stats(data, 1, 1, 2, 115, 1007)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 # TODO is this layer deprecated?

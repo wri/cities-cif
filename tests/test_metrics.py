@@ -205,6 +205,13 @@ def test_recreational_space_per_capita():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0, 0.455, 100, 0)
 
+def test_riparian_land_with_vegetation__percent():
+    indicator = RiparianLandWithVegetation__Percent().get_metric(BUENOS_AIRES_ZONES_TINY)
+    expected_zone_size = len(BUENOS_AIRES_ZONES_TINY.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 77.75, 92.34, 3, 0)
+
 def test_urban_open_space():
     indicator = UrbanOpenSpace().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
