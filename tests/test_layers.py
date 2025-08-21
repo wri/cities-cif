@@ -62,6 +62,12 @@ def test_cams():
     data = Cams().get_data(BBOX)
     assert np.size(data) > 0
 
+def test_carbon_flux_from_trees():
+    data = CarbonFluxFromTrees().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, -1.173, 0, 1122, 0)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
     data = Era5HottestDay(seasonal_utc_offset=-8).get_data(BBOX)
@@ -164,6 +170,12 @@ def test_ndvi_sentinel2():
     assert_raster_stats(data, 2, 0.087, 0.852, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
+def test_ndwi_sentinel2():
+    data = NdwiSentinel2(year=2023).get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, -0.0178, 0.578, 9797, 0)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+
 def test_openbuildings():
     data = OpenBuildings(COUNTRY_CODE_FOR_BBOX).get_data(BBOX)
     assert np.size(data) > 0
@@ -232,6 +244,12 @@ def test_smart_surface_lulc():
     data = SmartSurfaceLULC().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 1.0, 50.0, 979700, 0)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+
+def test_surface_water():
+    data = SurfaceWater().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 1, 1.0, 1.0, 172, 9625)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_tree_canopy_cover_mask():
