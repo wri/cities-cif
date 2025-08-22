@@ -18,7 +18,7 @@ from .percent_canopy_covered_population import *
 from .percent_protected_area import PercentProtectedArea
 from .recreational_space_per_capita import RecreationalSpacePerCapita
 from .riparian_land_with_vegetation_or_water__percent import RiparianLandWithVegetationOrWater__Percent
-from steeply_sloped_land_with_vegetation__percent import SteeplySlopedLandWithVegetation__Percent
+from .steeply_sloped_land_with_vegetation__percent import SteeplySlopedLandWithVegetation__Percent
 from .tree_carbon_flux import TreeCarbonFlux__Tonnes
 from .urban_open_space import UrbanOpenSpace
 from .vegetation_water_change import *
