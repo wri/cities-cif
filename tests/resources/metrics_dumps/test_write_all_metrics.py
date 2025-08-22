@@ -224,11 +224,11 @@ def test_write_recreational_space_per_capita(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_riparian_land_with_vegetation__percent(target_folder):
+def test_write_riparian_land_with_vegetation_or_water__percent(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','riparian_land_with_vegetation__percent.csv')
+    file_path = prep_output_path(target_folder, 'metric','riparian_land_with_vegetation_or_water__percent.csv')
 
-    metric_obj = RiparianLandWithVegatation__Percent()
+    metric_obj = RiparianLandWithVegatationOrWater__Percent()
     _write_verify(metric_obj, zones, file_path)
     
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")

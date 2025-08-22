@@ -23,8 +23,8 @@ def test_city_values_NaturalAreasPercent():
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
     _evaluate_metric_values(metric_values, 2, 2.06, 97.24, 36.92, 138, 0, True)
 
-def test_city_values_RiparianLandWithVegetation__Percent():
-    metric_obj = RiparianLandWithVegetation__Percent()
+def test_city_values_RiparianLandWithVegetationOrWater__Percent():
+    metric_obj = RiparianLandWithVegetationOrWater__Percent()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
     _evaluate_metric_values(metric_values, 2, 0, 98.95, 50.06, 114, 2, True)
 
