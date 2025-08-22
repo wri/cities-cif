@@ -34,7 +34,7 @@ class RiparianLandWithVegetationOrWater__Percent(Metric):
         water_area = riparian_layer.mask(water_layer).groupby(geo_zone).count().fillna(0)
         vegetation_area = riparian_layer.mask(vegetation_layer).groupby(geo_zone).count().fillna(0)
         AND_area = vegetation_layer.mask(water_layer).groupby(geo_zone).count().fillna(0)
-        OR_area = water_area + vegetation_area - and_area
+        OR_area = water_area + vegetation_area - AND_area
 
         vegetationwater_fraction = OR_area / riparian_layer.groupby(geo_zone).count()
         
