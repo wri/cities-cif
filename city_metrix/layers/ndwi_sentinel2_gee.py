@@ -67,6 +67,6 @@ class NdwiSentinel2(Layer):
         ).NDWI
 
         if self.min_threshold is not None:
-            ndwi_data = xr.where(ndwi_data >= self.min_threshold, 1, np.nan).assign_attrs(ndwi.attrs).rio.write_crs(ndwi_data.crs)
+            ndwi_data = xr.where(ndwi_data >= self.min_threshold, 1, np.nan).assign_attrs(ndwi_data.attrs).rio.write_crs(ndwi_data.crs)
 
         return ndwi_data
