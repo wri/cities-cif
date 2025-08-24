@@ -1,5 +1,6 @@
 import ee
-
+import xarray as xr
+import numpy as np
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
@@ -45,7 +46,7 @@ class TreeCanopyHeight(Layer):
         result_data = data.astype("uint8")
 
         if self.height:
-            result_data = result_data.where(result_data >= self.height)
+            result_data = xr.where(result_data >= self.height, 1, np.nan).assign_attrs(result_data.attrs)
 
         utm_crs = ee_rectangle['crs']
         result_data = result_data.rio.write_crs(utm_crs)
