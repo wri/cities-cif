@@ -52,12 +52,10 @@ class KeyBiodiversityAreaUndeveloped__Percent(Metric):
         kba_area = worldpop_layer.mask(kba_layer).groupby(geo_zone).count()
         builtup_kba_area = worldpop_layer.mask(kba_layer).mask(builtup_layer).groupby(geo_zone).count()
 
-        fraction_developed = builtup_kba_area / kba_area
-
-        if isinstance(fraction_developed, pd.DataFrame):
-            result = fraction_developed.copy()
-            result['value'] = (1 - fraction_developed['value']) * 100
+        if isinstance(kba_area, pd.DataFrame):
+            result = kba_area.copy()
+            result['value'] = 100 * (1 - (builtup_kba_area['value'] / kba_area['value']))
         else:
-            result = (1 - fraction_developed) * 100
+            result = 100 * (1 - (builtup_kba_area / kba_area))
 
         return result

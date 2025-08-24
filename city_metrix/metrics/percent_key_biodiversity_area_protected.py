@@ -51,12 +51,12 @@ class KeyBiodiversityAreaProtected__Percent(Metric):
         kba_area = worldpop_layer.mask(kba_layer).groupby(geo_zone).count()
         protected_kba_area = worldpop_layer.mask(kba_layer).mask(protected_layer).groupby(geo_zone).count()
 
-        fraction_protected = protected_kba_area / kba_area
-
-        if isinstance(fraction_protected, pd.DataFrame):
-            result = fraction_protected.copy()
-            result['value'] = fraction_protected['value'] * 100
+        if isinstance(kba_area, pd.DataFrame):
+            result = kba_area.copy()
+            result['value'] = 100 * (protected_kba_area['value'] / kba_area['value'])
         else:
-            result = fraction_protected * 100
+            result = 100 * protected_kba_area / kba_area
+
+        result = protected_kba_area / kba_area
 
         return result
