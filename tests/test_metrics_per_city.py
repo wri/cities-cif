@@ -1,5 +1,5 @@
 from city_metrix.metrics import *
-from tests.resources.bbox_constants import GEOZONE_TERESINA
+from tests.resources.bbox_constants import GEOZONE_TERESINA, GEOZONE_BUENOS_AIRES
 
 # TODO - Consider adding other metrics
 
@@ -7,6 +7,16 @@ def test_city_values_built_land_with_high_lst():
     metric_obj = BuiltLandWithHighLST()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
     _evaluate_metric_values(metric_values, 2, 0, 0.11, 0.03, 138, 10, True)
+
+def test_city_values_kba_protected__percent():
+    metric_obj = KeyBiodiversityAreaProtected__Percent(country_code_iso3='ARG')
+    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_BUENOS_AIRES)
+    _evaluate_metric_values(metric_values, 2, 0, 98.34, 53.52, 6, 2, True)
+
+def test_city_values_kba_undeveloped__percent():
+    metric_obj = KeyBiodiversityAreaUndeveloped__Percent(country_code_iso3='ARG')
+    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_BUENOS_AIRES)
+    _evaluate_metric_values(metric_values, 2, 27.40, 100, 84.78, 6, 0, True)
 
 def test_city_values_mean_pm2p5_exposure():
     metric_obj = MeanPM2P5Exposure()

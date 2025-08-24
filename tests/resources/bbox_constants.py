@@ -34,7 +34,15 @@ city_admin = construct_city_aoi_json("BRA-Teresina", "city_admin_level")
 GEOZONE_TERESINA = GeoZone(geo_zone=city_admin)
 GEOEXTENT_TERESINA = GeoExtent(GEOZONE_TERESINA)
 
+# Buenos Aires includes some KBA.
+city_admin = construct_city_aoi_json("ARG-Buenos_Aires", "city_admin_level")
+GEOZONE_BUENOS_AIRES = GeoZone(geo_zone=city_admin)
+GEOEXTENT_BUENOS_AIRES = GeoExtent(GEOZONE_BUENOS_AIRES)
+
 # A medium city
 city_admin = construct_city_aoi_json("BRA-Florianopolis", "city_admin_level")
 GEOZONE_FLORIANOPOLIS = GeoZone(geo_zone=city_admin)
 GEOEXTENT_FLORIANOPOLIS = GeoExtent(GEOZONE_FLORIANOPOLIS)
+
+# For testing KBA metrics
+BUENOS_AIRES_WGS84 = GeoExtent(bbox=(-58.89079284843553, -35.009468078762055, -58.01673109153538, -34.001892090572426), crs=WGS_CRS)
