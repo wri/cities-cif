@@ -57,6 +57,6 @@ class KeyBiodiversityAreaProtected__Percent(Metric):
         else:
             result = 100 * protected_kba_area / kba_area
 
-        result = protected_kba_area / kba_area
+        result = 100 * protected_kba_area / kba_area
 
         return result
