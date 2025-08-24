@@ -39,7 +39,7 @@ class RiparianAreas(Layer):
                 .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution))
 
         # Read surface water occurance
-        water = ee.Image('JRC/GSW1_3/GlobalSurfaceWater').select(['occurrence']).gte(50)
+        water = ee.Image('JRC/GSW1_4/GlobalSurfaceWater').select(['occurrence']).gte(50)
         ee_rectangle = bbox.to_ee_rectangle()
         water_da = get_image_collection(
             ee.ImageCollection(water),
@@ -69,6 +69,6 @@ class RiparianAreas(Layer):
         birdBuffer = (distance_200 <= (144.0 - halfpixel))
 
         # get riparian mask
-        data = birdBuffer.rio.write_crs(bbox.as_utm_bbox().crs)
+        data = xr.where(birdBuffer, 1, np.nan).rio.write_crs(bbox.as_utm_bbox().crs)
 
         return data

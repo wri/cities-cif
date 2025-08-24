@@ -228,7 +228,7 @@ def test_pop_weighted_pm2p5():
 def test_riparian_areas():
     data = RiparianAreas().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, False, True, 1122, 0)
+    assert_raster_stats(data, 1, 1, 1, 115, 1007)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 # TODO is this layer deprecated?
@@ -239,6 +239,12 @@ def test_sentinel_2_level2():
     assert np.size(data.green) > 0
     # TODO Add value testing
     assert get_projection_type(data.spatial_ref.crs_wkt) == ProjectionType.UTM
+
+def test_slope():
+    data = Slope().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, 0, 24.76, 1122, 0)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_smart_surface_lulc():
     data = SmartSurfaceLULC().get_data(BBOX)
