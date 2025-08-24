@@ -31,17 +31,17 @@ class RiparianLandWithVegetationOrWater__Percent(Metric):
         water_layer = NdwiSentinel2(min_threshold=MIN_NDWI)
         vegetation_layer = FractionalVegetationPercent(min_threshold=MIN_VEGETATION_PERCENT)
 
+        riparian_area = riparian_layer.groupby(geo_zone).count()
         water_area = riparian_layer.mask(water_layer).groupby(geo_zone).count().fillna(0)
         vegetation_area = riparian_layer.mask(vegetation_layer).groupby(geo_zone).count().fillna(0)
         AND_area = vegetation_layer.mask(water_layer).groupby(geo_zone).count().fillna(0)
         OR_area = water_area + vegetation_area - AND_area
-
         vegetationwater_fraction = OR_area / riparian_layer.groupby(geo_zone).count()
-        
-        if isinstance(vegetationwater_fraction, pd.DataFrame):
-            result = vegetationwater_fraction.copy()
-            result['value'] = vegetationwater_fraction['value'] * 100
+
+        if isinstance(riparian_area, pd.DataFrame):
+            result = riparian_area.copy()
+            result['value'] = 100 * vegetationwater_fraction['value']
         else:
-            result = vegetationwater_fraction * 100
+            result = 100 * vegetationwater_fraction
 
         return result

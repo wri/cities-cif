@@ -24,8 +24,8 @@ class AreaFractionalVegetationExceedsThreshold__Percent(Metric):
         fracveg_gte_thresh_sum = fracveg_gte_thresh_layer.groupby(geo_zone,custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).sum()
         fracveg_all_count = fracveg_all_layer.groupby(geo_zone,custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).count()
 
-        if isinstance(fracveg_gte_thresh_sum, pd.DataFrame):
-            result = fracveg_gte_thresh_sum.copy()
+        if isinstance(fracveg_all_count, pd.DataFrame):
+            result = fracveg_all_count.copy()
             result['value'] = 100 * fracveg_gte_thresh_sum['value'] / fracveg_all_count['value']
         else:
             result = 100 * fracveg_gte_thresh_sum / fracveg_all_count

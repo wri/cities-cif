@@ -30,12 +30,13 @@ class SteeplySlopedLandWithVegetation__Percent(Metric):
         steep_layer = Slope(min_threshold=MIN_SLOPE_DEGREES)
         vegetation_layer = FractionalVegetationPercent(min_threshold=MIN_VEGETATION_PERCENT)
 
-        vegetation_fraction = steep_layer.mask(vegetation_layer).groupby(geo_zone).count().fillna(0) / steep_layer.groupby(geo_zone).count()
-        
-        if isinstance(vegetation_fraction, pd.DataFrame):
-            result = vegetation_fraction.copy()
-            result['value'] = vegetation_fraction['value'] * 100
+        steep_area = steep_layer.groupby(geo_zone).count()
+        vegetated_steep_area = steep_layer.mask(vegetation_layer).groupby(geo_zone).count().fillna(0)
+
+        if isinstance(steep_area, pd.DataFrame):
+            result = steep_area.copy()
+            result['value'] = 100 * vegetated_steep_area['value'] / steep_area['value']
         else:
-            result = vegetation_fraction * 100
+            result = 100 * vegetated_steep_area / steep_area
 
         return result
