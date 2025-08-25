@@ -299,7 +299,6 @@ class FutureDaysAbove35__Days(Metric):
 
         data_layer = NexGddpCmip6(start_year=self.start_year, end_year=self.end_year)
         results = defaultdict(list)
-        zone = zones.zones.iloc[[rownum]]
         bbox = GeoExtent(geo_zone)
         haz = ThresholdDays(35)
         data = data_layer.get_data(bbox)
