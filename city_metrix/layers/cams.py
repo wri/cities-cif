@@ -43,7 +43,7 @@ class CamsSpecies(Enum):
         'who_threshold': 45.0,
         'cost_per_tonne': np.nan,
         'eac4_varname': 'pm10'
-    },
+    }
     CO = {
         'name': 'carbon monoxide',
         'molar_mass': 28.01,
