@@ -87,7 +87,7 @@ class AirPollutantWhoExceedance__Days(Metric):
         if self.species is not None:
             if not isinstance(self.species, (list, tuple, set)) or len(self.species) == 0 or sum([not i in SUPPORTED_SPECIES for i in self.species]) > 0:
                 raise Exception('Argument species must be list-like containing any non-empty subset of CamsSpecies enums {0}'.format(', '.join([i.__str__().split('.')[1] for i in SUPPORTED_SPECIES])))
-        bbox = GeoExtent(zones.total_bounds)
+        bbox = GeoExtent(geo_zone.total_bounds)
         cams_layer = Cams(start_date=f'{self.year}-01-01', end_date=f'{self.year}-12-31', species=self.species)
         cams_data = cams_layer.get_data(bbox)
         if self.species is None:
