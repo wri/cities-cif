@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
@@ -45,8 +46,11 @@ class CanopyAreaPerResident(Metric):
         if isinstance(tree_canopy_height_count, pd.DataFrame):
             result = tree_canopy_height_count.copy()
             result['value'] = tree_canopy_height_count['value'] / world_pop_sum['value']
+            result['value'] = result['value'].replace([np.inf, -np.inf], np.nan)
         else:
             result = tree_canopy_height_count / world_pop_sum
+            if np.isinf(result):
+                result = np.nan
 
         return result
 

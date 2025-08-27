@@ -8,6 +8,11 @@ def test_city_values_built_land_with_high_lst():
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
     _evaluate_metric_values(metric_values, 2, 0, 0.11, 0.03, 138, 10, True)
 
+def test_city_values_canopy_area_per_resident_informal():
+    metric_obj = CanopyAreaPerResidentInformal()
+    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
+    _evaluate_metric_values(metric_values, 2, 0, 538.22, 10.81, 70, 1, True)
+
 def test_city_values_mean_pm2p5_exposure():
     metric_obj = MeanPM2P5Exposure()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
