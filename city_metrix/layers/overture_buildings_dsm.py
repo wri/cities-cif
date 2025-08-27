@@ -123,7 +123,7 @@ def _extract_bbox_aoi(buffered_dem, bbox):
         write_layer(buffered_dem, file_uri, GTIFF_FILE_EXTENSION)
 
         with rasterio.open(temp_file) as src:
-            xmin, ymin, xmax, ymax = bbox.bounds
+            xmin, ymin, xmax, ymax = bbox.as_utm_bbox().bounds
             window = from_bounds(xmin, ymin, xmax, ymax, transform=src.transform)
             subarea = src.read(1, window=window)
             sub_transform = src.window_transform(window)

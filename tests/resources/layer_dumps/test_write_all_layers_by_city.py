@@ -303,7 +303,9 @@ def _run_write_layers_by_city_test(layer_obj, target_folder):
     try:
         # Do not force data refresh to avoid collisions with concurrent tests
         layer_obj.write(bbox=geo_extent, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri= os_file_path, force_data_refresh=True)
-        cache_file_exists = check_if_cache_file_exists(file_uri)
+        tiled_file_uri = file_uri + '/tile_0001.tif'
+        cache_file_exists = True if check_if_cache_file_exists(file_uri) or check_if_cache_file_exists(
+            tiled_file_uri) else False
         assert cache_file_exists, "Test failed since file did not upload to s3"
     finally:
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path

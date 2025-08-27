@@ -26,47 +26,54 @@ def _read_geojson_from_s3(s3_bucket, file_key):
 
 from botocore.exceptions import ClientError
 def delete_s3_file_if_exists(uri):
-    bucket_name = get_bucket_name_from_s3_uri(uri)
-    key = get_file_key_from_url(uri)
-    try:
-        # Check if the object exists
-        s3_client.head_object(Bucket=bucket_name, Key=key)
+    if get_uri_scheme(uri) == 's3':
+        bucket_name = get_bucket_name_from_s3_uri(uri)
+        key = get_file_key_from_url(uri)
+        try:
+            # Check if the object exists
+            s3_client.head_object(Bucket=bucket_name, Key=key)
 
-        # If no error, delete the object
-        s3_client.delete_object(Bucket=bucket_name, Key=key)
-    except ClientError as e:
-        if e.response['Error']['Code'] == '404':
-            print(f"File not found: {key}")
-        else:
-            raise  # Re-raise other unexpected errors
+            # If no error, delete the object
+            s3_client.delete_object(Bucket=bucket_name, Key=key)
+        except ClientError as e:
+            if e.response['Error']['Code'] == '404':
+                print(f"File not found: {key}")
+            else:
+                raise  # Re-raise other unexpected errors
 
 def delete_s3_folder_if_exists(uri):
-    bucket_name = get_bucket_name_from_s3_uri(uri)
-    folder = get_file_key_from_url(uri)
+    if get_uri_scheme(uri) == 's3':
+        bucket_name = get_bucket_name_from_s3_uri(uri)
+        folder = get_file_key_from_url(uri)
 
-    # List objects under the prefix
-    response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=folder)
+        # List objects under the prefix
+        response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=folder)
 
-    if 'Contents' in response:
-        objects_to_delete = [{'Key': obj['Key']} for obj in response['Contents']]
+        if 'Contents' in response:
+            objects_to_delete = [{'Key': obj['Key']} for obj in response['Contents']]
 
-        # Delete objects in one batch (up to 1000)
-        s3_client.delete_objects(
-            Bucket=bucket_name,
-            Delete={'Objects': objects_to_delete}
-        )
+            # Delete objects in one batch (up to 1000)
+            s3_client.delete_objects(
+                Bucket=bucket_name,
+                Delete={'Objects': objects_to_delete}
+            )
+        else:
+            print(f"No folder found at prefix '{folder}' — nothing to delete.")
+
+
+def create_uri_target_folder(uri):
+    if get_uri_scheme(uri) == 's3':
+        s3_bucket = get_bucket_name_from_s3_uri(uri)
+        folder = get_file_key_from_url(uri)
+
+        if not folder.endswith('/'):
+            folder += '/'
+
+        s3_client.put_object(Bucket=s3_bucket, Key=folder)
     else:
-        print(f"No folder found at prefix '{folder}' — nothing to delete.")
-
-
-def create_s3_folder(uri):
-    s3_bucket = get_bucket_name_from_s3_uri(uri)
-    folder = get_file_key_from_url(uri)
-
-    if not folder.endswith('/'):
-        folder += '/'
-
-    s3_client.put_object(Bucket=s3_bucket, Key=folder)
+        file_path = get_file_path_from_uri(uri)
+        folder_path = os.path.dirname(file_path)
+        os.makedirs(folder_path, exist_ok=True)
 
 def read_geojson_from_cache(uri):
     if get_uri_scheme(uri) == 's3':

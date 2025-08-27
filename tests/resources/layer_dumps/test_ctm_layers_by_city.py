@@ -10,11 +10,11 @@ from tests.resources.conftest import get_target_folder_path, DUMP_RUN_LEVEL, Dum
 from tests.resources.tools import prep_output_path
 from tests.tools.general_tools import get_test_cache_variables
 
-# GEO_EXTENT = GEOEXTENT_TERESINA
-GEO_EXTENT = GEOEXTENT_FLORIANOPOLIS
+GEO_EXTENT = GEOEXTENT_TERESINA
+# GEO_EXTENT = GEOEXTENT_FLORIANOPOLIS
 
 # 8 min runtime for Teresina
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_fabdem_city():
     layer_obj = FabDEM()
     layer_obj.write(bbox=GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
@@ -25,7 +25,7 @@ def test_fabdem_city():
     assert cache_file_exists
 
 # 4 min runtime for Teresina
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_open_urban_city():
     layer_obj = OpenUrban()
     layer_obj.get_data_with_caching(bbox=GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
@@ -37,7 +37,7 @@ def test_open_urban_city():
 
 # 7 min runtime for Teresina
 # 26 min Florianopolis
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_tree_canopy_height_city():
     layer_obj = TreeCanopyHeight()
     layer_obj.get_data_with_caching(bbox=GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
@@ -49,7 +49,7 @@ def test_tree_canopy_height_city():
 
 # 10 min runtime for Teresina
 # 41 min Florianopolis
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_albedo_cloud_mask_city():
     layer_obj = AlbedoCloudMasked()
     layer_obj.get_data_with_caching(bbox=GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
@@ -60,7 +60,7 @@ def test_albedo_cloud_mask_city():
     assert cache_file_exists
 
 # 52 min runtime for Teresina
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_overture_buildings_dsm_city():
     layer_obj = OvertureBuildingsDSM()
     layer_obj.get_data_with_caching(bbox=GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)

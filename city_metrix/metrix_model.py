@@ -1,5 +1,6 @@
 import math
 import os
+import shutil
 import subprocess
 import tempfile
 import dask
@@ -28,9 +29,9 @@ from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_admin_boundaries, read_geotiff_from_cache, extract_tif_subarea,
-                                    create_s3_folder, write_geojson, write_json, get_key_from_s3_uri,
+                                    create_uri_target_folder, write_geojson, write_json, get_key_from_s3_uri,
                                     get_file_key_from_url, get_bucket_name_from_s3_uri,
-                                    delete_s3_folder_if_exists, delete_s3_file_if_exists)
+                                    delete_s3_folder_if_exists, delete_s3_file_if_exists, get_file_path_from_uri)
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
                                       parse_city_aoi_json, reproject_units, construct_city_aoi_json,
                                       standardize_y_dimension_direction)
@@ -751,7 +752,7 @@ class Layer():
         return results
 
 
-    def get_data_by_fishnet_tiles(self, bbox, tile_side_m, spatial_resolution, file_uri):
+    def get_data_by_fishnet_tiles(self, bbox, tile_side_m, spatial_resolution, file_uri, os=None):
         # TODO: Code currently only handles raster data
 
         #  Clean up targets
@@ -823,10 +824,7 @@ class Layer():
                     from rasterio.plot import show
                     import os
 
-                    # Step 2: Open all files
                     src_files_to_mosaic = [rasterio.open(fp) for fp in file_paths]
-
-                    # Step 3: Merge them
                     mosaic, out_trans = merge(src_files_to_mosaic)
 
                     # Step 4: Copy metadata and write to new file
@@ -850,6 +848,10 @@ class Layer():
                     # write_layer(clipped_data, tile_file_uri, self.OUTPUT_FILE_FORMAT)
                     # ------- Use above for testing
 
+                    # read data
+                    temp_file_uri = 'file://' + temp_file_path
+                    merged_data = read_geotiff_from_cache(temp_file_uri)
+
                     # write to cache
                     file_key = get_file_key_from_url(file_uri)
                     bucket = get_bucket_name_from_s3_uri(file_uri)
@@ -861,22 +863,28 @@ class Layer():
                     print(f"Failed to process {file_uri}: {e}")
             else:
                 has_merge_data = False
-                create_s3_folder(file_uri)
+                create_uri_target_folder(file_uri)
                 for file in file_paths:
                     tile = Path(file).stem
                     target_tile_uri = f"{file_uri}/{tile}.{GTIFF_FILE_EXTENSION}"
-                    file_key = get_file_key_from_url(target_tile_uri)
-                    bucket = get_bucket_name_from_s3_uri(target_tile_uri)
 
-                    s3_client.upload_file(
-                        file, bucket, file_key, ExtraArgs={"ACL": "public-read"}
-                    )
+                    if target_tile_uri.startswith('s3://'):
+                        file_key = get_file_key_from_url(target_tile_uri)
+                        bucket = get_bucket_name_from_s3_uri(target_tile_uri)
 
-                self._write_fishnet_metadata_to_s3(fishnet, file_uri, crs)
+                        s3_client.upload_file(
+                            file, bucket, file_key, ExtraArgs={"ACL": "public-read"}
+                        )
+                    else:
+                        file_path = get_file_path_from_uri(target_tile_uri)
+                        shutil.move(file, file_path)
+
+                self._write_fishnet_metadata_to_uri_target(fishnet, file_uri, crs)
+
 
         return has_merge_data, merged_data
 
-    def _write_fishnet_metadata_to_s3(self, fishnet, file_uri, crs):
+    def _write_fishnet_metadata_to_uri_target(self, fishnet, file_uri, crs):
         import json
         json_snippets = []
         for index, tile in fishnet.iterrows():

@@ -39,15 +39,10 @@ def test_geotiff_custom_param_val():
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_netcdf_default_param_val():
-    layer_obj = Era5HottestDay(seasonal_utc_offset=-8)
-    is_custom_layer = _run_cache_test(layer_obj)
-    assert is_custom_layer == False
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_netcdf_custom_param_val():
-    layer_obj = Era5HottestDay(start_date="2023-02-01", seasonal_utc_offset=-8)
+    layer_obj = Era5HottestDay(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=-8)
     is_custom_layer = _run_cache_test(layer_obj)
     assert is_custom_layer == True
+
 
 def _run_cache_test(layer_obj):
     _, file_uri, _, is_custom_layer = get_test_cache_variables(layer_obj, GEO_EXTENT_PROCESSING_CITY)
