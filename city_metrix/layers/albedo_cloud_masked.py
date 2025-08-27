@@ -14,6 +14,7 @@ class AlbedoCloudMasked(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["zonal_stats"]
     MINOR_NAMING_ATTS = None
+    PROCESSING_TILE_SIDE_M = 5000
 
     """
     Attributes:

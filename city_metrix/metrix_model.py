@@ -1,7 +1,8 @@
 import math
 import os
+import subprocess
 import tempfile
-
+import dask
 import geopandas as gpd
 import xarray as xr
 import numpy as np
@@ -21,15 +22,21 @@ from shapely import geometry
 from shapely.geometry import box
 from xrspatial import zonal_stats
 
+from city_metrix import s3_client
 from city_metrix.cache_manager import retrieve_city_cache, build_file_key
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
-                                    get_city, get_city_admin_boundaries, read_geotiff_from_cache)
+                                    get_city, get_city_admin_boundaries, read_geotiff_from_cache, extract_tif_subarea,
+                                    create_s3_folder, write_geojson, write_json, get_key_from_s3_uri,
+                                    get_file_key_from_url, get_bucket_name_from_s3_uri,
+                                    delete_s3_folder_if_exists, delete_s3_file_if_exists)
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
                                       parse_city_aoi_json, reproject_units, construct_city_aoi_json,
                                       standardize_y_dimension_direction)
 
+MAX_RASTER_BYTES_FOR_SINGLE_FILE_OUTPUT = 500000000 # (Note: Teresina FabDem 544997973)
+dask.config.set({'logging.distributed': 'warning'})
 
 class GeoZone():
     def __init__(self, geo_zone: Union[GeoDataFrame | str], crs=WGS_CRS):
@@ -735,9 +742,21 @@ class Layer():
         """
         ...
 
+    def _get_completed_tile_ids(self, file_paths):
+        results = []
+        for path in file_paths:
+            filename = os.path.basename(path)
+            id = int(filename.split('_', 1)[1].replace('.tif', ''))
+            results.append(id)
+        return results
+
+
     def get_data_by_fishnet_tiles(self, bbox, tile_side_m, spatial_resolution, file_uri):
         # TODO: Code currently only handles raster data
-        from osgeo import gdal
+
+        #  Clean up targets
+        delete_s3_file_if_exists(file_uri)
+        delete_s3_folder_if_exists(file_uri)
 
         output_as = ProjectionType.UTM
         utm_box = bbox.as_utm_bbox()
@@ -755,51 +774,208 @@ class Layer():
         # ------- Use above for testing
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            array_list = []
-            for index, row in fishnet.iterrows():
-                tile_bounds = row['geometry'].bounds
-                geo_extent = GeoExtent(tile_bounds, crs)
+            # TODO Add verification of complete set of files
 
-                tile_data = self.aggregate.get_data(bbox=geo_extent, spatial_resolution=spatial_resolution)
-                _, tile_data = standardize_y_dimension_direction(tile_data)
+            processed_count = 0
+            retry_count = 0
+            expected_result_count = len(fishnet)
+            uncompleted_tiles = fishnet
+            while processed_count < expected_result_count and retry_count < 10:
+                tasks = []
+                # for index, tile in uncompleted_tiles.iterrows():
+                    # cell_count = self._process_fishnet_tile(index, tile, crs, spatial_resolution, temp_dir)
+                    # if cell_count == 0:
+                    #     empty_tiles.append(index)
+                    # else:
+                    #     total_cell_count += cell_count
 
-                file_name = f'layer{index}.tif'
-                temp_file = os.path.join(temp_dir, file_name)
+                for index, tile in uncompleted_tiles.iterrows():
+                    task = dask.delayed(self._process_fishnet_tile)(index, tile, crs, spatial_resolution, temp_dir)
+                    tasks.append(task)
 
-                # clip to bounds
-                write_layer(tile_data, temp_file, self.OUTPUT_FILE_FORMAT)
-                array_list.append(temp_file)
+                # run them all in parallel with threads
+                target_gb = 3
+                try:
+                    unprocessed_tiles = self._run_tasks(tasks, target_gb)
+                except Exception as e:
+                    print(f"Failed to process a tile fo {file_uri}: {e}. Retrying.")
 
-            output_file_path = os.path.join(temp_dir, 'composite_layer.tif')
-            gdal.Warp(output_file_path, array_list, format="GTiff")
+                file_paths = self._get_all_tif_file_paths(temp_dir)
+                total_file_bytes = get_folder_size(temp_dir)
 
-            temp_file_uri = 'file://' + output_file_path
-            data = read_geotiff_from_cache(temp_file_uri)
+                missing_tiles = [item for item in unprocessed_tiles if not isinstance(item, str)]
+                processed_count = len(file_paths) + len(missing_tiles)
+                if processed_count == expected_result_count:
+                    uncompleted_tiles = gpd.GeoDataFrame(geometry=[])
+                else:
+                    completed_tile_ids = self._get_completed_tile_ids(file_paths)
+                    uncompleted_tiles = fishnet.drop(completed_tile_ids).drop(missing_tiles)
 
-            # clip to AOI bounds
-            west, south, east, north = utm_box.bounds
-            longitude_range = slice(west, east)
-            latitude_range = slice(north, south)
-            clipped_data = data.sel(x=longitude_range, y=latitude_range)
+                retry_count +=1
 
-            # ------- Use below for testing
-            # import uuid
-            # guid = uuid.uuid4()
-            # file_id = f'{self.aggregate.__class__.__name__}_{guid}'
-            # tile_file_uri = f'/tmp/test_result_tif_files/scratch/{file_id}'
-            # write_layer(clipped_data, tile_file_uri, self.OUTPUT_FILE_FORMAT)
-            # ------- Use above for testing
+            merged_data = []
+            file_paths = self._get_all_tif_file_paths(temp_dir)
+            if total_file_bytes <= MAX_RASTER_BYTES_FOR_SINGLE_FILE_OUTPUT:
+                has_merge_data = True
+                try:
+                    import rasterio
+                    from rasterio.merge import merge
+                    from rasterio.plot import show
+                    import os
 
-            if bbox.geo_type == GeoType.CITY:
-                write_layer(clipped_data, file_uri, self.OUTPUT_FILE_FORMAT)
+                    # Step 2: Open all files
+                    src_files_to_mosaic = [rasterio.open(fp) for fp in file_paths]
 
-        return clipped_data
+                    # Step 3: Merge them
+                    mosaic, out_trans = merge(src_files_to_mosaic)
+
+                    # Step 4: Copy metadata and write to new file
+                    out_meta = src_files_to_mosaic[0].meta.copy()
+                    out_meta.update({
+                        "driver": "GTiff",
+                        "height": mosaic.shape[1],
+                        "width": mosaic.shape[2],
+                        "transform": out_trans
+                    })
+
+                    temp_file_path = os.path.join(temp_dir, 'composite_layer.tif')
+                    with rasterio.open(temp_file_path, "w", **out_meta) as dest:
+                        dest.write(mosaic)
+
+                    # ------- Use below for testing
+                    # import uuid
+                    # guid = uuid.uuid4()
+                    # file_id = f'{self.aggregate.__class__.__name__}_{guid}'
+                    # tile_file_uri = f'/tmp/test_result_tif_files/scratch/{file_id}'
+                    # write_layer(clipped_data, tile_file_uri, self.OUTPUT_FILE_FORMAT)
+                    # ------- Use above for testing
+
+                    # write to cache
+                    file_key = get_file_key_from_url(file_uri)
+                    bucket = get_bucket_name_from_s3_uri(file_uri)
+                    s3_client.upload_file(
+                        temp_file_path, bucket, file_key, ExtraArgs={"ACL": "public-read"}
+                    )
+
+                except  Exception as e:
+                    print(f"Failed to process {file_uri}: {e}")
+            else:
+                has_merge_data = False
+                create_s3_folder(file_uri)
+                for file in file_paths:
+                    tile = Path(file).stem
+                    target_tile_uri = f"{file_uri}/{tile}.{GTIFF_FILE_EXTENSION}"
+                    file_key = get_file_key_from_url(target_tile_uri)
+                    bucket = get_bucket_name_from_s3_uri(target_tile_uri)
+
+                    s3_client.upload_file(
+                        file, bucket, file_key, ExtraArgs={"ACL": "public-read"}
+                    )
+
+                self._write_fishnet_metadata_to_s3(fishnet, file_uri, crs)
+
+        return has_merge_data, merged_data
+
+    def _write_fishnet_metadata_to_s3(self, fishnet, file_uri, crs):
+        import json
+        json_snippets = []
+        for index, tile in fishnet.iterrows():
+            tile_bounds = tile.geometry.bounds
+            tile_file_name = self._construct_tile_name(index)
+            tile_uri = f"{file_uri}/{tile_file_name}"
+            key = get_key_from_s3_uri(tile_uri)
+            tile_row = {
+                "key": key,
+                "bbox": tile_bounds,
+                "crs": crs
+            }
+            snippet = json.dumps(tile_row)
+            json_snippets.append(snippet)
+
+        metadata_file = f"{file_uri}/geotiff_index.json"
+        parsed_snippets = [json.loads(snippet) for snippet in json_snippets]
+        write_json(parsed_snippets, metadata_file)
+
+
+    def _run_tasks(self, tasks, target_gb: int):
+        import multiprocessing as mp
+        import psutil
+        from dask import compute
+        # from dask.distributed import Client
+
+        memory_info = psutil.virtual_memory()
+        available_memory = memory_info.available  # Available memory in bytes
+        available_memory_gb = available_memory / (1024 ** 3)
+        max_workers_by_memory = int(available_memory_gb / target_gb)
+
+        max_workers_by_cpu_availability = int(mp.cpu_count() - 1)
+
+        num_workers = (
+            max_workers_by_memory
+            if max_workers_by_memory < max_workers_by_cpu_availability
+            else max_workers_by_cpu_availability
+        )
+
+        memory_limit = f"{target_gb}GB"
+
+        unprocessed_tiles = compute(
+            *tasks,
+            scheduler="threads",
+            num_workers=num_workers,
+            threads_per_worker=1,
+            memory_limit=memory_limit,
+        )
+
+        # total_raster_count = sum(raster_count_results)
+        return unprocessed_tiles
+
+
+    def _get_all_tif_file_paths(self, directory):
+        tif_files = [
+            os.path.join(directory, f)
+            for f in os.listdir(directory)
+            if f.endswith('.tif') and os.path.isfile(os.path.join(directory, f))
+        ]
+        return tif_files
+
+    def _process_fishnet_tile(self, index, tile, crs, spatial_resolution, temp_dir):
+        tile_bounds = tile['geometry'].bounds
+        geo_extent = GeoExtent(tile_bounds, crs)
+
+        # buffer the tile bbox so that it can be later cleanly trimmed back to original extent
+        buffered_utm_bbox = geo_extent.buffer_utm_bbox(2)
+
+        unprocessed_tile = ''
+        tile_data = self.aggregate.get_data(bbox=buffered_utm_bbox, spatial_resolution=spatial_resolution)
+        if tile_data is None:
+            cell_count = 0
+            unprocessed_tile = index
+        else:
+            _, tile_data = standardize_y_dimension_direction(tile_data)
+
+            # clip back to original tile extent
+            clipped_tile = extract_tif_subarea(tile_data, geo_extent)
+
+            file_name = self._construct_tile_name(index)
+            temp_file_path = os.path.join(temp_dir, file_name)
+            # write_layer(tile_data, temp_file_path, self.OUTPUT_FILE_FORMAT)
+            write_layer(clipped_tile, temp_file_path, GTIFF_FILE_EXTENSION)
+
+            cell_count = tile_data.size if tile_data.any() else 0
+
+        return unprocessed_tile
+
+    def _construct_tile_name(self, tile_index):
+        padded_index = str(tile_index).zfill(4)
+        file_name = f'tile_{padded_index}.tif'
+        return file_name
 
     def get_data_with_caching(self, bbox: GeoExtent, s3_env: str,
                               spatial_resolution: int = None, force_data_refresh: bool = False) -> Union[
         xr.DataArray, gpd.GeoDataFrame]:
         """
         Extract the data from the S3 cache otherwise source and return it in a way we can compare to other layers.
+        :param city_aoi: specifies a specific AOI for a city extent that does not match the standard city extent
         :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
         """
 
@@ -814,16 +990,19 @@ class Layer():
                 tile_side_m = None
             bbox_area = bbox.as_utm_bbox().polygon.area
             if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
-                result_data = self.get_data_by_fishnet_tiles(bbox=bbox, tile_side_m=tile_side_m,
+                has_merge_data, result_data = self.get_data_by_fishnet_tiles(bbox=bbox, tile_side_m=tile_side_m,
                                                              spatial_resolution=spatial_resolution, file_uri=file_uri)
             else:
                 result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
-                # Write to cache
-                if bbox.geo_type == GeoType.CITY:
+                has_merge_data = True
+
+                # write to cache
+                if has_merge_data and bbox.geo_type == GeoType.CITY:
                     write_layer(result_data, file_uri, self.OUTPUT_FILE_FORMAT)
         else:
             print(f">>>Reading {self.aggregate.__class__.__name__} layer data from cache..")
             result_data = retrieved_cached_data
+            has_merge_data = True
 
         return result_data
 
@@ -1200,3 +1379,14 @@ def standardize_s3_env(output_env):
         raise ValueError(f"Invalid output environment ({output_env}) for Layer")
     else:
         return standard_env
+
+
+def get_folder_size(folder_path):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(folder_path):
+        for file in filenames:
+            file_path = os.path.join(dirpath, file)
+            if os.path.isfile(file_path):  # Ensure it's a file
+                total_size += os.path.getsize(file_path)
+    return total_size
+

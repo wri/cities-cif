@@ -1,4 +1,5 @@
 import os
+import uuid
 from datetime import datetime
 from enum import Enum
 
@@ -26,6 +27,8 @@ def build_file_key(output_env, class_obj, geo_extent):
 
     return file_uri, file_key, feature_id, is_custom_object
 
+# def retrieve_city_cache(class_obj, geo_extent, output_env, force_data_refresh: bool,
+#                         city_aoi:tuple[float, float, float, float] = None):
 def retrieve_city_cache(class_obj, geo_extent, output_env, force_data_refresh: bool):
     file_uri, file_key, feature_id, is_custom_layer = build_file_key(output_env, class_obj, geo_extent)
 
@@ -246,7 +249,32 @@ def get_cached_file_uri(file_key, is_custom_layer):
 
 def get_cached_file_key(feature_based_class_name, output_env, feature_name, city_id, admin_level, feature_id, file_format):
     if feature_based_class_name.lower() == 'layer':
-        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}.{file_format}"
+        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}"
     else:
-        file_key = f"data/{output_env}/metrics/{city_id}/{city_id}__{feature_id}.{file_format}"
+        file_key = f"data/{output_env}/metrics/{city_id}/{city_id}__{feature_id}"
+
+    # if city_aoi is not None:
+    #     aoi_uuid = hashkey_from_tuple(city_aoi)
+    #     file_key = f"{file_key}_AoiHash{aoi_uuid}"
+
+    file_key = f"{file_key}.{file_format}"
     return file_key
+
+
+# def hashkey_from_tuple(numbers, length=12):
+#     import hashlib
+#     if len(numbers) != 4:
+#         raise ValueError("Tuple must contain exactly four numbers.")
+#
+#     # Convert each number to a string with consistent formatting
+#     formatted = [f"{n:.10f}" if isinstance(n, float) else str(n) for n in numbers]
+#
+#     # Join into a single string
+#     combined = "_".join(formatted)
+#
+#     # Hash the string
+#     hash_key = hashlib.sha256(combined.encode()).hexdigest()
+#
+#     # Return shortened hash
+#     return hash_key[:length]
+

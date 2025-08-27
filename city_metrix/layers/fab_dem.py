@@ -11,6 +11,12 @@ class FabDEM(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
+    PROCESSING_TILE_SIDE_M = 5000
+    # tile-size testing for Teresina
+    # 1. no tiling = 6:49 min (run mode)
+    # 2. 10k = 19:00 (debug mode)
+    # 3. 20k = 8:17 (run mode)
+    # 4. 30k = 7:41 (run mode) no tmp directory observed since city area is smaller, so same as no tiling
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

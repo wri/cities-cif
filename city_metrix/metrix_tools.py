@@ -1,6 +1,4 @@
 import math
-import os
-from datetime import datetime
 
 import utm
 from typing import Union

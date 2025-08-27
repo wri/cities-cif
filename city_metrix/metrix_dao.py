@@ -12,7 +12,8 @@ from urllib.parse import urlparse
 
 from city_metrix import s3_client
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
-    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, CIF_DASHBOARD_LAYER_S3_BUCKET_URI, CIF_CACHE_S3_BUCKET_URI, LOCAL_CACHE_URI
+    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, CIF_DASHBOARD_LAYER_S3_BUCKET_URI, CIF_CACHE_S3_BUCKET_URI, \
+    LOCAL_CACHE_URI, JSON_FILE_EXTENSION
 from city_metrix.metrix_tools import get_crs_from_data, standardize_y_dimension_direction
 
 
@@ -23,16 +24,59 @@ def _read_geojson_from_s3(s3_bucket, file_key):
         result_data = gpd.read_file(temp_file_path)
     return result_data
 
+from botocore.exceptions import ClientError
+def delete_s3_file_if_exists(uri):
+    bucket_name = get_bucket_name_from_s3_uri(uri)
+    key = get_file_key_from_url(uri)
+    try:
+        # Check if the object exists
+        s3_client.head_object(Bucket=bucket_name, Key=key)
+
+        # If no error, delete the object
+        s3_client.delete_object(Bucket=bucket_name, Key=key)
+    except ClientError as e:
+        if e.response['Error']['Code'] == '404':
+            print(f"File not found: {key}")
+        else:
+            raise  # Re-raise other unexpected errors
+
+def delete_s3_folder_if_exists(uri):
+    bucket_name = get_bucket_name_from_s3_uri(uri)
+    folder = get_file_key_from_url(uri)
+
+    # List objects under the prefix
+    response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=folder)
+
+    if 'Contents' in response:
+        objects_to_delete = [{'Key': obj['Key']} for obj in response['Contents']]
+
+        # Delete objects in one batch (up to 1000)
+        s3_client.delete_objects(
+            Bucket=bucket_name,
+            Delete={'Objects': objects_to_delete}
+        )
+    else:
+        print(f"No folder found at prefix '{folder}' — nothing to delete.")
+
+
+def create_s3_folder(uri):
+    s3_bucket = get_bucket_name_from_s3_uri(uri)
+    folder = get_file_key_from_url(uri)
+
+    if not folder.endswith('/'):
+        folder += '/'
+
+    s3_client.put_object(Bucket=s3_bucket, Key=folder)
 
 def read_geojson_from_cache(uri):
     if get_uri_scheme(uri) == 's3':
         s3_bucket = get_bucket_name_from_s3_uri(uri)
-        file_key = _get_file_key_from_url(uri)
+        file_key = get_file_key_from_url(uri)
         result_data = _read_geojson_from_s3(s3_bucket, file_key)
     elif get_uri_scheme(uri) == 'https':
         # Hard-coded to pull data from CIF_dashboard_layer_s3_bucket_uri
         s3_bucket = Path(CIF_DASHBOARD_LAYER_S3_BUCKET_URI).parts[1]
-        file_key = _get_file_key_from_url(uri)
+        file_key = get_file_key_from_url(uri)
         result_data = _read_geojson_from_s3(s3_bucket, file_key)
     else:
         file_path = os.path.normpath(get_file_path_from_uri(uri))
@@ -70,7 +114,7 @@ def read_netcdf_from_cache(file_uri):
     result_data = None
     if get_uri_scheme(file_uri) == 's3':
         s3_bucket = remove_scheme_from_uri(CIF_CACHE_S3_BUCKET_URI)
-        file_key = _get_file_key_from_url(file_uri)
+        file_key = get_file_key_from_url(file_uri)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_file_path = os.path.join(temp_dir, 'tempfile')
@@ -85,7 +129,7 @@ def read_netcdf_from_cache(file_uri):
 
 def read_csv_from_s3(file_uri):
     s3_bucket = remove_scheme_from_uri(CIF_CACHE_S3_BUCKET_URI)
-    file_key = _get_file_key_from_url(file_uri)
+    file_key = get_file_key_from_url(file_uri)
     result_data = None
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_file_path = os.path.join(temp_dir, 'tempfile')
@@ -127,7 +171,7 @@ def write_layer(data, uri, file_format):
 def _write_file_to_s3(data, uri, file_extension):
     import shutil
     s3_bucket = get_bucket_name_from_s3_uri(uri)
-    file_key = _get_file_key_from_url(uri)
+    file_key = get_file_key_from_url(uri)
     try:
         temp_dir = tempfile.mkdtemp()
         temp_file = os.path.join(temp_dir, 'tempfile')
@@ -140,6 +184,10 @@ def _write_file_to_s3(data, uri, file_extension):
             data.to_netcdf(temp_file)
         elif file_extension == CSV_FILE_EXTENSION:
             data.to_csv(temp_file, header=True, index=False)
+        elif file_extension == JSON_FILE_EXTENSION:
+            combined_json = json.dumps(data, indent=4)
+            with open(temp_file, 'w') as file:
+                file.write(combined_json)
         else:
             raise Exception(f"File extension{file_extension} currently not handled for writing to S3")
 
@@ -172,6 +220,14 @@ def write_geojson(data, uri):
         _create_local_target_folder(uri_path)
         data.to_file(uri, driver="GeoJSON")
 
+def write_json(data, uri):
+    if get_uri_scheme(uri) == 's3':
+        _write_file_to_s3(data, uri, JSON_FILE_EXTENSION)
+    else:
+        uri_path = os.path.normpath(get_file_path_from_uri(uri))
+        _create_local_target_folder(uri_path)
+        data.to_file(uri, driver="JSON")
+
 
 def _write_geotiff(data, uri):
     _verify_datatype('write_geotiff()', data, [xr.DataArray], is_spatial=True)
@@ -182,7 +238,6 @@ def _write_geotiff(data, uri):
         uri_path = os.path.normpath(get_file_path_from_uri(uri))
         _create_local_target_folder(uri_path)
         standardized_array.rio.to_raster(raster_path=uri_path, driver="GTiff")
-
 
 def _write_netcdf(data, uri):
     _verify_datatype('write_netcdf()', data, [xr.DataArray], is_spatial=False)
@@ -230,17 +285,12 @@ def write_tile_grid(tile_grid, output_path, target_file_name):
     tg.to_file(tile_grid_file_path)
 
 
-def _get_file_key_from_url(s3_url):
-    file_key = '/'.join(s3_url.split('/')[3:])
-    return file_key
-
-
 # == API queries ==
 def _verify_api_cache_file(query_uri, qualifier, file_extension):
     cache_base = query_uri.replace('https://', '').replace('/', '_').replace('.','_')
     cache_filename = f'{cache_base}_{qualifier}.{file_extension}'
 
-    cache_path = os.path.join(Path('/'),_get_file_key_from_url(LOCAL_CACHE_URI), 'api')
+    cache_path = os.path.join(Path('/'), get_file_key_from_url(LOCAL_CACHE_URI), 'api')
     cache_file_path = os.path.join(cache_path, cache_filename)
     if os.path.exists(cache_file_path) and  _is_file_less_than_one_day_old(cache_file_path):
         is_cache_file_usable = True
@@ -348,6 +398,15 @@ def get_file_path_from_uri(uri):
 
     return file_path
 
+def get_file_key_from_url(s3_url):
+    file_key = '/'.join(s3_url.split('/')[3:])
+    return file_key
+
+
+def get_key_from_s3_uri(s3_uri):
+    parsed_url = urlparse(s3_uri)
+    key = parsed_url.path.lstrip('/')  # Remove leading slash
+    return key
 
 def get_bucket_name_from_s3_uri(uri):
     # Ensure the URI starts with 's3://'
@@ -366,3 +425,42 @@ def remove_scheme_from_uri(uri):
     if uri_without_scheme.startswith('//'):
         uri_without_scheme = uri_without_scheme[2:]
     return uri_without_scheme
+
+
+def extract_tif_subarea(tif_da, bbox):
+    import os
+    import rasterio
+    from rasterio.windows import from_bounds
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_file = os.path.join(temp_dir, 'tempfile.tif')
+        file_uri = f"file://{temp_file}"
+        write_layer(tif_da, file_uri, GTIFF_FILE_EXTENSION)
+
+        with rasterio.open(temp_file) as src:
+            xmin, ymin, xmax, ymax = bbox.bounds
+            window = from_bounds(xmin, ymin, xmax, ymax, transform=src.transform)
+            subarea = src.read(1, window=window)
+            sub_transform = src.window_transform(window)
+
+            crs = tif_da.rio.crs.to_epsg()
+
+            # Clean metadata
+            meta = {
+                "driver": "GTiff",
+                "dtype": subarea.dtype.name,
+                "nodata": None,
+                "width": subarea.shape[1],
+                "height": subarea.shape[0],
+                "count": 1,
+                "crs": crs,
+                "transform": sub_transform
+            }
+
+            output_path = os.path.join(temp_dir, 'tempfile2.tif')
+            with rasterio.open(output_path, "w", **meta) as dst:
+                dst.write(subarea, 1)
+
+            file_uri = f"file://{output_path}"
+            query_da = read_geotiff_from_cache(file_uri)
+
+        return query_da
