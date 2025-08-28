@@ -49,8 +49,7 @@ class CanopyAreaPerResident(Metric):
             result['value'] = result['value'].replace([np.inf, -np.inf], np.nan)
         else:
             result = tree_canopy_height_count / world_pop_sum
-            if np.isinf(result):
-                result = np.nan
+            result = result.replace([np.inf, -np.inf], np.nan)
 
         return result
 
