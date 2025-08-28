@@ -582,21 +582,15 @@ class LayerGroupBy:
     def _zonal_stats_tile(stats_func, tile_gdf, zones, aggregate, layer, masks, spatial_resolution, force_data_refresh):
         bbox = GeoExtent(tile_gdf)
 
-        aggregate_data = aggregate.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
-                                                         spatial_resolution=spatial_resolution,
-                                                         force_data_refresh=force_data_refresh)
+        aggregate_data = aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
 
         if isinstance(aggregate_data, xr.DataArray) and aggregate_data.data.size == 0:
             return None
         else:
-            mask_datum = [mask.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
-                                                     spatial_resolution=spatial_resolution,
-                                                     force_data_refresh=force_data_refresh) for mask in masks]
+            mask_datum = [mask.get_data(bbox=bbox, spatial_resolution=spatial_resolution) for mask in masks]
 
             if layer is not None:
-                layer_data = layer.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
-                                                         spatial_resolution=spatial_resolution,
-                                                         force_data_refresh=force_data_refresh)
+                layer_data = layer.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
             else:
                 layer_data = None
 
@@ -978,14 +972,16 @@ class Layer():
         file_name = f'tile_{padded_index}.tif'
         return file_name
 
-    def get_data_with_caching(self, bbox: GeoExtent, s3_env: str,
-                              spatial_resolution: int = None, force_data_refresh: bool = False) -> Union[
-        xr.DataArray, gpd.GeoDataFrame]:
+    def cache_city_data(self, bbox: GeoExtent, s3_env: str, spatial_resolution: int = None,
+                              force_data_refresh: bool = False):
         """
         Extract the data from the S3 cache otherwise source and return it in a way we can compare to other layers.
         :param city_aoi: specifies a specific AOI for a city extent that does not match the standard city extent
         :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
         """
+
+        if bbox.geo_type != GeoType.CITY:
+            raise ValueError("Non-city data cannot be cached.")
 
         standard_env = standardize_s3_env(s3_env)
         retrieved_cached_data, _, file_uri = retrieve_city_cache(self.aggregate, bbox, standard_env,
@@ -1008,11 +1004,25 @@ class Layer():
                 if has_merge_data and bbox.geo_type == GeoType.CITY:
                     write_layer(result_data, file_uri, self.OUTPUT_FILE_FORMAT)
         else:
-            print(f">>>Reading {self.aggregate.__class__.__name__} layer data from cache..")
-            result_data = retrieved_cached_data
-            has_merge_data = True
+            print(f">>>Layer {self.aggregate.__class__.__name__} is already cached ..")
 
-        return result_data
+
+    def get_cached_city_data(self, city_id: str, sub_area_aoi, s3_env: str, spatial_resolution: int = None,  force_data_refresh: bool = False):
+        """
+        TODO This function is currently a stub
+        Function retreives data fraom a cache for a specified city and sub-area
+        """
+        if bbox.geo_type != GeoType.CITY:
+            raise ValueError("Non-city data cannot be cached.")
+
+        standard_env = standardize_s3_env(s3_env)
+        retrieved_cached_data, _, file_uri = retrieve_city_cache(self.aggregate, bbox, standard_env,
+                                                                 force_data_refresh)
+
+        if retrieved_cached_data is None:
+            pass
+
+
 
     def mask(self, *layers):
         """
@@ -1056,9 +1066,7 @@ class Layer():
 
         if tile_side_length is None:
             utm_geo_extent = bbox.as_utm_bbox()  # currently only support output as utm
-            clipped_data = self.aggregate.get_data_with_caching(bbox=utm_geo_extent, s3_env=standard_env,
-                                                                spatial_resolution=spatial_resolution,
-                                                                force_data_refresh=force_data_refresh)
+            clipped_data = self.aggregate.get_data(bbox=utm_geo_extent, spatial_resolution=spatial_resolution)
 
             # Determine if write can be skipped
             skip_write = _decide_if_write_can_be_skipped(self.aggregate, bbox, output_uri, standard_env)

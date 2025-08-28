@@ -6,7 +6,7 @@ import numpy as np
 from rasterio.features import rasterize
 from city_metrix.metrix_model import Layer, GeoExtent, validate_raster_resampling_method
 from . import FabDEM
-from ..constants import GTIFF_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
+from ..constants import GTIFF_FILE_EXTENSION
 from .overture_buildings_w_height import OvertureBuildingsHeight
 from ..metrix_dao import write_layer, read_geotiff_from_cache
 
@@ -48,8 +48,7 @@ class OvertureBuildingsDSM(Layer):
         buffered_utm_bbox = bbox.buffer_utm_bbox(building_buffer)
 
         # Load buildings and sub-select to ones fully contained in buffered area
-        buffered_buildings_gdf = (OvertureBuildingsHeight(self.city)
-                             .get_data_with_caching(bbox=buffered_utm_bbox, s3_env=DEFAULT_DEVELOPMENT_ENV))
+        buffered_buildings_gdf = (OvertureBuildingsHeight(self.city).get_data(bbox=buffered_utm_bbox))
 
         buffered_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=1, resampling_method='bilinear')
 

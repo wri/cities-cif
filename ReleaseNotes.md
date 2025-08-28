@@ -1,5 +1,9 @@
 # Release Notes
 
+# 2025/08/27
+1. Removed opportunistic caching
+2. Added sub-tiled caching for large layers
+
 # 2025/08/07
 1. Added default date range for Albedo layers
 
