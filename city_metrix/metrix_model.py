@@ -582,15 +582,21 @@ class LayerGroupBy:
     def _zonal_stats_tile(stats_func, tile_gdf, zones, aggregate, layer, masks, spatial_resolution, force_data_refresh):
         bbox = GeoExtent(tile_gdf)
 
-        aggregate_data = aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
+        aggregate_data = aggregate.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
+                                                         spatial_resolution=spatial_resolution,
+                                                         force_data_refresh=force_data_refresh)
 
         if isinstance(aggregate_data, xr.DataArray) and aggregate_data.data.size == 0:
             return None
         else:
-            mask_datum = [mask.get_data(bbox=bbox, spatial_resolution=spatial_resolution) for mask in masks]
+            mask_datum = [mask.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
+                                                     spatial_resolution=spatial_resolution,
+                                                     force_data_refresh=force_data_refresh) for mask in masks]
 
             if layer is not None:
-                layer_data = layer.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
+                layer_data = layer.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
+                                                         spatial_resolution=spatial_resolution,
+                                                         force_data_refresh=force_data_refresh)
             else:
                 layer_data = None
 
@@ -746,12 +752,12 @@ class Layer():
         return results
 
 
-    def get_data_by_fishnet_tiles(self, bbox, tile_side_m, spatial_resolution, file_uri, os=None):
+    def get_data_by_fishnet_tiles(self, bbox, tile_side_m, spatial_resolution, target_uri, os=None):
         # TODO: Code currently only handles raster data
 
         #  Clean up targets
-        delete_s3_file_if_exists(file_uri)
-        delete_s3_folder_if_exists(file_uri)
+        delete_s3_file_if_exists(target_uri)
+        delete_s3_folder_if_exists(target_uri)
 
         output_as = ProjectionType.UTM
         utm_box = bbox.as_utm_bbox()
@@ -793,7 +799,7 @@ class Layer():
                 try:
                     unprocessed_tiles = self._run_tasks(tasks, target_gb)
                 except Exception as e:
-                    print(f"Failed to process a tile fo {file_uri}: {e}. Retrying.")
+                    print(f"Failed to process a tile fo {target_uri}: {e}. Retrying.")
 
                 file_paths = self._get_all_tif_file_paths(temp_dir)
                 total_file_bytes = get_folder_size(temp_dir)
@@ -811,6 +817,7 @@ class Layer():
             merged_data = []
             file_paths = self._get_all_tif_file_paths(temp_dir)
             if total_file_bytes <= MAX_RASTER_BYTES_FOR_SINGLE_FILE_OUTPUT:
+                # Combine tiles into a single file and cache
                 has_merge_data = True
                 try:
                     import rasterio
@@ -847,36 +854,35 @@ class Layer():
                     merged_data = read_geotiff_from_cache(temp_file_uri)
 
                     # write to cache
-                    file_key = get_file_key_from_url(file_uri)
-                    bucket = get_bucket_name_from_s3_uri(file_uri)
-                    s3_client.upload_file(
-                        temp_file_path, bucket, file_key, ExtraArgs={"ACL": "public-read"}
-                    )
-
+                    self._cache_data(temp_file_path, target_uri)
                 except  Exception as e:
-                    print(f"Failed to process {file_uri}: {e}")
+                    print(f"Failed to process {target_uri}: {e}")
             else:
+                # Write individual tiles to cache
                 has_merge_data = False
-                create_uri_target_folder(file_uri)
+                create_uri_target_folder(target_uri)
                 for file in file_paths:
                     tile = Path(file).stem
-                    target_tile_uri = f"{file_uri}/{tile}.{GTIFF_FILE_EXTENSION}"
+                    target_tile_uri = f"{target_uri}/{tile}.{GTIFF_FILE_EXTENSION}"
+                    self._cache_data(file, target_tile_uri)
 
-                    if target_tile_uri.startswith('s3://'):
-                        file_key = get_file_key_from_url(target_tile_uri)
-                        bucket = get_bucket_name_from_s3_uri(target_tile_uri)
-
-                        s3_client.upload_file(
-                            file, bucket, file_key, ExtraArgs={"ACL": "public-read"}
-                        )
-                    else:
-                        file_path = get_file_path_from_uri(target_tile_uri)
-                        shutil.move(file, file_path)
-
-                self._write_fishnet_metadata_to_uri_target(fishnet, file_uri, crs)
+                self._write_fishnet_metadata_to_uri_target(fishnet, target_uri, crs)
 
 
         return has_merge_data, merged_data
+
+    def _cache_data(self, source_file_path, target_tile_uri):
+        if target_tile_uri.startswith('s3://'):
+            file_key = get_file_key_from_url(target_tile_uri)
+            bucket = get_bucket_name_from_s3_uri(target_tile_uri)
+
+            s3_client.upload_file(
+                source_file_path, bucket, file_key, ExtraArgs={"ACL": "public-read"}
+            )
+        else:
+            target_file_path = get_file_path_from_uri(target_tile_uri)
+            shutil.move(source_file_path, target_file_path)
+
 
     def _write_fishnet_metadata_to_uri_target(self, fishnet, file_uri, crs):
         import json
@@ -995,7 +1001,7 @@ class Layer():
             bbox_area = bbox.as_utm_bbox().polygon.area
             if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
                 has_merge_data, result_data = self.get_data_by_fishnet_tiles(bbox=bbox, tile_side_m=tile_side_m,
-                                                             spatial_resolution=spatial_resolution, file_uri=file_uri)
+                                                                             spatial_resolution=spatial_resolution, target_uri=file_uri)
             else:
                 result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
                 has_merge_data = True
@@ -1007,21 +1013,35 @@ class Layer():
             print(f">>>Layer {self.aggregate.__class__.__name__} is already cached ..")
 
 
-    def get_cached_city_data(self, city_id: str, sub_area_aoi, s3_env: str, spatial_resolution: int = None,  force_data_refresh: bool = False):
+    def get_data_with_caching(self, bbox: GeoExtent, s3_env: str,
+                              spatial_resolution: int = None, force_data_refresh: bool = False) -> Union[
+        xr.DataArray, gpd.GeoDataFrame]:
         """
-        TODO This function is currently a stub
-        Function retreives data fraom a cache for a specified city and sub-area
+        Extract the data from the S3 cache otherwise source and return it in a way we can compare to other layers.
+        :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
         """
-        if bbox.geo_type != GeoType.CITY:
-            raise ValueError("Non-city data cannot be cached.")
+
 
         standard_env = standardize_s3_env(s3_env)
         retrieved_cached_data, _, file_uri = retrieve_city_cache(self.aggregate, bbox, standard_env,
                                                                  force_data_refresh)
 
         if retrieved_cached_data is None:
-            pass
+            if hasattr(self.aggregate, 'PROCESSING_TILE_SIDE_M'):
+                tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
+            else:
+                tile_side_m = None
+            bbox_area = bbox.as_utm_bbox().polygon.area
+            if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
+                has_merged_data, result_data = self.get_data_by_fishnet_tiles(bbox=bbox, tile_side_m=tile_side_m,
+                                                                              spatial_resolution=spatial_resolution, target_uri=file_uri)
+            else:
+                result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
+        else:
+            print(f">>>Reading {self.aggregate.__class__.__name__} layer data from cache..")
+            result_data = retrieved_cached_data
 
+        return result_data
 
 
     def mask(self, *layers):
@@ -1060,6 +1080,10 @@ class Layer():
         :param force_data_refresh: forces layer data to be pulled from source instead of cache
         :return:
         """
+
+        if output_uri is None:
+            print("Can't write output to None path")
+            return
 
         standard_env = standardize_s3_env(s3_env)
         file_format = self.OUTPUT_FILE_FORMAT
@@ -1263,6 +1287,10 @@ class Metric():
         :param spatial_resolution: resolution of continuous raster data in meters
         :param force_data_refresh: forces layer data to be pulled from source instead of cache
         """
+        if output_uri is None:
+            print("Can't write output to None path")
+            return
+
         standard_env = standardize_s3_env(s3_env)
 
         indicator, feature_id = self.metric.get_metric_with_caching(geo_zone, standard_env,

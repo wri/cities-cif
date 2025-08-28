@@ -1,4 +1,5 @@
 import os
+import shutil
 import tempfile
 import requests
 import xarray as xr
@@ -57,9 +58,13 @@ def delete_s3_folder_if_exists(uri):
                 Bucket=bucket_name,
                 Delete={'Objects': objects_to_delete}
             )
-        else:
-            print(f"No folder found at prefix '{folder}' — nothing to delete.")
-
+    else:
+        path = get_file_path_from_uri(uri)
+        if os.path.exists(path):
+            if os.path.isfile(path):
+                os.remove(path)
+            elif os.path.isdir(path):
+                shutil.rmtree(path)
 
 def create_uri_target_folder(uri):
     if get_uri_scheme(uri) == 's3':
@@ -72,8 +77,7 @@ def create_uri_target_folder(uri):
         s3_client.put_object(Bucket=s3_bucket, Key=folder)
     else:
         file_path = get_file_path_from_uri(uri)
-        folder_path = os.path.dirname(file_path)
-        os.makedirs(folder_path, exist_ok=True)
+        os.makedirs(file_path, exist_ok=True)
 
 def read_geojson_from_cache(uri):
     if get_uri_scheme(uri) == 's3':
@@ -213,9 +217,9 @@ def write_csv(data, uri):
     if get_uri_scheme(uri) == 's3':
         _write_file_to_s3(data, uri, CSV_FILE_EXTENSION)
     else:
-        uri_path = os.path.normpath(get_file_path_from_uri(uri))
-        _create_local_target_folder(uri_path)
-        data.to_csv(uri, header=True, index=False)
+        file_path = os.path.normpath(get_file_path_from_uri(uri))
+        _create_local_target_folder(file_path)
+        data.to_csv(file_path, header=True, index=False)
 
 
 def write_geojson(data, uri):
@@ -231,10 +235,10 @@ def write_json(data, uri):
     if get_uri_scheme(uri) == 's3':
         _write_file_to_s3(data, uri, JSON_FILE_EXTENSION)
     else:
-        uri_path = os.path.normpath(get_file_path_from_uri(uri))
-        _create_local_target_folder(uri_path)
-        data.to_file(uri, driver="JSON")
-
+        target_path = os.path.normpath(get_file_path_from_uri(uri))
+        _create_local_target_folder(target_path)
+        with open(target_path, 'w') as json_file:
+            json.dump(data, json_file, indent=4)
 
 def _write_geotiff(data, uri):
     _verify_datatype('write_geotiff()', data, [xr.DataArray], is_spatial=True)

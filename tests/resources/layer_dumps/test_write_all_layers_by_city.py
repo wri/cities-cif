@@ -296,13 +296,11 @@ def _run_write_layers_by_city_test(layer_obj, target_folder):
     geo_extent = PROCESSING_CITY
     file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
 
-    if PRESERVE_RESULTS_ON_OS:
-        os_file_path = prep_output_path(target_folder, 'layer', layer_id)
-    else:
-        os_file_path = None
+    os_file_path = prep_output_path(target_folder, 'layer', layer_id)
+
     try:
         # Do not force data refresh to avoid collisions with concurrent tests
-        layer_obj.write(bbox=geo_extent, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri= os_file_path, force_data_refresh=True)
+        layer_obj.write(bbox=geo_extent, tile_side_length=5000, length_units='meters', s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri= os_file_path, force_data_refresh=True)
         tiled_file_uri = file_uri + '/tile_0001.tif'
         cache_file_exists = True if check_if_cache_file_exists(file_uri) or check_if_cache_file_exists(
             tiled_file_uri) else False

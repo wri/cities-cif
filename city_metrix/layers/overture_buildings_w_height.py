@@ -4,7 +4,7 @@ import numpy as np
 
 from city_metrix.metrix_model import Layer, GeoExtent, get_class_default_spatial_resolution
 from . import AverageNetBuildingHeight
-from ..constants import GEOJSON_FILE_EXTENSION
+from ..constants import GEOJSON_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
 from .overture_buildings import OvertureBuildings
 from .ut_globus import UtGlobus
 
@@ -30,8 +30,8 @@ class OvertureBuildingsHeight(Layer):
 
         # Load the datasets
         # Specify DEFAULT_DEVELOPMENT_ENV since below are not Dashboard layers
-        overture_buildings = OvertureBuildings().get_data(bbox=bbox)
-        ut_globus = UtGlobus(self.city).get_data(bbox=bbox)
+        overture_buildings = OvertureBuildings().get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV)
+        ut_globus = UtGlobus(self.city).get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV)
         if len(ut_globus) == 0:
             result_building_heights = overture_buildings
             if hasattr(overture_buildings, 'height'):
