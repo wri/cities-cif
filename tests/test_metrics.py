@@ -4,11 +4,17 @@ import pytest
 
 
 from city_metrix.metrics import *
-from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, BUENOS_AIRES_ZONES_TINY
-PORTLAND_DST_seasonal_utc_offset = -8
+from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, ARG_BUENOS_AIRES_TILED_ZONES_TINY
 
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
+
+def test_area_fractional_vegetation_exceeds_threshold__percent():
+    indicator = AreaFractionalVegetationExceedsThreshold__Percent().get_metric(ARG_BUENOS_AIRES_TILED_ZONES_TINY)
+    expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES_TINY.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 82.37, 92.23, 3, 0)
 
 def test_built_land_with_high_lst():
     sample_zones = IDN_JAKARTA_TILED_ZONES
@@ -25,9 +31,9 @@ def test_built_land_with_low_surface_reflectivity():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.83, 0.99, 100, 0)
 
-def test_built_land_with_vegetation():
-    indicator = BuiltLandWithVegetation__Percent().get_metric(BUENOS_AIRES_ZONES_TINY)
-    expected_zone_size = len(BUENOS_AIRES_ZONES_TINY.zones)
+def test_built_land_with_vegetation__percent():
+    indicator = BuiltLandWithVegetation__Percent().get_metric(ARG_BUENOS_AIRES_TILED_ZONES_TINY)
+    expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES_TINY.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 1, 6.1, 17.2, 2, 1)
@@ -158,13 +164,6 @@ def test_natural_areas__percent():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
 
-def test_percent_area_fracveg_exceeds_threshold():
-    indicator = AreaFractionalVegetationExceedsThreshold__Percent().get_metric(BUENOS_AIRES_ZONES_TINY)
-    expected_zone_size = len(BUENOS_AIRES_ZONES_TINY.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 82.37, 92.23, 3, 0)
-
 def test_percent_area_impervious():
     indicator = PercentAreaImpervious().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
@@ -227,15 +226,15 @@ def test_recreational_space_per_capita():
     assert_metric_stats(indicator, 2, 0, 0.455, 100, 0)
 
 def test_riparian_land_with_vegetation_or_water__percent():
-    indicator = RiparianLandWithVegetationOrWater__Percent().get_metric(BUENOS_AIRES_ZONES_TINY)
-    expected_zone_size = len(BUENOS_AIRES_ZONES_TINY.zones)
+    indicator = RiparianLandWithVegetationOrWater__Percent().get_metric(ARG_BUENOS_AIRES_TILED_ZONES_TINY)
+    expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES_TINY.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 77.75, 92.34, 3, 0)
 
 def test_steeply_sloped_land_with_vegetation__percent():
-    indicator = SteeplySlopedLandWithVegetation__Percent().get_metric(BUENOS_AIRES_ZONES_TINY)
-    expected_zone_size = len(BUENOS_AIRES_ZONES_TINY.zones)
+    indicator = SteeplySlopedLandWithVegetation__Percent().get_metric(ARG_BUENOS_AIRES_TILED_ZONES_TINY)
+    expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES_TINY.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 79.41, 100, 2, 1)
@@ -324,4 +323,3 @@ def assert_metric_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, 
 
     # template
     # assert_metric_stats(indicator, 2, 0, 0, 1, 0)
-

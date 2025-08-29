@@ -5,6 +5,7 @@ from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import GeoZone, Metric
 from city_metrix.layers import EsaWorldCoverClass, EsaWorldCover, FractionalVegetationPercent
 
+
 class BuiltLandWithVegetation__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
@@ -24,13 +25,17 @@ class BuiltLandWithVegetation__Percent(Metric):
 
         builtup_layer = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
         vegetation_layer = FractionalVegetationPercent(min_threshold=50)
-        vegetation_cover_in_built_land = builtup_layer.mask(vegetation_layer).groupby(geo_zone).count()
-        fraction_vegetation_in_built_up_land = (vegetation_cover_in_built_land.fillna(0) / builtup_layer.groupby(geo_zone).count())
 
-        if isinstance(fraction_vegetation_in_built_up_land, pd.DataFrame):
-            result = fraction_vegetation_in_built_up_land.copy()
-            result['value'] = fraction_vegetation_in_built_up_land['value'] * 100
+        vegetation_cover_in_built_land = builtup_layer.mask(vegetation_layer).groupby(geo_zone).count()
+        built_land = builtup_layer.groupby(geo_zone).count()
+
+        if not isinstance(vegetation_cover_in_built_land, (int, float)):
+            vegetation_cover_in_built_land = vegetation_cover_in_built_land.fillna(0)
+
+        if isinstance(vegetation_cover_in_built_land, pd.DataFrame):
+            result = vegetation_cover_in_built_land.copy()
+            result['value'] = 100 * (vegetation_cover_in_built_land['value'] / built_land['value'])
         else:
-            result = fraction_vegetation_in_built_up_land * 100
+            result = 100 * (vegetation_cover_in_built_land / built_land)
 
         return result

@@ -24,6 +24,14 @@ PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
 
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_area_fractional_vegetation_exceeds_threshold__percent(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric', 'area_fractional_vegetation_exceeds_threshold__percent.csv')
+
+    metric_obj = AreaFractionalVegetationExceedsThreshold__Percent()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_built_land_with_high_land_surface_temperature(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(target_folder, 'metric', 'built_land_with_high_land_surface_temperature.csv')
@@ -176,14 +184,6 @@ def test_write_natural_areas__percent(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_percent_area_fracveg_exceeds_threshold(target_folder):
-    zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric', 'percent_area_fracveg_exceeds_threshold.csv')
-
-    metric_obj = PercentAreaFracvegExceedsThreshold()
-    _write_verify(metric_obj, zones, file_path)
-
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_percent_area_impervious(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(target_folder, 'metric', 'percent_area_impervious.csv')
@@ -226,23 +226,23 @@ def test_write_recreational_space_per_capita(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_riparian_land_with_vegetation_or_water__percent(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','riparian_land_with_vegetation_or_water__percent.csv')
+    file_path = prep_output_path(target_folder, 'metric', 'riparian_land_with_vegetation_or_water__percent.csv')
 
-    metric_obj = RiparianLandWithVegatationOrWater__Percent()
+    metric_obj = RiparianLandWithVegetationOrWater__Percent()
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_steeply_sloped_land_with_vegetation__percent(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','steeply_sloped_land_with_vegetation__percent.csv')
+    file_path = prep_output_path(target_folder, 'metric', 'steeply_sloped_land_with_vegetation__percent.csv')
 
-    metric_obj = SteeplySlopedLandWithVegatation__Percent()
+    metric_obj = SteeplySlopedLandWithVegetation__Percent()
     _write_verify(metric_obj, zones, file_path)
     
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_tree_carbon_flux__tonnes(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','tree_carbon_flix__tonnes.csv')
+    file_path = prep_output_path(target_folder, 'metric', 'tree_carbon_flix__tonnes.csv')
 
     metric_obj = TreeCarbonFlux__Tonnes()
     _write_verify(metric_obj, zones, file_path)

@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Union
-import geopandas as gpd
+
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import Slope, FractionalVegetationPercent
 from city_metrix.metrix_model import Metric, GeoZone
@@ -30,9 +30,9 @@ class SteeplySlopedLandWithVegetation__Percent(Metric):
         steep_layer = Slope(min_threshold=MIN_SLOPE_DEGREES)
         vegetation_layer = FractionalVegetationPercent(min_threshold=MIN_VEGETATION_PERCENT)
 
-        steep_area = steep_layer.groupby(geo_zone).count()
         vegetated_steep_area = steep_layer.mask(vegetation_layer).groupby(geo_zone).count().fillna(0)
-
+        steep_area = steep_layer.groupby(geo_zone).count()
+        
         if isinstance(steep_area, pd.DataFrame):
             result = steep_area.copy()
             result['value'] = 100 * vegetated_steep_area['value'] / steep_area['value']

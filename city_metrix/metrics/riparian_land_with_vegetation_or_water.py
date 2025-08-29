@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Union
-import geopandas as gpd
+
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import RiparianAreas, NdwiSentinel2, FractionalVegetationPercent
 from city_metrix.metrix_model import Metric, GeoZone
@@ -34,14 +34,17 @@ class RiparianLandWithVegetationOrWater__Percent(Metric):
         riparian_area = riparian_layer.groupby(geo_zone).count()
         water_area = riparian_layer.mask(water_layer).groupby(geo_zone).count().fillna(0)
         vegetation_area = riparian_layer.mask(vegetation_layer).groupby(geo_zone).count().fillna(0)
+        
         AND_area = vegetation_layer.mask(water_layer).groupby(geo_zone).count().fillna(0)
         OR_area = water_area + vegetation_area - AND_area
-        vegetationwater_fraction = OR_area / riparian_layer.groupby(geo_zone).count()
+
+        if not isinstance(OR_area, (int, float)):
+            OR_area = OR_area.fillna(0)
 
         if isinstance(riparian_area, pd.DataFrame):
             result = riparian_area.copy()
-            result['value'] = 100 * vegetationwater_fraction['value']
+            result['value'] = 100 * (OR_area['value'] / riparian_area['value'])
         else:
-            result = 100 * vegetationwater_fraction
+            result = 100 * (OR_area / riparian_area)
 
         return result
