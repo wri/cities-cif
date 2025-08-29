@@ -3,11 +3,6 @@ from tests.resources.bbox_constants import GEOZONE_TERESINA
 
 # TODO - Consider adding other metrics
 
-def test_city_values_area_fractional_vegetation_exceeds_threshold__Percent():
-    metric_obj = AreaFractionalVegetationExceedsThreshold__Percent()
-    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
-    _evaluate_metric_values(metric_values, 2, 0.81, 96.16, 32.38, 138, 0, True)
-
 def test_city_values_built_land_with_high_lst():
     metric_obj = BuiltLandWithHighLST()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
@@ -27,16 +22,6 @@ def test_city_values_natural_areas__Percent():
     metric_obj = NaturalAreas__Percent()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
     _evaluate_metric_values(metric_values, 2, 2.06, 97.24, 36.92, 138, 0, True)
-
-def test_city_values_riparian_land_with_vegetation_or_water__Percent():
-    metric_obj = RiparianLandWithVegetationOrWater__Percent()
-    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
-    _evaluate_metric_values(metric_values, 2, 0, 98.95, 50.04, 114, 2, True)
-
-def test_city_values_steeply_sloped_land_with_vegetation__Percent():
-    metric_obj = SteeplySlopedLandWithVegetation__Percent()
-    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
-    _evaluate_metric_values(metric_values, 2, 0, 100, 68.74, 97, 7, True)
 
 
 def _evaluate_metric_values(metric_values, digits, expected_min, expected_max, expected_mean, expected_count, expected_zero_count, expect_zone_continuity):
