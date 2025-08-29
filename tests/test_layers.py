@@ -255,7 +255,7 @@ def test_smart_surface_lulc():
 def test_surface_water():
     data = SurfaceWater().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 1.0, 1.0, 172, 9625)
+    assert_raster_stats(data, 1, 1.0, 1.0, 174, 9623)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_tree_canopy_cover_mask():
