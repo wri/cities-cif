@@ -1,13 +1,15 @@
 import pytest
 import timeout_decorator
 
-from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, CIF_TESTING_S3_BUCKET_URI
 from city_metrix.layers import *
-from city_metrix.cache_manager import check_if_cache_file_exists
+from city_metrix.cache_manager import check_if_cache_object_exists
 from ...tools.general_tools import get_test_cache_variables
 from tests.resources.tools import cleanup_cache_files, prep_output_path
 from ..bbox_constants import GEOEXTENT_TERESINA
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
+
+TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI
 
 PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
 
@@ -300,9 +302,9 @@ def _run_write_layers_by_city_test(layer_obj, target_folder):
 
     try:
         # Do not force data refresh to avoid collisions with concurrent tests
-        layer_obj.write(bbox=geo_extent, tile_side_length=5000, length_units='meters', s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri= os_file_path, force_data_refresh=True)
+        layer_obj.write(bbox=geo_extent, tile_side_length=5000, length_units='meters', s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri= os_file_path, force_data_refresh=True)
         tiled_file_uri = file_uri + '/tile_0001.tif'
-        cache_file_exists = True if check_if_cache_file_exists(file_uri) or check_if_cache_file_exists(
+        cache_file_exists = True if check_if_cache_object_exists(file_uri) or check_if_cache_object_exists(
             tiled_file_uri) else False
         assert cache_file_exists, "Test failed since file did not upload to s3"
     finally:

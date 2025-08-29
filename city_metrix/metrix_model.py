@@ -433,15 +433,13 @@ def create_fishnet_grid(bbox: GeoExtent,
 DEFAULT_MAX_TILE_SIZE_M = 15000
 
 class LayerGroupBy:
-    def __init__(self, aggregate, geo_zone: GeoZone, spatial_resolution=None, layer=None, custom_tile_size_m=None,
-                 force_data_refresh=True, masks=[]):
+    def __init__(self, aggregate, geo_zone: GeoZone, spatial_resolution=None, layer=None, custom_tile_size_m=None, masks=[]):
         self.aggregate = aggregate
         self.masks = masks
         self.geo_zone = geo_zone
         self.custom_tile_size_m = custom_tile_size_m
         self.spatial_resolution = spatial_resolution
         self.layer = layer
-        self.force_data_refresh = force_data_refresh
 
     def mean(self):
         return self._compute_statistic("mean")
@@ -454,10 +452,10 @@ class LayerGroupBy:
 
     def _compute_statistic(self, stats_func):
         return self._zonal_stats(stats_func, self.geo_zone, self.aggregate, self.layer, self.masks,
-                                 self.custom_tile_size_m, self.spatial_resolution, self.force_data_refresh)
+                                 self.custom_tile_size_m, self.spatial_resolution)
 
     @staticmethod
-    def _zonal_stats(stats_func, geo_zone, aggregate, layer, masks, custom_tile_size_m, spatial_resolution, force_data_refresh):
+    def _zonal_stats(stats_func, geo_zone, aggregate, layer, masks, custom_tile_size_m, spatial_resolution):
         zones = geo_zone.zones.reset_index(drop=True)
         # Get area of zone in square degrees
         box_area = box(*zones.total_bounds).area
@@ -467,7 +465,7 @@ class LayerGroupBy:
         # if area of zone is within tolerance, then query as a single tile, otherwise sub-tile
         if box_area <= tile_size_meters**2:
             stats = LayerGroupBy._zonal_stats_tile([stats_func], geo_zone, zones, aggregate,
-                                                   layer, masks, spatial_resolution, force_data_refresh)
+                                                   layer, masks, spatial_resolution)
         else:
             stats = LayerGroupBy._zonal_stats_fishnet(stats_func, geo_zone, zones, aggregate, layer,
                                                       masks, tile_size_meters, spatial_resolution)
@@ -537,7 +535,7 @@ class LayerGroupBy:
         tile_stats = pd.concat([
             LayerGroupBy._zonal_stats_tile(tile_funcs,
                                            LayerGroupBy._merge_tile_geometry_into_query_gdf(tile_gdf, zones),
-                                           zones, aggregate, layer, masks, spatial_resolution, False)
+                                           zones, aggregate, layer, masks, spatial_resolution)
             for tile_gdf in tile_gdfs
         ])
 
@@ -579,24 +577,21 @@ class LayerGroupBy:
         return adjusted_gdf
 
     @staticmethod
-    def _zonal_stats_tile(stats_func, tile_gdf, zones, aggregate, layer, masks, spatial_resolution, force_data_refresh):
+    def _zonal_stats_tile(stats_func, tile_gdf, zones, aggregate, layer, masks, spatial_resolution):
         bbox = GeoExtent(tile_gdf)
 
         aggregate_data = aggregate.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
-                                                         spatial_resolution=spatial_resolution,
-                                                         force_data_refresh=force_data_refresh)
+                                                         spatial_resolution=spatial_resolution)
 
         if isinstance(aggregate_data, xr.DataArray) and aggregate_data.data.size == 0:
             return None
         else:
             mask_datum = [mask.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
-                                                     spatial_resolution=spatial_resolution,
-                                                     force_data_refresh=force_data_refresh) for mask in masks]
+                                                     spatial_resolution=spatial_resolution) for mask in masks]
 
             if layer is not None:
                 layer_data = layer.get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
-                                                         spatial_resolution=spatial_resolution,
-                                                         force_data_refresh=force_data_refresh)
+                                                         spatial_resolution=spatial_resolution)
             else:
                 layer_data = None
 
@@ -743,6 +738,69 @@ class Layer():
         """
         ...
 
+    def get_data_with_caching(self, bbox: GeoExtent, s3_env: str, city_aoi_modifier: (float, float, float, float)=None,
+                              spatial_resolution: int = None) -> Union[
+        xr.DataArray, gpd.GeoDataFrame]:
+        """
+        Extract the data from the S3 cache otherwise source and return it in a way we can compare to other layers.
+        :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
+        """
+
+        standard_env = standardize_s3_env(s3_env)
+        result_data, _, target_uri = retrieve_city_cache(self.aggregate, bbox, standard_env, city_aoi_modifier,
+                                                                 force_data_refresh=False)
+
+        if result_data is None:
+            result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
+
+            if bbox.geo_type == GeoType.CITY and city_aoi_modifier is None:
+                delete_s3_file_if_exists(target_uri)
+                delete_s3_folder_if_exists(target_uri)
+                write_layer(result_data, target_uri, self.OUTPUT_FILE_FORMAT)
+
+        return result_data
+
+
+    def cache_city_data(self, bbox: GeoExtent, s3_env: str, spatial_resolution: int = None,
+                              force_data_refresh: bool = False):
+        """
+        Extract the data from the S3 cache otherwise source and return it in a way we can compare to other layers.
+        :param city_aoi: specifies a specific AOI for a city extent that does not match the standard city extent
+        :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
+        """
+
+        if bbox.geo_type != GeoType.CITY:
+            raise ValueError("Non-city data cannot be cached.")
+
+        standard_env = standardize_s3_env(s3_env)
+        retrieved_cached_data, _, target_uri = retrieve_city_cache(self.aggregate, geo_extent=bbox, output_env=standard_env,
+                                                                 city_aoi_modifier=None, force_data_refresh=force_data_refresh)
+
+        if retrieved_cached_data is None:
+            self._build_city_cache(bbox, spatial_resolution, target_uri)
+        else:
+            print(f">>>Layer {self.aggregate.__class__.__name__} is already cached ..")
+
+
+    def _build_city_cache(self, bbox, spatial_resolution, target_uri):
+        if bbox.geo_type == GeoType.CITY:
+            if hasattr(self.aggregate, 'PROCESSING_TILE_SIDE_M'):
+                tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
+            else:
+                tile_side_m = None
+            bbox_area = bbox.as_utm_bbox().polygon.area
+            if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
+                self._cache_data_by_fishnet_tiles(bbox=bbox, tile_side_m=tile_side_m, spatial_resolution=spatial_resolution,
+                                                  target_uri=target_uri)
+            else:
+                result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
+                delete_s3_file_if_exists(target_uri)
+                delete_s3_folder_if_exists(target_uri)
+                write_layer(result_data, target_uri, self.OUTPUT_FILE_FORMAT)
+        else:
+            raise ValueError(f"Data not cached for {self.aggregate.__class__.__name__}.  Data can only be cached for CITY geo_extent.")
+
+
     def _get_completed_tile_ids(self, file_paths):
         results = []
         for path in file_paths:
@@ -752,13 +810,8 @@ class Layer():
         return results
 
 
-    def get_data_by_fishnet_tiles(self, bbox, tile_side_m, spatial_resolution, target_uri, os=None):
+    def _cache_data_by_fishnet_tiles(self, bbox, tile_side_m, spatial_resolution, target_uri):
         # TODO: Code currently only handles raster data
-
-        #  Clean up targets
-        delete_s3_file_if_exists(target_uri)
-        delete_s3_folder_if_exists(target_uri)
-
         output_as = ProjectionType.UTM
         utm_box = bbox.as_utm_bbox()
         crs = utm_box.crs
@@ -818,7 +871,6 @@ class Layer():
             file_paths = self._get_all_tif_file_paths(temp_dir)
             if total_file_bytes <= MAX_RASTER_BYTES_FOR_SINGLE_FILE_OUTPUT:
                 # Combine tiles into a single file and cache
-                has_merge_data = True
                 try:
                     import rasterio
                     from rasterio.merge import merge
@@ -854,13 +906,16 @@ class Layer():
                     merged_data = read_geotiff_from_cache(temp_file_uri)
 
                     # write to cache
+                    delete_s3_file_if_exists(target_uri)
+                    delete_s3_folder_if_exists(target_uri)
                     self._cache_data(temp_file_path, target_uri)
                 except  Exception as e:
                     print(f"Failed to process {target_uri}: {e}")
             else:
                 # Write individual tiles to cache
-                has_merge_data = False
                 create_uri_target_folder(target_uri)
+                delete_s3_file_if_exists(target_uri)
+                delete_s3_folder_if_exists(target_uri)
                 for file in file_paths:
                     tile = Path(file).stem
                     target_tile_uri = f"{target_uri}/{tile}.{GTIFF_FILE_EXTENSION}"
@@ -868,8 +923,6 @@ class Layer():
 
                 self._write_fishnet_metadata_to_uri_target(fishnet, target_uri, crs)
 
-
-        return has_merge_data, merged_data
 
     def _cache_data(self, source_file_path, target_tile_uri):
         if target_tile_uri.startswith('s3://'):
@@ -966,7 +1019,6 @@ class Layer():
 
             file_name = self._construct_tile_name(index)
             temp_file_path = os.path.join(temp_dir, file_name)
-            # write_layer(tile_data, temp_file_path, self.OUTPUT_FILE_FORMAT)
             write_layer(clipped_tile, temp_file_path, GTIFF_FILE_EXTENSION)
 
             cell_count = tile_data.size if tile_data.any() else 0
@@ -978,71 +1030,6 @@ class Layer():
         file_name = f'tile_{padded_index}.tif'
         return file_name
 
-    def cache_city_data(self, bbox: GeoExtent, s3_env: str, spatial_resolution: int = None,
-                              force_data_refresh: bool = False):
-        """
-        Extract the data from the S3 cache otherwise source and return it in a way we can compare to other layers.
-        :param city_aoi: specifies a specific AOI for a city extent that does not match the standard city extent
-        :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
-        """
-
-        if bbox.geo_type != GeoType.CITY:
-            raise ValueError("Non-city data cannot be cached.")
-
-        standard_env = standardize_s3_env(s3_env)
-        retrieved_cached_data, _, file_uri = retrieve_city_cache(self.aggregate, bbox, standard_env,
-                                                                 force_data_refresh)
-
-        if retrieved_cached_data is None:
-            if hasattr(self.aggregate, 'PROCESSING_TILE_SIDE_M'):
-                tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
-            else:
-                tile_side_m = None
-            bbox_area = bbox.as_utm_bbox().polygon.area
-            if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
-                has_merge_data, result_data = self.get_data_by_fishnet_tiles(bbox=bbox, tile_side_m=tile_side_m,
-                                                                             spatial_resolution=spatial_resolution, target_uri=file_uri)
-            else:
-                result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
-                has_merge_data = True
-
-                # write to cache
-                if has_merge_data and bbox.geo_type == GeoType.CITY:
-                    write_layer(result_data, file_uri, self.OUTPUT_FILE_FORMAT)
-        else:
-            print(f">>>Layer {self.aggregate.__class__.__name__} is already cached ..")
-
-
-    def get_data_with_caching(self, bbox: GeoExtent, s3_env: str,
-                              spatial_resolution: int = None, force_data_refresh: bool = False) -> Union[
-        xr.DataArray, gpd.GeoDataFrame]:
-        """
-        Extract the data from the S3 cache otherwise source and return it in a way we can compare to other layers.
-        :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
-        """
-
-
-        standard_env = standardize_s3_env(s3_env)
-        retrieved_cached_data, _, file_uri = retrieve_city_cache(self.aggregate, bbox, standard_env,
-                                                                 force_data_refresh)
-
-        if retrieved_cached_data is None:
-            if hasattr(self.aggregate, 'PROCESSING_TILE_SIDE_M'):
-                tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
-            else:
-                tile_side_m = None
-            bbox_area = bbox.as_utm_bbox().polygon.area
-            if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
-                has_merged_data, result_data = self.get_data_by_fishnet_tiles(bbox=bbox, tile_side_m=tile_side_m,
-                                                                              spatial_resolution=spatial_resolution, target_uri=file_uri)
-            else:
-                result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
-        else:
-            print(f">>>Reading {self.aggregate.__class__.__name__} layer data from cache..")
-            result_data = retrieved_cached_data
-
-        return result_data
-
 
     def mask(self, *layers):
         """
@@ -1052,7 +1039,7 @@ class Layer():
         """
         return Layer(aggregate=self, masks=self.masks + list(layers))
 
-    def groupby(self, geo_zone, spatial_resolution=None, layer=None, custom_tile_size_m=None, force_data_refresh=False):
+    def groupby(self, geo_zone, spatial_resolution=None, layer=None, custom_tile_size_m=None):
         """
         Group layers by zones.
         :param geo_zone: GeoZone containing geometries to group by.
@@ -1060,28 +1047,25 @@ class Layer():
         :param layer: Additional categorical layer to group by
         :return: LayerGroupBy object that can be aggregated.
         """
-        return LayerGroupBy(self.aggregate, geo_zone, spatial_resolution, layer, custom_tile_size_m,
-                            force_data_refresh, self.masks)
+        return LayerGroupBy(self.aggregate, geo_zone, spatial_resolution, layer, custom_tile_size_m, self.masks)
 
-    def write(self, bbox: GeoExtent, s3_env: str, output_uri: str = None,
+    def write(self, bbox: GeoExtent, s3_env: str, target_uri: str = None,
               tile_side_length: int = None, buffer_size: int = None, length_units: str = None,
-              spatial_resolution: int = None, resampling_method: str = None,
-              force_data_refresh: bool = False, **kwargs):
+              spatial_resolution: int = None, resampling_method: str = None, **kwargs):
         """
         Write the layer to a path. Does not apply masks.
         :param bbox: (min x, min y, max x, max y)
-        :param output_uri: local or s3 path to output to
+        :param target_uri: local or s3 path to output to
         :param s3_env: name of storage environment (dev, prd)
         :param tile_side_length: optional param to tile the results into multiple files specified as tile length on a side
         :param buffer_size: tile buffer distance
         :param length_units: units for tile_side_length and buffer_size (degrees, meters)
         :param spatial_resolution: resolution of continuous raster data in meters
         :param resampling_method: interpolation method for continuous raster layers (bilinear, bicubic, nearest)
-        :param force_data_refresh: forces layer data to be pulled from source instead of cache
         :return:
         """
 
-        if output_uri is None:
+        if target_uri is None:
             print("Can't write output to None path")
             return
 
@@ -1090,12 +1074,14 @@ class Layer():
 
         if tile_side_length is None:
             utm_geo_extent = bbox.as_utm_bbox()  # currently only support output as utm
-            clipped_data = self.aggregate.get_data(bbox=utm_geo_extent, spatial_resolution=spatial_resolution)
+            clipped_data = self.aggregate.get_data_with_caching(bbox=utm_geo_extent, s3_env=standard_env, spatial_resolution=spatial_resolution)
 
             # Determine if write can be skipped
-            skip_write = _decide_if_write_can_be_skipped(self.aggregate, bbox, output_uri, standard_env)
+            skip_write = _decide_if_write_can_be_skipped(self.aggregate, bbox, target_uri, standard_env)
             if not skip_write:
-                write_layer(clipped_data, output_uri, file_format)
+                delete_s3_file_if_exists(target_uri)
+                delete_s3_folder_if_exists(target_uri)
+                write_layer(clipped_data, target_uri, file_format)
         else:
             tile_grid_gdf = create_fishnet_grid(bbox=bbox, tile_side_length=tile_side_length, tile_buffer_size=0,
                                                 length_units=length_units, spatial_resolution=spatial_resolution)
@@ -1109,18 +1095,18 @@ class Layer():
                 buffered_tile_grid_gdf = Layer._add_tile_name_column(buffered_tile_grid_gdf)
 
             # write tile grid to geojson file
-            write_tile_grid(tile_grid_gdf, output_uri, 'tile_grid.geojson')
+            write_tile_grid(tile_grid_gdf, target_uri, 'tile_grid.geojson')
 
             # if tiles were buffered, also write unbuffered tile grid to geojson file
             if buffered_tile_grid_gdf is not None and len(buffered_tile_grid_gdf) > 0:
-                write_tile_grid(buffered_tile_grid_gdf, output_uri, 'tile_grid_unbuffered.geojson')
+                write_tile_grid(buffered_tile_grid_gdf, target_uri, 'tile_grid_unbuffered.geojson')
 
             utm_crs = tile_grid_gdf.crs.srs
             for tile in tile_grid_gdf.itertuples():
                 tile_name = tile.tile_name
                 tile_bbox = GeoExtent(bbox=tile.geometry.bounds, crs=utm_crs)
 
-                file_path = os.path.join(output_uri, tile_name)
+                file_path = os.path.join(target_uri, tile_name)
                 layer_data = self.aggregate.get_data(bbox=tile_bbox, spatial_resolution=spatial_resolution,
                                                      resampling_method=resampling_method)
                 write_layer(layer_data, file_path, file_format)
@@ -1247,7 +1233,7 @@ class Metric():
                                 force_data_refresh: bool = False) -> tuple[Union[pd.Series, pd.DataFrame], str]:
 
         standard_env = standardize_s3_env(s3_env)
-        retrieved_cached_data, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, standard_env,
+        retrieved_cached_data, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, standard_env, None,
                                                                           force_data_refresh)
         if retrieved_cached_data is None:
             result_metric = self.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
@@ -1277,17 +1263,17 @@ class Metric():
         return padded_rows
 
 
-    def write(self, geo_zone: GeoZone, s3_env: str, output_uri: str = None,
+    def write(self, geo_zone: GeoZone, s3_env: str, target_uri: str = None,
               spatial_resolution: int = None, force_data_refresh: bool = False, **kwargs):
         """
         Write the metric to a path. Does not apply masks.
         :param geo_zone: a GeoZone object
-        :param output_uri: local or s3 path to output to
+        :param target_uri: local or s3 path to output to
         :param s3_env: name of storage environment (dev, staging, prd)
         :param spatial_resolution: resolution of continuous raster data in meters
         :param force_data_refresh: forces layer data to be pulled from source instead of cache
         """
-        if output_uri is None:
+        if target_uri is None:
             print("Can't write output to None path")
             return
 
@@ -1300,10 +1286,10 @@ class Metric():
             indicator = self._expand_empty_results_to_results_with_null_value(geo_zone)
 
         # Determine if write can be skipped
-        skip_write = _decide_if_write_can_be_skipped(self.metric, geo_zone, output_uri, standard_env)
+        skip_write = _decide_if_write_can_be_skipped(self.metric, geo_zone, target_uri, standard_env)
 
         if not skip_write:
-            Metric._verify_extension(output_uri, f".{CSV_FILE_EXTENSION}")
+            Metric._verify_extension(target_uri, f".{CSV_FILE_EXTENSION}")
 
             if isinstance(indicator, (float, int)):
                 indicator = pd.Series([indicator])
@@ -1325,9 +1311,9 @@ class Metric():
             if isinstance(indicator_df, gpd.GeoDataFrame):
                 indicator_df = indicator_df.drop(columns="geometry")
 
-            write_metric(indicator_df, output_uri, CSV_FILE_EXTENSION)
+            write_metric(indicator_df, target_uri, CSV_FILE_EXTENSION)
 
-    def write_as_geojson(self, geo_zone: GeoZone, s3_env: str, output_uri: str = None,
+    def write_as_geojson(self, geo_zone: GeoZone, s3_env: str, target_uri: str = None,
                          spatial_resolution: int = None, force_data_refresh: bool = False, **kwargs):
 
         """
@@ -1343,10 +1329,10 @@ class Metric():
             indicator = self._expand_empty_results_to_results_with_null_value(geo_zone)
 
         # Determine if write can be skipped
-        skip_write = _decide_if_write_can_be_skipped(self.metric, geo_zone, output_uri, standard_env)
+        skip_write = _decide_if_write_can_be_skipped(self.metric, geo_zone, target_uri, standard_env)
 
         if not skip_write:
-            Metric._verify_extension(output_uri, f".{GEOJSON_FILE_EXTENSION}")
+            Metric._verify_extension(target_uri, f".{GEOJSON_FILE_EXTENSION}")
 
             if isinstance(indicator, (int, float)):
                 indicator = pd.Series([indicator])
@@ -1372,7 +1358,7 @@ class Metric():
             else:
                 indicator_gdf = indicator_df
 
-            write_metric(indicator_gdf, output_uri, GEOJSON_FILE_EXTENSION)
+            write_metric(indicator_gdf, target_uri, GEOJSON_FILE_EXTENSION)
 
     @staticmethod
     def _verify_extension(file_path, extension):

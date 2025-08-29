@@ -17,6 +17,9 @@ def prep_output_path(output_folder, model_name, file_name):
     return file_path
 
 def verify_file_is_populated(file_path):
+    if not os.path.exists(file_path):
+        return False
+
     is_populated = True if os.path.getsize(file_path) > 0 else False
     return is_populated
 

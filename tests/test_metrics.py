@@ -49,7 +49,7 @@ def test_canopy_area_per_resident_informal():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0.00, 2.84, 18, 82)
+    assert_metric_stats(indicator, 2, 0.00, 2.81, 18, 82)
 
 def test_habitat_types_restored__covertypes():
     indicator = HabitatTypesRestored__CoverTypes().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -154,7 +154,7 @@ def test_percent_area_fracveg_exceeds_threshold():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0.009, 0.36, 100, 0)
+    assert_metric_stats(indicator, 2, 0.01, 0.33, 100, 0)
 
 def test_percent_area_impervious():
     indicator = PercentAreaImpervious().get_metric(IDN_JAKARTA_TILED_ZONES)

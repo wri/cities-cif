@@ -7,7 +7,8 @@ from city_metrix import s3_client
 from city_metrix.constants import GeoType, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION, \
     CSV_FILE_EXTENSION, LOCAL_CACHE_URI, DEFAULT_PRODUCTION_ENV, CIF_CACHE_S3_BUCKET_URI
 from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_cache, \
-    read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_bucket_name_from_s3_uri, read_csv_from_s3
+    read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_bucket_name_from_s3_uri, read_csv_from_s3, \
+    read_geotiff_subarea_from_cache
 from city_metrix.metrix_tools import get_class_from_instance
 
 def build_file_key(output_env, class_obj, geo_extent):
@@ -27,19 +28,25 @@ def build_file_key(output_env, class_obj, geo_extent):
 
     return file_uri, file_key, feature_id, is_custom_object
 
-# def retrieve_city_cache(class_obj, geo_extent, output_env, force_data_refresh: bool,
-#                         city_aoi:tuple[float, float, float, float] = None):
-def retrieve_city_cache(class_obj, geo_extent, output_env, force_data_refresh: bool):
+
+def retrieve_city_cache(class_obj, geo_extent, output_env, city_aoi_modifier: tuple[float, float, float, float],
+                        force_data_refresh: bool):
     file_uri, file_key, feature_id, is_custom_layer = build_file_key(output_env, class_obj, geo_extent)
 
-    if force_data_refresh or geo_extent.geo_type == GeoType.GEOMETRY or not check_if_cache_file_exists(file_uri):
+    if force_data_refresh or geo_extent.geo_type == GeoType.GEOMETRY or not check_if_cache_object_exists(file_uri):
+        return None, feature_id, file_uri
+
+    file_format = class_obj.OUTPUT_FILE_FORMAT
+
+    if city_aoi_modifier is not None and file_format != GTIFF_FILE_EXTENSION:
         return None, feature_id, file_uri
 
     # Retrieve from cache
-    data = None
-    file_format = class_obj.OUTPUT_FILE_FORMAT
     if file_format == GTIFF_FILE_EXTENSION:
-        data = read_geotiff_from_cache(file_uri)
+        if city_aoi_modifier is None:
+            data = read_geotiff_from_cache(file_uri)
+        else:
+            data = read_geotiff_subarea_from_cache(file_uri, city_aoi_modifier)
     elif file_format == GEOJSON_FILE_EXTENSION:
         data = read_geojson_from_cache(file_uri)
     elif file_format == NETCDF_FILE_EXTENSION:
@@ -223,16 +230,23 @@ def _convert_snake_case_to_pascal_case(attribute_name):
 def _construct_kv_string(key, value, separator):
     return f"{separator}{key}_{value}"
 
-def check_if_cache_file_exists(file_uri):
+def check_if_cache_object_exists(file_uri):
     uri_scheme = get_uri_scheme(file_uri)
     file_key = get_file_path_from_uri(file_uri)
     if uri_scheme == "s3":
         s3_bucket = get_bucket_name_from_s3_uri(file_uri)
-        response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=file_key)
-        for obj in response.get('Contents', []):
-            if obj['Key'] == file_key:
-                return True
-        return False
+        # Add a trailing slash to the path to check for a folder
+        folder_path = file_key if file_key.endswith('/') else file_key + '/'
+
+        # Check for file
+        file_response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=file_key, MaxKeys=1)
+        if 'Contents' in file_response:
+            return True
+
+        # Check for folder
+        folder_response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=folder_path, MaxKeys=1)
+        if 'Contents' in folder_response:
+            return True
     else:
         uri_path = os.path.normpath(get_file_path_from_uri(file_key))
         return os.path.exists(uri_path)

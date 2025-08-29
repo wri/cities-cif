@@ -120,6 +120,118 @@ def read_geotiff_from_cache(file_uri):
 
     return result_data
 
+def _get_uri_pars(uri):
+    s3_bucket = get_bucket_name_from_s3_uri(uri)
+    file_key = get_file_key_from_url(uri)
+    return s3_bucket, file_key
+
+def _is_s3_folder_or_file(uri):
+    s3_bucket, file_key = _get_uri_pars(uri)
+
+    # Add a trailing slash to the path to check for a folder
+    folder_path = file_key if file_key.endswith('/') else file_key + '/'
+
+    # Check for folder
+    folder_response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=folder_path, MaxKeys=1)
+    if 'Contents' in folder_response:
+        return "folder"
+
+    # Check for file
+    file_response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=file_key, MaxKeys=1)
+    if 'Contents' in file_response:
+        return "file"
+
+    return None
+
+
+def read_geotiff_subarea_from_cache(file_uri, city_aoi_modifier):
+    import json
+    import xarray as xr
+    from shapely.geometry import box
+
+    query_bounds = box(*city_aoi_modifier)
+    s3_bucket, file_key = _get_uri_pars(file_uri)
+
+    object_type = _is_s3_folder_or_file(file_uri)
+    if object_type == 'file':
+        subarea_da = _get_sub_area(s3_bucket, file_key, city_aoi_modifier, 0)
+    else:
+        # Load geotiff_index.json from S3
+        index_key = f"{file_key}/geotiff_index.json"
+        index_obj = s3_client.get_object(Bucket=s3_bucket, Key=index_key)
+        metadata = json.loads(index_obj['Body'].read().decode('utf-8'))
+
+        # Filter GeoTIFFs that intersect the bounding box
+        matching_items = [
+            item for item in metadata
+            if box(*item["bbox"]).intersects(query_bounds)
+        ]
+
+        # Extract CRS from the first matching item
+        if matching_items:
+            crs_str = matching_items[0]["crs"]
+        else:
+            raise ValueError("No overlapping GeoTIFFs found.")
+
+        if len(matching_items) == 0:
+            subarea_da = None
+        else:
+            # Read and extract overlapping data
+            data_arrays = []
+
+            for item in matching_items:
+                tile_key = item["key"]
+                da = _get_sub_area(s3_bucket, tile_key, city_aoi_modifier, 0)
+                data_arrays.append(da)
+
+            # Merge into a single DataArray using outer join
+            subarea_da = xr.concat(data_arrays, dim="tile", join="outer").max("tile", skipna=True)
+            subarea_da.attrs["crs"] = crs_str
+
+    return subarea_da
+
+
+def _get_sub_area(s3_bucket, key, bbox, pad):
+    from rasterio.io import MemoryFile
+    from rasterio.windows import from_bounds, Window
+    from rasterio.transform import xy
+    import numpy as np
+
+    obj = s3_client.get_object(Bucket=s3_bucket, Key=key)
+    with MemoryFile(obj['Body'].read()) as memfile:
+        with memfile.open() as src:
+            # Compute and pad the window
+            window = from_bounds(*bbox, transform=src.transform)
+            window = window.round_offsets().round_lengths()
+            padded_window = Window(
+                col_off=window.col_off,
+                row_off=window.row_off,
+                width=window.width + pad,
+                height=window.height + pad
+            )
+
+            data = src.read(1, window=padded_window, boundless=True, fill_value=np.nan)
+            transform = src.window_transform(padded_window)
+
+            # Compute accurate x/y coordinates
+            rows, cols = np.meshgrid(
+                np.arange(data.shape[0]), np.arange(data.shape[1]), indexing='ij'
+            )
+            xs, ys = xy(transform, rows, cols, offset='center')
+            x_coords = np.unique(xs)
+            y_coords = np.unique(ys)
+            if np.diff(y_coords).mean() > 0:
+                y_coords = y_coords[::-1]  # Flip to descending
+
+            da = xr.DataArray(
+                data,
+                dims=("y", "x"),
+                coords={"y": y_coords, "x": x_coords},
+                name="tile"
+            )
+
+        return da
+
 
 def read_netcdf_from_cache(file_uri):
     result_data = None

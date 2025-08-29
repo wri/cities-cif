@@ -1,17 +1,18 @@
 # This code is mostly intended for manual execution
 # Execution configuration is specified in the conftest file
-from datetime import datetime
-
 import pytest
 import xarray as xr
 
-from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
+from datetime import datetime
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, CIF_TESTING_S3_BUCKET_URI
 from city_metrix.layers import *
 from city_metrix.metrix_model import get_class_default_spatial_resolution
 from tests.resources.bbox_constants import GEOEXTENT_TERESINA, BBOX_USA_OR_PORTLAND_2
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.tools import get_test_bbox, cleanup_cache_files, prep_output_path, verify_file_is_populated, \
     get_file_count_in_folder
+
+TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI
 
 # ==================== Test resolution changes ===========================
 # Multiplier applied to the default spatial_resolution of the layer
@@ -28,7 +29,7 @@ def test_write_alos_dsm(target_folder):
     file_path = prep_output_path(target_folder, 'layer','AlosDSM_targeted_resolution.tif')
     target_resolution = get_test_resolution(AlosDSM())
     bbox = get_test_bbox(BBOX)
-    AlosDSM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path, spatial_resolution=target_resolution)
+    AlosDSM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri=file_path, spatial_resolution=target_resolution)
     assert verify_file_is_populated(file_path)
     cleanup_cache_files(None, None, None, file_path)
 
@@ -37,7 +38,7 @@ def test_write_nasa_dem(target_folder):
     file_path = prep_output_path(target_folder, 'layer','NasaDEM_targeted_resolution.tif')
     target_resolution = get_test_resolution(NasaDEM())
     bbox = get_test_bbox(BBOX)
-    NasaDEM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path, spatial_resolution=target_resolution)
+    NasaDEM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri=file_path, spatial_resolution=target_resolution)
     assert verify_file_is_populated(file_path)
     cleanup_cache_files(None, None, None, file_path)
 
@@ -48,7 +49,7 @@ def test_write_albedo_tiled_unbuffered(target_folder):
     target_resolution = get_test_resolution(Albedo())
     bbox = get_test_bbox(BBOX)
     (Albedo()
-     .write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path, tile_side_length=0.01,
+     .write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri=file_path, tile_side_length=0.01,
             buffer_size=None, length_units="degrees", spatial_resolution=target_resolution))
     file_count = get_file_count_in_folder(file_path)
 
@@ -63,7 +64,7 @@ def test_write_albedo_tiled_buffered(target_folder):
     target_resolution = get_test_resolution(Albedo())
     bbox = get_test_bbox(BBOX)
     (Albedo()
-     .write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path, tile_side_length=0.01,
+     .write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri=file_path, tile_side_length=0.01,
             buffer_size=buffer_degrees, length_units="degrees", spatial_resolution=target_resolution))
     file_count = get_file_count_in_folder(file_path)
 
@@ -79,7 +80,7 @@ def test_write_nasa_dem_tiled_unbuffered(target_folder):
     bbox = get_test_bbox(BBOX)
     (NasaDEM()
      .write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV,
-               tile_side_length=.008, length_units='degrees', output_uri=file_path,
+               tile_side_length=.008, length_units='degrees', target_uri=file_path,
                spatial_resolution=target_resolution, resampling_method='bilinear'))
 
     file_count = get_file_count_in_folder(file_path)
@@ -100,7 +101,7 @@ def test_get_nasa_dem_bicubic(target_folder):
 def test_write_nasa_dem(target_folder):
     file_path = prep_output_path(target_folder, 'layer','NasaDEM_small_city_wgs84.tif')
     bbox = get_test_bbox(GEOEXTENT_TERESINA)
-    NasaDEM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
+    NasaDEM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri=file_path)
     assert verify_file_is_populated(file_path)
     cleanup_cache_files(None, None, None, file_path)
 
@@ -108,7 +109,7 @@ def test_write_nasa_dem(target_folder):
 def test_write_nasa_dem_utm(target_folder):
     file_path = prep_output_path(target_folder, 'layer','NasaDEM_small_city_utm.tif')
     bbox = get_test_bbox(GEOEXTENT_TERESINA)
-    NasaDEM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
+    NasaDEM().write(bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri=file_path)
     assert verify_file_is_populated(file_path)
     cleanup_cache_files(None, None, None, file_path)
 

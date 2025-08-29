@@ -3,13 +3,15 @@ import os
 import pytest
 import timeout_decorator
 
-from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, CIF_TESTING_S3_BUCKET_URI
 from city_metrix.metrics import *
-from city_metrix.cache_manager import check_if_cache_file_exists
+from city_metrix.cache_manager import check_if_cache_object_exists
 from ...tools.general_tools import get_test_cache_variables
 from ..bbox_constants import GEOZONE_TERESINA, GEOEXTENT_TERESINA
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from ..tools import prep_output_path, cleanup_cache_files
+
+TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI
 
 PRESERVE_RESULTS_ON_OS = False  # False - Default for check-in
 OUTPUT_RESULTS_FORMAT = 'csv' # Default for check-in
@@ -204,15 +206,15 @@ def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_z
     try:
         if OUTPUT_RESULTS_FORMAT == 'csv':
             os_file_path = prep_output_path(target_folder, 'metric', metric_id)
-            metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=os_file_path,
+            metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri=os_file_path,
                              force_data_refresh=True)
-            cache_file_exists = check_if_cache_file_exists(file_uri)
+            cache_file_exists = check_if_cache_object_exists(file_uri)
         else:
             metric_name = metric_obj.__class__.__name__
             os_file_path = f'{metric_geojson_path}/{metric_name}.geojson'
-            metric_obj.write_as_geojson(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=os_file_path,
+            metric_obj.write_as_geojson(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri=os_file_path,
                                         force_data_refresh=True)
-            cache_file_exists = check_if_cache_file_exists(file_uri)
+            cache_file_exists = check_if_cache_object_exists(file_uri)
 
         assert cache_file_exists, "Test failed since file did not upload to s3"
     finally:

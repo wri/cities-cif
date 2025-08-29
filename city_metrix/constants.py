@@ -17,6 +17,7 @@ DEFAULT_STAGING_ENV = 'staging'  # not used in new file storage structure
 
 CIF_DASHBOARD_LAYER_S3_BUCKET_URI = 's3://wri-cities-data-api'
 CIF_CACHE_S3_BUCKET_URI = 's3://wri-cities-indicators'  # 's3://cities-test-sandbox' # 's3://cities-cache-store'
+TCM_CACHE_S3_BUCKET_URI = 's3://wri-cities-tcm'
 CIF_TESTING_S3_BUCKET_URI = 's3://cities-test-sandbox'  # not used in new file storage structure
 
 local_cache_directory = os.path.join(Path.home(), 'CIF_local_cache')
