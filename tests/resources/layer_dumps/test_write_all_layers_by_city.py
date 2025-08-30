@@ -218,6 +218,12 @@ def test_ProtectedAreas_write_by_city(target_folder):
     layer_obj = ProtectedAreas()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_Slope_write_by_city(target_folder):
+    layer_obj = Slope()
+    _run_write_layers_by_city_test(layer_obj, target_folder)
+
 # # TODO test fails due to https://gfw.atlassian.net/browse/CDB-243
 # @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 # def test_RiparianAreas_write_by_city(target_folder):
@@ -296,13 +302,14 @@ def test_WorldPop_write_by_city(target_folder):
 
 def _run_write_layers_by_city_test(layer_obj, target_folder):
     geo_extent = PROCESSING_CITY
-    file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
+    file_key, _, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
 
     os_file_path = prep_output_path(target_folder, 'layer', layer_id)
 
     try:
         # Do not force data refresh to avoid collisions with concurrent tests
-        layer_obj.write(bbox=geo_extent, tile_side_length=5000, length_units='meters', s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri= os_file_path, force_data_refresh=True)
+        layer_obj.write(bbox=geo_extent, tile_side_length=5000, length_units='meters', s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri= os_file_path)
+        file_uri = 'file://' + os_file_path
         tiled_file_uri = file_uri + '/tile_0001.tif'
         cache_file_exists = True if check_if_cache_object_exists(file_uri) or check_if_cache_object_exists(
             tiled_file_uri) else False

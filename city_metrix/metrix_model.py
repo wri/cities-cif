@@ -36,6 +36,7 @@ from city_metrix.metrix_tools import (get_projection_type, get_haversine_distanc
                                       parse_city_aoi_json, reproject_units, construct_city_aoi_json,
                                       standardize_y_dimension_direction)
 
+TILE_NUMBER_PADCOUNT = 4
 MAX_RASTER_BYTES_FOR_SINGLE_FILE_OUTPUT = 500000000 # (Note: Teresina FabDem 544997973)
 dask.config.set({'logging.distributed': 'warning'})
 
@@ -1026,7 +1027,7 @@ class Layer():
         return unprocessed_tile
 
     def _construct_tile_name(self, tile_index):
-        padded_index = str(tile_index).zfill(4)
+        padded_index = str(tile_index).zfill(TILE_NUMBER_PADCOUNT)
         file_name = f'tile_{padded_index}.tif'
         return file_name
 
@@ -1074,7 +1075,8 @@ class Layer():
 
         if tile_side_length is None:
             utm_geo_extent = bbox.as_utm_bbox()  # currently only support output as utm
-            clipped_data = self.aggregate.get_data_with_caching(bbox=utm_geo_extent, s3_env=standard_env, spatial_resolution=spatial_resolution)
+            clipped_data = self.aggregate.get_data(bbox=bbox,  spatial_resolution=spatial_resolution,
+                                                     resampling_method=resampling_method)
 
             # Determine if write can be skipped
             skip_write = _decide_if_write_can_be_skipped(self.aggregate, bbox, target_uri, standard_env)
@@ -1107,7 +1109,7 @@ class Layer():
                 tile_bbox = GeoExtent(bbox=tile.geometry.bounds, crs=utm_crs)
 
                 file_path = os.path.join(target_uri, tile_name)
-                layer_data = self.aggregate.get_data(bbox=tile_bbox, spatial_resolution=spatial_resolution,
+                layer_data = self.aggregate.get_data(bbox=tile_bbox,  spatial_resolution=spatial_resolution,
                                                      resampling_method=resampling_method)
                 write_layer(layer_data, file_path, file_format)
 
@@ -1115,7 +1117,7 @@ class Layer():
     def _add_tile_name_column(tile_grid):
         tile_grid['tile_name'] = (tile_grid.index
                                   .to_series()
-                                  .apply(lambda x: f'tile_{str(x + 1).zfill(3)}.tif'))
+                                  .apply(lambda x: f'tile_{str(x + 1).zfill(TILE_NUMBER_PADCOUNT)}.tif'))
         return tile_grid
 
 
