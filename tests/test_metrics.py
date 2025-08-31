@@ -2,7 +2,7 @@ import math
 import pytest
 
 from city_metrix.metrics import *
-from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, PORTLAND_LARGE_ZONES
+from tests.conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE
 PORTLAND_DST_seasonal_utc_offset = -8
 
 
@@ -50,13 +50,6 @@ def test_canopy_area_per_resident_informal():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.00, 2.81, 18, 82)
-
-def test_flood_risk_area__percent():
-    indicator = RiverineOrCoastalFloodRiskArea__Percent().get_metric(PORTLAND_LARGE_ZONES)
-    expected_zone_size = len(PORTLAND_LARGE_ZONES.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 18.18, 100, 48, 231)
 
 def test_habitat_types_restored__covertypes():
     indicator = HabitatTypesRestored__CoverTypes().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -223,6 +216,13 @@ def test_recreational_space_per_capita():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0, 0.455, 100, 0)
+
+def test_riverine_or_coastal_flood_risk_area__percent():
+    indicator = RiverineOrCoastalFloodRiskArea__Percent().get_metric(USA_OR_PORTLAND_TILED_LARGE_ZONE)
+    expected_zone_size = len(USA_OR_PORTLAND_TILED_LARGE_ZONE.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0, 100, 60, 219)
 
 def test_tree_carbon_flux__tonnes():
     indicator = TreeCarbonFlux__Tonnes().get_metric(IDN_JAKARTA_TILED_ZONES)

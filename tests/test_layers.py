@@ -6,13 +6,13 @@ from city_metrix.constants import ProjectionType
 from city_metrix.layers import *
 from city_metrix.metrix_tools import get_projection_type
 from tests.conftest import EXECUTE_IGNORED_TESTS
-from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_2
+from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC and is a stable region
 COUNTRY_CODE_FOR_BBOX = 'USA'
 CITY_CODE_FOR_BBOX = 'portland'
-BBOX = BBOX_USA_OR_PORTLAND_2
+BBOX = BBOX_USA_OR_PORTLAND_1
 
 
 def test_acag_pm2p5():
