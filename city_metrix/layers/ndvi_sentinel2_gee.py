@@ -1,4 +1,6 @@
 import ee
+import xarray as xr
+import numpy as np
 
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
@@ -21,9 +23,10 @@ class NdviSentinel2(Layer):
     Attributes:
         year: The satellite imaging year.
     """
-    def __init__(self, year=2021, **kwargs):
+    def __init__(self, year=2021, min_threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.year = year
+        self.min_threshold = min_threshold
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -63,5 +66,8 @@ class NdviSentinel2(Layer):
             spatial_resolution,
             "NDVI"
         ).NDVI
+
+        if self.min_threshold is not None:
+            ndvi_data = xr.where(ndvi_data >= self.min_threshold, 1, np.nan).assign_attrs(ndvi_data.attrs).rio.write_crs(ndvi_data.crs)
 
         return ndvi_data

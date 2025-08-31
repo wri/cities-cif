@@ -29,6 +29,8 @@ BBOX_IDN_JAKARTA_LARGE = GeoExtent(bbox=(106, -7, 107, -6), crs=WGS_CRS)
 
 BBOX_IND_BHOPAL = GeoExtent(bbox=(77.41791, 23.20914, 77.42856, 23.21651), crs=WGS_CRS)
 
+BBOX_ARG_BUENOS_AIRES = GeoExtent(bbox=(-58.89079284843553, -35.009468078762055, -58.01673109153538, -34.001892090572426), crs=WGS_CRS)
+
 # A smaller city. Saif recommended Teresina since it's small and has all layers available
 city_admin = construct_city_aoi_json("BRA-Teresina", "city_admin_level")
 GEOZONE_TERESINA = GeoZone(geo_zone=city_admin)

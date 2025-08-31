@@ -20,6 +20,12 @@ SLOW_TEST_TIMEOUT_SECONDS = 3600 # seconds = 1 hour (Duration needed for fractio
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_AreaFractionalVegetationExceedsThreshold__Percent(target_folder):
+    metric_obj = AreaFractionalVegetationExceedsThreshold__Percent()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_BuiltLandWithHighLST(target_folder):
     metric_obj = BuiltLandWithHighLST()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
@@ -28,6 +34,12 @@ def test_write_BuiltLandWithHighLST(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_BuiltLandWithLowSurfaceReflectivity(target_folder):
     metric_obj = BuiltLandWithLowSurfaceReflectivity()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_BuiltLandWithVegetation__Percent(target_folder):
+    metric_obj = BuiltLandWithVegetation__Percent()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
@@ -132,12 +144,6 @@ def test_write_NaturalAreas__Percent(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_PercentAreaFracVegExceedsThreshold(target_folder):
-    metric_obj = PercentAreaFracvegExceedsThreshold()
-    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
-
-@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_PercentAreaImpervious(target_folder):
     metric_obj = PercentAreaImpervious()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
@@ -168,8 +174,20 @@ def test_write_RecreationalSpacePerCapita(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_RiparianLandWithVegatationOrWater__Percent(target_folder):
+    metric_obj = RiparianLandWithVegetationOrWater__Percent()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_RiverineOrCoastalFloodRiskArea__Percent(target_folder):
     metric_obj = RiverineOrCoastalFloodRiskArea__Percent()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_SteeplySlopedLandWithVegatation__Percent(target_folder):
+    metric_obj = SteeplySlopedLandWithVegetation__Percent()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
