@@ -1,15 +1,12 @@
 from city_metrix import *
 import math
 import pytest
-
-
 from city_metrix.metrics import *
 from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES_TINY
 PORTLAND_DST_seasonal_utc_offset = -8
 
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
-
 
 def test_area_fractional_vegetation_exceeds_threshold__percent():
     indicator = AreaFractionalVegetationExceedsThreshold__Percent().get_metric(ARG_BUENOS_AIRES_TILED_ZONES_TINY)
