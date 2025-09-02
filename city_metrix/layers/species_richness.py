@@ -19,20 +19,21 @@ class GBIFTaxonClass(Enum):
 
 
 class SpeciesRichness(Layer):
+    """
+    Layer for estimating species richness using GBIF/iNaturalist data.
+
+    Attributes:
+        taxon: Enum value from GBIFTaxonClass
+        start_year, end_year: years used for data retrieval
+        mask_layer: Optional mask to filter valid regions
+    """
     OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_LAYER_NAMING_ATTS = ["taxon"]
     MINOR_LAYER_NAMING_ATTS = ["start_year", "end_year"]
 
-    """
-    Attributes:
-        taxon: Enum value from GBIFTaxonClass
-        start_year, end_year: years used for data retrieval
-    """
-
     API_URL = "https://api.gbif.org/v1/occurrence/search/"
     DATASETKEY = "50c9509d-22c7-4a22-a47d-8c48425ef4a7"  # iNaturalist research-grade observations
     LIMIT = 300
-
     NUM_CURVEFITS = 200
 
     def __init__(self, taxon=GBIFTaxonClass.BIRDS, start_year=2019, end_year=2024, mask_layer=None, **kwargs):
@@ -44,14 +45,10 @@ class SpeciesRichness(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  allow_cache_retrieval=False):
-        #Note: spatial_resolution and resampling_method arguments are ignored.
+        # Note: spatial_resolution and resampling_method arguments are ignored.
 
         poly = bbox.as_geographic_bbox().polygon
-        print(
-            "Retrieving {0} observations for bbox {1}, {2}, {3}, {4}\n".format(
-                self.taxon.value["taxon"], *bbox.as_geographic_bbox().coords
-            )
-        )
+        print(f"Retrieving {self.taxon.value['taxon']} observations for bbox {bbox.as_geographic_bbox().coords}")
         offset = -self.LIMIT
         observations = gpd.GeoDataFrame({"species": [], "geometry": []})
         while offset == -self.LIMIT or not results["endOfRecords"]:
@@ -68,35 +65,36 @@ class SpeciesRichness(Layer):
             )
             resp = requests.get(url)
             results = resp.json()
-            print(
-                "  Collected {0} of {1} observations".format(
-                    results["offset"], results["count"]
-                )
-            )
+            print(f"Collected {results.get('offset')} of {results.get('count')} observations")
 
             has_species = [
                 (
-                    result["species"],
+                    result.get("species"),
                     shapely.geometry.Point(
-                        float(result["decimalLongitude"]),
-                        float(result["decimalLatitude"]),
+                        float(result.get("decimalLongitude")),
+                        float(result.get("decimalLatitude")),
                     ),
                 )
-                for result in results["results"]
-                if "species" in result.keys()
+                for result in results.get("results")
+                if "species" in result
             ]
 
             if self.mask_layer is not None:  # Filter for points within unmasked region
                 mask_raster = (self.mask_layer.get_data(bbox) * 0) + 1
-                valid_shapes = rasterio.features.shapes(mask_raster, connectivity=8, transform=mask_raster.rio.transform())  # Polygonize the natural-areas raster
+                valid_shapes = rasterio.features.shapes(
+                    # Polygonize the natural-areas raster
+                    mask_raster, connectivity=8, transform=mask_raster.rio.transform())
                 valid_shapes = list(valid_shapes)
-                valid_geoms = [i[0] for i in valid_shapes if i[1]==1]  # Only want the natural areas
-                valid_gdf = gpd.GeoDataFrame({'id': range(len(valid_geoms)), 'geometry': [shapely.Polygon(j['coordinates'][0]) for j in valid_geoms]})
-                valid_gdf_wgs = valid_gdf.dissolve().set_crs(bbox.as_utm_bbox().crs).to_crs('EPSG:4326')
+                # Only want the natural areas
+                valid_geoms = [i[0] for i in valid_shapes if i[1] == 1]
+                valid_gdf = gpd.GeoDataFrame({'id': range(len(valid_geoms)), 'geometry': [
+                                             shapely.Polygon(j['coordinates'][0]) for j in valid_geoms]})
+                valid_gdf_wgs = valid_gdf.dissolve().set_crs(
+                    bbox.as_utm_bbox().crs).to_crs('EPSG:4326')
                 has_species = [
                     obs for obs in has_species if obs[1].intersects(valid_gdf_wgs.geometry.iloc[0])
                 ]
-            
+
             observations = pd.concat(
                 [
                     observations,
@@ -116,13 +114,18 @@ class SpeciesRichness(Layer):
             taxon_observations = list(observations.species)
             asymptotes = []
             tries = 0
-            while (len(asymptotes) < self.NUM_CURVEFITS):  # Different observation-orders give different results, so average over many
+            # Different observation-orders give different results, so average over many
+            while (len(asymptotes) < self.NUM_CURVEFITS):
                 tries += 1
-                random.shuffle(taxon_observations)  # Randomize order of observations
+                # Randomize order of observations
+                random.shuffle(taxon_observations)
                 sac = []  # Initialize species accumulation curve data
-                for obs_count in range(1, len(taxon_observations)):  # Go through observation list from beginning
-                    sac.append(len(set(taxon_observations[:obs_count])))  # and count unique species from start to index
-                if (len(sac) > 5 and tries <= 1000):  # Avoid letting infinite-species errors stop the process
+                # Go through observation list from beginning
+                for obs_count in range(1, len(taxon_observations)):
+                    # and count unique species from start to index
+                    sac.append(len(set(taxon_observations[:obs_count])))
+                # Avoid letting infinite-species errors stop the process
+                if (len(sac) > 5 and tries <= 1000):
                     try:
                         asymptotes.append(
                             scipy.optimize.curve_fit(

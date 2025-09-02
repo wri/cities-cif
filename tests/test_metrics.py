@@ -6,8 +6,6 @@ from city_metrix.metrics import *
 from tests.conftest import EXECUTE_IGNORED_TESTS, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, ARG_BUENOS_AIRES_TILED_ZONES_TINY
 PORTLAND_DST_seasonal_utc_offset = -8
 
-HALF_JAKARTA = GeoZone(IDN_JAKARTA_TILED_ZONES.zones.iloc[50:])
-
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
 
 def test_area_fractional_vegetation_exceeds_threshold__percent():
@@ -168,7 +166,7 @@ def test_natural_areas__percent():
 def test_number_species_bird_richness__species():
     random.seed(42)
     indicator = BirdRichness__Species().get_metric( IDN_JAKARTA_TILED_ZONES_SMALL)
-    expected_zone_size = len( IDN_JAKARTA_TILED_ZONES_SMALL.zones)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 1, 7.0, 15.0, 2, 38)
