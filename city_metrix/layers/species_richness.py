@@ -62,8 +62,9 @@ class SpeciesRichness(Layer):
                 "offset": offset,
                 "hasCoordinate": "true",
             }
-            resp = requests.get(self.API_URL, params=params)
+            resp = requests.get(self.API_URL, params=params, headers={"Accept": "application/json"})
             results_json = resp.json()
+            print(results_json)
             print(f"Collected {results_json['offset']} of {results_json['count']} observations")
 
             has_species = [
