@@ -6,8 +6,6 @@ from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_POR
 PORTLAND_DST_seasonal_utc_offset = -8
 
 
-# TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
-
 def test_area_fractional_vegetation_exceeds_threshold__percent():
     indicator = AreaFractionalVegetationExceedsThreshold__Percent().get_metric(ARG_BUENOS_AIRES_TILED_ZONES_TINY)
     expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES_TINY.zones)
@@ -187,13 +185,6 @@ def test_children_access_open_space():
     # NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
     # indicator = AccessPopulationCountAll('BRA-Belo_Horizonte', 'jobs', 'walk', '15', 'minutes')
     # assert actual_indicator_size > 0
-
-def test_percent_area_fracveg_exceeds_threshold():
-    indicator = PercentAreaFracvegExceedsThreshold().get_metric(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0.0101, 0.334, 100, 0)
 
 
 def test_percent_area_impervious():
