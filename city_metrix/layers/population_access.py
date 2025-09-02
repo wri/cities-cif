@@ -18,10 +18,10 @@ SUPPORTED_AMENITIES = ('commerce', 'economic', 'healthcare', 'openspace', 'schoo
 
 class AccessibleCount(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = ["amenity", "city_id", "level", "travel_mode", "threshold", "unit"]
-    MINOR_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ["project"]
+    MINOR_NAMING_ATTS = ["amenity", "city_id", "level", "travel_mode", "threshold", "unit"]
 
-    def __init__(self, amenity='economic', city_id='KEN-Nairobi', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', **kwargs):
+    def __init__(self, amenity='economic', city_id='KEN-Nairobi', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', project=None, **kwargs):
         super().__init__(**kwargs)
         self.city_id = city_id
         self.level = level
@@ -29,10 +29,15 @@ class AccessibleCount(Layer):
         self.travel_mode = travel_mode
         self.threshold = threshold
         self.unit = unit
+        self.project = project
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_cache_retrieval=False):
-        url = f'https://{BUCKET_NAME}.s3.us-east-1.amazonaws.com/{PREFIX}/{self.amenity}__{self.city_id}__{self.level}__{self.travel_mode}__{self.threshold}__{self.unit}.tif'
+        if self.project is None:
+            project_tag = '__' + self.project
+        else:
+            project_tag = ''
+        url = f'https://{BUCKET_NAME}.s3.us-east-1.amazonaws.com/{PREFIX}/{self.amenity}__{self.city_id}__{self.level}__{self.travel_mode}__{self.threshold}__{self.unit}{project_tag}.tif'
         print(f'Attempting to retrieve accessibility file from {url}', end=' ')
         try:
             ds = rioxarray.open_rasterio(url)
