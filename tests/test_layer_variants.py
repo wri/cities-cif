@@ -7,7 +7,7 @@ from city_metrix.constants import ProjectionType, WGS_CRS
 from city_metrix.layers import NdviSentinel2, TreeCover, Albedo, AlosDSM, Era5HottestDay, UtGlobus, \
     OvertureBuildingsHeight, AlbedoCloudMasked
 from city_metrix.metrix_tools import get_projection_type
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_2, BBOX_IDN_JAKARTA
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_1, BBOX_IDN_JAKARTA
 from city_metrix.metrix_model import get_image_collection, GeoExtent
 from tests.test_layers import assert_vector_stats, assert_raster_stats
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
@@ -150,7 +150,7 @@ def test_tree_cover_values():
     )
 
 def test_ut_globus_blank_city():
-    data = UtGlobus().get_data(BBOX_USA_OR_PORTLAND_2)
+    data = UtGlobus().get_data(BBOX_USA_OR_PORTLAND_1)
     assert np.size(data) > 0
     assert_vector_stats(data, 'height', 0, 3, 16, 1095, 0)
 
@@ -165,7 +165,7 @@ def test_overture_height_rio():
 
 
 def test_wgs_utm_equivalency():
-    BBOX = BBOX_USA_OR_PORTLAND_2
+    BBOX = BBOX_USA_OR_PORTLAND_1
     BBOX_AS_UTM = BBOX.as_utm_bbox()
 
     data = AcagPM2p5().get_data(BBOX)
