@@ -144,6 +144,30 @@ def test_write_NaturalAreas__Percent(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_number_species_BirdRichness__Species(target_folder):
+    metric_obj = BirdRichness__Species()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_number_species_ArthropodRichness__Species(target_folder):
+    metric_obj = ArthropodRichness__Species()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_number_species_VascularPlantRichness__Species(target_folder):
+    metric_obj = VascularPlantRichness__Species()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_number_species_BirdRichnessInBuiltUpArea__Species(target_folder):
+    metric_obj = BirdRichnessInBuiltUpArea__Species()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_PercentAreaImpervious(target_folder):
     metric_obj = PercentAreaImpervious()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
