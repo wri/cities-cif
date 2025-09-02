@@ -7,6 +7,7 @@ import random
 import scipy
 import shapely
 import rasterio
+import time
 
 from city_metrix.metrix_model import Layer, GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION
@@ -64,8 +65,13 @@ class SpeciesRichness(Layer):
             }
             resp = requests.get(self.API_URL, params=params, headers={"Accept": "application/json"})
             results_json = resp.json()
-            print(results_json)
-            print(f"Collected {results_json['offset']} of {results_json['count']} observations")
+            if isinstance(results_json, dict):
+                print(f"Collected {results_json['offset']} of {results_json['count']} observations")
+            else:
+                time.sleep(5)  # Rate limiting
+                resp = requests.get(self.API_URL, params=params, headers={"Accept": "application/json"})
+                results_json = resp.json()
+                print(f"Collected {results_json['offset']} of {results_json['count']} observations")
 
             has_species = [
                 (
