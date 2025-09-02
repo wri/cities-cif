@@ -690,7 +690,7 @@ class LayerGroupBy:
             out_shape = (snap_to.rio.height, snap_to.rio.width)
 
             # Prepare the geometries and values for rasterization
-            shapes = [(geom, value) for geom, value in zip(reproj_gdf.geometry, reproj_gdf['index'])]
+            shapes = [(geom, value) for geom, value in zip(reproj_gdf.geometry, reproj_gdf.index)]
 
             # Perform rasterization
             raster1 = rasterize(
