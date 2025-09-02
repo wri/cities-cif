@@ -51,21 +51,20 @@ class SpeciesRichness(Layer):
         print(f"Retrieving {self.taxon.value['taxon']} observations for bbox {bbox.as_geographic_bbox().coords}")
         offset = -self.LIMIT
         observations = gpd.GeoDataFrame({"species": [], "geometry": []})
-        while offset == -self.LIMIT or not results["endOfRecords"]:
+        while offset == -self.LIMIT or not results_json["endOfRecords"]:
             offset += self.LIMIT
-            url = "{0}?dataset_key={1}&taxon_key={2}&year={3},{4}&geometry={5}&limit={6}&offset={7}&hasCoordinate=true".format(
-                self.API_URL,
-                self.DATASETKEY,
-                self.taxon.value["taxon_key"],
-                self.start_year,
-                self.end_year,
-                str(poly),
-                self.LIMIT,
-                offset,
-            )
-            resp = requests.get(url)
-            results = resp.json()
-            print(f"Collected {results.get('offset')} of {results.get('count')} observations")
+            params = {
+                "dataset_key": self.DATASETKEY,
+                "taxon_key": self.taxon.value["taxon_key"],
+                "year": f"{self.start_year},{self.end_year}",
+                "geometry": str(poly),
+                "limit": self.LIMIT,
+                "offset": offset,
+                "hasCoordinate": "true",
+            }
+            resp = requests.get(self.API_URL, params=params)
+            results_json = resp.json()
+            print(f"Collected {results_json['offset']} of {results_json['count']} observations")
 
             has_species = [
                 (
@@ -75,7 +74,7 @@ class SpeciesRichness(Layer):
                         float(result.get("decimalLatitude")),
                     ),
                 )
-                for result in results.get("results")
+                for result in results_json["results"]
                 if "species" in result
             ]
 
