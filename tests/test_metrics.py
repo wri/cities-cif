@@ -4,7 +4,8 @@ import pytest
 
 
 from city_metrix.metrics import *
-from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, ARG_BUENOS_AIRES_TILED_ZONES_TINY
+from tests.conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES_TINY
+PORTLAND_DST_seasonal_utc_offset = -8
 
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
@@ -231,6 +232,13 @@ def test_riparian_land_with_vegetation_or_water__percent():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 77.75, 92.34, 3, 0)
+
+def test_riverine_or_coastal_flood_risk_area__percent():
+    indicator = RiverineOrCoastalFloodRiskArea__Percent().get_metric(USA_OR_PORTLAND_TILED_LARGE_ZONE)
+    expected_zone_size = len(USA_OR_PORTLAND_TILED_LARGE_ZONE.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0, 100, 60, 219)
 
 def test_steeply_sloped_land_with_vegetation__percent():
     indicator = SteeplySlopedLandWithVegetation__Percent().get_metric(ARG_BUENOS_AIRES_TILED_ZONES_TINY)

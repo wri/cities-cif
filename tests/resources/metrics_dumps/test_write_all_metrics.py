@@ -232,13 +232,21 @@ def test_write_riparian_land_with_vegetation_or_water__percent(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_riverine_or_coastal_flood_risk_area__percent(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric', 'riverine_or_coastal_flood_risk_area__percent.csv')
+
+    metric_obj = RiverineOrCoastalFloodRiskArea__Percent()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_steeply_sloped_land_with_vegetation__percent(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(target_folder, 'metric', 'steeply_sloped_land_with_vegetation__percent.csv')
 
     metric_obj = SteeplySlopedLandWithVegetation__Percent()
     _write_verify(metric_obj, zones, file_path)
-    
+
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_tree_carbon_flux__tonnes(target_folder):
     zones = SAMPLE_TILED_ZONES
