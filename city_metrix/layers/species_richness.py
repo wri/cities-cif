@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 import requests
-import random, scipy
+import random
+import scipy
 import shapely
 import rasterio
 
@@ -117,7 +118,7 @@ class SpeciesRichness(Layer):
             tries = 0
             while (len(asymptotes) < self.NUM_CURVEFITS):  # Different observation-orders give different results, so average over many
                 tries += 1
-                taxon_observations.sort(key=lambda x: random.random())  # Randomize order of observations
+                random.shuffle(taxon_observations)  # Randomize order of observations
                 sac = []  # Initialize species accumulation curve data
                 for obs_count in range(1, len(taxon_observations)):  # Go through observation list from beginning
                     sac.append(len(set(taxon_observations[:obs_count])))  # and count unique species from start to index
