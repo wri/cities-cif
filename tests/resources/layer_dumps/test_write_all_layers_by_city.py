@@ -64,6 +64,12 @@ def test_Cams_write_by_city(target_folder):
     layer_obj = Cams()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_CarbonFluxFromTrees_write_by_city(target_folder):
+    layer_obj = CarbonFluxFromTrees()
+    _run_write_layers_by_city_test(layer_obj, target_folder)
+
 # @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 # @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 # def test_Era5HottestDay_write_by_city(target_folder):
@@ -168,6 +174,12 @@ def test_NdviSentinel2_write_by_city(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_NdwiSentinel2_write_by_city(target_folder):
+    layer_obj = NdwiSentinel2()
+    _run_write_layers_by_city_test(layer_obj, target_folder)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_OpenBuildings_write_by_city(target_folder):
     layer_obj = OpenBuildings()
     _run_write_layers_by_city_test(layer_obj, target_folder)
@@ -204,6 +216,12 @@ def test_ProtectedAreas_write_by_city(target_folder):
     layer_obj = ProtectedAreas()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_Slope_write_by_city(target_folder):
+    layer_obj = Slope()
+    _run_write_layers_by_city_test(layer_obj, target_folder)
+
 # # TODO test fails due to https://gfw.atlassian.net/browse/CDB-243
 # @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 # def test_RiparianAreas_write_by_city(target_folder):
@@ -223,6 +241,12 @@ def test_ProtectedAreas_write_by_city(target_folder):
 # def test_SmartSurfaceLULC_write_by_city(target_folder):
 #     layer_obj = SmartSurfaceLULC()
 #     _run_write_layers_by_city_test(layer_obj, target_folder)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_SurfaceWater_write_by_city(target_folder):
+    layer_obj = SurfaceWater()
+    _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
