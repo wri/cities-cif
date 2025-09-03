@@ -79,7 +79,7 @@ def test_extreme_small_meters():
     bbox = GeoExtent((100, 45, 101, 46), bbox_crs)
 
     with pytest.raises(ValueError, match='Failure. Grid would have too many cells along the x axis.'):
-        create_fishnet_grid(bbox, tile_side_length=100, length_units='meters')
+        create_fishnet_grid(bbox, tile_side_length=10, length_units='meters')
 
 
 def test_degree_offsets_for_meter_units():
