@@ -10,6 +10,7 @@ from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResiden
 from .impervious_surface_on_urbanized_land__percent import ImperviousSurfaceOnUrbanizedLand__Percent
 from .land_near_natural_drainage import LandNearNaturalDrainage__Percent
 from .mean_pm2p5_exposure import *
+from .number_species import *
 from .mean_tree_cover import MeanTreeCover__Percent
 from .natural_areas import NaturalAreas__Percent
 from .percent_area_impervious import PercentAreaImpervious

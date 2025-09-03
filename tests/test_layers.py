@@ -1,6 +1,7 @@
 import math
 import pytest
 import numpy as np
+import random
 
 from city_metrix.constants import ProjectionType
 from city_metrix.layers import *
@@ -257,6 +258,14 @@ def test_smart_surface_lulc():
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 1.0, 50.0, 979700, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+
+def test_species_richness():
+    taxon = GBIFTaxonClass.BIRDS
+    random.seed(42)
+    data = SpeciesRichness(taxon=taxon).get_data(BBOX)
+    assert np.size(data) > 0
+    assert_vector_stats(data, "species_count", 1, 59, 59, 1, 0)
+    assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_surface_water():
     data = SurfaceWater().get_data(BBOX)

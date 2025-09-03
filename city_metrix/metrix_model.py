@@ -387,12 +387,16 @@ def create_fishnet_grid(bbox: GeoExtent,
 
     start_x_coord, start_y_coord, end_x_coord, end_y_coord = _get_bounding_coords(bbox, output_as)
 
-    # Restrict the cell size to something reasonable
+    # Restrict the cell size to something reasonable. It is best to limit the size to minimize invalid grid
+    # definitions and expansion into adjacent UTM zones. As reference, a UTM zone at the equator is ~670,000 m.
+    # Assuming 1 km tile size, then 1,000 cells would equal 1,000,000 m grid width - so a 1000 cell limit is
+    # somewhat larger than one UTM zone.
+    maximum_grid_side_count = 1000
     x_cell_count = math.floor((end_x_coord - start_x_coord) / x_tile_side_units)
     y_cell_count = math.floor((end_y_coord - start_y_coord) / y_tile_side_units)
-    if x_cell_count > 100:
+    if x_cell_count > maximum_grid_side_count:
         raise ValueError('Failure. Grid would have too many cells along the x axis.')
-    if y_cell_count > 100:
+    if y_cell_count > maximum_grid_side_count:
         raise ValueError('Failure. Grid would have too many cells along the y axis.')
 
     geom_array = []
