@@ -21,13 +21,15 @@ BBOX_NLD_AMSTERDAM_LARGE = GeoExtent(
 )
 
 BBOX_USA_OR_PORTLAND = GeoExtent(bbox=(-122.7037, 45.51995, -122.6923117, 45.5232773), crs=WGS_CRS)
-BBOX_USA_OR_PORTLAND_1 = GeoExtent(bbox=(-122.68096, 45.49394, -122.66703, 45.50139), crs=WGS_CRS)
-BBOX_USA_OR_PORTLAND_2 = GeoExtent(bbox=(-122.75020, 45.58043, -122.73720, 45.58910), crs=WGS_CRS)
+BBOX_USA_OR_PORTLAND_1 = GeoExtent(bbox=(-122.75020, 45.58043, -122.73720, 45.58910), crs=WGS_CRS)
+BBOX_USA_OR_PORTLAND_LARGE = GeoExtent(bbox=(-122.79366913, 45.49012068, -122.4909632, 45.57367905), crs=WGS_CRS)
 
 BBOX_IDN_JAKARTA = GeoExtent(bbox=(106.7, -6.3, 106.8, -6.2), crs=WGS_CRS)
 BBOX_IDN_JAKARTA_LARGE = GeoExtent(bbox=(106, -7, 107, -6), crs=WGS_CRS)
 
 BBOX_IND_BHOPAL = GeoExtent(bbox=(77.41791, 23.20914, 77.42856, 23.21651), crs=WGS_CRS)
+
+BBOX_ARG_BUENOS_AIRES = GeoExtent(bbox=(-58.89079284843553, -35.009468078762055, -58.01673109153538, -34.001892090572426), crs=WGS_CRS)
 
 # A smaller city. Saif recommended Teresina since it's small and has all layers available
 city_admin = construct_city_aoi_json("BRA-Teresina", "city_admin_level")

@@ -7,6 +7,7 @@ from .average_net_building_height import AverageNetBuildingHeight
 from .built_up_height import BuiltUpHeight
 from .cams_ghg import CamsGhg
 from .cams import Cams
+from .carbon_flux_from_trees import CarbonFluxFromTrees
 from .era_5_hottest_day import Era5HottestDay
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .fab_dem import FabDEM
@@ -21,6 +22,7 @@ from .landsat_collection_2 import LandsatCollection2
 from .nasa_dem import NasaDEM
 from .natural_areas import NaturalAreas
 from .ndvi_sentinel2_gee import NdviSentinel2
+from .ndwi_sentinel2_gee import NdwiSentinel2
 from .open_buildings import OpenBuildings
 from .open_street_map import OpenStreetMap, OpenStreetMapClass
 from .open_urban import OpenUrban
@@ -31,7 +33,10 @@ from .pop_weighted_pm2p5 import PopWeightedPM2p5
 from .protected_areas import ProtectedAreas
 from .riparian_areas import RiparianAreas
 from .sentinel_2_level_2 import Sentinel2Level2
+from .slope import Slope
 from .smart_surface_lulc import SmartSurfaceLULC
+from .species_richness import SpeciesRichness, GBIFTaxonClass
+from .surface_water import SurfaceWater
 from .tree_canopy_cover_mask import TreeCanopyCoverMask
 from .tree_canopy_height import TreeCanopyHeight
 from .tree_cover import TreeCover

@@ -1,18 +1,19 @@
 import math
 import pytest
 import numpy as np
+import random
 
 from city_metrix.constants import ProjectionType
 from city_metrix.layers import *
 from city_metrix.metrix_tools import get_projection_type
 from tests.conftest import EXECUTE_IGNORED_TESTS
-from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_2
+from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC and is a stable region
 COUNTRY_CODE_FOR_BBOX = 'USA'
 CITY_CODE_FOR_BBOX = 'portland'
-BBOX = BBOX_USA_OR_PORTLAND_2
+BBOX = BBOX_USA_OR_PORTLAND_1
 
 
 def test_acag_pm2p5():
@@ -67,6 +68,12 @@ def test_cams_ghg():
 def test_cams():
     data = Cams().get_data(BBOX)
     assert np.size(data) > 0
+
+def test_carbon_flux_from_trees():
+    data = CarbonFluxFromTrees().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, -1.173, 0, 1122, 0)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
@@ -170,6 +177,12 @@ def test_ndvi_sentinel2():
     assert_raster_stats(data, 2, 0.087, 0.852, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
+def test_ndwi_sentinel2():
+    data = NdwiSentinel2(year=2023).get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, -0.0178, 0.578, 9797, 0)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+
 def test_openbuildings():
     data = OpenBuildings(COUNTRY_CODE_FOR_BBOX).get_data(BBOX)
     assert np.size(data) > 0
@@ -222,7 +235,7 @@ def test_pop_weighted_pm2p5():
 def test_riparian_areas():
     data = RiparianAreas().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, False, True, 1122, 0)
+    assert_raster_stats(data, 1, 1, 1, 115, 1007)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 # TODO is this layer deprecated?
@@ -234,10 +247,30 @@ def test_sentinel_2_level2():
     # TODO Add value testing
     assert get_projection_type(data.spatial_ref.crs_wkt) == ProjectionType.UTM
 
+def test_slope():
+    data = Slope().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, 0, 24.76, 1122, 0)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+
 def test_smart_surface_lulc():
     data = SmartSurfaceLULC().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 1.0, 50.0, 979700, 0)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+
+def test_species_richness():
+    taxon = GBIFTaxonClass.BIRDS
+    random.seed(42)
+    data = SpeciesRichness(taxon=taxon).get_data(BBOX)
+    assert np.size(data) > 0
+    assert_vector_stats(data, "species_count", 1, 59, 59, 1, 0)
+    assert get_projection_type(data.crs.srs) == ProjectionType.UTM
+
+def test_surface_water():
+    data = SurfaceWater().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 1, 1.0, 1.0, 174, 9623)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_tree_canopy_cover_mask():
