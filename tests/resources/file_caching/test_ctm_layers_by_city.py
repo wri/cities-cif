@@ -19,7 +19,7 @@ GEO_EXTENT = GEOEXTENT_TERESINA
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_fabdem_city():
     layer_obj = FabDEM()
-    layer_obj.cache_city_data(bbox=GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
+    layer_obj.cache_city_data(bbox=GEO_EXTENT, s3_bucket=TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
     _, file_uri, _, _ = get_test_cache_variables(layer_obj, GEO_EXTENT)
     time.sleep(10)
     tiled_file_uri = file_uri + '/geotiff_index.json'
@@ -30,7 +30,7 @@ def test_fabdem_city():
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_open_urban_city():
     layer_obj = OpenUrban()
-    layer_obj.cache_city_data(bbox=GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
+    layer_obj.cache_city_data(bbox=GEO_EXTENT, s3_bucket=TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
     _, file_uri, _, _ = get_test_cache_variables(layer_obj, GEO_EXTENT)
     time.sleep(10)
     tiled_file_uri = file_uri + '/geotiff_index.json'
@@ -42,7 +42,7 @@ def test_open_urban_city():
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_tree_canopy_height_city():
     layer_obj = TreeCanopyHeight()
-    layer_obj.cache_city_data(bbox=GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
+    layer_obj.cache_city_data(bbox=GEO_EXTENT, s3_bucket=TEST_BUCKET,  s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
     _, file_uri, _, _ = get_test_cache_variables(layer_obj, GEO_EXTENT)
     time.sleep(10)
     tiled_file_uri = file_uri + '/geotiff_index.json'
@@ -54,7 +54,7 @@ def test_tree_canopy_height_city():
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_albedo_cloud_mask_city():
     layer_obj = AlbedoCloudMasked()
-    layer_obj.cache_city_data(bbox=GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
+    layer_obj.cache_city_data(bbox=GEO_EXTENT, s3_bucket=TEST_BUCKET,  s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
     _, file_uri, _, _ = get_test_cache_variables(layer_obj, GEO_EXTENT)
     time.sleep(10)
     tiled_file_uri = file_uri + '/geotiff_index.json'
@@ -66,7 +66,7 @@ def test_albedo_cloud_mask_city():
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_overture_buildings_dsm_city():
     layer_obj = OvertureBuildingsDSM()
-    layer_obj.cache_city_data(bbox=GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
+    layer_obj.cache_city_data(bbox=GEO_EXTENT, s3_bucket=TEST_BUCKET,  s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
     _, file_uri, _, _ = get_test_cache_variables(layer_obj, GEO_EXTENT)
     time.sleep(10)
     tiled_file_uri = file_uri + '/geotiff_index.json'

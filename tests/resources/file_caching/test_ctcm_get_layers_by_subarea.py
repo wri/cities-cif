@@ -25,7 +25,7 @@ CITY_SUB_AREA = (729496,6933650, 731047,6934496)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_get_fabdem_city():
     layer_obj = FabDEM()
-    data = layer_obj.get_data_with_caching(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
+    data = layer_obj.retrieve_data(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
                                  spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'file:////tmp/test_result_tif_files/ctcm_test_result/{GEO_EXTENT.city_id}_fabdem_test.tif', GTIFF_FILE_EXTENSION)
@@ -41,7 +41,7 @@ def test_get_fabdem_city():
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_get_open_urban_city():
     layer_obj = OpenUrban()
-    data = layer_obj.get_data_with_caching(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
+    data = layer_obj.retrieve_data(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
                                  spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'file:////tmp/test_result_tif_files/ctcm_test_result/{GEO_EXTENT.city_id}_openurban_test.tif', GTIFF_FILE_EXTENSION)
@@ -57,7 +57,7 @@ def test_get_open_urban_city():
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_get_tree_canopy_height_city():
     layer_obj = TreeCanopyHeight()
-    data = layer_obj.get_data_with_caching(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
+    data = layer_obj.retrieve_data(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
                                  spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'file:////tmp/test_result_tif_files/ctcm_test_result/{GEO_EXTENT.city_id}_treecanopy_test.tif', GTIFF_FILE_EXTENSION)
@@ -73,7 +73,7 @@ def test_get_tree_canopy_height_city():
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_get_albedo_cloud_mask_city():
     layer_obj = AlbedoCloudMasked()
-    data = layer_obj.get_data_with_caching(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
+    data = layer_obj.retrieve_data(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
                                  spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'file:////tmp/test_result_tif_files/ctcm_test_result/{GEO_EXTENT.city_id}_albedocloudmask_test.tif', GTIFF_FILE_EXTENSION)
@@ -89,7 +89,7 @@ def test_get_albedo_cloud_mask_city():
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_get_overture_buildings_dsm_city():
     layer_obj = OvertureBuildingsDSM()
-    data = layer_obj.get_data_with_caching(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
+    data = layer_obj.retrieve_data(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
                                  spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'file:////tmp/test_result_tif_files/ctcm_test_result/{GEO_EXTENT.city_id}_overturedsm_test.tif', GTIFF_FILE_EXTENSION)

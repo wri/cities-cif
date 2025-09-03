@@ -51,7 +51,7 @@ def test_UtGlobus_write_small_bbox(target_folder):
     _write_verify(layer_obj, bbox, file_path)
 
 def _write_verify(layer_obj, bbox, file_path):
-    layer_obj.write(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri=file_path, tile_side_length=None)
+    layer_obj.write(bbox=bbox, target_file_path=file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
     if not PRESERVE_RESULTS_ON_OS:

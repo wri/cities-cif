@@ -11,7 +11,7 @@ from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 
 TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI
 
-PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
+PRESERVE_RESULTS_ON_OS = True # False - Default for check-in
 
 SLOW_TEST_TIMEOUT_SECONDS = 2100 # seconds = 35 minutes (Duration needed for fractional vegegation)
 
@@ -308,7 +308,7 @@ def _run_write_layers_by_city_test(layer_obj, target_folder):
 
     try:
         # Do not force data refresh to avoid collisions with concurrent tests
-        layer_obj.write(bbox=geo_extent, tile_side_length=5000, length_units='meters', s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri= os_file_path)
+        layer_obj.write(bbox=geo_extent, target_file_path=os_file_path, tile_side_length=5000, length_units='meters')
         file_uri = 'file://' + os_file_path
         tiled_file_uri = file_uri + '/tile_0001.tif'
         cache_file_exists = True if check_if_cache_object_exists(file_uri) or check_if_cache_object_exists(

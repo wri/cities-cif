@@ -41,7 +41,7 @@ class Era5MetPreprocessingUPenn(Metric):
         bbox = GeoExtent(geo_zone.bounds, geo_zone.crs)
 
         era_5_data = (Era5HottestDay(start_date=self.start_date, end_date=self.end_date, seasonal_utc_offset=self.seasonal_utc_offset)
-                      .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
+                      .retrieve_data(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
                                              spatial_resolution=spatial_resolution))
 
         t2m_var = era_5_data.sel(variable='t2m').values
