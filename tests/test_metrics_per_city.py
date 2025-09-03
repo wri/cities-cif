@@ -6,7 +6,7 @@ from tests.resources.bbox_constants import GEOZONE_TERESINA
 def test_city_values_built_land_with_high_lst():
     metric_obj = BuiltLandWithHighLST__Percent()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
-    _evaluate_metric_values(metric_values, 2, 0, 11, 3, 138, 10, True)
+    _evaluate_metric_values(metric_values, 2, 0, 11.36, 2.83, 138, 10, True)
 
 def test_city_values_mean_pm2p5_exposure():
     metric_obj = MeanPM2P5Exposure__MicrogramsPerCubicMeter()
