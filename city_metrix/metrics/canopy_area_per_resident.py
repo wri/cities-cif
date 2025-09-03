@@ -66,7 +66,7 @@ class CanopyAreaPerResidentChildren__SquareMeters(Metric):
     def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-        return (CanopyAreaPerResident(WorldPopClass.CHILDREN,
+        return (CanopyAreaPerResident__SquareMeters(WorldPopClass.CHILDREN,
                                      self.height,
                                      False)
                 .get_metric(geo_zone))
@@ -84,7 +84,7 @@ class CanopyAreaPerResidentElderly__SquareMeters(Metric):
     def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-        return (CanopyAreaPerResident(WorldPopClass.ELDERLY,
+        return (CanopyAreaPerResident__SquareMeters(WorldPopClass.ELDERLY,
                                      self.height,
                                      False)
                 .get_metric(geo_zone))
@@ -102,7 +102,7 @@ class CanopyAreaPerResidentFemale__SquareMeters(Metric):
     def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-        return (CanopyAreaPerResident(WorldPopClass.FEMALE,
+        return (CanopyAreaPerResident__SquareMeters(WorldPopClass.FEMALE,
                                      self.height,
                                      False)
                 .get_metric(geo_zone))
@@ -119,7 +119,7 @@ class CanopyAreaPerResidentInformal__SquareMeters(Metric):
     def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-        return (CanopyAreaPerResident([],
+        return (CanopyAreaPerResident__SquareMeters([],
                                      self.height,
                                      True)
                 .get_metric(geo_zone))
