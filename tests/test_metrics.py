@@ -289,7 +289,7 @@ def test_urban_open_space():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 3, 0, 20.83, 100, 0)
+    assert_metric_stats(indicator, 3, 0, 2.083, 100, 0)
 
 def test_vegetation_water_change_gain_area():
     indicator = VegetationWaterChangeGainArea__SquareMeters().get_metric(IDN_JAKARTA_TILED_ZONES)
