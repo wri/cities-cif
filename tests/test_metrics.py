@@ -171,7 +171,6 @@ def test_natural_areas__percent():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
 
-
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
 def test_children_access_open_space():
     from geopandas import GeoDataFrame
@@ -185,7 +184,6 @@ def test_children_access_open_space():
     # NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
     # indicator = AccessPopulationCountAll('BRA-Belo_Horizonte', 'jobs', 'walk', '15', 'minutes')
     # assert actual_indicator_size > 0
-
 
 def test_number_species_bird_richness__species():
     random.seed(42)
