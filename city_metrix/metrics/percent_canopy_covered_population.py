@@ -63,7 +63,7 @@ class CanopyCoveredPopulationChildren__Percent(Metric):
         self.informal_only = informal_only
 
     def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        percent_canopy_covered_children = PercentCanopyCoveredPopulation(
+        percent_canopy_covered_children = CanopyCoveredPopulation__Percent(
             worldpop_agesex_classes=WorldPopClass.CHILDREN,
             height=self.height,
             percentage=self.percentage,
@@ -84,7 +84,7 @@ class CanopyCoveredPopulationElderly__Percent(Metric):
         self.informal_only = informal_only
 
     def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        percent_canopy_covered_elderly = PercentCanopyCoveredPopulation(
+        percent_canopy_covered_elderly = CanopyCoveredPopulation__Percent(
             worldpop_agesex_classes=WorldPopClass.ELDERLY,
             height=self.height,
             percentage=self.percentage,
@@ -105,7 +105,7 @@ class CanopyCoveredPopulationFemale__Percent(Metric):
         self.informal_only = informal_only
 
     def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        percent_canopy_covered_female = PercentCanopyCoveredPopulation(
+        percent_canopy_covered_female = CanopyCoveredPopulation__Percent(
             worldpop_agesex_classes=WorldPopClass.FEMALE,
             height=self.height,
             percentage=self.percentage,
@@ -126,7 +126,7 @@ class CanopyCoveredPopulationInformal__Percent(Metric):
         self.percentage = percentage
 
     def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        percent_canopy_covered_informal = PercentCanopyCoveredPopulation(
+        percent_canopy_covered_informal = CanopyCoveredPopulation__Percent(
             worldpop_agesex_classes=self.worldpop_agesex_classes,
             height=self.height,
             percentage=self.percentage,
