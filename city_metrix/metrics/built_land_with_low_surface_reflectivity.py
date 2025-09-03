@@ -6,7 +6,7 @@ from city_metrix.layers import Albedo, EsaWorldCoverClass, EsaWorldCover
 from city_metrix.metrix_model import GeoZone, Metric
 
 
-class BuiltLandWithLowSurfaceReflectivity(Metric):
+class BuiltLandWithLowSurfaceReflectivity__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -43,8 +43,8 @@ class BuiltLandWithLowSurfaceReflectivity(Metric):
 
         if isinstance(built_albedo_counts, pd.DataFrame):
             result = built_albedo_counts.copy()
-            result['value'] = built_albedo_counts['value'] / built_land_counts['value']
+            result['value'] = 100 * built_albedo_counts['value'] / built_land_counts['value']
         else:
-            result = built_albedo_counts / built_land_counts
+            result = 100 * built_albedo_counts / built_land_counts
 
         return result

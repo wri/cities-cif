@@ -7,7 +7,7 @@ from city_metrix.metrics import GeoZone
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
-class RecreationalSpacePerCapita(Metric):
+class RecreationalSpacePerThousand__HectaresPerThousandPersons(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None

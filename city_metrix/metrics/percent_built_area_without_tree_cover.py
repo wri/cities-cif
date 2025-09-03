@@ -8,7 +8,7 @@ from city_metrix.layers import TreeCanopyHeight, UrbanLandUse
 MIN_TREE_HEIGHT = 3
 ULU_INFORMAL_CLASS = 3
 
-class PercentBuiltAreaWithoutTreeCover(Metric):
+class BuiltAreaWithoutTreeCover__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None

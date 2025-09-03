@@ -5,7 +5,7 @@ from city_metrix.layers import ProtectedAreas, EsaWorldCover
 from city_metrix.metrix_model import Metric, GeoZone
 
 
-class PercentProtectedArea(Metric):
+class ProtectedArea__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None

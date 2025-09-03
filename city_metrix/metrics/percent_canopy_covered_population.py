@@ -10,7 +10,7 @@ from city_metrix.layers import (
 )
 
 
-class PercentCanopyCoveredPopulation(Metric):
+class CanopyCoveredPopulation__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -51,7 +51,7 @@ class PercentCanopyCoveredPopulation(Metric):
         return result
 
 
-class PercentCanopyCoveredPopulationChildren(Metric):
+class CanopyCoveredPopulationChildren__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -72,7 +72,7 @@ class PercentCanopyCoveredPopulationChildren(Metric):
 
         return percent_canopy_covered_children.get_metric(geo_zone=geo_zone)
 
-class PercentCanopyCoveredPopulationElderly(Metric):
+class CanopyCoveredPopulationElderly__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -93,7 +93,7 @@ class PercentCanopyCoveredPopulationElderly(Metric):
 
         return percent_canopy_covered_elderly.get_metric(geo_zone=geo_zone)
 
-class PercentCanopyCoveredPopulationFemale(Metric):
+class CanopyCoveredPopulationFemale__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -114,7 +114,7 @@ class PercentCanopyCoveredPopulationFemale(Metric):
 
         return percent_canopy_covered_female.get_metric(geo_zone=geo_zone)
 
-class PercentCanopyCoveredPopulationInformal(Metric):
+class CanopyCoveredPopulationInformal__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None

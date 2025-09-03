@@ -5,7 +5,7 @@ from city_metrix.layers import OpenStreetMap, OpenStreetMapClass, WorldPop
 from city_metrix.metrix_model import GeoZone, Metric
 
 
-class HospitalsPerTenThousandResidents(Metric):
+class HospitalsPerTenThousandResidents__Hospitals(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None

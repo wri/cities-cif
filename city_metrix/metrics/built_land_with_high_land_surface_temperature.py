@@ -5,7 +5,7 @@ from city_metrix.layers import HighLandSurfaceTemperature, EsaWorldCoverClass, E
 from city_metrix.metrix_model import GeoZone, Metric
 
 
-class BuiltLandWithHighLST(Metric):
+class BuiltLandWithHighLST__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -36,8 +36,8 @@ class BuiltLandWithHighLST(Metric):
 
         if isinstance(built_high_lst_counts, pd.DataFrame):
             result = built_high_lst_counts.copy()
-            result['value'] = built_high_lst_counts['value'] / built_land_counts['value']
+            result['value'] = 100 * built_high_lst_counts['value'] / built_land_counts['value']
         else:
-            result = built_high_lst_counts / built_land_counts
+            result = 100 * built_high_lst_counts / built_land_counts
 
         return result

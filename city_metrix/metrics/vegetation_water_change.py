@@ -9,7 +9,7 @@ DEFAULT_SPATIAL_RESOLUTION = 10
 
 # TODO: layer generation and zonal stats use different spatial resolutions
 
-class VegetationWaterChangeGainArea(Metric):
+class VegetationWaterChangeGainArea__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -33,7 +33,7 @@ class VegetationWaterChangeGainArea(Metric):
         return result
 
 
-class VegetationWaterChangeLossArea(Metric):
+class VegetationWaterChangeLossArea__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -57,7 +57,7 @@ class VegetationWaterChangeLossArea(Metric):
         return result
 
 
-class VegetationWaterChangeGainLossRatio(Metric):
+class VegetationWaterChangeGainLoss__Ratio(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None

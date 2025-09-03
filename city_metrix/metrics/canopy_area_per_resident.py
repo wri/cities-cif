@@ -7,7 +7,7 @@ from city_metrix.layers import TreeCanopyHeight, WorldPop, WorldPopClass, UrbanL
 from city_metrix.metrix_model import GeoZone, Metric
 
 
-class CanopyAreaPerResident(Metric):
+class CanopyAreaPerResident__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     CUSTOM_TILE_SIDE_M = 10000
     MAJOR_NAMING_ATTS = None
@@ -54,7 +54,7 @@ class CanopyAreaPerResident(Metric):
         return result
 
 
-class CanopyAreaPerResidentChildren(Metric):
+class CanopyAreaPerResidentChildren__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -72,7 +72,7 @@ class CanopyAreaPerResidentChildren(Metric):
                 .get_metric(geo_zone))
 
 
-class CanopyAreaPerResidentElderly(Metric):
+class CanopyAreaPerResidentElderly__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -90,7 +90,7 @@ class CanopyAreaPerResidentElderly(Metric):
                 .get_metric(geo_zone))
 
 
-class CanopyAreaPerResidentFemale(Metric):
+class CanopyAreaPerResidentFemale__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -107,7 +107,7 @@ class CanopyAreaPerResidentFemale(Metric):
                                      False)
                 .get_metric(geo_zone))
 
-class CanopyAreaPerResidentInformal(Metric):
+class CanopyAreaPerResidentInformal__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None

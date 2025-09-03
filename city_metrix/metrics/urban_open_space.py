@@ -5,7 +5,7 @@ from city_metrix.layers import EsaWorldCover, EsaWorldCoverClass, OpenStreetMap,
 from city_metrix.metrix_model import Metric, GeoZone
 
 
-class UrbanOpenSpace(Metric):
+class UrbanOpenSpace__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -28,8 +28,8 @@ class UrbanOpenSpace(Metric):
 
         if isinstance(open_space_in_built_land, pd.DataFrame):
             result = open_space_in_built_land.copy()
-            result['value'] = open_space_in_built_land['value'] / built_land_counts['value']
+            result['value'] = 100 * open_space_in_built_land['value'] / built_land_counts['value']
         else:
-            result = open_space_in_built_land / built_land_counts
+            result = 100 * open_space_in_built_land / built_land_counts
 
         return result
