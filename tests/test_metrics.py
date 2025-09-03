@@ -249,7 +249,7 @@ def test_percent_water_cover():
 
 def test_recreational_space_per_capita():
     spatial_resolution=100
-    indicator = (RecreationalSpacePerCapita__HectaresPerThousandPersons()
+    indicator = (RecreationalSpacePerThousand__HectaresPerThousandPersons()
                  .get_metric(IDN_JAKARTA_TILED_ZONES, spatial_resolution=spatial_resolution))
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
