@@ -44,7 +44,7 @@ def test_default_name_for_metric_with_start_end_dates():
     file_key, file_uri, metric_id, is_custom_metric = get_test_cache_variables(metric_obj, zones)
 
     assert is_custom_metric == False
-    assert metric_id == 'BuiltLandWithLowSurfaceReflectivity__StartYear_2021_EndYear_2021.csv'
+    assert metric_id == 'BuiltLandWithLowSurfaceReflectivity__Percent__StartYear_2021_EndYear_2021.csv'
 
 
 def test_custom_name_for_layer_with_start_end_dates():
