@@ -1,10 +1,9 @@
-from city_metrix import *
+import random
 import math
 import pytest
 from city_metrix.metrics import *
 from .conftest import IDN_JAKARTA_TILED_ZONES, EXECUTE_IGNORED_TESTS, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES_TINY
 PORTLAND_DST_seasonal_utc_offset = -8
-
 
 def test_area_fractional_vegetation_exceeds_threshold__percent():
     indicator = AreaFractionalVegetationExceedsThreshold__Percent().get_metric(ARG_BUENOS_AIRES_TILED_ZONES_TINY)
@@ -171,7 +170,6 @@ def test_natural_areas__percent():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
 
-
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
 def test_children_access_open_space():
     from geopandas import GeoDataFrame
@@ -186,6 +184,37 @@ def test_children_access_open_space():
     # indicator = AccessPopulationCountAll('BRA-Belo_Horizonte', 'jobs', 'walk', '15', 'minutes')
     # assert actual_indicator_size > 0
 
+def test_number_species_bird_richness__species():
+    random.seed(42)
+    indicator = BirdRichness__Species().get_metric( IDN_JAKARTA_TILED_ZONES_SMALL)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 1, 7.0, 15.0, 2, 38)
+
+def test_number_species_arthropod_richness__species():
+    random.seed(42)
+    indicator = ArthropodRichness__Species().get_metric(IDN_JAKARTA_TILED_ZONES_SMALL)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 1, 36.0, 36.0, 1, 39)
+
+def test_number_species_vascular_plant_richness__species():
+    random.seed(42)
+    indicator = VascularPlantRichness__Species().get_metric(IDN_JAKARTA_TILED_ZONES_SMALL)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 1, 10.0, 10.0, 1, 39)
+
+def test_number_species_bird_richness_in_builtup_area__species():
+    random.seed(42)
+    indicator = BirdRichnessInBuiltUpArea__Species().get_metric(IDN_JAKARTA_TILED_ZONES_SMALL)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 1, 7.0, 7.0, 1, 39)
 
 def test_percent_area_impervious():
     indicator = PercentAreaImpervious().get_metric(IDN_JAKARTA_TILED_ZONES)

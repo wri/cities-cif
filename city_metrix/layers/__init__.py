@@ -43,6 +43,7 @@ from .riparian_areas import RiparianAreas
 from .sentinel_2_level_2 import Sentinel2Level2
 from .slope import Slope
 from .smart_surface_lulc import SmartSurfaceLULC
+from .species_richness import SpeciesRichness, GBIFTaxonClass
 from .surface_water import SurfaceWater
 from .tree_canopy_cover_mask import TreeCanopyCoverMask
 from .tree_canopy_height import TreeCanopyHeight
