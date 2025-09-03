@@ -3,8 +3,8 @@ from city_metrix.constants import WGS_EPSG_CODE, ProjectionType
 from city_metrix.metrix_model import create_fishnet_grid, WGS_CRS, GeoExtent, GeoZone, Layer
 from geocube.api.core import make_geocube
 
-from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND, BBOX_NLD_AMSTERDAM, BBOX_IDN_JAKARTA, \
-    BBOX_IDN_JAKARTA_LARGE
+from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND, BBOX_USA_OR_PORTLAND_LARGE, BBOX_NLD_AMSTERDAM, BBOX_IDN_JAKARTA, \
+    BBOX_IDN_JAKARTA_LARGE, BBOX_ARG_BUENOS_AIRES
 
 # EXECUTE_IGNORED_TESTS is the master control for whether to execute tests decorated with
 # pytest.mark.skipif. These tests are temporarily ignored due to some unresolved issue.
@@ -45,15 +45,23 @@ IDN_JAKARTA_TILED_BBOXES = (
     create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA.coords, 0.01).reset_index())
 IDN_JAKARTA_TILED_LARGE_BBOXES = (
     create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA_LARGE.coords, 0.1).reset_index())
+USA_OR_PORTLAND_TILED_LARGE_BBOX = (
+    create_fishnet_gdf_for_testing(BBOX_USA_OR_PORTLAND_LARGE.coords, 0.01).reset_index())
 USA_OR_PORTLAND_BBOX = create_single_bbox_gdf_for_testing(BBOX_USA_OR_PORTLAND.coords)
 NLD_AMSTERDAM_BBOX = create_single_bbox_gdf_for_testing(BBOX_NLD_AMSTERDAM.coords)
 
 # Test zones of a regular 0.01x0.01 grid over a 0.1x0.1 extent by degrees
 IDN_JAKARTA_TILED_ZONES = GeoZone(IDN_JAKARTA_TILED_BBOXES)
+IDN_JAKARTA_TILED_ZONES_SMALL = GeoZone(IDN_JAKARTA_TILED_ZONES.zones.iloc[50:90])
 IDN_JAKARTA_TILED_LARGE_ZONES = GeoZone(IDN_JAKARTA_TILED_LARGE_BBOXES)
+USA_OR_PORTLAND_TILED_LARGE_ZONE = GeoZone(USA_OR_PORTLAND_TILED_LARGE_BBOX)
+
 # Test single tiles
 USA_OR_PORTLAND_ZONE = GeoZone(USA_OR_PORTLAND_BBOX)
 NLD_AMSTERDAM_ZONE = GeoZone(NLD_AMSTERDAM_BBOX)
+
+ARG_BUENOS_AIRES_TILED_BBOXES_TINY = create_fishnet_gdf_for_testing(BBOX_ARG_BUENOS_AIRES.coords, 0.02).reset_index().iloc[[1,2,3]]
+ARG_BUENOS_AIRES_TILED_ZONES_TINY = GeoZone(ARG_BUENOS_AIRES_TILED_BBOXES_TINY)
 
 
 class MockLayer(Layer):
