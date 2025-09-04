@@ -3,12 +3,12 @@ from tests.resources.bbox_constants import GEOZONE_TERESINA
 
 # TODO - Consider adding other metrics
 
-def test_city_values_built_land_with_high_lst():
+def test_city_values_built_land_with_high_lst__percent():
     metric_obj = BuiltLandWithHighLST__Percent()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
     _evaluate_metric_values(metric_values, 2, 0, 11.36, 2.83, 138, 10, True)
 
-def test_city_values_mean_pm2p5_exposure():
+def test_city_values_mean_pm2p5_exposure__microgramspercubicmeter():
     metric_obj = MeanPM2P5Exposure__MicrogramsPerCubicMeter()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
     _evaluate_metric_values(metric_values, 2, 11.18, 14.04, 12.45, 138, 0, True)
