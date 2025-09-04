@@ -1,18 +1,19 @@
 import math
 import pytest
 import numpy as np
+import random
 
 from city_metrix.constants import ProjectionType
 from city_metrix.layers import *
 from city_metrix.metrix_tools import get_projection_type
 from tests.conftest import EXECUTE_IGNORED_TESTS
-from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_2
+from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC and is a stable region
 COUNTRY_CODE_FOR_BBOX = 'USA'
 CITY_CODE_FOR_BBOX = 'portland'
-BBOX = BBOX_USA_OR_PORTLAND_2
+BBOX = BBOX_USA_OR_PORTLAND_1
 
 
 def test_acag_pm2p5():
@@ -251,6 +252,14 @@ def test_smart_surface_lulc():
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 1.0, 50.0, 979700, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+
+def test_species_richness():
+    taxon = GBIFTaxonClass.BIRDS
+    random.seed(42)
+    data = SpeciesRichness(taxon=taxon).get_data(BBOX)
+    assert np.size(data) > 0
+    assert_vector_stats(data, "species_count", 1, 59, 59, 1, 0)
+    assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_surface_water():
     data = SurfaceWater().get_data(BBOX)

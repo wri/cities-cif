@@ -14,18 +14,21 @@ from tests.test_layers import assert_raster_stats
 
 TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI
 
-SAVE_RESULTS_TO_OS = True
+SAVE_RESULTS_TO_OS = False # False is default
 
-GEO_EXTENT = GEOEXTENT_FLORIANOPOLIS
-CITY_SUB_AREA = (729496,6933650, 731047,6934496)
-# GEO_EXTENT = GEOEXTENT_TERESINA
-# CITY_SUB_AREA = (740102,9424381, 742071,9425993) # Teresina
+# GEO_EXTENT = GEOEXTENT_FLORIANOPOLIS
+# CITY_SUB_AREA = (729496,6933650, 731047,6934496)
+GEO_EXTENT = GEOEXTENT_TERESINA
+CITY_SUB_AREA = (740102,9424381, 742071,9425993) # Teresina
 #
 
+# For full caching:
+# 8-10 min runtime for Teresina
+# 46 mins for Florianopolis
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_get_fabdem_city():
     layer_obj = FabDEM()
-    data = layer_obj.retrieve_data(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
+    data = layer_obj.retrieve_data(GEO_EXTENT, s3_bucket= TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
                                  spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'file:////tmp/test_result_tif_files/ctcm_test_result/{GEO_EXTENT.city_id}_fabdem_test.tif', GTIFF_FILE_EXTENSION)
@@ -38,10 +41,10 @@ def test_get_fabdem_city():
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
     assert _evaluate_bounds(CITY_SUB_AREA, data)
 
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_get_open_urban_city():
     layer_obj = OpenUrban()
-    data = layer_obj.retrieve_data(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
+    data = layer_obj.retrieve_data(GEO_EXTENT, s3_bucket= TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
                                  spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'file:////tmp/test_result_tif_files/ctcm_test_result/{GEO_EXTENT.city_id}_openurban_test.tif', GTIFF_FILE_EXTENSION)
@@ -54,10 +57,10 @@ def test_get_open_urban_city():
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
     assert _evaluate_bounds(CITY_SUB_AREA, data)
 
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_get_tree_canopy_height_city():
     layer_obj = TreeCanopyHeight()
-    data = layer_obj.retrieve_data(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
+    data = layer_obj.retrieve_data(GEO_EXTENT, s3_bucket= TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
                                  spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'file:////tmp/test_result_tif_files/ctcm_test_result/{GEO_EXTENT.city_id}_treecanopy_test.tif', GTIFF_FILE_EXTENSION)
@@ -70,10 +73,10 @@ def test_get_tree_canopy_height_city():
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
     assert _evaluate_bounds(CITY_SUB_AREA, data)
 
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_get_albedo_cloud_mask_city():
     layer_obj = AlbedoCloudMasked()
-    data = layer_obj.retrieve_data(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
+    data = layer_obj.retrieve_data(GEO_EXTENT, s3_bucket= TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
                                  spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'file:////tmp/test_result_tif_files/ctcm_test_result/{GEO_EXTENT.city_id}_albedocloudmask_test.tif', GTIFF_FILE_EXTENSION)
@@ -86,10 +89,10 @@ def test_get_albedo_cloud_mask_city():
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
     assert _evaluate_bounds(CITY_SUB_AREA, data)
 
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_get_overture_buildings_dsm_city():
     layer_obj = OvertureBuildingsDSM()
-    data = layer_obj.retrieve_data(GEO_EXTENT, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
+    data = layer_obj.retrieve_data(GEO_EXTENT, s3_bucket= TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,
                                  spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'file:////tmp/test_result_tif_files/ctcm_test_result/{GEO_EXTENT.city_id}_overturedsm_test.tif', GTIFF_FILE_EXTENSION)

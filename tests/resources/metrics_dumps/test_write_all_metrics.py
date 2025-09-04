@@ -9,8 +9,6 @@ from tests.resources.bbox_constants import BBOX_IDN_JAKARTA, BBOX_IDN_JAKARTA_LA
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.tools import prep_output_path, verify_file_is_populated, cleanup_cache_files
 
-TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI
-
 SAMPLE_TILED_SINGLE_ZONE = (
     GeoZone(create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA.coords, 0.1).reset_index()))
 
@@ -186,6 +184,38 @@ def test_write_natural_areas__percent(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_number_species_bird_richness__species(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric', 'bird_richness__species.csv')
+
+    metric_obj = BirdRichness__Species()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_number_species_arthropod_richness__species(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric', 'arthropod_richness__species.csv')
+
+    metric_obj = ArthropodRichness__Species()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_number_species_vascular_plant_richness__species(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric', 'vascular_plant_richness__species.csv')
+
+    metric_obj = VascularPlantRichness__Species()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_number_species_bird_richness_in_builtup_area__species(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric', 'bird_richness_in_builtup_area__species.csv')
+
+    metric_obj = BirdRichnessInBuiltUpArea__Species()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_percent_area_impervious(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(target_folder, 'metric', 'percent_area_impervious.csv')
@@ -234,13 +264,21 @@ def test_write_riparian_land_with_vegetation_or_water__percent(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_riverine_or_coastal_flood_risk_area__percent(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(target_folder, 'metric', 'riverine_or_coastal_flood_risk_area__percent.csv')
+
+    metric_obj = RiverineOrCoastalFloodRiskArea__Percent()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_steeply_sloped_land_with_vegetation__percent(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(target_folder, 'metric', 'steeply_sloped_land_with_vegetation__percent.csv')
 
     metric_obj = SteeplySlopedLandWithVegetation__Percent()
     _write_verify(metric_obj, zones, file_path)
-    
+
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_tree_carbon_flux__tonnes(target_folder):
     zones = SAMPLE_TILED_ZONES
@@ -291,7 +329,7 @@ def test_write_water_cover__percent(target_folder):
 
 
 def _write_verify(metric_obj, zones, file_path):
-    metric_obj.write(geo_zone=zones, s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri=file_path)
+    metric_obj.write(geo_zone=zones, target_file_path=file_path)
     assert verify_file_is_populated(file_path)
     if not PRESERVE_RESULTS_ON_OS:
         cleanup_cache_files(None, None, None, file_path)

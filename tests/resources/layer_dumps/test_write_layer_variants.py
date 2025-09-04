@@ -7,12 +7,10 @@ from datetime import datetime
 from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, CIF_TESTING_S3_BUCKET_URI
 from city_metrix.layers import *
 from city_metrix.metrix_model import get_class_default_spatial_resolution
-from tests.resources.bbox_constants import GEOEXTENT_TERESINA, BBOX_USA_OR_PORTLAND_2
+from tests.resources.bbox_constants import GEOEXTENT_TERESINA, BBOX_USA_OR_PORTLAND_1
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.tools import get_test_bbox, cleanup_cache_files, prep_output_path, verify_file_is_populated, \
     get_file_count_in_folder
-
-TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI
 
 # ==================== Test resolution changes ===========================
 # Multiplier applied to the default spatial_resolution of the layer
@@ -24,7 +22,8 @@ FIXED_RESOLUTION = 30 # Note: Some layers do not support less than resolution of
 
 PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
 
-BBOX = BBOX_USA_OR_PORTLAND_2
+BBOX = BBOX_USA_OR_PORTLAND_1
+
 
 #  Resolution tests
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")

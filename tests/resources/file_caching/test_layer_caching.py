@@ -49,7 +49,7 @@ def test_netcdf_default_param_val():
 def _run_cache_test(layer_obj):
     _, file_uri, _, is_custom_layer = get_test_cache_variables(layer_obj, GEO_EXTENT_PROCESSING_CITY)
 
-    data = layer_obj.cache_city_data(bbox=GEO_EXTENT_PROCESSING_CITY, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True)
+    data = layer_obj.cache_city_data(bbox=GEO_EXTENT_PROCESSING_CITY, s3_bucket=TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True)
     assert np.size(data) > 0
 
     cache_file_exists = check_if_cache_object_exists(file_uri)

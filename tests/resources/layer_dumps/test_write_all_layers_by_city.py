@@ -9,8 +9,6 @@ from tests.resources.tools import cleanup_cache_files, prep_output_path
 from ..bbox_constants import GEOEXTENT_TERESINA
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 
-TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI
-
 PRESERVE_RESULTS_ON_OS = True # False - Default for check-in
 
 SLOW_TEST_TIMEOUT_SECONDS = 2100 # seconds = 35 minutes (Duration needed for fractional vegegation)
@@ -243,6 +241,12 @@ def test_Slope_write_by_city(target_folder):
 # def test_SmartSurfaceLULC_write_by_city(target_folder):
 #     layer_obj = SmartSurfaceLULC()
 #     _run_write_layers_by_city_test(layer_obj, target_folder)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_SpeciesRichness_write_by_city(target_folder):
+    layer_obj = SpeciesRichness()
+    _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")

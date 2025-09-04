@@ -10,6 +10,7 @@ from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResiden
 from .impervious_surface_on_urbanized_land import ImperviousSurfaceOnUrbanizedLand__Percent
 from .land_near_natural_drainage import LandNearNaturalDrainage__Percent
 from .mean_pm2p5_exposure import *
+from .number_species import *
 from .mean_tree_cover import MeanTreeCover__Percent
 from .natural_areas import NaturalAreas__Percent
 from .percent_area_impervious import PercentAreaImpervious
@@ -18,6 +19,7 @@ from .percent_canopy_covered_population import *
 from .percent_protected_area import PercentProtectedArea
 from .recreational_space_per_capita import RecreationalSpacePerCapita
 from .riparian_land_with_vegetation_or_water import RiparianLandWithVegetationOrWater__Percent
+from .riverine_or_coastal_flood_risk_area import RiverineOrCoastalFloodRiskArea__Percent
 from .steeply_sloped_land_with_vegetation import SteeplySlopedLandWithVegetation__Percent
 from .tree_carbon_flux import TreeCarbonFlux__Tonnes
 from .urban_open_space import UrbanOpenSpace

@@ -26,7 +26,7 @@ from xrspatial import zonal_stats
 from city_metrix import s3_client
 from city_metrix.cache_manager import retrieve_city_cache, build_file_key
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
-    DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION
+    DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_admin_boundaries, read_geotiff_from_cache, extract_tif_subarea,
                                     create_uri_target_folder, write_geojson, write_json, get_key_from_s3_uri,
@@ -396,12 +396,16 @@ def create_fishnet_grid(bbox: GeoExtent,
 
     start_x_coord, start_y_coord, end_x_coord, end_y_coord = _get_bounding_coords(bbox, output_as)
 
-    # Restrict the cell size to something reasonable
+    # Restrict the cell size to something reasonable. It is best to limit the size to minimize invalid grid
+    # definitions and expansion into adjacent UTM zones. As reference, a UTM zone at the equator is ~670,000 m.
+    # Assuming 1 km tile size, then 1,000 cells would equal 1,000,000 m grid width - so a 1000 cell limit is
+    # somewhat larger than one UTM zone.
+    maximum_grid_side_count = 1000
     x_cell_count = math.floor((end_x_coord - start_x_coord) / x_tile_side_units)
     y_cell_count = math.floor((end_y_coord - start_y_coord) / y_tile_side_units)
-    if x_cell_count > 100:
+    if x_cell_count > maximum_grid_side_count:
         raise ValueError('Failure. Grid would have too many cells along the x axis.')
-    if y_cell_count > 100:
+    if y_cell_count > maximum_grid_side_count:
         raise ValueError('Failure. Grid would have too many cells along the y axis.')
 
     geom_array = []
@@ -581,17 +585,17 @@ class LayerGroupBy:
     def _zonal_stats_tile(stats_func, tile_gdf, zones, aggregate, layer, masks, spatial_resolution):
         bbox = GeoExtent(tile_gdf)
 
-        aggregate_data = aggregate.retrieve_data(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
+        aggregate_data = aggregate.retrieve_data(bbox=bbox, s3_bucket=CIF_CACHE_S3_BUCKET_URI, s3_env=DEFAULT_PRODUCTION_ENV,
                                                          spatial_resolution=spatial_resolution)
 
         if isinstance(aggregate_data, xr.DataArray) and aggregate_data.data.size == 0:
             return None
         else:
-            mask_datum = [mask.retrieve_data(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
+            mask_datum = [mask.retrieve_data(bbox=bbox, s3_bucket=CIF_CACHE_S3_BUCKET_URI, s3_env=DEFAULT_PRODUCTION_ENV,
                                                      spatial_resolution=spatial_resolution) for mask in masks]
 
             if layer is not None:
-                layer_data = layer.retrieve_data(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV,
+                layer_data = layer.retrieve_data(bbox=bbox, s3_bucket=CIF_CACHE_S3_BUCKET_URI, s3_env=DEFAULT_PRODUCTION_ENV,
                                                          spatial_resolution=spatial_resolution)
             else:
                 layer_data = None
@@ -694,7 +698,7 @@ class LayerGroupBy:
             out_shape = (snap_to.rio.height, snap_to.rio.width)
 
             # Prepare the geometries and values for rasterization
-            shapes = [(geom, value) for geom, value in zip(reproj_gdf.geometry, reproj_gdf['index'])]
+            shapes = [(geom, value) for geom, value in zip(reproj_gdf.geometry, reproj_gdf.index)]
 
             # Perform rasterization
             raster1 = rasterize(
@@ -1227,11 +1231,104 @@ class Metric():
         """
         ...
 
-    def get_metric_with_caching(self, geo_zone: GeoZone, s3_env: str, spatial_resolution: int = None,
-                                force_data_refresh: bool = False) -> tuple[Union[pd.Series, pd.DataFrame], str]:
+
+    def write(self, geo_zone: GeoZone, target_file_path: str = None,
+              spatial_resolution: int = None, **kwargs):
+        """
+        Write the metric to a path. Does not apply masks.
+        :param geo_zone: a GeoZone object
+        :param target_file_path: local or s3 path to output to
+        :param spatial_resolution: resolution of continuous raster data in meters
+        :param force_data_refresh: forces layer data to be pulled from source instead of cache
+        """
+        if target_file_path is None:
+            print("Can't write output to None path")
+            return
+
+        indicator = self.metric.get_metric(geo_zone, spatial_resolution=spatial_resolution)
+
+        if indicator is None:
+            indicator = self._expand_empty_results_to_results_with_null_value(geo_zone)
+
+        Metric._verify_extension(target_file_path, f".{CSV_FILE_EXTENSION}")
+
+        if isinstance(indicator, (float, int)):
+            indicator = pd.Series([indicator])
+
+        if isinstance(indicator, Series):
+            indicator.name = 'value'
+
+            result_df = geo_zone.zones
+            indicator_df = pd.concat([result_df, indicator], axis=1)
+        else:
+            indicator_df = indicator
+
+        # if 'metric_id' not in indicator_df.columns:
+        #     indicator_df = indicator_df.assign(metric_id=feature_id)
+
+        if 'geo_id' in indicator_df.columns:
+            indicator_df = _standardize_city_metrics_columns(indicator_df, None)
+
+        if isinstance(indicator_df, gpd.GeoDataFrame):
+            indicator_df = indicator_df.drop(columns="geometry")
+
+        write_metric(indicator_df, target_file_path, CSV_FILE_EXTENSION)
+
+
+    def write_as_geojson(self, geo_zone: GeoZone, target_file_path: str = None,
+                         spatial_resolution: int = None, **kwargs):
+
+        """
+        Write the metric to a path. Does not apply masks.
+        :return:
+        """
+
+        if target_file_path is None:
+            print("Can't write output to None path")
+            return
+
+        indicator = self.metric.get_metric(geo_zone, spatial_resolution=spatial_resolution)
+
+        if indicator is None:
+            indicator = self._expand_empty_results_to_results_with_null_value(geo_zone)
+
+        Metric._verify_extension(target_file_path, f".{GEOJSON_FILE_EXTENSION}")
+
+        if isinstance(indicator, (int, float)):
+            indicator = pd.Series([indicator])
+        if isinstance(indicator, Series):
+            indicator.name = 'value'
+
+        result_df = geo_zone.zones
+        if isinstance(indicator, pd.DataFrame):
+            indicator_df = pd.concat([result_df['geometry'], indicator], axis=1)
+        elif not isinstance(indicator, gpd.GeoDataFrame):
+            indicator_df = pd.concat([result_df, indicator], axis=1)
+        else:
+            indicator_df = indicator
+
+        # if 'metric_id' not in indicator_df.columns:
+        #     indicator_df = indicator_df.assign(metric_id=feature_id)
+
+        if 'geo_id' in indicator_df.columns:
+            indicator_df = _standardize_city_metrics_columns(indicator_df, 'geometry')
+
+        if not isinstance(indicator_df, gpd.GeoDataFrame):
+            indicator_gdf = gpd.GeoDataFrame(indicator_df, geometry='geometry')
+        else:
+            indicator_gdf = indicator_df
+
+        write_metric(indicator_gdf, target_file_path, GEOJSON_FILE_EXTENSION)
+
+
+    def cache_city_metric(self, geo_zone: GeoZone, s3_bucket: str, s3_env: str, spatial_resolution: int = None,
+                          force_data_refresh: bool = False) -> tuple[Union[pd.Series, pd.DataFrame], str]:
+
+        if geo_zone.geo_type != GeoType.CITY:
+            raise ValueError("Non-city data cannot be cached.")
 
         standard_env = standardize_s3_env(s3_env)
-        retrieved_cached_data, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, standard_env, None,
+        retrieved_cached_data, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, s3_bucket, standard_env, None,
                                                                           force_data_refresh)
         if retrieved_cached_data is None:
             result_metric = self.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
@@ -1251,6 +1348,27 @@ class Metric():
 
         return result_metric, feature_id
 
+
+    def retrieve_metric(self, geo_zone: GeoZone, s3_bucket: str, s3_env: str, spatial_resolution: int = None,
+                          force_data_refresh: bool = False) -> tuple[Union[pd.Series, pd.DataFrame], str]:
+
+        if geo_zone.geo_type != GeoType.CITY:
+            raise ValueError("Non-city data cannot be retrieved.")
+
+        standard_env = standardize_s3_env(s3_env)
+        result_metric, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, s3_bucket, standard_env, None,
+                                                                          force_data_refresh)
+
+        if result_metric is None:
+            result_metric = self.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
+
+            # Opportunistically cache city metric
+            if geo_zone.geo_type == GeoType.CITY:
+                write_metric(result_metric, file_uri, self.OUTPUT_FILE_FORMAT)
+
+        return result_metric
+
+
     def _expand_empty_results_to_results_with_null_value(self, geo_zone: GeoZone) -> Union[pd.DataFrame, pd.Series]:
         if geo_zone.geo_type == GeoType.CITY:
             admin_count = len(geo_zone.zones)
@@ -1261,102 +1379,6 @@ class Metric():
         return padded_rows
 
 
-    def write(self, geo_zone: GeoZone, s3_env: str, target_uri: str = None,
-              spatial_resolution: int = None, force_data_refresh: bool = False, **kwargs):
-        """
-        Write the metric to a path. Does not apply masks.
-        :param geo_zone: a GeoZone object
-        :param target_uri: local or s3 path to output to
-        :param s3_env: name of storage environment (dev, staging, prd)
-        :param spatial_resolution: resolution of continuous raster data in meters
-        :param force_data_refresh: forces layer data to be pulled from source instead of cache
-        """
-        if target_uri is None:
-            print("Can't write output to None path")
-            return
-
-        standard_env = standardize_s3_env(s3_env)
-
-        indicator, feature_id = self.metric.get_metric_with_caching(geo_zone, standard_env,
-                                                                    spatial_resolution, force_data_refresh)
-
-        if indicator is None:
-            indicator = self._expand_empty_results_to_results_with_null_value(geo_zone)
-
-        # Determine if write can be skipped
-        skip_write = _decide_if_write_can_be_skipped(self.metric, geo_zone, target_uri, standard_env)
-
-        if not skip_write:
-            Metric._verify_extension(target_uri, f".{CSV_FILE_EXTENSION}")
-
-            if isinstance(indicator, (float, int)):
-                indicator = pd.Series([indicator])
-
-            if isinstance(indicator, Series):
-                indicator.name = 'value'
-
-                result_df = geo_zone.zones
-                indicator_df = pd.concat([result_df, indicator], axis=1)
-            else:
-                indicator_df = indicator
-
-            if 'metric_id' not in indicator_df.columns:
-                indicator_df = indicator_df.assign(metric_id=feature_id)
-
-            if 'geo_id' in indicator_df.columns:
-                indicator_df = _standardize_city_metrics_columns(indicator_df, None)
-
-            if isinstance(indicator_df, gpd.GeoDataFrame):
-                indicator_df = indicator_df.drop(columns="geometry")
-
-            write_metric(indicator_df, target_uri, CSV_FILE_EXTENSION)
-
-    def write_as_geojson(self, geo_zone: GeoZone, s3_env: str, target_uri: str = None,
-                         spatial_resolution: int = None, force_data_refresh: bool = False, **kwargs):
-
-        """
-        Write the metric to a path. Does not apply masks.
-        :return:
-        """
-        standard_env = standardize_s3_env(s3_env)
-
-        indicator, feature_id = self.metric.get_metric_with_caching(geo_zone, standard_env,
-                                                                    spatial_resolution, force_data_refresh)
-
-        if indicator is None:
-            indicator = self._expand_empty_results_to_results_with_null_value(geo_zone)
-
-        # Determine if write can be skipped
-        skip_write = _decide_if_write_can_be_skipped(self.metric, geo_zone, target_uri, standard_env)
-
-        if not skip_write:
-            Metric._verify_extension(target_uri, f".{GEOJSON_FILE_EXTENSION}")
-
-            if isinstance(indicator, (int, float)):
-                indicator = pd.Series([indicator])
-            if isinstance(indicator, Series):
-                indicator.name = 'value'
-
-            result_df = geo_zone.zones
-            if isinstance(indicator, pd.DataFrame):
-                indicator_df = pd.concat([result_df['geometry'], indicator], axis=1)
-            elif not isinstance(indicator, gpd.GeoDataFrame):
-                indicator_df = pd.concat([result_df, indicator], axis=1)
-            else:
-                indicator_df = indicator
-
-            if 'metric_id' not in indicator_df.columns:
-                indicator_df = indicator_df.assign(metric_id=feature_id)
-
-            if 'geo_id' in indicator_df.columns:
-                indicator_df = _standardize_city_metrics_columns(indicator_df, 'geometry')
-
-            if not isinstance(indicator_df, gpd.GeoDataFrame):
-                indicator_gdf = gpd.GeoDataFrame(indicator_df, geometry='geometry')
-            else:
-                indicator_gdf = indicator_df
-
-            write_metric(indicator_gdf, target_uri, GEOJSON_FILE_EXTENSION)
 
     @staticmethod
     def _verify_extension(file_path, extension):

@@ -9,9 +9,7 @@ from city_metrix.cache_manager import check_if_cache_object_exists
 from ...tools.general_tools import get_test_cache_variables
 from ..bbox_constants import GEOZONE_TERESINA, GEOEXTENT_TERESINA
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
-from ..tools import prep_output_path, cleanup_cache_files
-
-TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI
+from ..tools import prep_output_path, cleanup_cache_files, verify_file_is_populated
 
 PRESERVE_RESULTS_ON_OS = False  # False - Default for check-in
 OUTPUT_RESULTS_FORMAT = 'csv' # Default for check-in
@@ -146,6 +144,30 @@ def test_write_NaturalAreas__Percent(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_number_species_BirdRichness__Species(target_folder):
+    metric_obj = BirdRichness__Species()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_number_species_ArthropodRichness__Species(target_folder):
+    metric_obj = ArthropodRichness__Species()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_number_species_VascularPlantRichness__Species(target_folder):
+    metric_obj = VascularPlantRichness__Species()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_number_species_BirdRichnessInBuiltUpArea__Species(target_folder):
+    metric_obj = BirdRichnessInBuiltUpArea__Species()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_PercentAreaImpervious(target_folder):
     metric_obj = PercentAreaImpervious()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
@@ -178,6 +200,12 @@ def test_write_RecreationalSpacePerCapita(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_RiparianLandWithVegatationOrWater__Percent(target_folder):
     metric_obj = RiparianLandWithVegetationOrWater__Percent()
+    _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_RiverineOrCoastalFloodRiskArea__Percent(target_folder):
+    metric_obj = RiverineOrCoastalFloodRiskArea__Percent()
     _run_write_metrics_by_city_test(metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
@@ -217,24 +245,22 @@ def test_write_WaterCover__Percent(target_folder):
 
 
 def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_zone):
-    file_key, file_uri, metric_id, _ = get_test_cache_variables(metric_obj, geo_extent)
+    _, _, metric_id, _ = get_test_cache_variables(metric_obj, geo_extent)
     metric_geojson_path = '/tmp/test_result_tif_files/metric_geojson'
 
     os_file_path = None
     try:
         if OUTPUT_RESULTS_FORMAT == 'csv':
             os_file_path = prep_output_path(target_folder, 'metric', metric_id)
-            metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri=os_file_path,
-                             force_data_refresh=True)
-            cache_file_exists = check_if_cache_object_exists(file_uri)
+            metric_obj.write(geo_zone=geo_zone, target_file_path=os_file_path)
+            file_exists = verify_file_is_populated(os_file_path)
         else:
             metric_name = metric_obj.__class__.__name__
             os_file_path = f'{metric_geojson_path}/{metric_name}.geojson'
-            metric_obj.write_as_geojson(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, target_uri=os_file_path,
-                                        force_data_refresh=True)
-            cache_file_exists = check_if_cache_object_exists(file_uri)
+            metric_obj.write_as_geojson(geo_zone=geo_zone, target_file_path=os_file_path)
+            file_exists = verify_file_is_populated(os_file_path)
 
-        assert cache_file_exists, "Test failed since file did not upload to s3"
+        assert file_exists, "Test failed since file did not upload to s3"
     finally:
         if PRESERVE_RESULTS_ON_OS and OUTPUT_RESULTS_FORMAT == 'geojson':
             import shutil
