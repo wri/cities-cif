@@ -50,8 +50,7 @@ def convert_ratio_to_percentage(data):
     return values_as_percent
 
 
-def get_test_cache_variables(class_obj, geo_extent):
-    s3_bucket = CIF_TESTING_S3_BUCKET_URI
+def get_test_cache_variables(class_obj, geo_extent, s3_bucket):
     s3_env = DEFAULT_DEVELOPMENT_ENV
     file_uri, file_key, feature_id, is_custom_object = build_file_key(s3_bucket, s3_env, class_obj, geo_extent)
     file_format = class_obj.OUTPUT_FILE_FORMAT

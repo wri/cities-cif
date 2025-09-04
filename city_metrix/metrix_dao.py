@@ -443,7 +443,7 @@ def get_city(city_id: str):
 
         uri_path = os.path.normpath(get_file_path_from_uri(cache_uri))
         _create_local_target_folder(uri_path)
-        with open(cache_file_path, "w") as file:
+        with open(uri_path, "w") as file:
             json.dump(city_json, file)
 
     return city_json

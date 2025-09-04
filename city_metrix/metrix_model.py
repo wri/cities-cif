@@ -975,6 +975,8 @@ class Layer():
                 except  Exception as e:
                     print(f"Failed to process {target_uri}: {e}")
             else:
+                self._write_fishnet_metadata_to_uri_target(fishnet, target_uri, crs)
+
                 # Write individual tiles to cache
                 create_uri_target_folder(target_uri)
                 delete_s3_file_if_exists(target_uri)
@@ -983,9 +985,6 @@ class Layer():
                     tile = Path(file).stem
                     target_tile_uri = f"{target_uri}/{tile}.{GTIFF_FILE_EXTENSION}"
                     self._cache_data(file, target_tile_uri)
-
-                self._write_fishnet_metadata_to_uri_target(fishnet, target_uri, crs)
-
 
     def _cache_data(self, source_file_path, target_tile_uri):
         if target_tile_uri.startswith('s3://'):

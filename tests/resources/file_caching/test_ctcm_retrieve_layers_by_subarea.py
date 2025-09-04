@@ -4,7 +4,7 @@ import pytest
 
 from city_metrix import TreeCanopyHeight
 from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, ProjectionType, GTIFF_FILE_EXTENSION, \
-    CIF_TESTING_S3_BUCKET_URI
+    CIF_TESTING_S3_BUCKET_URI, TCM_CACHE_S3_BUCKET_URI
 from city_metrix.layers import OvertureBuildingsDSM, FabDEM, OpenUrban, AlbedoCloudMasked
 from city_metrix.metrix_dao import write_layer
 from city_metrix.metrix_tools import get_projection_type
@@ -12,7 +12,8 @@ from tests.resources.bbox_constants import GEOEXTENT_TERESINA, GEOEXTENT_FLORIAN
 from tests.resources.conftest import DumpRunLevel, DUMP_RUN_LEVEL
 from tests.test_layers import assert_raster_stats
 
-TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI
+TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI # Default for testing
+# TEST_BUCKET = TCM_CACHE_S3_BUCKET_URI
 
 SAVE_RESULTS_TO_OS = False # False is default
 
@@ -41,7 +42,7 @@ def test_get_fabdem_city():
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
     assert _evaluate_bounds(CITY_SUB_AREA, data)
 
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_get_open_urban_city():
     layer_obj = OpenUrban()
     data = layer_obj.retrieve_data(GEO_EXTENT, s3_bucket= TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=CITY_SUB_AREA,

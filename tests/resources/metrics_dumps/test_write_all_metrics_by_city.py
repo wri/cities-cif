@@ -245,7 +245,7 @@ def test_write_WaterCover__Percent(target_folder):
 
 
 def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_zone):
-    _, _, metric_id, _ = get_test_cache_variables(metric_obj, geo_extent)
+    _, _, metric_id, _ = get_test_cache_variables(metric_obj, geo_extent, 'NO_BUCKET')
     metric_geojson_path = '/tmp/test_result_tif_files/metric_geojson'
 
     os_file_path = None
