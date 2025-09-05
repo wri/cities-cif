@@ -24,7 +24,12 @@ VARIABLES = {
         'era_varname': 'minimum_2m_air_temperature',
         'nex_transform': lambda x: x - 273.5,
         'era_transform': lambda x: x - 273.5
-    }
+    },
+    'pr': {
+        'era_varname': 'total_precipitation',
+        'nex_transform': lambda x: x * 86400,
+        'era_transform': lambda x: x * 1000
+    },
 }
 HIST_START, HIST_END = 1980, 2014
 MIN_HEATWAVE_DURATION = 3
@@ -90,7 +95,7 @@ def percentile(latlon, varname, pctl, want_summer_only=True):
         summer_only = summeronly(alldays_noleap, southern_hem)     
         return np.percentile(summer_only, pctl)
     else:
-        return np.percentile(alldays_noleap)
+        return np.percentile(alldays_noleap, pctl)
 
 def count_runs(tf_array, min_runsize):
     falses = np.zeros(tf_array.shape[0]).reshape((tf_array.shape[0],1))
@@ -231,116 +236,117 @@ class AnnualVal(Hazard):
 
 class FutureHeatwaveFrequency__Heatwaves(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ['start_year', 'end_year']
+    MINOR_NAMING_ATTS = ['model_rank']
 
-    def __init__(self, start_year:int=2040, end_year:int=2049, **kwargs):
+    def __init__(self, start_year:int=2040, end_year:int=2049, model_rank=1, **kwargs):
         super().__init__(**kwargs)
         self.start_year = start_year
         self.end_year = end_year
+        self.model_rank = model_rank
+        self.unit = 'heatwaves'
 
     def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution=None
                  ) -> GeoSeries:
         
-        data_layer = NexGddpCmip6(start_year=self.start_year, end_year=self.end_year)
-        results = defaultdict(list)
-        
+        data_layer = NexGddpCmip6(varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
         threshold = percentile((geo_zone.centroid.y, geo_zone.centroid.x), 'tasmax', HEATWAVE_INTENSITY_PERCENTILE, True)
         haz = Tempwave_count(MIN_HEATWAVE_DURATION, threshold)
         data = data_layer.get_data(bbox)
-        for model_rank in range(len(list(data.keys()))):
-            model = list(data.keys())[model_rank]
-            results[f'model_{model_rank+1}'].append(haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year))
-        return pd.DataFrame({key: [round(i, 1) for i in results[key]] for key in results.keys()})
+        model = list(data.keys())[self.model_rank - 1]
+        result = haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+        return float(round(result, 1))
 
 class FutureHeatwaveMaxduration__Days(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ['start_year', 'end_year']
+    MINOR_NAMING_ATTS = ['model_rank']
 
-    def __init__(self, start_year:int=2040, end_year:int=2049, **kwargs):
+    def __init__(self, start_year:int=2040, end_year:int=2049, model_rank=1, **kwargs):
         super().__init__(**kwargs)
         self.start_year = start_year
         self.end_year = end_year
+        self.model_rank = model_rank
+        self.unit = 'days'
 
     def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution=None
                  ) -> GeoSeries:
 
-        data_layer = NexGddpCmip6(start_year=self.start_year, end_year=self.end_year)
-        results = defaultdict(list)
+        data_layer = NexGddpCmip6(varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
         threshold = percentile((geo_zone.centroid.y, geo_zone.centroid.x), 'tasmax', HEATWAVE_INTENSITY_PERCENTILE, True)
         haz = Tempwave_duration(threshold)
         data = data_layer.get_data(bbox)
-        for model_rank in range(len(list(data.keys()))):
-            model = list(data.keys())[model_rank]
-            results[f'model_{model_rank+1}'].append(haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year))
-        return pd.DataFrame({key: [round(i, 1) for i in results[key]] for key in results.keys()})
+        model = list(data.keys())[self.model_rank - 1]
+        result = haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+        return float(round(result, 1))
 
 class FutureDaysAbove35__Days(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ['start_year', 'end_year']
+    MINOR_NAMING_ATTS = ['model_rank']
 
-    def __init__(self, start_year:int=2040, end_year:int=2049, **kwargs):
+    def __init__(self, start_year:int=2040, end_year:int=2049, model_rank=1, **kwargs):
         super().__init__(**kwargs)
         self.start_year = start_year
         self.end_year = end_year
+        self.model_rank = model_rank
+        self.unit = 'days'
 
     def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution=None
                  ) -> GeoSeries:
 
-        data_layer = NexGddpCmip6(start_year=self.start_year, end_year=self.end_year)
-        results = defaultdict(list)
+        data_layer = NexGddpCmip6(varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
         haz = ThresholdDays(35)
         data = data_layer.get_data(bbox)
-        for model_rank in range(len(list(data.keys()))):
-            model = list(data.keys())[model_rank]
-            results[f'model_{model_rank+1}'].append(haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year))
-        return pd.DataFrame({key: [round(i, 1) for i in results[key]] for key in results.keys()})
+        model = list(data.keys())[self.model_rank - 1]
+        result = haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+        return float(round(result, 1))
 
 class FutureAnnualMaxtemp__DegreesCelsius(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ['start_year', 'end_year']
+    MINOR_NAMING_ATTS = ['model_rank']
 
-    def __init__(self, start_year:int=2040, end_year:int=2049, **kwargs):
+    def __init__(self, start_year:int=2040, end_year:int=2049, model_rank=1, **kwargs):
         super().__init__(**kwargs)
         self.start_year = start_year
         self.end_year = end_year
+        self.model_rank = model_rank
+        self.unit = 'degrees Celsius'
 
     def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution=None
                  ) -> GeoSeries:
 
-        data_layer = NexGddpCmip6(start_year=self.start_year, end_year=self.end_year)
-        results = defaultdict(list)
+        data_layer = NexGddpCmip6(varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
         haz = AnnualVal('max')
         data = data_layer.get_data(bbox)
-        for model_rank in range(len(list(data.keys()))):
-            model = list(data.keys())[model_rank]
-            results[f'model_{model_rank+1}'].append(haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year))
-        return pd.DataFrame({key: [round(i, 1) for i in results[key]] for key in results.keys()})
+        model = list(data.keys())[self.model_rank - 1]
+        result = haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+        return float(round(result, 1))
 
 class FutureExtremePrecipitationDays__Days(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ['start_year', 'end_year']
+    MINOR_NAMING_ATTS = ['model_rank']
 
-    def __init__(self, start_year:int=2040, end_year:int=2049, **kwargs):
+    def __init__(self, start_year:int=2040, end_year:int=2049, model_rank=1, **kwargs):
         super().__init__(**kwargs)
         self.start_year = start_year
         self.end_year = end_year
+        self.model_rank = model_rank
+        self.unit = 'days'
 
     def get_metric(self,
                  geo_zone: GeoZone,
@@ -348,12 +354,10 @@ class FutureExtremePrecipitationDays__Days(Metric):
                  ) -> GeoSeries:
 
         data_layer = NexGddpCmip6(varname='pr', start_year=self.start_year, end_year=self.end_year)
-        results = defaultdict(list)
         bbox = GeoExtent(geo_zone)
         pctl_90 = percentile((geo_zone.centroid.y, geo_zone.centroid.x), 'pr', 90, False)
         haz = ThresholdDays(pctl_90)
         data = data_layer.get_data(bbox)
-        for model_rank in range(len(list(data.keys()))):
-            model = list(data.keys())[model_rank]
-            results[f'model_{model_rank+1}'].append(haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year))
-        return pd.DataFrame({key: [round(i, 1) for i in results[key]] for key in results.keys()})
+        model = list(data.keys())[self.model_rank - 1]
+        result = haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+        return float(round(result, 1))
