@@ -1,4 +1,5 @@
 import os
+import tempfile
 import pytest
 import timeout_decorator
 
@@ -245,7 +246,8 @@ def test_write_WaterCover__Percent(target_folder):
 
 def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_zone):
     file_key, file_uri, metric_id, _ = get_test_cache_variables(metric_obj, geo_extent)
-    metric_geojson_path = '/tmp/test_result_tif_files/metric_geojson'
+    temp_dir = tempfile.gettempdir()
+    metric_geojson_path = os.path.join(temp_dir, 'test_result_tif_files', 'metric_geojson')
 
     os_file_path = None
     try:
@@ -256,7 +258,7 @@ def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_z
             cache_file_exists = check_if_cache_file_exists(file_uri)
         else:
             metric_name = metric_obj.__class__.__name__
-            os_file_path = f'{metric_geojson_path}/{metric_name}.geojson'
+            os_file_path = os.path.join(metric_geojson_path, f'{metric_name}.geojson')
             metric_obj.write_as_geojson(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=os_file_path,
                                         force_data_refresh=True)
             cache_file_exists = check_if_cache_file_exists(file_uri)
