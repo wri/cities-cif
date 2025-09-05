@@ -175,7 +175,7 @@ def test_natural_areas__percent():
 def test_children_access_open_space():
     from geopandas import GeoDataFrame
     zones = GeoZone(GeoDataFrame.from_file('https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/ARG-Buenos_Aires.geojson'))
-    indicator = AccessToOpenSpace__ChildrenPercent('ARG-Buenos_Aires', 'adminbound', 'walk', 15, 'minutes').get_metric(zones)
+    indicator = AccessToOpenSpace_Children__Percent('ARG-Buenos_Aires', 'adminbound', 'walk', 15, 'minutes').get_metric(zones)
     assert actual_indicator_size > 0
 
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
