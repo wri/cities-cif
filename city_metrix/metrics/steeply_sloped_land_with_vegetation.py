@@ -8,6 +8,7 @@ from city_metrix.metrix_model import Metric, GeoZone
 MIN_SLOPE_DEGREES = 10
 MIN_VEGETATION_PERCENT = 60
 
+
 class SteeplySlopedLandWithVegetation__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
@@ -18,8 +19,8 @@ class SteeplySlopedLandWithVegetation__Percent(Metric):
         self.year = year
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         """
         Get total area as number of pixels in NwdiSentinel2.
         Get water area as number of 1-valued pixels in SurfaceWater.
@@ -32,7 +33,7 @@ class SteeplySlopedLandWithVegetation__Percent(Metric):
 
         vegetated_steep_area = steep_layer.mask(vegetation_layer).groupby(geo_zone).count().fillna(0)
         steep_area = steep_layer.groupby(geo_zone).count()
-        
+
         if isinstance(steep_area, pd.DataFrame):
             result = steep_area.copy()
             result['value'] = 100 * vegetated_steep_area['value'] / steep_area['value']

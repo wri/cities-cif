@@ -3,8 +3,8 @@ from typing import Union
 from geocube.api.core import make_geocube
 
 from city_metrix.constants import CSV_FILE_EXTENSION
-from city_metrix.layers import LandCoverSimplifiedGlad, LandCoverHabitatChangeGlad
 from city_metrix.metrix_model import GeoExtent, GeoZone, Metric
+from city_metrix.layers import LandCoverSimplifiedGlad, LandCoverHabitatChangeGlad
 
 
 class HabitatTypesRestored__CoverTypes(Metric):
@@ -18,13 +18,13 @@ class HabitatTypesRestored__CoverTypes(Metric):
         self.end_year = end_year
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
         cover_array = LandCoverSimplifiedGlad(year=self.end_year).get_data(GeoExtent(geo_zone))
         restored_array = LandCoverHabitatChangeGlad(start_year=self.start_year, end_year=self.end_year).get_data(GeoExtent(geo_zone))
         # Count unique cover types in each zone, only within pixels classed 01 in change raster
-        cover_array_masked = cover_array.where(restored_array==1)
+        cover_array_masked = cover_array.where(restored_array == 1)
 
         zone_raster = make_geocube(
             vector_data=geo_zone.zones,
