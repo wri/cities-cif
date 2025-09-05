@@ -71,132 +71,132 @@ class _AccessPopulationPercentInformal(_AccessPopulationPercent):
 
 
 #*********************** openspace ***********************
-class AccessToOpenSpace__TotalPopulationPercent(_AccessPopulationPercentAll):
+class AccessToOpenSpace_TotalPopulation__Percent(_AccessPopulationPercentAll):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='openspace', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToOpenSpace__ChildrenPercent(_AccessPopulationPercentChildren):
+class AccessToOpenSpace_Children__Percent(_AccessPopulationPercentChildren):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='openspace', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToOpenSpace__ElderlyPercent(_AccessPopulationPercentElderly):
+class AccessToOpenSpace_Elderly__Percent(_AccessPopulationPercentElderly):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='openspace', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToOpenSpace__FemalePercent(_AccessPopulationPercentFemale):
+class AccessToOpenSpace_Female__Percent(_AccessPopulationPercentFemale):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='openspace', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToOpenSpace__InformalPercent(_AccessPopulationPercentInformal):
+class AccessToOpenSpace_Informal__Percent(_AccessPopulationPercentInformal):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='openspace', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
 
 #*********************** schools ***********************
-class AccessToSchools__TotalPopulationPercent(_AccessPopulationPercentAll):
+class AccessToSchools_TotalPopulation__Percent(_AccessPopulationPercentAll):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='openspace', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToSchools__ChildrenPercent(_AccessPopulationPercentChildren):
+class AccessToSchools_Children__Percent(_AccessPopulationPercentChildren):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='schools', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToSchools__ElderlyPercent(_AccessPopulationPercentElderly):
+class AccessToSchools_Elderly__Percent(_AccessPopulationPercentElderly):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='schools', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToSchools__FemalePercent(_AccessPopulationPercentFemale):
+class AccessToSchools_Female__Percent(_AccessPopulationPercentFemale):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='schools', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToSchools__InformalPercent(_AccessPopulationPercentInformal):
+class AccessToSchools_Informal__Percent(_AccessPopulationPercentInformal):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='schools', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
 
 #*********************** goods & services ***********************
-class AccessToGoodsAndServices__TotalPopulationPercent(_AccessPopulationPercentAll):
+class AccessToGoodsAndServices_TotalPopulation__Percent(_AccessPopulationPercentAll):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='commerce', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToGoodsAndServices__ChildrenPercent(_AccessPopulationPercentChildren):
+class AccessToGoodsAndServices_Children__Percent(_AccessPopulationPercentChildren):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='commerce', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToGoodsAndServices__ElderlyPercent(_AccessPopulationPercentElderly):
+class AccessToGoodsAndServices_Elderly__Percent(_AccessPopulationPercentElderly):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='commerce', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToGoodsAndServices__FemalePercent(_AccessPopulationPercentFemale):
+class AccessToGoodsAndServices_Female__Percent(_AccessPopulationPercentFemale):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='commerce', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToGoodsAndServices__InformalPercent(_AccessPopulationPercentInformal):
+class AccessToGoodsAndServices_Informal__Percent(_AccessPopulationPercentInformal):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='commerce', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
 
 #*********************** potential employment ***********************
-class AccessToPotentialEmployment__TotalPopulationPercent(_AccessPopulationPercentAll):
+class AccessToPotentialEmployment_TotalPopulation__Percent(_AccessPopulationPercentAll):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToPotentialEmployment__ChildrenPercent(_AccessPopulationPercentChildren):
+class AccessToPotentialEmployment_Children__Percent(_AccessPopulationPercentChildren):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToPotentialEmployment__ElderlyPercent(_AccessPopulationPercentElderly):
+class AccessToPotentialEmployment_Elderly__Percent(_AccessPopulationPercentElderly):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToPotentialEmployment__FemalePercent(_AccessPopulationPercentFemale):
+class AccessToPotentialEmployment_Female__Percent(_AccessPopulationPercentFemale):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToPotentialEmployment__InformalPercent(_AccessPopulationPercentInformal):
+class AccessToPotentialEmployment_Informal__Percent(_AccessPopulationPercentInformal):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
 
 #*********************** public transportation ***********************
-class AccessToPublicTransportation__TotalPopulationPercent(_AccessPopulationPercentAll):
+class AccessToPublicTransportation_TotalPopulation__Percent(_AccessPopulationPercentAll):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='transit', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToPublicTransportation__ChildrenPercent(_AccessPopulationPercentChildren):
+class AccessToPublicTransportation_Children__Percent(_AccessPopulationPercentChildren):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='transit', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToPublicTransportation__ElderlyPercent(_AccessPopulationPercentElderly):
+class AccessToPublicTransportation_Elderly__Percent(_AccessPopulationPercentElderly):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='transit', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToPublicTransportation__FemalePercent(_AccessPopulationPercentFemale):
+class AccessToPublicTransportation_Female__Percent(_AccessPopulationPercentFemale):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='transit', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToPublicTransportation__InformalPercent(_AccessPopulationPercentInformal):
+class AccessToPublicTransportation_Informal__Percent(_AccessPopulationPercentInformal):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='transit', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
 
 #*********************** healthcare ***********************
-class AccessToHealthcare__TotalPopulationPercent(_AccessPopulationPercentAll):
+class AccessToHealthcare_TotalPopulation__Percent(_AccessPopulationPercentAll):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='healthcare', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToHealthcare__ChildrenPercent(_AccessPopulationPercentChildren):
+class AccessToHealthcare_Children__Percent(_AccessPopulationPercentChildren):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='healthcare', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToHealthcare__ElderlyPercent(_AccessPopulationPercentElderly):
+class AccessToHealthcare_Elderly__Percent(_AccessPopulationPercentElderly):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='healthcare', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToHealthcare__FemalePercent(_AccessPopulationPercentFemale):
+class AccessToHealthcare_Female__Percent(_AccessPopulationPercentFemale):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='healthcare', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToHealthcare__InformalPercent(_AccessPopulationPercentInformal):
+class AccessToHealthcare_Informal__Percent(_AccessPopulationPercentInformal):
     def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
         super().__init__(amenity='healthcare', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
