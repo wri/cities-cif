@@ -126,7 +126,7 @@ def test_era_5_met_preprocess_upenn():
 
 def test_future_annual_maxtemp():
     indicator = FutureAnnualMaxtemp__DegreesCelsius(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
-    assert indicator == 1.0  # Returns just one number
+    assert indicator == 34.9  # Returns just one number
 
 def test_future_days_above_35():
     indicator = FutureDaysAbove35__Days(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -134,7 +134,7 @@ def test_future_days_above_35():
 
 def test_future_extreme_precipitation_days():
     indicator = FutureExtremePrecipitationDays__Days(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
-    assert indicator == 34.9   # Returns just one number
+    assert indicator == 1   # Returns just one number
 
 def test_future_heatwave_frequency():
     indicator = FutureHeatwaveFrequency__Heatwaves(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
