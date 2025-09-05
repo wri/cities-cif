@@ -21,20 +21,20 @@ class _NumberSpecies(Metric):
         self.mask_layer = None
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
         speciesrichness_layer = SpeciesRichness(taxon=self.taxon, start_year=self.start_year, end_year=self.end_year, mask_layer=self.mask_layer)
-        
+
         zones = geo_zone.zones
         results = []
         for rownum in range(len(zones)):
             zone = zones.iloc[[rownum]]
-            results.append(speciesrichness_layer.get_data(GeoExtent(zone.total_bounds)).species_count[0])
+            results.append(speciesrichness_layer.get_data(GeoExtent(zone)).species_count[0])
 
         result_gdf = zones.copy()
         result_gdf['value'] = results
-        result_gdf['zone'] = zones['id']
+        result_gdf['zone'] = zones['index']
         return result_gdf[['zone', 'value']]
 
 
@@ -63,7 +63,6 @@ class VascularPlantRichness__Species(_NumberSpecies):
 
 
 class BirdRichnessInBuiltUpArea__Species(_NumberSpecies):
-
     def __init__(self, start_year=2019, end_year=2024, **kwargs):
         super().__init__(**kwargs)
         self.mask_layer = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)

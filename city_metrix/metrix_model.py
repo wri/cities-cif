@@ -1042,6 +1042,8 @@ class Metric():
 
         zones = geo_zone.zones
         if isinstance(result_metric, pd.DataFrame) and 'zone' in result_metric.columns:
+            zones['index'] = zones['index'].astype(float)
+            result_metric['zone'] = result_metric['zone'].astype(float)
             results_metric_df = pd.merge(zones, result_metric, left_on='index', right_on='zone', how='left')
             if 'metric_id' not in results_metric_df.columns:
                 results_metric_df = results_metric_df.assign(metric_id=feature_id)

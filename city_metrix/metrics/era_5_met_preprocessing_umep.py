@@ -3,9 +3,9 @@ import numpy as np
 from datetime import datetime
 
 from city_metrix.constants import CSV_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV
-from city_metrix.layers import Era5HottestDay
 from city_metrix.metrix_model import GeoExtent, Metric, GeoZone
 from city_metrix.metrix_tools import is_date
+from city_metrix.layers import Era5HottestDay
 
 
 class Era5MetPreprocessingUmep(Metric):
@@ -19,15 +19,16 @@ class Era5MetPreprocessingUmep(Metric):
         end_date: ending date for data retrieval
         seasonal_utc_offset: UTC-offset in hours as determined for AOI and DST usage.
     """
-    def __init__(self, start_date:str=None, end_date:str=None, seasonal_utc_offset:float=0, **kwargs):
+
+    def __init__(self, start_date: str = None, end_date: str = None, seasonal_utc_offset: float = 0, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.seasonal_utc_offset = seasonal_utc_offset
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> pd.DataFrame:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> pd.DataFrame:
         """
         Get ERA 5 data for the hottest day
         :param geo_zone: GeoZone with geometries to collect zonal stats on
@@ -58,7 +59,7 @@ class Era5MetPreprocessingUmep(Metric):
         times = [time.astype('datetime64[s]').astype(datetime) for time in time_var]
         t2m_vals = (t2m_var[:]-273.15)
         d2m_vals = (d2m_var[:]-273.15)
-        rh_vals = (100*(np.exp((17.625*d2m_vals)/(243.04+d2m_vals))/np.exp((17.625*t2m_vals)/(243.04+t2m_vals))))
+        rh_vals = (100*(np.exp((17.625*d2m_vals)/(243.04+d2m_vals)) / np.exp((17.625*t2m_vals)/(243.04+t2m_vals))))
         grad_vals = (cdir_var[:]/3600)
         dir_vals = (sw_var[:])
         dif_vals = (lw_var[:])
