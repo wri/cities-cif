@@ -8,6 +8,7 @@ from city_metrix.metrix_model import Metric, GeoZone
 MIN_NDWI = 0.4
 MIN_VEGETATION_PERCENT = 50
 
+
 class RiparianLandWithVegetationOrWater__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
@@ -18,8 +19,8 @@ class RiparianLandWithVegetationOrWater__Percent(Metric):
         self.year = year
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         """
         Get total area as number of pixels in NwdiSentinel2.
         Get water area as number of 1-valued pixels in SurfaceWater.
@@ -34,7 +35,7 @@ class RiparianLandWithVegetationOrWater__Percent(Metric):
         riparian_area = riparian_layer.groupby(geo_zone).count()
         water_area = riparian_layer.mask(water_layer).groupby(geo_zone).count().fillna(0)
         vegetation_area = riparian_layer.mask(vegetation_layer).groupby(geo_zone).count().fillna(0)
-        
+
         AND_area = vegetation_layer.mask(water_layer).groupby(geo_zone).count().fillna(0)
         OR_area = water_area + vegetation_area - AND_area
 
