@@ -3,7 +3,7 @@ from .world_pop import WorldPop, WorldPopClass
 from .acag_pm2p5 import AcagPM2p5
 from ..constants import GTIFF_FILE_EXTENSION
 
-DEFAULT_SPATIAL_RESOLUTION = 1113.1949
+DEFAULT_SPATIAL_RESOLUTION = 100
 
 class PopWeightedPM2p5(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
@@ -39,6 +39,6 @@ class PopWeightedPM2p5(Layer):
 
         utm_crs = bbox.as_utm_bbox().crs
 
-        data = pm2p5 * (world_pop / world_pop.mean()).rio.write_crs(utm_crs)
+        data = pm2p5 * (world_pop / world_pop.mean()).rio.write_crs(utm_crs).assign_attrs({'crs': utm_crs})
 
         return data
