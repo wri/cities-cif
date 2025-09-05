@@ -46,7 +46,8 @@ def read_geotiff_from_cache(file_uri):
         file_path = os.path.normpath(get_file_path_from_uri(file_uri))
     else:
         file_path = file_uri
-    data = rioxarray.open_rasterio(file_path, driver="GTiff")
+    with rioxarray.open_rasterio(file_path, driver="GTiff") as src:
+        data = src.load()
 
     result_data = data.squeeze('band', drop=True)
 
@@ -270,7 +271,7 @@ def get_city(city_id: str):
 
         uri_path = os.path.normpath(get_file_path_from_uri(cache_uri))
         _create_local_target_folder(uri_path)
-        with open(cache_file_path, "w") as file:
+        with open(uri_path, "w") as file:
             json.dump(city_json, file)
 
     return city_json
