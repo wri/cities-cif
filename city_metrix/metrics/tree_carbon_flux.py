@@ -11,6 +11,7 @@ See Harris et al. 2021 Nature Climate Change (nature.com/articles/s41558-020-009
 
 """
 
+
 class TreeCarbonFlux__Tonnes(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
@@ -20,9 +21,9 @@ class TreeCarbonFlux__Tonnes(Metric):
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-        
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
+
         flux = CarbonFluxFromTrees().groupby(geo_zone).sum()
 
         return flux

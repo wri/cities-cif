@@ -4,9 +4,9 @@ from datetime import datetime
 from pvlib import solarposition
 
 from city_metrix.constants import CSV_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV
-from city_metrix.layers import Era5HottestDay
 from city_metrix.metrix_model import GeoExtent, Metric, GeoZone
 from city_metrix.metrix_tools import is_date
+from city_metrix.layers import Era5HottestDay
 
 
 class Era5MetPreprocessingUPenn(Metric):
@@ -14,22 +14,22 @@ class Era5MetPreprocessingUPenn(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-
     """
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
         seasonal_utc_offset: UTC-offset in hours as determined for AOI and DST usage.
     """
-    def __init__(self, start_date:str=None, end_date:str=None, seasonal_utc_offset:float=0, **kwargs):
+
+    def __init__(self, start_date: str = None, end_date: str = None, seasonal_utc_offset: float = 0, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.seasonal_utc_offset = seasonal_utc_offset
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> pd.DataFrame:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> pd.DataFrame:
         """
         Get ERA 5 data for the hottest day
         :param geo_zone: GeoZone with geometries to collect zonal stats on
@@ -66,7 +66,7 @@ class Era5MetPreprocessingUPenn(Metric):
         minutes = [dt.minute for dt in times]
         t2m_vals = (t2m_var[:]-273.15)
         d2m_vals = (d2m_var[:]-273.15)
-        rh_vals = (100*(np.exp((17.625*d2m_vals)/(243.04+d2m_vals))/np.exp((17.625*t2m_vals)/(243.04+t2m_vals))))
+        rh_vals = (100*(np.exp((17.625*d2m_vals)/(243.04+d2m_vals)) / np.exp((17.625*t2m_vals)/(243.04+t2m_vals))))
         sp_vals = (sp_var[:]/100)
         wind_vals = (np.sqrt(((np.square(u10_var[:]))+(np.square(v10_var[:])))))
         ghi_vals = (ssrd_var[:]/3600)
@@ -100,9 +100,9 @@ class Era5MetPreprocessingUPenn(Metric):
             'Day': np.repeat(days, len(latitudes_flat)),
             'Hour': np.repeat(hours, len(latitudes_flat)),
             'Minute': np.repeat(minutes, len(latitudes_flat)),
-            'DHI': dhi_vals.flatten(), 
-            'DNI':dni_vals.flatten(),
-            'GHI':ghi_vals.flatten(),
+            'DHI': dhi_vals.flatten(),
+            'DNI': dni_vals.flatten(),
+            'GHI': ghi_vals.flatten(),
             'Clearsky DHI': clear_sky_dhi_vals.flatten(),
             'Clearsky DNI': clear_sky_dni_vals.flatten(),
             'Clearsky GHI': clear_sky_ghi_vals.flatten(),

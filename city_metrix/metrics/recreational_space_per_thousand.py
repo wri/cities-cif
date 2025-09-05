@@ -1,5 +1,6 @@
 import pandas as pd
 from typing import Union
+
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import WorldPop, OpenStreetMap, OpenStreetMapClass
 from city_metrix.metrix_model import Metric
@@ -7,7 +8,8 @@ from city_metrix.metrics import GeoZone
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
-class RecreationalSpacePerCapita(Metric):
+
+class RecreationalSpacePerThousand__HectaresPerThousandPersons(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -16,9 +18,9 @@ class RecreationalSpacePerCapita(Metric):
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution=DEFAULT_SPATIAL_RESOLUTION
-                 ) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution=DEFAULT_SPATIAL_RESOLUTION
+                   ) -> Union[pd.DataFrame | pd.Series]:
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
         world_pop = WorldPop()
