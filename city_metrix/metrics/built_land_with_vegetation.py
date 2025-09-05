@@ -15,8 +15,8 @@ class BuiltLandWithVegetation__Percent(Metric):
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         """
         Get percentage of built up land (using ESA world cover) with NDVI vegetation cover.
         :param zones: GeoDataFrame with geometries to collect zonal stats on

@@ -3,8 +3,8 @@ import numpy as np
 from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
-from city_metrix.layers import TreeCanopyHeight, WorldPop, WorldPopClass, UrbanLandUse
 from city_metrix.metrix_model import GeoZone, Metric
+from city_metrix.layers import TreeCanopyHeight, WorldPop, WorldPopClass, UrbanLandUse
 
 
 class CanopyAreaPerResident__SquareMeters(Metric):
@@ -24,8 +24,8 @@ class CanopyAreaPerResident__SquareMeters(Metric):
         self.informal_only = informal_only
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
         world_pop = WorldPop(agesex_classes=self.agesex_classes)
         # tree canopy height has default spatial resolution of 1, count equals area
@@ -64,11 +64,11 @@ class CanopyAreaPerResidentChildren__SquareMeters(Metric):
         self.height = height
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident__SquareMeters(WorldPopClass.CHILDREN,
-                                     self.height,
-                                     False)
+                                                    self.height,
+                                                    False)
                 .get_metric(geo_zone))
 
 
@@ -82,11 +82,11 @@ class CanopyAreaPerResidentElderly__SquareMeters(Metric):
         self.height = height
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident__SquareMeters(WorldPopClass.ELDERLY,
-                                     self.height,
-                                     False)
+                                                    self.height,
+                                                    False)
                 .get_metric(geo_zone))
 
 
@@ -100,12 +100,13 @@ class CanopyAreaPerResidentFemale__SquareMeters(Metric):
         self.height = height
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident__SquareMeters(WorldPopClass.FEMALE,
-                                     self.height,
-                                     False)
+                                                    self.height,
+                                                    False)
                 .get_metric(geo_zone))
+
 
 class CanopyAreaPerResidentInformal__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
@@ -117,9 +118,9 @@ class CanopyAreaPerResidentInformal__SquareMeters(Metric):
         self.height = height
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident__SquareMeters([],
-                                     self.height,
-                                     True)
+                                                    self.height,
+                                                    True)
                 .get_metric(geo_zone))

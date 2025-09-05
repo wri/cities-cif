@@ -3,6 +3,7 @@ from tests.resources.bbox_constants import GEOZONE_TERESINA
 
 # TODO - Consider adding other metrics
 
+
 def test_city_values_built_land_with_high_lst__percent():
     metric_obj = BuiltLandWithHighLST__Percent()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)

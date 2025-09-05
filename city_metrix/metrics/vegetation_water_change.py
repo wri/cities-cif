@@ -10,6 +10,7 @@ DEFAULT_SPATIAL_RESOLUTION = 10
 
 # TODO: layer generation and zonal stats use different spatial resolutions
 
+
 class VegetationWaterChangeGainArea__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
@@ -19,8 +20,8 @@ class VegetationWaterChangeGainArea__SquareMeters(Metric):
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution=DEFAULT_SPATIAL_RESOLUTION) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution=DEFAULT_SPATIAL_RESOLUTION) -> Union[pd.DataFrame | pd.Series]:
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
         gain_counts = VegetationWaterMap(greenwater_layer='gaingreenwaterSlope').groupby(geo_zone).count()
@@ -43,8 +44,8 @@ class VegetationWaterChangeLossArea__SquareMeters(Metric):
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution=DEFAULT_SPATIAL_RESOLUTION) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution=DEFAULT_SPATIAL_RESOLUTION) -> Union[pd.DataFrame | pd.Series]:
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
         loss_counts = VegetationWaterMap(greenwater_layer='lossgreenwaterSlope').groupby(geo_zone).count()
@@ -67,8 +68,8 @@ class VegetationWaterChangeGainLoss__Ratio(Metric):
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
         start_counts = VegetationWaterMap(greenwater_layer='startgreenwaterIndex').groupby(geo_zone).count()

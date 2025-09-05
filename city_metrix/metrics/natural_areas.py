@@ -15,8 +15,8 @@ class NaturalAreas__Percent(Metric):
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
         natural_areas = NaturalAreas().groupby(geo_zone).mean()
 

@@ -8,6 +8,7 @@ PORTLAND_DST_seasonal_utc_offset = -8
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
 
+
 def test_area_fractional_vegetation_exceeds_threshold__percent():
     indicator = AreaFractionalVegetationExceedsThreshold__Percent().get_metric(ARG_BUENOS_AIRES_TILED_ZONES_TINY)
     expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES_TINY.zones)
@@ -15,7 +16,7 @@ def test_area_fractional_vegetation_exceeds_threshold__percent():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 82.37, 92.23, 3, 0)
 
-def test_percent_built_area_without_tree_cover():
+def test_percent_built_area_without_tree_cover__percent():
     indicator = BuiltAreaWithoutTreeCover__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
@@ -101,7 +102,7 @@ def test_era_5_met_preprocess_umep():
     # Useful site: https://projects.oregonlive.com/weather/temps/
     indicator = (Era5MetPreprocessingUmep(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset)
                  .get_metric(USA_OR_PORTLAND_ZONE))
-    non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
+    non_nullable_variables = ['temp', 'rh', 'global_rad', 'direct_rad', 'diffuse_rad', 'wind', 'vpd']
     has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
     # p1= indicator[non_nullable_variables].isnull().any()
     # p2 = indicator['global_rad'].values
@@ -115,9 +116,8 @@ def test_era_5_met_preprocess_upenn():
     # Useful site: https://projects.oregonlive.com/weather/temps/
     indicator = (Era5MetPreprocessingUPenn(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset)
                  .get_metric(USA_OR_PORTLAND_ZONE))
-
-    non_nullable_variables = ['Year', 'Month', 'Day', 'Hour', 'Minute', 'DHI', 'DNI', 
-                              'GHI', 'Clearsky DHI', 'Clearsky DNI','Clearsky GHI', 
+    non_nullable_variables = ['Year', 'Month', 'Day', 'Hour', 'Minute', 'DHI', 'DNI',
+                              'GHI', 'Clearsky DHI', 'Clearsky DNI', 'Clearsky GHI',
                               'Wind Speed', 'Relative Humidity', 'Temperature', 'Pressure']
     has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
     assert has_empty_required_cells == False
@@ -203,7 +203,7 @@ def test_natural_areas__percent():
 
 def test_number_species_bird_richness__species():
     random.seed(42)
-    indicator = BirdRichness__Species().get_metric( IDN_JAKARTA_TILED_ZONES_SMALL)
+    indicator = BirdRichness__Species().get_metric(IDN_JAKARTA_TILED_ZONES_SMALL)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
@@ -241,7 +241,7 @@ def test_protected_area__percent():
     assert_metric_stats(indicator, 2, 0.00, 0.00, 100, 0)
 
 def test_recreational_space_per_thousand__hectaresperthousandpersons():
-    spatial_resolution=100
+    spatial_resolution = 100
     indicator = (RecreationalSpacePerThousand__HectaresPerThousandPersons()
                  .get_metric(IDN_JAKARTA_TILED_ZONES, spatial_resolution=spatial_resolution))
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
@@ -342,7 +342,7 @@ def compare_nullable_numbers(a, b):
         return True
     return a == b
 
-def assert_metric_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, notnull_count:int, null_count:int):
+def assert_metric_stats(data, sig_digits: int, min_notnull_val, max_notnull_val, notnull_count: int, null_count: int):
     if 'zone' in data.columns:
         data = data.drop(columns=['zone'])
 
@@ -356,7 +356,7 @@ def assert_metric_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, 
     data_null_count = data.isnull().sum()
 
     is_matched, expected, actual = _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val,
-                  data_notnull_count, data_null_count, min_notnull_val, max_notnull_val, notnull_count, null_count)
+                                                 data_notnull_count, data_null_count, min_notnull_val, max_notnull_val, notnull_count, null_count)
     assert is_matched, f"expected ({expected}), but got ({actual})"
 
     # template

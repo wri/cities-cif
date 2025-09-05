@@ -73,6 +73,7 @@ class CanopyCoveredPopulationChildren__Percent(Metric):
 
         return percent_canopy_covered_children.get_metric(geo_zone=geo_zone)
 
+
 class CanopyCoveredPopulationElderly__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
@@ -94,6 +95,7 @@ class CanopyCoveredPopulationElderly__Percent(Metric):
 
         return percent_canopy_covered_elderly.get_metric(geo_zone=geo_zone)
 
+
 class CanopyCoveredPopulationFemale__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
@@ -114,6 +116,7 @@ class CanopyCoveredPopulationFemale__Percent(Metric):
         )
 
         return percent_canopy_covered_female.get_metric(geo_zone=geo_zone)
+
 
 class CanopyCoveredPopulationInformal__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION

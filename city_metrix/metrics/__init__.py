@@ -13,9 +13,9 @@ from .impervious_area import ImperviousArea__Percent
 from .impervious_surface_on_urbanized_land import ImperviousSurfaceOnUrbanizedLand__Percent
 from .land_near_natural_drainage import LandNearNaturalDrainage__Percent
 from .mean_pm2p5_exposure import *
-from .number_species import *
 from .mean_tree_cover import MeanTreeCover__Percent
 from .natural_areas import NaturalAreas__Percent
+from .number_species import *
 from .protected_area import ProtectedArea__Percent
 from .recreational_space_per_thousand import RecreationalSpacePerThousand__HectaresPerThousandPersons
 from .riparian_land_with_vegetation_or_water import RiparianLandWithVegetationOrWater__Percent

@@ -8,6 +8,7 @@ from city_metrix.metrics import GeoZone
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
+
 class RecreationalSpacePerThousand__HectaresPerThousandPersons(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
@@ -17,9 +18,9 @@ class RecreationalSpacePerThousand__HectaresPerThousandPersons(Metric):
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution=DEFAULT_SPATIAL_RESOLUTION
-                 ) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution=DEFAULT_SPATIAL_RESOLUTION
+                   ) -> Union[pd.DataFrame | pd.Series]:
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
         world_pop = WorldPop()

@@ -22,8 +22,8 @@ class ProtectedArea__Percent(Metric):
         self.iucn_cat = iucn_cat
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
         world_cover = EsaWorldCover(year=2021)
         protect_area = ProtectedAreas(status=self.status, status_year=self.status_year, iucn_cat=self.iucn_cat)
@@ -41,4 +41,3 @@ class ProtectedArea__Percent(Metric):
             result = 100 * protect_area_in_world_cover / world_cover_counts
 
         return result
-

@@ -15,8 +15,8 @@ class UrbanOpenSpace__Percent(Metric):
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
         built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
         open_space = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE)

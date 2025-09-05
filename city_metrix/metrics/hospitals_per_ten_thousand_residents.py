@@ -2,8 +2,8 @@ import pandas as pd
 from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
-from city_metrix.layers import OpenStreetMap, OpenStreetMapClass, WorldPop
 from city_metrix.metrix_model import GeoZone, Metric
+from city_metrix.layers import OpenStreetMap, OpenStreetMapClass, WorldPop
 
 
 class HospitalsPerTenThousandResidents__Hospitals(Metric):

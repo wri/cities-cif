@@ -2,8 +2,8 @@ import pandas as pd
 from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
-from city_metrix.layers import HighLandSurfaceTemperature, EsaWorldCoverClass, EsaWorldCover
 from city_metrix.metrix_model import GeoZone, Metric
+from city_metrix.layers import HighLandSurfaceTemperature, EsaWorldCoverClass, EsaWorldCover
 
 
 class BuiltLandWithHighLST__Percent(Metric):
@@ -15,8 +15,8 @@ class BuiltLandWithHighLST__Percent(Metric):
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         """
         Get percentage of built up land with low albedo based on Sentinel 2 imagery.
         :param geo_zone: GeoDataFrame with geometries to collect zonal stats over
@@ -26,10 +26,10 @@ class BuiltLandWithHighLST__Percent(Metric):
         high_lst = HighLandSurfaceTemperature()
 
         built_land_counts = (built_up_land
-                             .groupby(geo_zone, force_data_refresh = False)
+                             .groupby(geo_zone, force_data_refresh=False)
                              .count())
         built_high_lst_counts = (high_lst.mask(built_up_land)
-                                 .groupby(geo_zone, force_data_refresh = False)
+                                 .groupby(geo_zone, force_data_refresh=False)
                                  .count())
 
         if not isinstance(built_high_lst_counts, (int, float)):
