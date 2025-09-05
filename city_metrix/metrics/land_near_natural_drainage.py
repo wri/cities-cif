@@ -2,8 +2,8 @@ import pandas as pd
 from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
-from city_metrix.layers import HeightAboveNearestDrainage
 from city_metrix.metrix_model import GeoZone, Metric
+from city_metrix.layers import HeightAboveNearestDrainage
 
 
 class LandNearNaturalDrainage__Percent(Metric):
@@ -15,8 +15,8 @@ class LandNearNaturalDrainage__Percent(Metric):
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
         neardrainage_area = HeightAboveNearestDrainage(thresh=1, nanval=None).groupby(geo_zone).count()
         total_area = HeightAboveNearestDrainage(nanval=0).groupby(geo_zone).count()

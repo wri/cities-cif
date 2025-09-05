@@ -1,14 +1,15 @@
 import pandas as pd
 from typing import Union
+
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import Metric, GeoZone
 from city_metrix.layers import TreeCanopyHeight, UrbanLandUse
 
-
 MIN_TREE_HEIGHT = 3
 ULU_INFORMAL_CLASS = 3
 
-class PercentBuiltAreaWithoutTreeCover(Metric):
+
+class BuiltAreaWithoutTreeCover__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -18,8 +19,8 @@ class PercentBuiltAreaWithoutTreeCover(Metric):
         self.height = height
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         """
         Get percentage of land (assuming zones are based on urban extents)
         with no tree cover (>3 Global Canopy Height dataset).

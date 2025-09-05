@@ -2,11 +2,11 @@ import pandas as pd
 from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
-from city_metrix.layers import AcagPM2p5, PopWeightedPM2p5, UrbanLandUse, WorldPopClass
 from city_metrix.metrix_model import GeoZone, Metric
+from city_metrix.layers import AcagPM2p5, PopWeightedPM2p5, UrbanLandUse, WorldPopClass
 
 
-class MeanPM2P5Exposure__MicrogramsPerCubicMeterPerDay(Metric):
+class MeanPM2P5Exposure__MicrogramsPerCubicMeter(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -18,8 +18,8 @@ class MeanPM2P5Exposure__MicrogramsPerCubicMeterPerDay(Metric):
         self.informal_only = informal_only
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
         pm2p5_layer = AcagPM2p5()
 
@@ -32,7 +32,7 @@ class MeanPM2P5Exposure__MicrogramsPerCubicMeterPerDay(Metric):
         return mean_pm2p5
 
 
-class MeanPM2P5Exposure__MicrogramsPerCubicMeterPerDayPopWeighted(Metric):
+class MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -46,8 +46,8 @@ class MeanPM2P5Exposure__MicrogramsPerCubicMeterPerDayPopWeighted(Metric):
         self.informal_only = informal_only
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         pop_weighted_pm2p5 = PopWeightedPM2p5(worldpop_agesex_classes=self.worldpop_agesex_classes)
 
         if self.informal_only:
@@ -59,7 +59,7 @@ class MeanPM2P5Exposure__MicrogramsPerCubicMeterPerDayPopWeighted(Metric):
         return mean_pm2p5
 
 
-class MeanPM2P5ExposurePopWeightedChildren__MicrogramsPerCubicMeterPerDayPopWeighted(Metric):
+class MeanPM2P5ExposurePopWeightedChildren__MicrogramsPerCubicMeter(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -68,15 +68,15 @@ class MeanPM2P5ExposurePopWeightedChildren__MicrogramsPerCubicMeterPerDayPopWeig
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-        pop_weighted_pm2p5_children = (MeanPM2P5Exposure__MicrogramsPerCubicMeterPerDayPopWeighted(worldpop_agesex_classes=WorldPopClass.CHILDREN,
-                                                                    informal_only=False))
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
+        pop_weighted_pm2p5_children = (MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(worldpop_agesex_classes=WorldPopClass.CHILDREN,
+                                                                                             informal_only=False))
 
         return pop_weighted_pm2p5_children.get_metric(geo_zone=geo_zone)
 
 
-class MeanPM2P5ExposurePopWeightedElderly__MicrogramsPerCubicMeterPerDayPopWeighted(Metric):
+class MeanPM2P5ExposurePopWeightedElderly__MicrogramsPerCubicMeter(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -85,15 +85,15 @@ class MeanPM2P5ExposurePopWeightedElderly__MicrogramsPerCubicMeterPerDayPopWeigh
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-        pop_weighted_pm2p5_elderly = (MeanPM2P5Exposure__MicrogramsPerCubicMeterPerDayPopWeighted(worldpop_agesex_classes=WorldPopClass.ELDERLY,
-                                                                    informal_only=False))
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
+        pop_weighted_pm2p5_elderly = (MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(worldpop_agesex_classes=WorldPopClass.ELDERLY,
+                                                                                            informal_only=False))
 
         return pop_weighted_pm2p5_elderly.get_metric(geo_zone=geo_zone)
 
 
-class MeanPM2P5ExposurePopWeightedFemale__MicrogramsPerCubicMeterPerDayPopWeighted(Metric):
+class MeanPM2P5ExposurePopWeightedFemale__MicrogramsPerCubicMeter(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -102,15 +102,15 @@ class MeanPM2P5ExposurePopWeightedFemale__MicrogramsPerCubicMeterPerDayPopWeight
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-        pop_weighted_pm2p5_female = (MeanPM2P5Exposure__MicrogramsPerCubicMeterPerDayPopWeighted(worldpop_agesex_classes=WorldPopClass.FEMALE,
-                                                                  informal_only=False))
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
+        pop_weighted_pm2p5_female = (MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(worldpop_agesex_classes=WorldPopClass.FEMALE,
+                                                                                           informal_only=False))
 
         return pop_weighted_pm2p5_female.get_metric(geo_zone=geo_zone)
 
 
-class MeanPM2P5ExposurePopWeightedInformal__MicrogramsPerCubicMeterPerDayPopWeighted(Metric):
+class MeanPM2P5ExposurePopWeightedInformal__MicrogramsPerCubicMeter(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -119,9 +119,9 @@ class MeanPM2P5ExposurePopWeightedInformal__MicrogramsPerCubicMeterPerDayPopWeig
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-        pop_weighted_pm2p5_informal = (MeanPM2P5Exposure__MicrogramsPerCubicMeterPerDayPopWeighted(worldpop_agesex_classes=[],
-                                                                  informal_only=True))
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
+        pop_weighted_pm2p5_informal = (MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(worldpop_agesex_classes=[],
+                                                                                             informal_only=True))
 
         return pop_weighted_pm2p5_informal.get_metric(geo_zone=geo_zone)
