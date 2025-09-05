@@ -449,7 +449,7 @@ def get_city(city_id: str):
     return city_json
 
 
-def get_city_admin_boundaries(city_id: str, admin_level: str) -> GeoDataFrame:
+def get_city_admin_boundaries(city_id: str) -> GeoDataFrame:
     query_uri = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
     is_cache_file_usable, cache_uri, _ = _verify_api_cache_file(query_uri, 'admin_boundaries', GEOJSON_FILE_EXTENSION)
 

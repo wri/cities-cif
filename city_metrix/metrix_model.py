@@ -64,14 +64,22 @@ class GeoZone():
             self.city_id, self.aoi_id = parse_city_aoi_json(city_json)
             # Admin from city_id and aoi_id
             city_data = get_city(self.city_id)
-            self.admin_level = city_data.get(self.aoi_id, None)
-            if not self.admin_level:
+            if self.aoi_id == 'urban_extent':
+                self.admin_level = self.aoi_id
+                bbox_str = city_data['bounding_box']['urban_extent']
+                wgs_bbox = string_to_float_list(bbox_str)
+                centroid = shapely.box(*wgs_bbox).centroid
+                self.crs = get_utm_zone_from_latlon_point(centroid)
+                self.bbox = reproject_units(*wgs_bbox, WGS_CRS, self.crs)
+                self.zones = None
+            elif self.aoi_id == 'city_admin_level':
+                self.admin_level = city_data.get(self.aoi_id, None)
+                # get city bbox from composite of admin areas and project
+                # bbox is always projected to UTM
+                self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
+            else:
                 raise ValueError(
-                    f"City metadata for {self.city_id} does not have geometry for admin_level: 'city_admin_level'")
-
-            # get city bbox from composite of admin areas and project
-            # bbox is always projected to UTM
-            self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
+                    f"City metadata for {self.city_id} does not have geometry for aoi_id: '{self.aoi_id}'")
 
         self.bounds = self.bbox
         self.epsg_code = int(self.crs.split(':')[1])
@@ -88,9 +96,9 @@ class GeoZone():
         self.centroid = self.polygon.centroid
 
 
-def _build_aoi_from_city_boundaries(city_id, admin_level):
+def _build_aoi_from_city_boundaries(city_id):
     # Construct bbox from total bounds of all admin levels
-    boundaries_gdf = get_city_admin_boundaries(city_id, admin_level)
+    boundaries_gdf = get_city_admin_boundaries(city_id)
 
     if len(boundaries_gdf) == 1:
         west, south, east, north = boundaries_gdf.bounds
@@ -1439,3 +1447,12 @@ def get_folder_size(folder_path):
                 total_size += os.path.getsize(file_path)
     return total_size
 
+def string_to_float_list(s, delimiter=","):
+    # Remove square brackets and whitespace
+    s_clean = s.strip().strip("[]")
+
+    # Split by delimiter and clean each element
+    elements = [x.strip() for x in s_clean.split(delimiter)]
+
+    # Convert to int (or float if needed)
+    return [float(x) for x in elements if x]
