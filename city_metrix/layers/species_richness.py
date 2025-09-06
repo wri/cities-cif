@@ -29,8 +29,8 @@ class SpeciesRichness(Layer):
         mask_layer: Optional mask to filter valid regions
     """
     OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_LAYER_NAMING_ATTS = ["taxon"]
-    MINOR_LAYER_NAMING_ATTS = ["start_year", "end_year"]
+    MAJOR_NAMING_ATTS = ["taxon"]
+    MINOR_NAMING_ATTS = ["start_year", "end_year"]
 
     API_URL = "https://api.gbif.org/v1/occurrence/search/"
     DATASETKEY = "50c9509d-22c7-4a22-a47d-8c48425ef4a7"  # iNaturalist research-grade observations

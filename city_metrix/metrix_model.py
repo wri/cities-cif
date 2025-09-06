@@ -1,8 +1,11 @@
 import math
 import os
+import random
 import shutil
 import subprocess
 import tempfile
+import time
+
 import dask
 import geopandas as gpd
 import xarray as xr
@@ -62,24 +65,19 @@ class GeoZone():
         else:
             city_json = geo_zone
             self.city_id, self.aoi_id = parse_city_aoi_json(city_json)
-            # Admin from city_id and aoi_id
+            # Boundaries from city_id and aoi_id
             city_data = get_city(self.city_id)
             if self.aoi_id == 'urban_extent':
                 self.admin_level = self.aoi_id
-                bbox_str = city_data['bounding_box']['urban_extent']
-                wgs_bbox = string_to_float_list(bbox_str)
-                centroid = shapely.box(*wgs_bbox).centroid
-                self.crs = get_utm_zone_from_latlon_point(centroid)
-                self.bbox = reproject_units(*wgs_bbox, WGS_CRS, self.crs)
-                self.zones = None
             elif self.aoi_id == 'city_admin_level':
                 self.admin_level = city_data.get(self.aoi_id, None)
-                # get city bbox from composite of admin areas and project
-                # bbox is always projected to UTM
-                self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
             else:
                 raise ValueError(
                     f"City metadata for {self.city_id} does not have geometry for aoi_id: '{self.aoi_id}'")
+
+            # get city bbox from composite of admin areas and project
+            # bbox is always projected to UTM
+            self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level, city_data)
 
         self.bounds = self.bbox
         self.epsg_code = int(self.crs.split(':')[1])
@@ -96,30 +94,40 @@ class GeoZone():
         self.centroid = self.polygon.centroid
 
 
-def _build_aoi_from_city_boundaries(city_id):
-    # Construct bbox from total bounds of all admin levels
-    boundaries_gdf = get_city_admin_boundaries(city_id)
-
-    if len(boundaries_gdf) == 1:
-        west, south, east, north = boundaries_gdf.bounds
+def _build_aoi_from_city_boundaries(city_id, admin_level, city_data):
+    if admin_level == 'urban_extent':
+        bbox_str = city_data['bounding_box']['urban_extent']
+        wgs_bbox = string_to_float_list(bbox_str)
+        west, south, east, north = wgs_bbox
+        boundaries_gdf = None
     else:
-        west, south, east, north = boundaries_gdf.total_bounds
+        # Construct bbox from total bounds of all admin levels
+        boundaries_gdf = get_city_admin_boundaries(city_id)
+        if len(boundaries_gdf) == 1:
+            west, south, east, north = boundaries_gdf.bounds
+        else:
+            west, south, east, north = boundaries_gdf.total_bounds
 
     # determine UTM CRS
     centroid = shapely.box(west, south, east, north).centroid
     utm_crs = get_utm_zone_from_latlon_point(centroid)
 
     # reproject geodataframe to UTM
-    gdf_reprojected = boundaries_gdf.to_crs(utm_crs)
-    if len(boundaries_gdf) == 1:
-        reproj_west, reproj_south, reproj_east, reproj_north = gdf_reprojected.bounds
+    if admin_level == 'urban_extent':
+        bbox = reproject_units(south, west, north, east, WGS_CRS, utm_crs)
+        reproj_south, reproj_west, reproj_north, reproj_east = bbox
+        zones = None
     else:
-        reproj_west, reproj_south, reproj_east, reproj_north = gdf_reprojected.total_bounds
+        zones = boundaries_gdf.to_crs(utm_crs)
+        if len(boundaries_gdf) == 1:
+            reproj_west, reproj_south, reproj_east, reproj_north = zones.bounds
+        else:
+            reproj_west, reproj_south, reproj_east, reproj_north = zones.total_bounds
 
     # Round coordinates to whole units
     bbox = (math.floor(reproj_west), math.floor(reproj_south), math.ceil(reproj_east), math.ceil(reproj_north))
 
-    return bbox, utm_crs, gdf_reprojected
+    return bbox, utm_crs, zones
 
 
 class GeoExtent():
@@ -844,7 +852,12 @@ class Layer():
                                                          city_aoi_modifier=city_aoi_modifier, force_data_refresh=False)
 
         if result_data is None:
-            result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
+            if city_aoi_modifier is None:
+                query_geoextent = bbox
+            else:
+                query_geoextent = GeoExtent(bbox=city_aoi_modifier, crs=bbox.crs)
+
+            result_data = self.aggregate.get_data(bbox=query_geoextent, spatial_resolution=spatial_resolution)
 
             # Opportunistically cache city data
             if bbox.geo_type == GeoType.CITY and city_aoi_modifier is None:
@@ -890,29 +903,16 @@ class Layer():
         fishnet = create_fishnet_grid(bbox=utm_box, tile_side_length=tile_side_m, length_units='meters',
                                       spatial_resolution=spatial_resolution, output_as=output_as)
 
-        # ------- Use below for testing
-        # import uuid
-        # guid = uuid.uuid4()
-        # file = f'/tmp/test_result_tif_files/scratch/fishet_layer_tile_grid_{guid}.geojson'
-        # saveable_fishnet = fishnet.drop(columns=['immutable_fishnet_geometry'])
-        # saveable_fishnet.to_file(file, driver='GeoJSON')
-        # ------- Use above for testing
-
         with tempfile.TemporaryDirectory() as temp_dir:
             # TODO Add verification of complete set of files
 
+            # First, read from source and write to local temp directory
             processed_count = 0
             retry_count = 0
             expected_result_count = len(fishnet)
             uncompleted_tiles = fishnet
             while processed_count < expected_result_count and retry_count < 10:
                 tasks = []
-                # for index, tile in uncompleted_tiles.iterrows():
-                    # cell_count = self._process_fishnet_tile(index, tile, crs, spatial_resolution, temp_dir)
-                    # if cell_count == 0:
-                    #     empty_tiles.append(index)
-                    # else:
-                    #     total_cell_count += cell_count
 
                 for index, tile in uncompleted_tiles.iterrows():
                     task = dask.delayed(self._process_fishnet_tile)(index, tile, crs, spatial_resolution, temp_dir)
@@ -921,14 +921,14 @@ class Layer():
                 # run them all in parallel with threads
                 target_gb = 3
                 try:
-                    unprocessed_tiles = self._run_tasks(tasks, target_gb)
+                    unretrieved_tile_ids = self._run_tasks(tasks, target_gb)
                 except Exception as e:
                     print(f"Failed to process a tile fo {target_uri}: {e}. Retrying.")
 
+                missing_tiles = [item for item in unretrieved_tile_ids if not isinstance(item, str)]
                 file_paths = self._get_all_tif_file_paths(temp_dir)
-                total_file_bytes = get_folder_size(temp_dir)
 
-                missing_tiles = [item for item in unprocessed_tiles if not isinstance(item, str)]
+                # Note this check only accounts for tiles that were missed due to dask failures and not download errors
                 processed_count = len(file_paths) + len(missing_tiles)
                 if processed_count == expected_result_count:
                     uncompleted_tiles = gpd.GeoDataFrame(geometry=[])
@@ -938,16 +938,15 @@ class Layer():
 
                 retry_count +=1
 
-            merged_data = []
+            # Second, write data to target S3 cache
+            total_file_bytes = get_folder_size(temp_dir)
             file_paths = self._get_all_tif_file_paths(temp_dir)
             if total_file_bytes <= MAX_RASTER_BYTES_FOR_SINGLE_FILE_OUTPUT:
-                # Combine tiles into a single file and cache
+                # Combine tiles into a single file and write to cache
+                import rasterio
+                from rasterio.merge import merge
+                import os
                 try:
-                    import rasterio
-                    from rasterio.merge import merge
-                    from rasterio.plot import show
-                    import os
-
                     src_files_to_mosaic = [rasterio.open(fp) for fp in file_paths]
                     mosaic, out_trans = merge(src_files_to_mosaic)
 
@@ -964,37 +963,38 @@ class Layer():
                     with rasterio.open(temp_file_path, "w", **out_meta) as dest:
                         dest.write(mosaic)
 
-                    # ------- Use below for testing
-                    # import uuid
-                    # guid = uuid.uuid4()
-                    # file_id = f'{self.aggregate.__class__.__name__}_{guid}'
-                    # tile_file_uri = f'/tmp/test_result_tif_files/scratch/{file_id}'
-                    # write_layer(clipped_data, tile_file_uri, self.OUTPUT_FILE_FORMAT)
-                    # ------- Use above for testing
-
-                    # read data
-                    temp_file_uri = 'file://' + temp_file_path
-                    merged_data = read_geotiff_from_cache(temp_file_uri)
-
-                    # write to cache
+                    # write mosaic to cache
+                    create_uri_target_folder(target_uri)
                     delete_s3_file_if_exists(target_uri)
                     delete_s3_folder_if_exists(target_uri)
-                    self._cache_data(temp_file_path, target_uri)
+                    self._write_data_to_cache(temp_file_path, target_uri)
                 except  Exception as e:
-                    print(f"Failed to process {target_uri}: {e}")
+                    raise Exception(f"Failed to process {target_uri}: {e}")
             else:
-                self._write_fishnet_metadata_to_uri_target(fishnet, target_uri, crs)
-
                 # Write individual tiles to cache
                 create_uri_target_folder(target_uri)
                 delete_s3_file_if_exists(target_uri)
                 delete_s3_folder_if_exists(target_uri)
+
+                tile_indices = []
                 for file in file_paths:
                     tile = Path(file).stem
-                    target_tile_uri = f"{target_uri}/{tile}.{GTIFF_FILE_EXTENSION}"
-                    self._cache_data(file, target_tile_uri)
 
-    def _cache_data(self, source_file_path, target_tile_uri):
+                    # extract the index
+                    index = int(tile[len('tile_'):])
+                    tile_indices.append(index)
+
+                    target_tile_uri = f"{target_uri}/{tile}.{GTIFF_FILE_EXTENSION}"
+
+                    try:
+                        self._write_data_to_cache(file, target_tile_uri)
+                    except  Exception as e:
+                        raise Exception(f"Failed to process {target_tile_uri}: {e}")
+
+                # Write after all other files so file presence can be used as indication of complete data upload
+                self._write_grid_index_to_cache(fishnet, tile_indices, target_uri, crs)
+
+    def _write_data_to_cache(self, source_file_path, target_tile_uri):
         if target_tile_uri.startswith('s3://'):
             file_key = get_file_key_from_url(target_tile_uri)
             bucket = get_bucket_name_from_s3_uri(target_tile_uri)
@@ -1007,21 +1007,22 @@ class Layer():
             shutil.move(source_file_path, target_file_path)
 
 
-    def _write_fishnet_metadata_to_uri_target(self, fishnet, file_uri, crs):
+    def _write_grid_index_to_cache(self, fishnet, tile_indices, file_uri, crs):
         import json
         json_snippets = []
         for index, tile in fishnet.iterrows():
-            tile_bounds = tile.geometry.bounds
-            tile_file_name = self._construct_tile_name(index)
-            tile_uri = f"{file_uri}/{tile_file_name}"
-            key = get_key_from_s3_uri(tile_uri)
-            tile_row = {
-                "key": key,
-                "bbox": tile_bounds,
-                "crs": crs
-            }
-            snippet = json.dumps(tile_row)
-            json_snippets.append(snippet)
+            if index in tile_indices:
+                tile_bounds = tile.geometry.bounds
+                tile_file_name = self._construct_tile_name(index)
+                tile_uri = f"{file_uri}/{tile_file_name}"
+                key = get_key_from_s3_uri(tile_uri)
+                tile_row = {
+                    "key": key,
+                    "bbox": tile_bounds,
+                    "crs": crs
+                }
+                snippet = json.dumps(tile_row)
+                json_snippets.append(snippet)
 
         metadata_file = f"{file_uri}/geotiff_index.json"
         parsed_snippets = [json.loads(snippet) for snippet in json_snippets]
@@ -1032,7 +1033,6 @@ class Layer():
         import multiprocessing as mp
         import psutil
         from dask import compute
-        # from dask.distributed import Client
 
         memory_info = psutil.virtual_memory()
         available_memory = memory_info.available  # Available memory in bytes
@@ -1049,7 +1049,7 @@ class Layer():
 
         memory_limit = f"{target_gb}GB"
 
-        unprocessed_tiles = compute(
+        unretrieved_tile_ids = compute(
             *tasks,
             scheduler="threads",
             num_workers=num_workers,
@@ -1057,8 +1057,7 @@ class Layer():
             memory_limit=memory_limit,
         )
 
-        # total_raster_count = sum(raster_count_results)
-        return unprocessed_tiles
+        return unretrieved_tile_ids
 
 
     def _get_all_tif_file_paths(self, directory):
@@ -1076,11 +1075,17 @@ class Layer():
         # buffer the tile bbox so that it can be later cleanly trimmed back to original extent
         buffered_utm_bbox = geo_extent.buffer_utm_bbox(2)
 
-        unprocessed_tile = ''
-        tile_data = self.aggregate.get_data(bbox=buffered_utm_bbox, spatial_resolution=spatial_resolution)
+        retry_count = 0
+        tile_data = None
+        while tile_data is None and retry_count < 3:
+            tile_data = self.aggregate.get_data(bbox=buffered_utm_bbox, spatial_resolution=spatial_resolution)
+            # pause to avoid over-contention against service
+            random_wait = random.randint(2,5)
+            time.sleep(random_wait)
+            retry_count += 1
+
         if tile_data is None:
-            cell_count = 0
-            unprocessed_tile = index
+            unretrieved_tile_id = index
         else:
             _, tile_data = standardize_y_dimension_direction(tile_data)
 
@@ -1091,9 +1096,9 @@ class Layer():
             temp_file_path = os.path.join(temp_dir, file_name)
             write_layer(clipped_tile, temp_file_path, GTIFF_FILE_EXTENSION)
 
-            cell_count = tile_data.size if tile_data.any() else 0
+            unretrieved_tile_id = ''
 
-        return unprocessed_tile
+        return unretrieved_tile_id
 
     def _construct_tile_name(self, tile_index):
         padded_index = str(tile_index).zfill(TILE_NUMBER_PADCOUNT)
@@ -1194,18 +1199,20 @@ def get_image_collection(
     if crs == WGS_CRS:
         raise Exception("Output in geographic units is currently not supported for raster layers.")
 
-    ds = xr.open_dataset(
-        image_collection,
-        engine='ee',
-        scale=scale,
-        crs=crs,
-        geometry=ee_rectangle['ee_geometry'],
-        chunks={'X': 512, 'Y': 512},
-    )
-
-    with ProgressBar():
-        print(f"Extracting layer {name} from Google Earth Engine for bbox :")
-        data = ds.compute()
+    try:
+        ds = xr.open_dataset(
+            image_collection,
+            engine='ee',
+            scale=scale,
+            crs=crs,
+            geometry=ee_rectangle['ee_geometry'],
+            chunks={'X': 512, 'Y': 512},
+        )
+        with ProgressBar():
+            print(f"Extracting layer {name} from Google Earth Engine for bbox :")
+            data = ds.compute()
+    except Exception as ex_msg:
+        raise ValueError(f"GEE download failed with exception: {ex_msg}")
 
     # get in rioxarray format
     data = data.squeeze("time")
@@ -1345,6 +1352,8 @@ class Metric():
 
         zones = geo_zone.zones
         if isinstance(result_metric, pd.DataFrame) and 'zone' in result_metric.columns:
+            zones['index'] = zones['index'].astype(float)
+            result_metric['zone'] = result_metric['zone'].astype(float)
             results_metric_df = pd.merge(zones, result_metric, left_on='index', right_on='zone', how='left')
             if 'metric_id' not in results_metric_df.columns:
                 results_metric_df = results_metric_df.assign(metric_id=feature_id)

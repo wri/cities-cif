@@ -101,7 +101,8 @@ def read_geotiff_from_cache(file_uri):
         file_path = os.path.normpath(get_file_path_from_uri(file_uri))
     else:
         file_path = file_uri
-    data = rioxarray.open_rasterio(file_path, driver="GTiff")
+    with rioxarray.open_rasterio(file_path, driver="GTiff") as src:
+        data = src.load()
 
     result_data = data.squeeze('band', drop=True)
 
@@ -144,7 +145,7 @@ def _is_s3_folder_or_file(uri):
     return None
 
 
-def read_geotiff_subarea_from_cache(file_uri, city_aoi_modifier):
+def read_geotiff_subarea_from_cache(file_uri, city_aoi_modifier, utm_crs):
     import json
     import xarray as xr
     from shapely.geometry import box
@@ -154,7 +155,7 @@ def read_geotiff_subarea_from_cache(file_uri, city_aoi_modifier):
 
     object_type = _is_s3_folder_or_file(file_uri)
     if object_type == 'file':
-        subarea_da = _get_sub_area(s3_bucket, file_key, city_aoi_modifier, 0)
+        subarea_da = _get_sub_area(s3_bucket, file_key, city_aoi_modifier, 0, utm_crs)
     else:
         # Load geotiff_index.json from S3
         index_key = f"{file_key}/geotiff_index.json"
@@ -181,17 +182,19 @@ def read_geotiff_subarea_from_cache(file_uri, city_aoi_modifier):
 
             for item in matching_items:
                 tile_key = item["key"]
-                da = _get_sub_area(s3_bucket, tile_key, city_aoi_modifier, 0)
+                da = _get_sub_area(s3_bucket, tile_key, city_aoi_modifier, 0, crs_str)
                 data_arrays.append(da)
 
             # Merge into a single DataArray using outer join
             subarea_da = xr.concat(data_arrays, dim="tile", join="outer").max("tile", skipna=True)
-            subarea_da.attrs["crs"] = crs_str
+            subarea_da.rio.write_crs(da.rio.crs, inplace=True)
+            subarea_da.rio.write_transform(da.rio.transform(), inplace=True)
+            subarea_da.attrs["crs"] = utm_crs
 
     return subarea_da
 
 
-def _get_sub_area(s3_bucket, key, bbox, pad):
+def _get_sub_area(s3_bucket, key, bbox, pad, utm_crs):
     from rasterio.io import MemoryFile
     from rasterio.windows import from_bounds, Window
     from rasterio.transform import xy
@@ -230,7 +233,8 @@ def _get_sub_area(s3_bucket, key, bbox, pad):
                 name="tile"
             )
 
-        return da
+    da.attrs["crs"] = utm_crs
+    return da
 
 
 def read_netcdf_from_cache(file_uri):

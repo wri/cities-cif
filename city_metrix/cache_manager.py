@@ -47,7 +47,8 @@ def retrieve_city_cache(class_obj, geo_extent, s3_bucket: str, output_env:str,
         if city_aoi_modifier is None:
             data = read_geotiff_from_cache(file_uri)
         else:
-            data = read_geotiff_subarea_from_cache(file_uri, city_aoi_modifier)
+            utm_crs = geo_extent.crs
+            data = read_geotiff_subarea_from_cache(file_uri, city_aoi_modifier, utm_crs)
     elif file_format == GEOJSON_FILE_EXTENSION:
         data = read_geojson_from_cache(file_uri)
     elif file_format == NETCDF_FILE_EXTENSION:

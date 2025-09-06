@@ -306,7 +306,7 @@ def test_WorldPop_write_by_city(target_folder):
 
 def _run_write_layers_by_city_test(layer_obj, target_folder):
     geo_extent = PROCESSING_CITY
-    file_key, _, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent, 'NO_BUCKET')
+    file_key, _, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent, CIF_TESTING_S3_BUCKET_URI)
 
     os_file_path = prep_output_path(target_folder, 'layer', layer_id)
 
