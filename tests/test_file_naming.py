@@ -1,4 +1,4 @@
-from city_metrix import BuiltLandWithLowSurfaceReflectivity
+from city_metrix import BuiltLandWithLowSurfaceReflectivity__Percent
 from city_metrix.constants import CIF_TESTING_S3_BUCKET_URI
 from city_metrix.layers import Albedo, AcagPM2p5, LandCoverHabitatChangeGlad, EsaWorldCover, EsaWorldCoverClass, Cams, \
     AqueductFlood
@@ -41,11 +41,11 @@ def test_default_name_for_layer_with_major_name():
 
 def test_default_name_for_metric_with_start_end_dates():
     zones = IDN_Jakarta_zone
-    metric_obj = BuiltLandWithLowSurfaceReflectivity()
+    metric_obj = BuiltLandWithLowSurfaceReflectivity__Percent()
     file_key, file_uri, metric_id, is_custom_metric = get_test_cache_variables(metric_obj, zones, CIF_TESTING_S3_BUCKET_URI)
 
     assert is_custom_metric == False
-    assert metric_id == 'BuiltLandWithLowSurfaceReflectivity__StartYear_2021_EndYear_2021.csv'
+    assert metric_id == 'BuiltLandWithLowSurfaceReflectivity__Percent__StartYear_2021_EndYear_2021.csv'
 
 
 def test_custom_name_for_layer_with_start_end_dates():

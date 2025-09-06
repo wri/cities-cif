@@ -12,16 +12,17 @@ from tests.resources.tools import prep_output_path, verify_file_is_populated, cl
 from shapely.geometry import Polygon
 
 jakarta_crude_boundary = \
-    [(106.688353778504393, -6.095658595454545),(106.971210221495596, -6.089509542346041),
-     (106.972088657653956, -6.197557189824047),(106.907084381935476, -6.37412285765396),
-     (106.796401425982395, -6.367973804545455),(106.690989086979457, -6.165055051964809),
+    [(106.688353778504393, -6.095658595454545), (106.971210221495596, -6.089509542346041),
+     (106.972088657653956, -6.197557189824047), (106.907084381935476, -6.37412285765396),
+     (106.796401425982395, -6.367973804545455), (106.690989086979457, -6.165055051964809),
      (106.688353778504393, -6.095658595454545)]
 
 IDN_Jakarta_zone = GeoZone(gpd.GeoDataFrame([Polygon(jakarta_crude_boundary)], columns=["geometry"])
-                    .set_crs(WGS_CRS)
-                    .reset_index())
+                           .set_crs(WGS_CRS)
+                           .reset_index())
 
 ZONE = GEOZONE_FLORIANOPOLIS
+
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_large_city(target_folder):
@@ -49,7 +50,7 @@ def test_write_data_series_as_geojson(target_folder):
     zones = IDN_Jakarta_zone
 
     file_path = prep_output_path(target_folder, 'metric', 'data_series_csv.geojson')
-    BuiltLandWithHighLST().write_as_geojson(zones, target_file_path=file_path)
+    BuiltLandWithHighLST__Percent().write_as_geojson(zones, target_file_path=file_path)
     assert verify_file_is_populated(file_path)
     cleanup_cache_files(None, None, None, file_path)
 
@@ -58,6 +59,6 @@ def test_write_data_series_as_csv(target_folder):
     zones = IDN_Jakarta_zone
 
     file_path = prep_output_path(target_folder, 'metric', 'data_series_csv.csv')
-    BuiltLandWithHighLST().write(zones, target_file_path=file_path)
+    BuiltLandWithHighLST__Percent().write(zones, target_file_path=file_path)
     assert verify_file_is_populated(file_path)
     cleanup_cache_files(None, None, None, file_path)

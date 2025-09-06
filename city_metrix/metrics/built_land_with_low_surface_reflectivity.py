@@ -2,11 +2,11 @@ import pandas as pd
 from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
-from city_metrix.layers import Albedo, EsaWorldCoverClass, EsaWorldCover
 from city_metrix.metrix_model import GeoZone, Metric
+from city_metrix.layers import Albedo, EsaWorldCoverClass, EsaWorldCover
 
 
-class BuiltLandWithLowSurfaceReflectivity(Metric):
+class BuiltLandWithLowSurfaceReflectivity__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -22,8 +22,8 @@ class BuiltLandWithLowSurfaceReflectivity(Metric):
         self.albedo_threshold = albedo_threshold
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         """
         Get percentage of built up land with low albedo based on Sentinel 2 imagery.
         :param geo_zone: GeoDataFrame with geometries to collect zonal stats over
@@ -43,8 +43,8 @@ class BuiltLandWithLowSurfaceReflectivity(Metric):
 
         if isinstance(built_albedo_counts, pd.DataFrame):
             result = built_albedo_counts.copy()
-            result['value'] = built_albedo_counts['value'] / built_land_counts['value']
+            result['value'] = 100 * built_albedo_counts['value'] / built_land_counts['value']
         else:
-            result = built_albedo_counts / built_land_counts
+            result = 100 * built_albedo_counts / built_land_counts
 
         return result
