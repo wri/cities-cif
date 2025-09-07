@@ -338,8 +338,8 @@ def _get_bounding_coords(bbox, output_as):
             start_x_coord, start_y_coord = (project_bbox.min_x, project_bbox.min_y)
             end_x_coord, end_y_coord = (project_bbox.max_x, project_bbox.max_y)
         else:  # meters
-            start_x_coord, start_y_coord = (bbox.min_x, bbox.min_y)
-            end_x_coord, end_y_coord = (bbox.max_x, bbox.max_y)
+            start_x_coord, start_y_coord = (math.floor(bbox.min_x), math.ceil(bbox.min_y))
+            end_x_coord, end_y_coord = (math.floor(bbox.max_x), math.ceil(bbox.max_y))
 
     return start_x_coord, start_y_coord, end_x_coord, end_y_coord
 

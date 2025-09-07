@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from city_metrix.metrix_dao import write_layer
-from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, CIF_TESTING_S3_BUCKET_URI, TCM_CACHE_S3_BUCKET_URI, \
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, CIF_TESTING_S3_BUCKET_URI, CTCM_CACHE_S3_BUCKET_URI, \
     GTIFF_FILE_EXTENSION, ProjectionType
 from city_metrix.layers import OpenUrban
 from city_metrix.metrix_tools import get_projection_type

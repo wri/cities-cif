@@ -5,7 +5,7 @@ from enum import Enum
 
 from city_metrix import s3_client
 from city_metrix.constants import GeoType, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION, \
-    CSV_FILE_EXTENSION, LOCAL_CACHE_URI, DEFAULT_PRODUCTION_ENV, CIF_CACHE_S3_BUCKET_URI, TCM_CACHE_S3_BUCKET_URI, \
+    CSV_FILE_EXTENSION, LOCAL_CACHE_URI, DEFAULT_PRODUCTION_ENV, CIF_CACHE_S3_BUCKET_URI, CTCM_CACHE_S3_BUCKET_URI, \
     CIF_TESTING_S3_BUCKET_URI
 from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_cache, \
     read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_bucket_name_from_s3_uri, read_csv_from_s3, \
@@ -257,7 +257,7 @@ def get_cached_file_uri(s3_bucket, file_key, is_custom_layer):
     if is_custom_layer:
         uri = LOCAL_CACHE_URI
     else:
-        if s3_bucket in (CIF_CACHE_S3_BUCKET_URI, TCM_CACHE_S3_BUCKET_URI, CIF_TESTING_S3_BUCKET_URI):
+        if s3_bucket in (CIF_CACHE_S3_BUCKET_URI, CTCM_CACHE_S3_BUCKET_URI, CIF_TESTING_S3_BUCKET_URI):
             uri = s3_bucket
         else:
             raise ValueError("Invalid s3 bucket name {s3_bucket}")
