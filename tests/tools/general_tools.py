@@ -52,7 +52,7 @@ def convert_ratio_to_percentage(data):
 
 def get_test_cache_variables(class_obj, geo_extent, s3_bucket):
     s3_env = DEFAULT_DEVELOPMENT_ENV
-    file_uri, file_key, feature_id, is_custom_object = build_file_key(s3_bucket, s3_env, class_obj, geo_extent)
+    file_uri, file_key, feature_id, is_custom_object = build_file_key(s3_bucket, s3_env, class_obj, geo_extent, None)
     file_format = class_obj.OUTPUT_FILE_FORMAT
     feature_with_extension = f"{feature_id}.{file_format}"
     return file_key, file_uri, feature_with_extension, is_custom_object

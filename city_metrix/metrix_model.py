@@ -818,8 +818,8 @@ class Layer():
                 write_layer(layer_data, file_path, file_format)
 
 
-    def cache_city_data(self, bbox: GeoExtent, s3_bucket: str, s3_env: str, spatial_resolution: int = None,
-                              force_data_refresh: bool = False):
+    def cache_city_data(self, bbox: GeoExtent, s3_bucket: str, s3_env: str, aoi_buffer_m:int=None,
+                        spatial_resolution: int = None, force_data_refresh: bool = False):
         """
         Extract the data from the S3 cache otherwise source and return it in a way we can compare to other layers.
         :param city_aoi: specifies a specific AOI for a city extent that does not match the standard city extent
@@ -830,17 +830,18 @@ class Layer():
             raise ValueError("Non-city data cannot be cached.")
 
         standard_env = standardize_s3_env(s3_env)
-        retrieved_cached_data, _, target_uri = retrieve_city_cache(self.aggregate, geo_extent=bbox, s3_bucket=s3_bucket, output_env=standard_env,
-                                                                 city_aoi_modifier=None, force_data_refresh=force_data_refresh)
+        retrieved_cached_data, _, target_uri = retrieve_city_cache(self.aggregate, geo_extent=bbox, aoi_buffer_m=aoi_buffer_m,
+                                                                   s3_bucket=s3_bucket, output_env=standard_env,
+                                                                   city_aoi_modifier=None, force_data_refresh=force_data_refresh)
 
         if retrieved_cached_data is None:
-            self._build_city_cache(bbox, spatial_resolution, target_uri)
+            self._build_city_cache(bbox, spatial_resolution, target_uri, aoi_buffer_m)
         else:
             print(f">>>Layer {self.aggregate.__class__.__name__} is already cached ..")
 
 
-    def retrieve_data(self, bbox: GeoExtent, s3_bucket: str, s3_env: str, city_aoi_modifier: (float, float, float, float)=None,
-                              spatial_resolution: int = None) -> Union[
+    def retrieve_data(self, bbox: GeoExtent, s3_bucket: str, s3_env: str, aoi_buffer_m:int=None,
+                      city_aoi_modifier: (float, float, float, float)=None, spatial_resolution: int = None) -> Union[
         xr.DataArray, gpd.GeoDataFrame]:
         """
         Extract the data from the S3 cache otherwise source and return it in a way we can compare to other layers.
@@ -848,7 +849,7 @@ class Layer():
         """
 
         standard_env = standardize_s3_env(s3_env)
-        result_data, _, target_uri = retrieve_city_cache(self.aggregate, bbox, s3_bucket=s3_bucket, output_env=standard_env,
+        result_data, _, target_uri = retrieve_city_cache(self.aggregate, bbox, aoi_buffer_m, s3_bucket=s3_bucket, output_env=standard_env,
                                                          city_aoi_modifier=city_aoi_modifier, force_data_refresh=False)
 
         if result_data is None:
@@ -861,17 +862,21 @@ class Layer():
 
             # Opportunistically cache city data
             if bbox.geo_type == GeoType.CITY and city_aoi_modifier is None:
-                self._build_city_cache(self, bbox, spatial_resolution, target_uri)
+                self._build_city_cache(self, bbox, spatial_resolution, target_uri, aoi_buffer_m)
 
         return result_data
 
 
-    def _build_city_cache(self, bbox, spatial_resolution, target_uri):
+    def _build_city_cache(self, bbox, spatial_resolution, target_uri, aoi_buffer_m:int=None, ):
         if bbox.geo_type == GeoType.CITY:
             if hasattr(self.aggregate, 'PROCESSING_TILE_SIDE_M'):
                 tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
             else:
                 tile_side_m = None
+
+            if aoi_buffer_m is not None:
+                bbox = bbox.buffer_utm_bbox(aoi_buffer_m)
+
             bbox_area = bbox.as_utm_bbox().polygon.area
             if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
                 self._cache_data_by_fishnet_tiles(bbox=bbox, tile_side_m=tile_side_m, spatial_resolution=spatial_resolution,
@@ -1342,7 +1347,7 @@ class Metric():
             raise ValueError("Non-city data cannot be cached.")
 
         standard_env = standardize_s3_env(s3_env)
-        retrieved_cached_data, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, s3_bucket, standard_env, None,
+        retrieved_cached_data, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, None, s3_bucket, standard_env, None,
                                                                           force_data_refresh)
         if retrieved_cached_data is None:
             result_metric = self.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
@@ -1372,8 +1377,8 @@ class Metric():
             raise ValueError("Non-city data cannot be retrieved.")
 
         standard_env = standardize_s3_env(s3_env)
-        result_metric, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, s3_bucket, standard_env, None,
-                                                                          force_data_refresh)
+        result_metric, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, None, s3_bucket,
+                                                                  standard_env, None, force_data_refresh)
 
         if result_metric is None:
             result_metric = self.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
@@ -1414,7 +1419,7 @@ def _decide_if_write_can_be_skipped(feature, selection_object, output_path, s3_e
     if output_path is None or len(output_path.strip()) == 0:
         skip_write = True
     elif selection_object.geo_type == GeoType.CITY:
-        default_s3_uri, _, _, _ = build_file_key(s3_env, feature, selection_object)
+        default_s3_uri, _, _, _ = build_file_key(s3_env, feature, selection_object, None)
         skip_write = True if default_s3_uri == output_path else False
     else:
         skip_write = False

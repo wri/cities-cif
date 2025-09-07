@@ -12,12 +12,12 @@ from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_ca
     read_geotiff_subarea_from_cache
 from city_metrix.metrix_tools import get_class_from_instance
 
-def build_file_key(s3_bucket:str, output_env: str, class_obj, geo_extent):
+def build_file_key(s3_bucket:str, output_env: str, class_obj, geo_extent, aoi_buffer_m:int=None):
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
 
     # Construct layer filename and s3 key
-    cache_folder_name, feature_id, file_format, is_custom_object = build_cache_name(class_obj)
+    cache_folder_name, feature_id, file_format, is_custom_object = build_cache_name(class_obj, aoi_buffer_m)
 
     # Determine if object is a layer or metric
     feature_base_class_name = class_obj.__class__.__bases__[0].__name__
@@ -30,9 +30,9 @@ def build_file_key(s3_bucket:str, output_env: str, class_obj, geo_extent):
     return file_uri, file_key, feature_id, is_custom_object
 
 
-def retrieve_city_cache(class_obj, geo_extent, s3_bucket: str, output_env:str,
+def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m:int, s3_bucket: str, output_env:str,
                         city_aoi_modifier: tuple[float, float, float, float], force_data_refresh: bool):
-    file_uri, file_key, feature_id, is_custom_layer = build_file_key(s3_bucket, output_env, class_obj, geo_extent)
+    file_uri, file_key, feature_id, is_custom_layer = build_file_key(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m)
 
     if force_data_refresh or geo_extent.geo_type == GeoType.GEOMETRY or not check_if_cache_object_exists(file_uri):
         return None, feature_id, file_uri
@@ -79,7 +79,7 @@ def has_default_attribute_values(layer_obj):
     return has_matched_cls_obj_atts, unmatched_atts
 
 
-def build_cache_name(class_obj):
+def build_cache_name(class_obj, aoi_buffer_m):
     """
     Function uses the sequence of class parameters specified in two class constants, plus standard date
     parameters in many of the classes to construct names for cache folders and cached layer files.
@@ -105,10 +105,11 @@ def build_cache_name(class_obj):
         is_custom_object = False
 
     date_kv_string = _build_naming_string_from_standard_parameters(class_obj, is_custom_object)
+    buffer_string = '' if aoi_buffer_m is None else f"__bufferm_{aoi_buffer_m}"
 
     class_name = class_obj.__class__.__name__
     layer_folder_name = f"{class_name}{primary_qualifiers}"
-    feature_id = f"{layer_folder_name}{secondary_qualifiers}{date_kv_string}"
+    feature_id = f"{layer_folder_name}{secondary_qualifiers}{date_kv_string}{buffer_string}"
 
     file_format = class_obj.OUTPUT_FILE_FORMAT
 

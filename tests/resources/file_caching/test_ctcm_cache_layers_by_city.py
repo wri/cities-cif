@@ -23,19 +23,21 @@ FLORIANOPOLIS_CITY_SUB_AREA = (729496,6933650, 731047,6934496)
 
 temp_dir = tempfile.gettempdir()
 OUTPUT_FILE_ROOT = rf'file://{temp_dir}/test_result_tif_files/ctcm_test_result'
+AOI_BUFFER_M = 0 # Do not buffer for test
 
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_openurban_city_teresina():
     layer_obj = OpenUrban()
     geo_extent = GEOEXTENT_TERESINA_URBAN_EXTENT
-    layer_obj.cache_city_data(bbox=geo_extent, s3_bucket=TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
+    layer_obj.cache_city_data(bbox=geo_extent, s3_bucket=TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV,
+                              aoi_buffer_m=AOI_BUFFER_M, force_data_refresh=True, spatial_resolution=1)
 
     # pause to allow S3 to catch up
     time.sleep(100)
 
-    data = layer_obj.retrieve_data(geo_extent, s3_bucket= TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=TERESINA_CITY_SUB_AREA,
-                                 spatial_resolution=1)
+    data = layer_obj.retrieve_data(geo_extent, s3_bucket= TEST_BUCKET, aoi_buffer_m= AOI_BUFFER_M,
+                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=TERESINA_CITY_SUB_AREA, spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'{OUTPUT_FILE_ROOT}/{geo_extent.city_id}_openurban_test_teresina.tif', GTIFF_FILE_EXTENSION)
 
@@ -49,13 +51,15 @@ def test_openurban_city_teresina():
 def test_openurban_city_florianopolis():
     layer_obj = OpenUrban()
     geo_extent = GEOEXTENT_FLORIANOPOLIS_URBAN_EXTENT
-    layer_obj.cache_city_data(bbox=geo_extent, s3_bucket=TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True, spatial_resolution=1)
+    layer_obj.cache_city_data(bbox=geo_extent, s3_bucket=TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV,
+                              aoi_buffer_m=AOI_BUFFER_M, force_data_refresh=True, spatial_resolution=1)
 
     # pause to allow S3 to catch up
     time.sleep(100)
 
-    data = layer_obj.retrieve_data(geo_extent, s3_bucket= TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=FLORIANOPOLIS_CITY_SUB_AREA,
-                                 spatial_resolution=1)
+    data = layer_obj.retrieve_data(geo_extent, s3_bucket= TEST_BUCKET, aoi_buffer_m= AOI_BUFFER_M,
+                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=FLORIANOPOLIS_CITY_SUB_AREA,
+                                   spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'{OUTPUT_FILE_ROOT}/{geo_extent.city_id}_openurban_test_florianopolis.tif', GTIFF_FILE_EXTENSION)
 
