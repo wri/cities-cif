@@ -27,6 +27,8 @@ CITIES_DATA_API_URL = "cities-data-api.wri.org"  # "dev.cities-data-api.wri.org"
 # CTCM features
 CTCM_CACHE_S3_BUCKET_URI = 's3://wri-cities-tcm'
 CTCM_MAX_TILE_BUFFER_M = 600
+# Ensure complete TCM tile-sampling coverage by adding extra buffer
+CTCM_PADDED_AOI_BUFFER = CTCM_MAX_TILE_BUFFER_M + 100
 
 class GeoType(Enum):
     CITY = 0
