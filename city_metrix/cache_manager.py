@@ -12,7 +12,8 @@ from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_ca
     read_geotiff_subarea_from_cache
 from city_metrix.metrix_tools import get_class_from_instance
 
-def build_file_key(s3_bucket:str, output_env: str, class_obj, geo_extent, aoi_buffer_m:int=None):
+
+def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_buffer_m: int = None):
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
 
@@ -30,19 +31,28 @@ def build_file_key(s3_bucket:str, output_env: str, class_obj, geo_extent, aoi_bu
     return file_uri, file_key, feature_id, is_custom_object
 
 
-def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m:int, s3_bucket: str, output_env:str,
-                        city_aoi_modifier: tuple[float, float, float, float], force_data_refresh: bool):
-    file_uri, file_key, feature_id, is_custom_layer = build_file_key(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m)
+def determine_cache_usability(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m, city_aoi_modifier):
+    file_uri, _, _, _ = build_file_key(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m)
 
-    if force_data_refresh or geo_extent.geo_type == GeoType.GEOMETRY or not check_if_cache_object_exists(file_uri):
-        return None, feature_id, file_uri
+    if geo_extent.geo_type == GeoType.CITY and check_if_cache_object_exists(file_uri):
+        return True
 
     file_format = class_obj.OUTPUT_FILE_FORMAT
 
     if city_aoi_modifier is not None and file_format != GTIFF_FILE_EXTENSION:
-        return None, feature_id, file_uri
+        return True
+
+    return False
+
+
+def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m: int, s3_bucket: str, output_env: str,
+                        city_aoi_modifier: tuple[float, float, float, float], force_data_refresh: bool):
+
+    file_uri, file_key, feature_id, is_custom_layer = build_file_key(s3_bucket, output_env, class_obj, geo_extent,
+                                                                     aoi_buffer_m)
 
     # Retrieve from cache
+    file_format = class_obj.OUTPUT_FILE_FORMAT
     if file_format == GTIFF_FILE_EXTENSION:
         if city_aoi_modifier is None:
             data = read_geotiff_from_cache(file_uri)
@@ -60,6 +70,7 @@ def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m:int, s3_bucket: str,
 
     return data, feature_id, file_uri
 
+
 # ============ Object naming ================================
 DATE_ATTRIBUTES = ['year', 'start_year', 'start_date', 'end_year', 'end_date']
 
@@ -74,7 +85,7 @@ def has_default_attribute_values(layer_obj):
             specified_value = getattr(layer_obj, key)
             is_matched = True if default_value == specified_value else False
             if not is_matched:
-                has_matched_cls_obj_atts =  False
+                has_matched_cls_obj_atts = False
                 unmatched_atts.append(key)
     return has_matched_cls_obj_atts, unmatched_atts
 
@@ -162,14 +173,16 @@ def _build_naming_string_from_standard_parameters(feature_obj, is_custom_feature
 
     return date_kv_string
 
+
 def _has_paired_start_end_keys(att_dict):
     prefix_list = ['start', 'end']
-    filtered_dict = {key: value for key, value in att_dict.items() if any(key.startswith(prefix) for prefix in prefix_list)}
+    filtered_dict = {key: value for key, value in att_dict.items() if
+                     any(key.startswith(prefix) for prefix in prefix_list)}
     has_paired_start_end_dates = True if len(filtered_dict) == 2 else False
     return has_paired_start_end_dates
 
 
-def _standardize_date_kv(date_key:str, date_value, is_custom_feature:bool):
+def _standardize_date_kv(date_key: str, date_value, is_custom_feature: bool):
     date_key = date_key.lower()
     year_value = date_value
     if not is_custom_feature:
@@ -215,7 +228,7 @@ def _flatten_attribute_value(value):
         flattened_value = value.name
     elif isinstance(value, str) or isinstance(value, numbers.Number):
         if isinstance(value, float):
-            flattened_value = str(value).replace('.','')
+            flattened_value = str(value).replace('.', '')
         else:
             flattened_value = value
     elif isinstance(value, list):
@@ -230,8 +243,10 @@ def _convert_snake_case_to_pascal_case(attribute_name):
     pascal_name = attribute_name.replace("_", " ").title().replace(" ", "")
     return pascal_name
 
+
 def _construct_kv_string(key, value, separator):
     return f"{separator}{key}_{value}"
+
 
 def check_if_cache_object_exists(file_uri):
     uri_scheme = get_uri_scheme(file_uri)
@@ -245,14 +260,19 @@ def check_if_cache_object_exists(file_uri):
         file_response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=file_key, MaxKeys=1)
         if 'Contents' in file_response:
             return True
+        else:
+            return False
 
         # Check for folder
         folder_response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=folder_path, MaxKeys=1)
         if 'Contents' in folder_response:
             return True
+        else:
+            return False
     else:
         uri_path = os.path.normpath(get_file_path_from_uri(file_key))
         return os.path.exists(uri_path)
+
 
 def get_cached_file_uri(s3_bucket, file_key, is_custom_layer):
     if is_custom_layer:
@@ -270,7 +290,8 @@ def get_cached_file_uri(s3_bucket, file_key, is_custom_layer):
     return file_uri
 
 
-def get_cached_file_key(feature_based_class_name, s3_bucket, output_env, feature_name, city_id, admin_level, feature_id, file_format):
+def get_cached_file_key(feature_based_class_name, s3_bucket, output_env, feature_name, city_id, admin_level, feature_id,
+                        file_format):
     if feature_based_class_name.lower() == 'layer':
         file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}"
     else:
@@ -282,7 +303,6 @@ def get_cached_file_key(feature_based_class_name, s3_bucket, output_env, feature
 
     file_key = f"{file_key}.{file_format}"
     return file_key
-
 
 # def hashkey_from_tuple(numbers, length=12):
 #     import hashlib

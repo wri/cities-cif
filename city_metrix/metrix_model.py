@@ -27,7 +27,7 @@ from shapely.geometry import box
 from xrspatial import zonal_stats
 
 from city_metrix import s3_client
-from city_metrix.cache_manager import retrieve_city_cache, build_file_key
+from city_metrix.cache_manager import retrieve_city_cache, build_file_key, determine_cache_usability
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
@@ -830,11 +830,13 @@ class Layer():
             raise ValueError("Non-city data cannot be cached.")
 
         standard_env = standardize_s3_env(s3_env)
-        retrieved_cached_data, _, target_uri = retrieve_city_cache(self.aggregate, geo_extent=bbox, aoi_buffer_m=aoi_buffer_m,
-                                                                   s3_bucket=s3_bucket, output_env=standard_env,
-                                                                   city_aoi_modifier=None, force_data_refresh=force_data_refresh)
+        if force_data_refresh:
+            has_useable_cache = False
+        else:
+            has_useable_cache = determine_cache_usability(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m, aoi_buffer_m)
 
-        if retrieved_cached_data is None:
+        if not has_useable_cache:
+            target_uri, _, _, _ = build_file_key(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m)
             self._build_city_cache(bbox, spatial_resolution, target_uri, aoi_buffer_m)
         else:
             print(f">>>Layer {self.aggregate.__class__.__name__} is already cached ..")
@@ -849,10 +851,12 @@ class Layer():
         """
 
         standard_env = standardize_s3_env(s3_env)
-        result_data, _, target_uri = retrieve_city_cache(self.aggregate, bbox, aoi_buffer_m, s3_bucket=s3_bucket, output_env=standard_env,
-                                                         city_aoi_modifier=city_aoi_modifier, force_data_refresh=False)
+        has_usable_cache = determine_cache_usability(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m, aoi_buffer_m)
 
-        if result_data is None:
+        if has_usable_cache:
+            result_data, _, _ = retrieve_city_cache(self.aggregate, bbox, aoi_buffer_m, s3_bucket=s3_bucket, output_env=standard_env,
+                                                         city_aoi_modifier=city_aoi_modifier, force_data_refresh=False)
+        else:
             if city_aoi_modifier is None:
                 query_geoextent = bbox
             else:
@@ -862,7 +866,8 @@ class Layer():
 
             # Opportunistically cache city data
             if bbox.geo_type == GeoType.CITY and city_aoi_modifier is None:
-                self._build_city_cache(self, bbox, spatial_resolution, target_uri, aoi_buffer_m)
+                target_uri, _, _, _ = build_file_key(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m)
+                self._build_city_cache(bbox, spatial_resolution, target_uri, aoi_buffer_m)
 
         return result_data
 
