@@ -67,13 +67,13 @@ class GeoZone():
             self.city_id, self.aoi_id = parse_city_aoi_json(city_json)
             # Boundaries from city_id and aoi_id
             city_data = get_city(self.city_id)
-            if self.aoi_id == 'urban_extent':
-                self.admin_level = self.aoi_id
-            elif self.aoi_id == 'city_admin_level':
+            if self.aoi_id == 'city_admin_level':
                 self.admin_level = city_data.get(self.aoi_id, None)
             else:
-                raise ValueError(
-                    f"City metadata for {self.city_id} does not have geometry for aoi_id: '{self.aoi_id}'")
+                self.admin_level = self.aoi_id
+            # else:
+            #     raise ValueError(
+            #         f"City metadata for {self.city_id} does not have geometry for aoi_id: '{self.aoi_id}'")
 
             # get city bbox from composite of admin areas and project
             # bbox is always projected to UTM
@@ -95,34 +95,34 @@ class GeoZone():
 
 
 def _build_aoi_from_city_boundaries(city_id, admin_level, city_data):
-    if admin_level == 'urban_extent':
-        bbox_str = city_data['bounding_box']['urban_extent']
-        wgs_bbox = string_to_float_list(bbox_str)
-        west, south, east, north = wgs_bbox
-        boundaries_gdf = None
-    else:
+    if admin_level.lower() == 'adm4union':
         # Construct bbox from total bounds of all admin levels
         boundaries_gdf = get_city_admin_boundaries(city_id)
         if len(boundaries_gdf) == 1:
             west, south, east, north = boundaries_gdf.bounds
         else:
             west, south, east, north = boundaries_gdf.total_bounds
+    else:
+        bbox_str = city_data['bounding_box'][admin_level]
+        wgs_bbox = string_to_float_list(bbox_str)
+        west, south, east, north = wgs_bbox
+        boundaries_gdf = None
 
     # determine UTM CRS
     centroid = shapely.box(west, south, east, north).centroid
     utm_crs = get_utm_zone_from_latlon_point(centroid)
 
     # reproject geodataframe to UTM
-    if admin_level == 'urban_extent':
-        bbox = reproject_units(south, west, north, east, WGS_CRS, utm_crs)
-        reproj_south, reproj_west, reproj_north, reproj_east = bbox
-        zones = None
-    else:
+    if admin_level.lower() == 'adm4union':
         zones = boundaries_gdf.to_crs(utm_crs)
         if len(boundaries_gdf) == 1:
             reproj_west, reproj_south, reproj_east, reproj_north = zones.bounds
         else:
             reproj_west, reproj_south, reproj_east, reproj_north = zones.total_bounds
+    else:
+        bbox = reproject_units(south, west, north, east, WGS_CRS, utm_crs)
+        reproj_south, reproj_west, reproj_north, reproj_east = bbox
+        zones = None
 
     # Round coordinates to whole units
     bbox = (math.floor(reproj_west), math.floor(reproj_south), math.ceil(reproj_east), math.ceil(reproj_north))
