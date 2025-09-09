@@ -34,7 +34,7 @@ def test_openurban_city_teresina():
                               aoi_buffer_m=AOI_BUFFER_M, force_data_refresh=True, spatial_resolution=1)
 
     # pause to allow S3 to catch up
-    time.sleep(100)
+    time.sleep(60)
 
     data = layer_obj.retrieve_data(geo_extent, s3_bucket= TEST_BUCKET, aoi_buffer_m= AOI_BUFFER_M,
                                    s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=TERESINA_CITY_SUB_AREA, spatial_resolution=1)
@@ -55,7 +55,7 @@ def test_openurban_city_florianopolis():
                               aoi_buffer_m=AOI_BUFFER_M, force_data_refresh=True, spatial_resolution=1)
 
     # pause to allow S3 to catch up
-    time.sleep(100)
+    time.sleep(60)
 
     data = layer_obj.retrieve_data(geo_extent, s3_bucket= TEST_BUCKET, aoi_buffer_m= AOI_BUFFER_M,
                                    s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=FLORIANOPOLIS_CITY_SUB_AREA,

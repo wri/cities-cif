@@ -46,7 +46,7 @@ def determine_cache_usability(s3_bucket, output_env, class_obj, geo_extent, aoi_
 
 
 def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m: int, s3_bucket: str, output_env: str,
-                        city_aoi_modifier: tuple[float, float, float, float], force_data_refresh: bool):
+                        city_aoi_modifier: tuple[float, float, float, float]=None):
 
     file_uri, file_key, feature_id, is_custom_layer = build_file_key(s3_bucket, output_env, class_obj, geo_extent,
                                                                      aoi_buffer_m)

@@ -831,11 +831,11 @@ class Layer():
 
         standard_env = standardize_s3_env(s3_env)
         if force_data_refresh:
-            has_useable_cache = False
+            has_usable_cache = False
         else:
-            has_useable_cache = determine_cache_usability(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m, aoi_buffer_m)
+            has_usable_cache = determine_cache_usability(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m, aoi_buffer_m)
 
-        if not has_useable_cache:
+        if not has_usable_cache:
             target_uri, _, _, _ = build_file_key(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m)
             self._build_city_cache(bbox, spatial_resolution, target_uri, aoi_buffer_m)
         else:
@@ -855,7 +855,7 @@ class Layer():
 
         if has_usable_cache:
             result_data, _, _ = retrieve_city_cache(self.aggregate, bbox, aoi_buffer_m, s3_bucket=s3_bucket, output_env=standard_env,
-                                                         city_aoi_modifier=city_aoi_modifier, force_data_refresh=False)
+                                                    city_aoi_modifier=city_aoi_modifier)
         else:
             if city_aoi_modifier is None:
                 query_geoextent = bbox
@@ -1352,45 +1352,49 @@ class Metric():
             raise ValueError("Non-city data cannot be cached.")
 
         standard_env = standardize_s3_env(s3_env)
-        retrieved_cached_data, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, None, s3_bucket, standard_env, None,
-                                                                          force_data_refresh)
-        if retrieved_cached_data is None:
-            result_metric = self.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
+        if force_data_refresh:
+            has_usable_cache = False
         else:
-            print(f">>>Reading {self.__class__.__name__} metric data from cache..")
-            result_metric = retrieved_cached_data
+            has_usable_cache = determine_cache_usability(s3_bucket, standard_env, self.metric, geo_zone, None, None)
 
-        zones = geo_zone.zones
-        if isinstance(result_metric, pd.DataFrame) and 'zone' in result_metric.columns:
-            zones['index'] = zones['index'].astype(float)
-            result_metric['zone'] = result_metric['zone'].astype(float)
-            results_metric_df = pd.merge(zones, result_metric, left_on='index', right_on='zone', how='left')
-            if 'metric_id' not in results_metric_df.columns:
-                results_metric_df = results_metric_df.assign(metric_id=feature_id)
-            result_metric = _standardize_city_metrics_columns(results_metric_df, None)
+        if not has_usable_cache and geo_zone.geo_type == GeoType.CITY:
+            target_uri, _, feature_id, _ = build_file_key(s3_bucket, standard_env, self.metric, geo_zone, None)
+            result_metric = self.metric.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
 
-        if retrieved_cached_data is None and geo_zone.geo_type == GeoType.CITY:
-            write_metric(result_metric, file_uri, self.OUTPUT_FILE_FORMAT)
-
-        return result_metric, feature_id
+            zones = geo_zone.zones
+            if isinstance(result_metric, pd.DataFrame) and 'zone' in result_metric.columns:
+                zones['index'] = zones['index'].astype(float)
+                result_metric['zone'] = result_metric['zone'].astype(float)
+                results_metric_df = pd.merge(zones, result_metric, left_on='index', right_on='zone', how='left')
+                if 'metric_id' not in results_metric_df.columns:
+                    results_metric_df = results_metric_df.assign(metric_id=feature_id)
+                result_metric = _standardize_city_metrics_columns(results_metric_df, None)
 
 
-    def retrieve_metric(self, geo_zone: GeoZone, s3_bucket: str, s3_env: str, spatial_resolution: int = None,
-                          force_data_refresh: bool = False) -> tuple[Union[pd.Series, pd.DataFrame], str]:
+            write_metric(result_metric, target_uri, self.OUTPUT_FILE_FORMAT)
+        else:
+            print(f">>>Metric {self.metric.__class__.__name__} is already cached ..")
+
+
+    def retrieve_metric(self, geo_zone: GeoZone, s3_bucket: str, s3_env: str, spatial_resolution: int = None) -> (
+            tuple)[Union[pd.Series, pd.DataFrame], str]:
 
         if geo_zone.geo_type != GeoType.CITY:
             raise ValueError("Non-city data cannot be retrieved.")
 
         standard_env = standardize_s3_env(s3_env)
-        result_metric, feature_id, file_uri = retrieve_city_cache(self.metric, geo_zone, None, s3_bucket,
-                                                                  standard_env, None, force_data_refresh)
+        has_usable_cache = determine_cache_usability(s3_bucket, standard_env, self.metric, geo_zone, None, None)
 
-        if result_metric is None:
+        if has_usable_cache:
+            result_metric, _, _ = retrieve_city_cache(self.metric, geo_extent=geo_zone, aoi_buffer_m=None, s3_bucket=s3_bucket,
+                                                    output_env=standard_env)
+        else:
+            target_uri, _, feature_id, _ = build_file_key(s3_bucket, standard_env, self.metric, geo_zone, None)
             result_metric = self.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
 
             # Opportunistically cache city metric
             if geo_zone.geo_type == GeoType.CITY:
-                write_metric(result_metric, file_uri, self.OUTPUT_FILE_FORMAT)
+                write_metric(result_metric, target_uri, self.OUTPUT_FILE_FORMAT)
 
         return result_metric
 

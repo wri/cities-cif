@@ -238,9 +238,8 @@ def _get_sub_area(s3_bucket, key, bbox, pad, utm_crs):
 
 
 def read_netcdf_from_cache(file_uri):
-    result_data = None
     if get_uri_scheme(file_uri) == 's3':
-        s3_bucket = remove_scheme_from_uri(CIF_CACHE_S3_BUCKET_URI)
+        s3_bucket = get_bucket_name_from_s3_uri(file_uri)
         file_key = get_file_key_from_url(file_uri)
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -255,11 +254,11 @@ def read_netcdf_from_cache(file_uri):
 
 
 def read_csv_from_s3(file_uri):
-    s3_bucket = remove_scheme_from_uri(CIF_CACHE_S3_BUCKET_URI)
+    s3_bucket = get_bucket_name_from_s3_uri(file_uri)
     file_key = get_file_key_from_url(file_uri)
     result_data = None
     with tempfile.TemporaryDirectory() as temp_dir:
-        temp_file_path = os.path.join(temp_dir, 'tempfile')
+        temp_file_path = os.path.join(temp_dir, 'tempfile.csv')
         s3_client.download_file(s3_bucket, file_key, temp_file_path)
         result_data = pd.read_csv(temp_file_path)
     return result_data
