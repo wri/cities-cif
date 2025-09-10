@@ -1,22 +1,24 @@
 import pandas as pd
 from typing import Union
-
+import datetime
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import Metric, GeoZone
 from city_metrix.layers import TreeCanopyHeight, UrbanLandUse
 
 MIN_TREE_HEIGHT = 3
-ULU_INFORMAL_CLASS = 3
+ULU_BUILTUP_CLASS = 5
 
 
 class BuiltAreaWithoutTreeCover__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height", "year"]
 
-    def __init__(self, height=MIN_TREE_HEIGHT, **kwargs):
+    def __init__(self, height=MIN_TREE_HEIGHT, year=2025, **kwargs):
         super().__init__(**kwargs)
         self.height = height
+        self.year = year
+        self.unit = 'percent'
 
     def get_metric(self,
                    geo_zone: GeoZone,
