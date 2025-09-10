@@ -31,7 +31,7 @@ class BuiltAreaWithoutTreeCover__Percent(Metric):
 
         tree_canopy_height = TreeCanopyHeight(height=self.height)
 
-        built_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
+        built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
 
         built_land_count = built_up_land.groupby(geo_zone).count()
         built_land_with_tree_cover_count = built_up_land.mask(tree_canopy_height).groupby(geo_zone).count()
