@@ -10,6 +10,10 @@ city_admin = construct_city_aoi_json("BRA-Florianopolis", "urban_extent")
 GEOZONE_FLORIANOPOLIS_URBAN_EXTENT = GeoZone(geo_zone=city_admin)
 GEOEXTENT_FLORIANOPOLIS_URBAN_EXTENT = GeoExtent(GEOZONE_FLORIANOPOLIS_URBAN_EXTENT)
 
+city_admin = construct_city_aoi_json("ZAF-Cape_Town", "business_district")
+GEOZONE_CAPETOWN_BIZDISTRICT_EXTENT = GeoZone(geo_zone=city_admin)
+GEOEXTENT_CAPETOWN_BIZDISTRICT_EXTENT = GeoExtent(GEOZONE_CAPETOWN_BIZDISTRICT_EXTENT)
+
 # city_admin_level
 city_admin = construct_city_aoi_json("BRA-Teresina", "city_admin_level")
 GEOZONE_TERESINA_CITY_ADMiN_LEVEL= GeoZone(geo_zone=city_admin)

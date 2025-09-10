@@ -31,7 +31,7 @@ def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_b
     return file_uri, file_key, feature_id, is_custom_object
 
 
-def determine_cache_usability(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m, city_aoi_modifier):
+def determine_cache_usability(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m=None, city_aoi_modifier=None):
     file_uri, _, _, _ = build_file_key(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m)
 
     if geo_extent.geo_type == GeoType.CITY and check_if_cache_object_exists(file_uri):

@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Union
 from dask.diagnostics import ProgressBar
 from ee import ImageCollection
-from geocube.api.core import make_geocube
 from geopandas import GeoDataFrame
 from pandas import Series
 from shapely import geometry
@@ -31,10 +30,11 @@ from city_metrix.cache_manager import retrieve_city_cache, build_file_key, deter
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
-                                    get_city, get_city_admin_boundaries, read_geotiff_from_cache, extract_tif_subarea,
-                                    create_uri_target_folder, write_geojson, write_json, get_key_from_s3_uri,
+                                    get_city, get_city_admin_boundaries, extract_tif_subarea,
+                                    create_uri_target_folder, write_json, get_key_from_s3_uri,
                                     get_file_key_from_url, get_bucket_name_from_s3_uri,
-                                    delete_s3_folder_if_exists, delete_s3_file_if_exists, get_file_path_from_uri)
+                                    delete_s3_folder_if_exists, delete_s3_file_if_exists, get_file_path_from_uri
+                                    )
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
                                       parse_city_aoi_json, reproject_units, construct_city_aoi_json,
                                       standardize_y_dimension_direction)
