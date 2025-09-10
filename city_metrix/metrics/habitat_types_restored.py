@@ -10,12 +10,13 @@ from city_metrix.layers import LandCoverSimplifiedGlad, LandCoverHabitatChangeGl
 class HabitatTypesRestored__CoverTypes(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["start_year", "end_year"]
 
     def __init__(self, start_year=2000, end_year=2020, **kwargs):
         super().__init__(**kwargs)
         self.start_year = start_year
         self.end_year = end_year
+        self.unit = 'cover type'
 
     def get_metric(self,
                    geo_zone: GeoZone,

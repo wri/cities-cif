@@ -13,6 +13,7 @@ class ImperviousArea__Percent(Metric):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.unit = 'percent'
 
     def get_metric(self,
                    geo_zone: GeoZone,

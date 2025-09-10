@@ -33,7 +33,7 @@ class BuiltAreaWithoutTreeCover__Percent(Metric):
         tree_canopy_height = TreeCanopyHeight(height=self.height)
 
         # informal_only: urban land use class 3 for Informal
-        urban_land_use = UrbanLandUse(ulu_class=ULU_INFORMAL_CLASS)
+        urban_land_use = UrbanLandUse(ulu_class=ULU_BUILTUP_CLASS)
 
         built_land = urban_land_use.groupby(geo_zone).count()
         built_land_with_tree_cover = urban_land_use.mask(tree_canopy_height).groupby(geo_zone).count()

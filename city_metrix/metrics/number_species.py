@@ -9,7 +9,7 @@ from city_metrix.metrix_model import Metric, GeoZone, GeoExtent
 class _NumberSpecies(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["taxon", "start_year", "end_year"]
 
     def __init__(
         self, **kwargs
@@ -19,6 +19,7 @@ class _NumberSpecies(Metric):
         self.start_year = None
         self.end_year = None
         self.mask_layer = None
+        self.unit = 'species'
 
     def get_metric(self,
                    geo_zone: GeoZone,
