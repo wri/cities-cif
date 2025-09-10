@@ -61,7 +61,7 @@ def test_custom_name_for_layer_with_one_custom_minor_param():
     file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
 
     assert is_custom_layer == True
-    assert layer_id == 'AqueductFlood__ReturnPeriodC_rp0002__StartYear_2050_EndYear_2050.tif.tif'
+    assert layer_id == 'AqueductFlood__ReturnPeriodC_rp0002__StartYear_2050_EndYear_2050.tif'
 
 def test_custom_name_for_layer_with_two_custom_minor_param():
     geo_extent = GEOEXTENT_TERESINA
