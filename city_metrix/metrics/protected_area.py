@@ -20,6 +20,7 @@ class ProtectedArea__Percent(Metric):
         self.status = status
         self.status_year = status_year
         self.iucn_cat = iucn_cat
+        self.unit = 'percent'
 
     def get_metric(self,
                    geo_zone: GeoZone,
