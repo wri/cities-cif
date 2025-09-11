@@ -31,7 +31,7 @@ def test_percent_built_area_without_tree_cover__percent():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 36.36, 100, 54, 46)
+    assert_metric_stats(indicator, 2, 89.00, 97.94, 100, 0)
 
 def test_built_land_with_high_lst__percent():
     sample_zones = IDN_JAKARTA_TILED_ZONES

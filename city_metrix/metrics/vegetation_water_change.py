@@ -14,17 +14,20 @@ DEFAULT_SPATIAL_RESOLUTION = 10
 class VegetationWaterChangeGainArea__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["start_date", "end_date"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, start_date="2016-01-01", end_date="2022-12-31", **kwargs):
         super().__init__(**kwargs)
+        self.start_date = start_date
+        self.end_date = end_date
+        self.unit = 'square meters'
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution=DEFAULT_SPATIAL_RESOLUTION) -> Union[pd.DataFrame | pd.Series]:
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        gain_counts = VegetationWaterMap(greenwater_layer='gaingreenwaterSlope').groupby(geo_zone).count()
+        gain_counts = VegetationWaterMap(start_date=self.start_date, end_date=self.end_date, greenwater_layer='gaingreenwaterSlope').groupby(geo_zone).count()
 
         if isinstance(gain_counts, pd.DataFrame):
             result = gain_counts.copy()
@@ -38,17 +41,20 @@ class VegetationWaterChangeGainArea__SquareMeters(Metric):
 class VegetationWaterChangeLossArea__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["start_date", "end_date"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, start_date="2016-01-01", end_date="2022-12-31", **kwargs):
         super().__init__(**kwargs)
+        self.start_date = start_date
+        self.end_date = end_date
+        self.unit = 'square meters'
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution=DEFAULT_SPATIAL_RESOLUTION) -> Union[pd.DataFrame | pd.Series]:
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        loss_counts = VegetationWaterMap(greenwater_layer='lossgreenwaterSlope').groupby(geo_zone).count()
+        loss_counts = VegetationWaterMap(start_date=self.start_date, end_date=self.end_date, greenwater_layer='lossgreenwaterSlope').groupby(geo_zone).count()
 
         if isinstance(loss_counts, pd.DataFrame):
             result = loss_counts.copy()
@@ -62,19 +68,22 @@ class VegetationWaterChangeLossArea__SquareMeters(Metric):
 class VegetationWaterChangeGainLoss__Ratio(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["start_date", "end_date"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, start_date="2016-01-01", end_date="2022-12-31", **kwargs):
         super().__init__(**kwargs)
+        self.start_date = start_date
+        self.end_date = end_date
+        self.unit = 'ratio'
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        start_counts = VegetationWaterMap(greenwater_layer='startgreenwaterIndex').groupby(geo_zone).count()
-        loss_counts = VegetationWaterMap(greenwater_layer='lossgreenwaterSlope').groupby(geo_zone).count()
-        gain_counts = VegetationWaterMap(greenwater_layer='gaingreenwaterSlope').groupby(geo_zone).count()
+        start_counts = VegetationWaterMap(start_date=self.start_date, end_date=self.end_date, greenwater_layer='startgreenwaterIndex').groupby(geo_zone).count()
+        loss_counts = VegetationWaterMap(start_date=self.start_date, end_date=self.end_date, greenwater_layer='lossgreenwaterSlope').groupby(geo_zone).count()
+        gain_counts = VegetationWaterMap(start_date=self.start_date, end_date=self.end_date, greenwater_layer='gaingreenwaterSlope').groupby(geo_zone).count()
 
         if isinstance(gain_counts, pd.DataFrame):
             result = gain_counts.copy()
