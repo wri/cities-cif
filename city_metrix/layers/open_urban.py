@@ -1,6 +1,7 @@
 import ee
 
 from city_metrix.constants import GTIFF_FILE_EXTENSION
+from city_metrix.metrix_dao import extract_bbox_aoi
 from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
 
 class OpenUrban(Layer):
@@ -15,12 +16,14 @@ class OpenUrban(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=None, resampling_method:str=None):
 
+        buffered_utm_bbox = bbox.buffer_utm_bbox(10)
+        ee_rectangle  = buffered_utm_bbox.to_ee_rectangle()
+
         dataset = ee.ImageCollection("projects/wri-datalab/cities/OpenUrban/OpenUrban_LULC")
         ## It is important if the cif code is pulling data from GEE to take the maximum value where the image tiles overlap
 
         # Check for data
         data = None
-        ee_rectangle = bbox.to_ee_rectangle()
         if dataset.filterBounds(ee_rectangle['ee_geometry']).size().getInfo() == 0:
             print("No OpenUrban Data Available")
         else:
@@ -39,7 +42,10 @@ class OpenUrban(Layer):
                 "urban land use"
             ).lulc
 
-        return data
+        # Trim back to original AOI
+        bbox_results = extract_bbox_aoi(data, bbox)
+
+        return bbox_results
 
 # Define reclassification
 from enum import Enum

@@ -1,6 +1,5 @@
 # optimized batch with max footprint
 # overture_buildings_dsm_without_gpu5
-import tempfile
 import xarray as xr
 import numpy as np
 from rasterio.features import rasterize
@@ -8,7 +7,7 @@ from city_metrix.metrix_model import Layer, GeoExtent, validate_raster_resamplin
 from . import FabDEM
 from ..constants import GTIFF_FILE_EXTENSION
 from .overture_buildings_w_height import OvertureBuildingsHeight
-from ..metrix_dao import write_layer, read_geotiff_from_cache
+from ..metrix_dao import extract_bbox_aoi
 from ..ut_globus_city_handler.ut_globus_city_handler import search_for_ut_globus_city_by_contained_polygon
 
 DEFAULT_SPATIAL_RESOLUTION = 1
@@ -113,42 +112,7 @@ class OvertureBuildingsDSM(Layer):
         result_dsm.attrs["crs"] = buffered_dem.rio.crs
 
         # Trim back to original AOI
-        bbox_dsm = _extract_bbox_aoi(result_dsm, bbox)
+        bbox_dsm = extract_bbox_aoi(result_dsm, bbox)
 
         return bbox_dsm
 
-def _extract_bbox_aoi(buffered_dem, bbox):
-    import os
-    import rasterio
-    from rasterio.windows import from_bounds
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_file = os.path.join(temp_dir, 'tempfile.tif')
-        file_uri = f"file://{temp_file}"
-        write_layer(buffered_dem, file_uri, GTIFF_FILE_EXTENSION)
-
-        with rasterio.open(temp_file) as src:
-            xmin, ymin, xmax, ymax = bbox.as_utm_bbox().bounds
-            window = from_bounds(xmin, ymin, xmax, ymax, transform=src.transform)
-            subarea = src.read(1, window=window)
-            sub_transform = src.window_transform(window)
-
-            # Clean metadata
-            meta = {
-                "driver": "GTiff",
-                "dtype": subarea.dtype.name,
-                "nodata": None,
-                "width": subarea.shape[1],
-                "height": subarea.shape[0],
-                "count": 1,
-                "crs": buffered_dem.crs,
-                "transform": sub_transform
-            }
-
-            output_path = os.path.join(temp_dir, 'tempfile2.tif')
-            with rasterio.open(output_path, "w", **meta) as dst:
-                dst.write(subarea, 1)
-
-            file_uri = f"file://{output_path}"
-            query_dem = read_geotiff_from_cache(file_uri)
-
-        return query_dem

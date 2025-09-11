@@ -385,6 +385,57 @@ def _write_dataset(data, uri):
     _verify_datatype('write_dataset()', data, [xr.Dataset], is_spatial=True)
     raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 
+# def _write_dataset_to_s3(data, uri):
+#     import xarray as xr
+#     import rasterio
+#     from rasterio.transform import from_origin
+#     import numpy as np
+#
+#     def save_xarray_to_geotiff(ds: xr.Dataset, filename: str, band_dim: str = "band") -> None:
+#         """
+#         Save an Xarray Dataset to a GeoTIFF file with all bands using rasterio.
+#
+#         Parameters:
+#         - ds: xarray.Dataset containing the bands and spatial coordinates
+#         - filename: output path for the GeoTIFF
+#         - band_dim: dimension name in ds representing bands (default: 'band')
+#         """
+#         # Extract coordinates
+#         x = ds['x'].values
+#         y = ds['y'].values
+#
+#         # Calculate pixel size assuming uniform spacing
+#         pixel_size_x = (x[-1] - x[0]) / (len(x) - 1)
+#         pixel_size_y = (y[-1] - y[0]) / (len(y) - 1)
+#
+#         # Define transform (upper-left corner)
+#         transform = from_origin(x[0] - pixel_size_x / 2, y[-1] + pixel_size_y / 2, pixel_size_x, pixel_size_y)
+#
+#         # Number of bands and shape
+#         num_bands = ds[band_dim].shape[0] if band_dim in ds.dims else 1
+#         height = len(y)
+#         width = len(x)
+#
+#         # Open rasterio file for writing
+#         with rasterio.open(
+#                 filename,
+#                 'w',
+#                 driver='GTiff',
+#                 height=height,
+#                 width=width,
+#                 count=num_bands,
+#                 dtype=str(ds[ds.data_vars.keys()[0]].dtype),
+#                 crs=ds.attrs.get('crs', 'EPSG:4326'),  # Use WGS84 by default if CRS not provided
+#                 transform=transform
+#         ) as dst:
+#             # Write each band
+#             for i in range(num_bands):
+#                 if num_bands == 1:
+#                     data = ds[list(ds.data_vars.keys())[0]].values
+#                 else:
+#                     data = ds[list(ds.data_vars.keys())[0]].isel({band_dim: i}).values
+#                 dst.write(data, i + 1)
+#
 
 def _verify_datatype(function_name: str, data, verification_classes: list, is_spatial: bool = False):
     data_datatype_name = type(data).__name__
@@ -590,3 +641,43 @@ def extract_tif_subarea(tif_da, bbox):
             query_da = read_geotiff_from_cache(file_uri)
 
         return query_da
+
+
+def extract_bbox_aoi(buffered_data, bbox):
+    import os
+    import rasterio
+    from rasterio.windows import from_bounds
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_file = os.path.join(temp_dir, 'tempfile.tif')
+        file_uri = f"file://{temp_file}"
+        write_layer(buffered_data, file_uri, GTIFF_FILE_EXTENSION)
+
+        with rasterio.open(temp_file) as src:
+            xmin, ymin, xmax, ymax = bbox.as_utm_bbox().bounds
+            window = from_bounds(xmin, ymin, xmax, ymax, transform=src.transform)
+            subarea = src.read(1, window=window)
+            sub_transform = src.window_transform(window)
+
+            epsg_code = buffered_data.rio.crs.to_epsg()
+            utm_crs = f'EPSG:{epsg_code}'
+
+            # Clean metadata
+            meta = {
+                "driver": "GTiff",
+                "dtype": subarea.dtype.name,
+                "nodata": None,
+                "width": subarea.shape[1],
+                "height": subarea.shape[0],
+                "count": 1,
+                "crs": utm_crs,
+                "transform": sub_transform
+            }
+
+            output_path = os.path.join(temp_dir, 'tempfile2.tif')
+            with rasterio.open(output_path, "w", **meta) as dst:
+                dst.write(subarea, 1)
+
+            file_uri = f"file://{output_path}"
+            query_data = read_geotiff_from_cache(file_uri)
+
+        return query_data

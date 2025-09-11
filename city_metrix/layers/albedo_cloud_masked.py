@@ -4,7 +4,7 @@ from city_metrix.metrix_model import (Layer, get_image_collection, set_resamplin
                                       validate_raster_resampling_method, GeoExtent)
 from .albedo import get_albedo_default_date_range
 from ..constants import GTIFF_FILE_EXTENSION
-
+from ..metrix_dao import extract_bbox_aoi
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 DEFAULT_RESAMPLING_METHOD = "bilinear"
@@ -51,6 +51,9 @@ class AlbedoCloudMasked(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
+        buffered_utm_bbox = bbox.buffer_utm_bbox(10)
+        ee_rectangle  = buffered_utm_bbox.to_ee_rectangle()
+
         if self.start_date is None or self.end_date is None:
             self.start_date, self.end_date = get_albedo_default_date_range(bbox)
             print("Date range was not specified for Albedo, so auto-setting to previous-year summer months as appropriate for hemisphere.")
@@ -79,9 +82,8 @@ class AlbedoCloudMasked(Layer):
 
             return albedo
 
-        bbox_ee = bbox.to_ee_rectangle()
         # Get masked S2 collection
-        S2filtered = self.get_masked_s2_collection(bbox_ee, self.start_date, self.end_date)
+        S2filtered = self.get_masked_s2_collection(ee_rectangle, self.start_date, self.end_date)
         # Add albedo
         S2albedo = S2filtered.map(calc_s2_albedo).select("albedo")
 
@@ -95,7 +97,7 @@ class AlbedoCloudMasked(Layer):
                     spatial_resolution,
                     DEFAULT_SPATIAL_RESOLUTION,
                     kernel_convolution,
-                    bbox_ee["crs"],
+                    ee_rectangle["crs"],
                 )
             ).reduce(ee.Reducer.mean()).rename('albedo_zonal')
         elif self.zonal_stats == 'median':
@@ -106,7 +108,7 @@ class AlbedoCloudMasked(Layer):
                     spatial_resolution,
                     DEFAULT_SPATIAL_RESOLUTION,
                     kernel_convolution,
-                    bbox_ee["crs"],
+                    ee_rectangle["crs"],
                 )
             ).reduce(ee.Reducer.median()).rename('albedo_zonal')
         else:
@@ -115,7 +117,7 @@ class AlbedoCloudMasked(Layer):
         albedo_zonal_ic = ee.ImageCollection(albedo_zonal)
         data = get_image_collection(
             albedo_zonal_ic,
-            bbox_ee,
+            ee_rectangle,
             spatial_resolution,
             "cloud masked albedo"
         ).albedo_zonal
@@ -123,4 +125,7 @@ class AlbedoCloudMasked(Layer):
         # clamping all values ≥ 1 down to exactly 1, and leaving values < 1 untouched
         data = data.where(data < 1, 1)
 
-        return data
+        # Trim back to original AOI
+        bbox_results = extract_bbox_aoi(data, bbox)
+
+        return bbox_results

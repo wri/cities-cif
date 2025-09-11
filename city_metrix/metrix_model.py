@@ -33,7 +33,8 @@ from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_admin_boundaries, extract_tif_subarea,
                                     create_uri_target_folder, write_json, get_key_from_s3_uri,
                                     get_file_key_from_url, get_bucket_name_from_s3_uri,
-                                    delete_s3_folder_if_exists, delete_s3_file_if_exists, get_file_path_from_uri
+                                    delete_s3_folder_if_exists, delete_s3_file_if_exists, get_file_path_from_uri,
+                                    extract_bbox_aoi
                                     )
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
                                       parse_city_aoi_json, reproject_units, construct_city_aoi_json,
