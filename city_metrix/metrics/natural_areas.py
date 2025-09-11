@@ -6,7 +6,7 @@ from city_metrix.layers import NaturalAreas
 from city_metrix.metrix_model import GeoZone, Metric
 
 
-class NaturalAreasPercent(Metric):
+class NaturalAreas__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
@@ -15,8 +15,8 @@ class NaturalAreasPercent(Metric):
         super().__init__(**kwargs)
 
     def get_metric(self,
-                 geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
         natural_areas = NaturalAreas().groupby(geo_zone).mean()
 

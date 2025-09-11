@@ -387,12 +387,16 @@ def create_fishnet_grid(bbox: GeoExtent,
 
     start_x_coord, start_y_coord, end_x_coord, end_y_coord = _get_bounding_coords(bbox, output_as)
 
-    # Restrict the cell size to something reasonable
+    # Restrict the cell size to something reasonable. It is best to limit the size to minimize invalid grid
+    # definitions and expansion into adjacent UTM zones. As reference, a UTM zone at the equator is ~670,000 m.
+    # Assuming 1 km tile size, then 1,000 cells would equal 1,000,000 m grid width - so a 1000 cell limit is
+    # somewhat larger than one UTM zone.
+    maximum_grid_side_count = 1000
     x_cell_count = math.floor((end_x_coord - start_x_coord) / x_tile_side_units)
     y_cell_count = math.floor((end_y_coord - start_y_coord) / y_tile_side_units)
-    if x_cell_count > 100:
+    if x_cell_count > maximum_grid_side_count:
         raise ValueError('Failure. Grid would have too many cells along the x axis.')
-    if y_cell_count > 100:
+    if y_cell_count > maximum_grid_side_count:
         raise ValueError('Failure. Grid would have too many cells along the y axis.')
 
     geom_array = []
@@ -690,7 +694,7 @@ class LayerGroupBy:
             out_shape = (snap_to.rio.height, snap_to.rio.width)
 
             # Prepare the geometries and values for rasterization
-            shapes = [(geom, value) for geom, value in zip(reproj_gdf.geometry, reproj_gdf['index'])]
+            shapes = [(geom, value) for geom, value in zip(reproj_gdf.geometry, reproj_gdf.index)]
 
             # Perform rasterization
             raster1 = rasterize(
@@ -1038,6 +1042,8 @@ class Metric():
 
         zones = geo_zone.zones
         if isinstance(result_metric, pd.DataFrame) and 'zone' in result_metric.columns:
+            zones['index'] = zones['index'].astype(float)
+            result_metric['zone'] = result_metric['zone'].astype(float)
             results_metric_df = pd.merge(zones, result_metric, left_on='index', right_on='zone', how='left')
             if 'metric_id' not in results_metric_df.columns:
                 results_metric_df = results_metric_df.assign(metric_id=feature_id)
