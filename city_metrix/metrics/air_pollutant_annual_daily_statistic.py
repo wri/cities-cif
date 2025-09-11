@@ -3,6 +3,7 @@ from typing import Union
 from city_metrix.constants import CSV_FILE_EXTENSION
 from geopandas import GeoDataFrame, GeoSeries
 import numpy as np
+import xarray as xr
 import pandas as pd
 from affine import Affine
 
@@ -12,9 +13,6 @@ from city_metrix.metrix_model import Metric, GeoExtent, GeoZone
 SUPPORTED_SPECIES = [CamsSpecies.CO, CamsSpecies.NO2, CamsSpecies.O3, CamsSpecies.PM10, CamsSpecies.PM25, CamsSpecies.SO2]
 
 class _CamsAnnual__Tonnes():
-    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
 
     def __init__(self, species, statistic, year):
         self.statistic = statistic
