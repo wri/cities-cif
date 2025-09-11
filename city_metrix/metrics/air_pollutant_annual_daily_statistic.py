@@ -3,6 +3,7 @@ from typing import Union
 from city_metrix.constants import CSV_FILE_EXTENSION
 from geopandas import GeoDataFrame, GeoSeries
 import numpy as np
+import pandas as pd
 from affine import Affine
 
 from city_metrix.layers import Cams, CamsSpecies
@@ -10,19 +11,20 @@ from city_metrix.metrix_model import Metric, GeoExtent, GeoZone
 
 SUPPORTED_SPECIES = [CamsSpecies.CO, CamsSpecies.NO2, CamsSpecies.O3, CamsSpecies.PM10, CamsSpecies.PM25, CamsSpecies.SO2]
 
-class CamsAnnual__Tonnes():
+class _CamsAnnual__Tonnes():
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, species=[], statistic='mean', year=2023):
+    def __init__(self, species, statistic, year):
         self.statistic = statistic
         self.species = species
         self.year = year
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                 spatial_resolution:int = None) -> xr.DataArray:
+        bbox = GeoExtent(geo_zone).as_geographic_bbox()
         cams = Cams(start_date=f'{self.year}-01-01', end_date=f'{self.year}-12-31', species=self.species).get_data(bbox)
         cams_daily = cams.resample({'valid_time': '1D'}).mean()
 
@@ -40,42 +42,86 @@ class CamsAnnual__Tonnes():
         cams_annual.rio.write_transform(transform, inplace=True)
         cams_annual.rio.write_crs("EPSG:4326", inplace=True)
         cams_annual = cams_annual.rio.reproject(bbox.as_utm_bbox().crs)
-
-        # var_names = cams_annual.coords["variable"].values
-        # values = cams_annual.values[:, 0, 0]
-        # var_dict = dict(zip(var_names, values))
-    
         return cams_annual
 
-class AirPollutant__AnnualDailyStatistic(Metric):
+class AirPollutant_AnnualDailyMean__Tonnes(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["species", "year"]
 
     def __init__(self,
                  species=[],
-                 year=2023,
+                 year=2024,
+                  **kwargs):
+        super().__init__(**kwargs)
+        self.species = species
+        self.year = year
+        self.unit = 'tonnes'
+
+    def get_metric(self,
+                 geo_zone: GeoZone,
+                 spatial_resolution:int = None) -> pd.Series:
+        bbox = GeoExtent(geo_zone)
+        cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic=[self.statistic, 'mean'][int(self.statistic=='cost')], year=self.year).get_metric(geo_zone)
+        if self.species:
+            requested_species = self.species
+        else:
+            requested_species = SUPPORTED_SPECIES
+        means = np.mean(np.mean(cams_annual, axis=1), axis=1)
+        result = pd.Series({'species': [sp.value['name'] for sp in requested_species], 'value': [float(means.sel(variable=sp.value['eac4_varname']).data) for sp in requested_species])
+        return result
+
+class AirPollutant_AnnualDailyMax__Tonnes(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["species", "year"]
+
+    def __init__(self,
+                 species=[],
+                 year=2024,
                  statistic='mean', # options are mean, max, cost
                   **kwargs):
         super().__init__(**kwargs)
         self.species = species
-        self.statistic = statistic
         self.year = year
+        self.unit = 'tonnes'
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
-        bbox = GeoExtent(zones.total_bounds)
-        cams_annual = CamsAnnual__Tonnes(species=self.species, statistic=[self.statistic, 'mean'][int(self.statistic=='cost')], year=self.year).get_data(bbox)
+                 spatial_resolution:int = None) -> pd.Series:
+        bbox = GeoExtent(geo_zone)
+        cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic=[self.statistic, 'mean'][int(self.statistic=='cost')], year=self.year).get_metric(geo_zone)
+        if self.species:
+            requested_species = self.species
+        else:
+            requested_species = SUPPORTED_SPECIES
+        maxes = np.max(np.max(cams_annual, axis=1), axis=1)
+        result = pd.Series({'species': [sp.value['name'] for sp in requested_species], 'value': [float(maxes.sel(variable=sp.value['eac4_varname']).data) for sp in requested_species])
+        return result
 
-        if self.statistic == 'mean':
-            return np.mean(np.mean(cams_annual, axis=1), axis=1)
-        elif self.statistic == 'max':
-            return np.max(np.max(cams_annual, axis=1), axis=1)
-        else: # statname = 'cost'
-            if self.species:
-                species = self.species
-            else:
-                species = SUPPORTED_SPECIES
-            return np.mean(np.mean(cams_annual, axis=1), axis=1) * [sp.value['cost_per_tonne'] for sp in species]
+class AirPollutant_AnnualDailySocialCost__USD(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["species", "year"]
 
+    def __init__(self,
+                 species=[],
+                 year=2024,
+                  **kwargs):
+        super().__init__(**kwargs)
+        self.species = species
+        self.year = year
+        self.unit = 'US dollars'
+
+    def get_metric(self,
+                 geo_zone: GeoZone,
+                 spatial_resolution:int = None) -> pd.Series:
+        bbox = GeoExtent(geo_zone)
+        cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic=[self.statistic, 'mean'][int(self.statistic=='cost')], year=self.year).get_metric(geo_zone)
+        if self.species:
+            requested_species = self.species
+        else:
+            requested_species = SUPPORTED_SPECIES
+        means = np.mean(np.mean(cams_annual, axis=1), axis=1)
+        result = pd.Series({'species': [sp.value['name'] for sp in requested_species], 'value': [float(maxes.sel(variable=sp.value['eac4_varname']).data) * sp.value['cost_per_tonne'] for sp in requested_species])
+        return result
