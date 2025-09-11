@@ -23,7 +23,7 @@ class AqueductFlood(Layer):
         return_period_r: default "rp00100"
                          options ["rp00002", "rp00005", "rp00010", "rp00025", "rp00050", "rp00100", "rp00250", "rp00500", "rp01000"]
                          note: return period 1.5 is only available for certain settings.
-        end_year: default 2050
+        year: default 2050
                   options [1980, 2030, 2050, 2080]
                   note: If 1980, may need to remove some filters that are not available as properties in those images.
         climate: default "rcp4p5"
@@ -34,11 +34,11 @@ class AqueductFlood(Layer):
                                  options [5, 50]
     """
 
-    def __init__(self, return_period_c="rp0100", return_period_r="rp00100", end_year=2050, climate="rcp4p5", subsidence='nosub', sea_level_rise_scenario=50, report_threshold=None, **kwargs):
+    def __init__(self, return_period_c="rp0100", return_period_r="rp00100", year=2050, climate="rcp4p5", subsidence='nosub', sea_level_rise_scenario=50, report_threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.return_period_c = return_period_c
         self.return_period_r = return_period_r
-        self.end_year = end_year
+        self.year = year
         self.climate = climate
         self.subsidence = subsidence
         self.sea_level_rise_scenario = sea_level_rise_scenario
@@ -70,7 +70,7 @@ class AqueductFlood(Layer):
 
         coastal_end = (flood_image.filterMetadata("floodtype", "equals", "inuncoast")
                        .filterMetadata("returnperiod", "equals", self.return_period_c)
-                       .filterMetadata("year", "equals", self.end_year)
+                       .filterMetadata("year", "equals", self.year)
                        .filterMetadata("climate", "equals", self.climate)
                        .filterMetadata("subsidence", "equals", self.subsidence)
                        .filterMetadata("sea_level_rise_scenario", "equals", self.sea_level_rise_scenario)
@@ -79,7 +79,7 @@ class AqueductFlood(Layer):
 
         riverine_end = (flood_image.filterMetadata("floodtype", "equals", "inunriver")
                         .filterMetadata("returnperiod", "equals", self.return_period_r)
-                        .filterMetadata("year", "equals", self.end_year)
+                        .filterMetadata("year", "equals", self.year)
                         .filterMetadata("climate", "equals", self.climate)
                         ).reduce(ee.Reducer.mean()).rename('b1')  # average of all 5 models
 
