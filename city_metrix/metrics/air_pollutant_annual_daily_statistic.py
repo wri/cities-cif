@@ -118,7 +118,7 @@ class AirPollutant_AnnualDailySocialCost__USD(Metric):
         if self.species:
             requested_species = self.species
         else:
-            requested_species = SUPPORTED_SPECIES
+            requested_species = [sp for sp in SUPPORTED_SPECIES if not np.isnan(sp.value['cost_per_tonne'])]
         means = np.mean(np.mean(cams_annual, axis=1), axis=1)
         result = pd.DataFrame({'species': [sp.value['name'] for sp in requested_species], 'value': [round(float(means.sel(variable=sp.value['eac4_varname']).data) * sp.value['cost_per_tonne']) for sp in requested_species]})
         return result
