@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Union
-
+import datetime
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import GeoZone, Metric
 from city_metrix.layers import OpenStreetMap, OpenStreetMapClass, WorldPop
@@ -9,10 +9,12 @@ from city_metrix.layers import OpenStreetMap, OpenStreetMapClass, WorldPop
 class HospitalsPerTenThousandResidents__Hospitals(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["year"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, year=datetime.datetime.now().year, **kwargs):
         super().__init__(**kwargs)
+        self.year = year
+        self.unit = 'hospitals'
 
     def get_metric(self,
                  geo_zone: GeoZone,

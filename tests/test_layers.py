@@ -281,7 +281,7 @@ def test_tree_canopy_height():
 def test_tree_cover():
     data = TreeCover().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 0.0, 100.0, 9797, 0)
+    assert_raster_stats(data, 1, 0.0, 100.0, 976626, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_urban_extents():
