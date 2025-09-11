@@ -1,22 +1,23 @@
 import pandas as pd
 from typing import Union
-
+import datetime
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import Metric, GeoZone
-from city_metrix.layers import TreeCanopyHeight, UrbanLandUse
+from city_metrix.layers import TreeCanopyHeight, EsaWorldCover, EsaWorldCoverClass
 
 MIN_TREE_HEIGHT = 3
-ULU_INFORMAL_CLASS = 3
 
 
 class BuiltAreaWithoutTreeCover__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height", "year"]
 
-    def __init__(self, height=MIN_TREE_HEIGHT, **kwargs):
+    def __init__(self, height=MIN_TREE_HEIGHT, year=2025, **kwargs):
         super().__init__(**kwargs)
         self.height = height
+        self.year = year
+        self.unit = 'percent'
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -30,19 +31,18 @@ class BuiltAreaWithoutTreeCover__Percent(Metric):
 
         tree_canopy_height = TreeCanopyHeight(height=self.height)
 
-        # informal_only: urban land use class 3 for Informal
-        urban_land_use = UrbanLandUse(ulu_class=ULU_INFORMAL_CLASS)
+        built_up_land = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
 
-        built_land = urban_land_use.groupby(geo_zone).count()
-        built_land_with_tree_cover = urban_land_use.mask(tree_canopy_height).groupby(geo_zone).count()
+        built_land_count = built_up_land.groupby(geo_zone).count()
+        built_land_with_tree_cover_count = built_up_land.mask(tree_canopy_height).groupby(geo_zone).count()
 
-        if not isinstance(built_land_with_tree_cover, (int, float)):
-            built_land_with_tree_cover = built_land_with_tree_cover.fillna(0)
+        if not isinstance(built_land_with_tree_cover_count, (int, float)):
+            built_land_with_tree_cover_count = built_land_with_tree_cover_count.fillna(0)
 
-        if isinstance(built_land_with_tree_cover, pd.DataFrame):
-            result = built_land_with_tree_cover.copy()
-            result['value'] = 100 * (1 - (built_land_with_tree_cover['value'] / built_land['value']))
+        if isinstance(built_land_with_tree_cover_count, pd.DataFrame):
+            result = built_land_with_tree_cover_count.copy()
+            result['value'] = 100 * (1 - (built_land_with_tree_cover_count['value'] / built_land_count['value']))
         else:
-            result = 100 * (1 - (built_land_with_tree_cover / built_land))
+            result = 100 * (1 - (built_land_with_tree_cover_count / built_land_count))
 
         return result

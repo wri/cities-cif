@@ -3,7 +3,7 @@ import ee
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
-DEFAULT_SPATIAL_RESOLUTION = 10
+DEFAULT_SPATIAL_RESOLUTION = 1
 
 class TreeCover(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION

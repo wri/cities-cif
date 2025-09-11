@@ -19,6 +19,7 @@ class TreeCarbonFlux__Tonnes(Metric):
 
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
+        self.unit = 'tonnes'
 
     def get_metric(self,
                    geo_zone: GeoZone,
