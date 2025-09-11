@@ -60,7 +60,7 @@ class AirPollutant_AnnualDailyMean__Tonnes(Metric):
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> pd.Series:
         bbox = GeoExtent(geo_zone)
-        cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic=[self.statistic, 'mean'][int(self.statistic=='cost')], year=self.year).get_metric(geo_zone)
+        cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic='mean', year=self.year).get_metric(geo_zone)
         if self.species:
             requested_species = self.species
         else:
@@ -77,7 +77,6 @@ class AirPollutant_AnnualDailyMax__Tonnes(Metric):
     def __init__(self,
                  species=[],
                  year=2024,
-                 statistic='mean', # options are mean, max, cost
                   **kwargs):
         super().__init__(**kwargs)
         self.species = species
@@ -88,7 +87,7 @@ class AirPollutant_AnnualDailyMax__Tonnes(Metric):
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> pd.Series:
         bbox = GeoExtent(geo_zone)
-        cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic=[self.statistic, 'mean'][int(self.statistic=='cost')], year=self.year).get_metric(geo_zone)
+        cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic='max', year=self.year).get_metric(geo_zone)
         if self.species:
             requested_species = self.species
         else:
@@ -115,7 +114,7 @@ class AirPollutant_AnnualDailySocialCost__USD(Metric):
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> pd.Series:
         bbox = GeoExtent(geo_zone)
-        cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic=[self.statistic, 'mean'][int(self.statistic=='cost')], year=self.year).get_metric(geo_zone)
+        cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic='mean', year=self.year).get_metric(geo_zone)
         if self.species:
             requested_species = self.species
         else:
