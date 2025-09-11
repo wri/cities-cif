@@ -96,7 +96,7 @@ class AirPollutant_AnnualDailyMax__Tonnes(Metric):
         else:
             requested_species = SUPPORTED_SPECIES
         maxes = np.max(np.max(cams_annual, axis=1), axis=1)
-        result = pd.Series({'species': [sp.value['name'] for sp in requested_species], 'value': [float(maxes.sel(variable=sp.value['eac4_varname']).data) for sp in requested_species])
+        result = pd.Series({'species': [sp.value['name'] for sp in requested_species], 'value': [float(maxes.sel(variable=sp.value['eac4_varname']).data) for sp in requested_species]})
         return result
 
 class AirPollutant_AnnualDailySocialCost__USD(Metric):
@@ -123,5 +123,5 @@ class AirPollutant_AnnualDailySocialCost__USD(Metric):
         else:
             requested_species = SUPPORTED_SPECIES
         means = np.mean(np.mean(cams_annual, axis=1), axis=1)
-        result = pd.Series({'species': [sp.value['name'] for sp in requested_species], 'value': [float(maxes.sel(variable=sp.value['eac4_varname']).data) * sp.value['cost_per_tonne'] for sp in requested_species])
+        result = pd.Series({'species': [sp.value['name'] for sp in requested_species], 'value': [float(maxes.sel(variable=sp.value['eac4_varname']).data) * sp.value['cost_per_tonne'] for sp in requested_species]})
         return result
