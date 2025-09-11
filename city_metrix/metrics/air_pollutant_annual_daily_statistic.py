@@ -58,7 +58,7 @@ class AirPollutant_AnnualDailyMean__Tonnes(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> pd.Series:
+                 spatial_resolution:int = None) -> pd.DataFrame:
         bbox = GeoExtent(geo_zone)
         cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic='mean', year=self.year).get_metric(geo_zone)
         if self.species:
@@ -66,7 +66,7 @@ class AirPollutant_AnnualDailyMean__Tonnes(Metric):
         else:
             requested_species = SUPPORTED_SPECIES
         means = np.mean(np.mean(cams_annual, axis=1), axis=1)
-        result = pd.Series({'species': [sp.value['name'] for sp in requested_species], 'value': [float(means.sel(variable=sp.value['eac4_varname']).data) for sp in requested_species]})
+        result = pd.DataFrame({'species': [sp.value['name'] for sp in requested_species], 'value': [float(means.sel(variable=sp.value['eac4_varname']).data) for sp in requested_species]})
         return result
 
 class AirPollutant_AnnualDailyMax__Tonnes(Metric):
@@ -85,7 +85,7 @@ class AirPollutant_AnnualDailyMax__Tonnes(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> pd.Series:
+                 spatial_resolution:int = None) -> pd.DataFrame:
         bbox = GeoExtent(geo_zone)
         cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic='max', year=self.year).get_metric(geo_zone)
         if self.species:
@@ -93,7 +93,7 @@ class AirPollutant_AnnualDailyMax__Tonnes(Metric):
         else:
             requested_species = SUPPORTED_SPECIES
         maxes = np.max(np.max(cams_annual, axis=1), axis=1)
-        result = pd.Series({'species': [sp.value['name'] for sp in requested_species], 'value': [float(maxes.sel(variable=sp.value['eac4_varname']).data) for sp in requested_species]})
+        result = pd.DataFrame({'species': [sp.value['name'] for sp in requested_species], 'value': [float(maxes.sel(variable=sp.value['eac4_varname']).data) for sp in requested_species]})
         return result
 
 class AirPollutant_AnnualDailySocialCost__USD(Metric):
@@ -112,7 +112,7 @@ class AirPollutant_AnnualDailySocialCost__USD(Metric):
 
     def get_metric(self,
                  geo_zone: GeoZone,
-                 spatial_resolution:int = None) -> pd.Series:
+                 spatial_resolution:int = None) -> pd.DataFrame:
         bbox = GeoExtent(geo_zone)
         cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic='mean', year=self.year).get_metric(geo_zone)
         if self.species:
@@ -120,5 +120,5 @@ class AirPollutant_AnnualDailySocialCost__USD(Metric):
         else:
             requested_species = SUPPORTED_SPECIES
         means = np.mean(np.mean(cams_annual, axis=1), axis=1)
-        result = pd.Series({'species': [sp.value['name'] for sp in requested_species], 'value': [float(maxes.sel(variable=sp.value['eac4_varname']).data) * sp.value['cost_per_tonne'] for sp in requested_species]})
+        result = pd.DataFrame({'species': [sp.value['name'] for sp in requested_species], 'value': [float(means.sel(variable=sp.value['eac4_varname']).data) * sp.value['cost_per_tonne'] for sp in requested_species]})
         return result
