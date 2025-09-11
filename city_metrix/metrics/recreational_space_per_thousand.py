@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Union
-
+import datetime
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.layers import WorldPop, OpenStreetMap, OpenStreetMapClass
 from city_metrix.metrix_model import Metric
@@ -12,10 +12,12 @@ DEFAULT_SPATIAL_RESOLUTION = 100
 class RecreationalSpacePerThousand__HectaresPerThousandPersons(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["year"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, year=datetime.datetime.now().year, **kwargs):
         super().__init__(**kwargs)
+        self.year = year
+        self.unit = 'hectares per thousand persons'
 
     def get_metric(self,
                    geo_zone: GeoZone,
