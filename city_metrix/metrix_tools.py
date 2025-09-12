@@ -163,3 +163,22 @@ def is_date(string):
         return True
     except ValueError:
         return False
+
+
+def is_openurban_available_for_city(city_id):
+    import ee
+    import xee
+
+    ic = ee.ImageCollection("projects/wri-datalab/cities/OpenUrban/OpenUrban_LULC")
+    store = xee.EarthEngineStore(ic, ee_init_if_necessary=True)
+
+    is_available = False
+    for image_id in store.image_ids:
+        # Split the string by '/' and take the last part
+        last_part = image_id.split('/')[-1]
+        # Take the part after the country code and split by '_' to get the city name
+        city_name = last_part.split('_')[0]
+        if city_name == city_id:
+            is_available = True
+            break
+    return is_available

@@ -1,5 +1,6 @@
 import numpy as np
 
+from city_metrix.metrix_tools import is_openurban_available_for_city
 from .conftest import (
     IDN_JAKARTA_TILED_LARGE_ZONES,
     IDN_JAKARTA_TILED_ZONES,
@@ -66,6 +67,17 @@ def test_group_by_layer():
     assert all([count == {1: 50.0, 2: 50.0} for count in counts])
 
 
+def test_is_openurban_available_for_city():
+    # True condition
+    test_city = 'BRA-Teresina'
+    is_available = is_openurban_available_for_city(city_id=test_city)
+    assert is_available
+    # False condition
+    test_city = 'ZZZ-Kenntown'
+    is_available = is_openurban_available_for_city(city_id=test_city)
+    assert is_available == False
+
+
 def test_group_by_large_layer():
     counts = (
         MockLargeLayer()
@@ -79,3 +91,4 @@ def convert_to_series(data):
         data = data.drop(columns=['zone'])
 
     return data.squeeze()
+
