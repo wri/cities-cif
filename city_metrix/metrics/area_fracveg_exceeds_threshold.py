@@ -10,7 +10,7 @@ class AreaFractionalVegetationExceedsThreshold__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     CUSTOM_TILE_SIDE_M = 10000
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["min_threshold", "year"]
+    MINOR_NAMING_ATTS = ["min_threshold"]
 
     def __init__(self, min_threshold=50, year=2024, **kwargs):
         super().__init__(**kwargs)
