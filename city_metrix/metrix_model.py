@@ -1397,7 +1397,6 @@ class Metric():
                     results_metric_df = results_metric_df.assign(metric_id=feature_id)
                 result_metric = _standardize_city_metrics_columns(results_metric_df, None)
 
-
             write_metric(result_metric, target_uri, self.OUTPUT_FILE_FORMAT)
         else:
             print(f">>>Metric {self.metric.__class__.__name__} is already cached ..")
@@ -1462,7 +1461,10 @@ class Metric():
 
 
 def _standardize_city_metrics_columns(metrics_df, supplemental_column):
-    columns = ['geo_id', 'geo_name', 'geo_level', 'metric_id', 'value']
+    if 'value' in metrics_df.columns:
+        columns = ['geo_id', 'geo_name', 'geo_level', 'metric_id', 'value']
+    else:
+        columns = ['geo_id', 'geo_name', 'geo_level', 'metric_id']
     if supplemental_column is not None:
         columns.append(supplemental_column)
 
