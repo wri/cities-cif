@@ -14,16 +14,18 @@ from city_metrix.layers import (
 class CanopyCoveredPopulation__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_agesex_classes", "height", "informal_only", "year"]
 
     def __init__(
-        self, worldpop_agesex_classes=[], height=3, percentage=30, informal_only=False, **kwargs
+        self, worldpop_agesex_classes=[], height=3, percentage=30, informal_only=False, year=2025, **kwargs
     ):
         super().__init__(**kwargs)
         self.worldpop_agesex_classes = worldpop_agesex_classes
         self.height = height
         self.percentage = percentage
         self.informal_only = informal_only
+        self.year = year
+        self.unit = 'percent'
 
     def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
@@ -55,20 +57,21 @@ class CanopyCoveredPopulation__Percent(Metric):
 class CanopyCoveredPopulationChildren__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height", "percentage", "year"]
 
-    def __init__(self, height=3, percentage=30, informal_only=False, **kwargs):
+    def __init__(self, height=3, percentage=30, year=2025, **kwargs):
         super().__init__(**kwargs)
         self.height = height
         self.percentage = percentage
-        self.informal_only = informal_only
+        self.year = year
+        self.unit = 'percent'
 
     def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         percent_canopy_covered_children = CanopyCoveredPopulation__Percent(
             worldpop_agesex_classes=WorldPopClass.CHILDREN,
             height=self.height,
             percentage=self.percentage,
-            informal_only=self.informal_only,
+            informal_only=False,
         )
 
         return percent_canopy_covered_children.get_metric(geo_zone=geo_zone)
@@ -77,20 +80,21 @@ class CanopyCoveredPopulationChildren__Percent(Metric):
 class CanopyCoveredPopulationElderly__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height", "percentage", "year"]
 
-    def __init__(self, height=3, percentage=30, informal_only=False, **kwargs):
+    def __init__(self, height=3, percentage=30, year=2025, **kwargs):
         super().__init__(**kwargs)
         self.height = height
         self.percentage = percentage
-        self.informal_only = informal_only
+        self.year = year
+        self.unit = 'percent'
 
     def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         percent_canopy_covered_elderly = CanopyCoveredPopulation__Percent(
             worldpop_agesex_classes=WorldPopClass.ELDERLY,
             height=self.height,
             percentage=self.percentage,
-            informal_only=self.informal_only,
+            informal_only=False,
         )
 
         return percent_canopy_covered_elderly.get_metric(geo_zone=geo_zone)
@@ -99,20 +103,21 @@ class CanopyCoveredPopulationElderly__Percent(Metric):
 class CanopyCoveredPopulationFemale__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height", "percentage", "year"]
 
-    def __init__(self, height=3, percentage=30, informal_only=False, **kwargs):
+    def __init__(self, height=3, percentage=30, year=2025, **kwargs):
         super().__init__(**kwargs)
         self.height = height
         self.percentage = percentage
-        self.informal_only = informal_only
+        self.year = year
+        self.unit = 'percent'
 
     def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         percent_canopy_covered_female = CanopyCoveredPopulation__Percent(
             worldpop_agesex_classes=WorldPopClass.FEMALE,
             height=self.height,
             percentage=self.percentage,
-            informal_only=self.informal_only,
+            informal_only=False,
         )
 
         return percent_canopy_covered_female.get_metric(geo_zone=geo_zone)
@@ -121,17 +126,18 @@ class CanopyCoveredPopulationFemale__Percent(Metric):
 class CanopyCoveredPopulationInformal__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height", "percentage", "year"]
 
-    def __init__(self, worldpop_agesex_classes=[], height=3, percentage=30, **kwargs):
+    def __init__(self, height=3, percentage=30, year=2025, **kwargs):
         super().__init__(**kwargs)
-        self.worldpop_agesex_classes = worldpop_agesex_classes
         self.height = height
         self.percentage = percentage
+        self.year = year
+        self.unit = 'percent'
 
     def get_metric(self, geo_zone: GeoZone, spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         percent_canopy_covered_informal = CanopyCoveredPopulation__Percent(
-            worldpop_agesex_classes=self.worldpop_agesex_classes,
+            worldpop_agesex_classes=[],
             height=self.height,
             percentage=self.percentage,
             informal_only=True,

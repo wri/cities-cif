@@ -16,6 +16,7 @@ class MeanPM2P5Exposure__MicrogramsPerCubicMeter(Metric):
                  **kwargs):
         super().__init__(**kwargs)
         self.informal_only = informal_only
+        self.unit = 'micrograms per cubic meter'
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -44,6 +45,7 @@ class MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(Metric):
         super().__init__(**kwargs)
         self.worldpop_agesex_classes = worldpop_agesex_classes
         self.informal_only = informal_only
+        self.unit = 'micrograms per cubic meter'
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -66,6 +68,7 @@ class MeanPM2P5ExposurePopWeightedChildren__MicrogramsPerCubicMeter(Metric):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.unit = 'micrograms per cubic meter'
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -83,6 +86,7 @@ class MeanPM2P5ExposurePopWeightedElderly__MicrogramsPerCubicMeter(Metric):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.unit = 'micrograms per cubic meter'
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -100,6 +104,7 @@ class MeanPM2P5ExposurePopWeightedFemale__MicrogramsPerCubicMeter(Metric):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.unit = 'micrograms per cubic meter'
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -117,6 +122,7 @@ class MeanPM2P5ExposurePopWeightedInformal__MicrogramsPerCubicMeter(Metric):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.unit = 'micrograms per cubic meter'
 
     def get_metric(self,
                    geo_zone: GeoZone,

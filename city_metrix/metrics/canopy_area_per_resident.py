@@ -11,17 +11,20 @@ class CanopyAreaPerResident__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     CUSTOM_TILE_SIDE_M = 5000
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height", "agesex_classes", "informal_only", "year"]
 
     def __init__(self,
                  agesex_classes=[],
                  height=3,
                  informal_only=False,
+                 year=2025,
                  **kwargs):
         super().__init__(**kwargs)
         self.agesex_classes = agesex_classes
         self.height = height
         self.informal_only = informal_only
+        self.year = year
+        self.unit = 'square meters'
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -57,11 +60,13 @@ class CanopyAreaPerResident__SquareMeters(Metric):
 class CanopyAreaPerResidentChildren__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height", "year"]
 
-    def __init__(self, height=3, **kwargs):
+    def __init__(self, height=3, year=2025, **kwargs):
         super().__init__(**kwargs)
         self.height = height
+        self.year = year
+        self.unit = 'square meters'
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -75,11 +80,13 @@ class CanopyAreaPerResidentChildren__SquareMeters(Metric):
 class CanopyAreaPerResidentElderly__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height", "year"]
 
-    def __init__(self, height=3, **kwargs):
+    def __init__(self, height=3, year=2025, **kwargs):
         super().__init__(**kwargs)
         self.height = height
+        self.year = year
+        self.unit = 'square meters'
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -93,11 +100,13 @@ class CanopyAreaPerResidentElderly__SquareMeters(Metric):
 class CanopyAreaPerResidentFemale__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height", "year"]
 
-    def __init__(self, height=3, **kwargs):
+    def __init__(self, height=3, year=2025, **kwargs):
         super().__init__(**kwargs)
         self.height = height
+        self.year=year
+        self.unit = 'square meters'
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -111,11 +120,13 @@ class CanopyAreaPerResidentFemale__SquareMeters(Metric):
 class CanopyAreaPerResidentInformal__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["height", "year"]
 
-    def __init__(self, height=3, **kwargs):
+    def __init__(self, height=3, year=2025, **kwargs):
         super().__init__(**kwargs)
         self.height = height
+        self.year = year
+        self.unit = 'square meters'
 
     def get_metric(self,
                    geo_zone: GeoZone,
