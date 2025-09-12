@@ -848,7 +848,7 @@ class Layer():
             print(f">>>Layer {self.aggregate.__class__.__name__} is already cached ..")
 
 
-    def retrieve_data(self, bbox: GeoExtent, s3_bucket: str, s3_env: str, aoi_buffer_m:int=None,
+    def retrieve_data(self, bbox: GeoExtent, s3_bucket: str=None, s3_env: str=None, aoi_buffer_m:int=None,
                       city_aoi_subarea: (float, float, float, float)=None, spatial_resolution: int = None) -> Union[
         xr.DataArray, gpd.GeoDataFrame]:
         """
@@ -862,8 +862,12 @@ class Layer():
         :param spatial_resolution: resolution of continuous raster data in meters
         """
 
-        standard_env = standardize_s3_env(s3_env)
-        has_usable_cache = determine_cache_usability(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m, aoi_buffer_m)
+        if s3_bucket is None or s3_env is None:
+            standard_env = None
+            has_usable_cache = False
+        else:
+            standard_env = standardize_s3_env(s3_env)
+            has_usable_cache = determine_cache_usability(s3_bucket, standard_env, self.aggregate, bbox, None, None)
 
         if has_usable_cache:
             result_data, _, _ = retrieve_city_cache(self.aggregate, bbox, aoi_buffer_m, s3_bucket=s3_bucket, output_env=standard_env,
@@ -877,7 +881,7 @@ class Layer():
             result_data = self.aggregate.get_data(bbox=query_geoextent, spatial_resolution=spatial_resolution)
 
             # Opportunistically cache city data
-            if bbox.geo_type == GeoType.CITY and city_aoi_subarea is None:
+            if s3_bucket is not None and bbox.geo_type == GeoType.CITY and city_aoi_subarea is None:
                 target_uri, _, _, _ = build_file_key(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m)
                 self._build_city_cache(bbox, spatial_resolution, target_uri, aoi_buffer_m)
 
@@ -1267,7 +1271,9 @@ class Metric():
     @abstractmethod
     def get_metric(self, geo_zone: GeoZone, spatial_resolution: int) -> Union[pd.Series, pd.DataFrame]:
         """
-        Construct polygonal dataset using baser layers
+        Construct polygonal dataset using baser layers. This is an abstract class to be implemented for each metric.
+        :param geo_zone: a GeoZone object
+        :param spatial_resolution: resolution of continuous raster data in meters
         :return: A rioxarray-format GeoPandas DataFrame
         """
         ...
@@ -1285,7 +1291,7 @@ class Metric():
             print("Can't write output to None path")
             return
 
-        indicator = self.metric.get_metric(geo_zone, spatial_resolution=spatial_resolution)
+        indicator, feature_id = self.metric.retrieve_metric(geo_zone, spatial_resolution=spatial_resolution)
 
         if indicator is None:
             indicator = self._expand_empty_results_to_results_with_null_value(geo_zone)
@@ -1295,16 +1301,17 @@ class Metric():
         if isinstance(indicator, (float, int)):
             indicator = pd.Series([indicator])
 
+        result_df = geo_zone.zones
         if isinstance(indicator, Series):
             indicator.name = 'value'
-
-            result_df = geo_zone.zones
+            indicator_df = pd.concat([result_df, indicator], axis=1)
+        elif isinstance(indicator, pd.DataFrame):
             indicator_df = pd.concat([result_df, indicator], axis=1)
         else:
             indicator_df = indicator
 
-        # if 'metric_id' not in indicator_df.columns:
-        #     indicator_df = indicator_df.assign(metric_id=feature_id)
+        if 'metric_id' not in indicator_df.columns:
+            indicator_df = indicator_df.assign(metric_id=feature_id)
 
         if 'geo_id' in indicator_df.columns:
             indicator_df = _standardize_city_metrics_columns(indicator_df, None)
@@ -1328,7 +1335,7 @@ class Metric():
             print("Can't write output to None path")
             return
 
-        indicator = self.metric.get_metric(geo_zone, spatial_resolution=spatial_resolution)
+        indicator, feature_id = self.metric.retrieve_metric(geo_zone, spatial_resolution=spatial_resolution)
 
         if indicator is None:
             indicator = self._expand_empty_results_to_results_with_null_value(geo_zone)
@@ -1348,8 +1355,8 @@ class Metric():
         else:
             indicator_df = indicator
 
-        # if 'metric_id' not in indicator_df.columns:
-        #     indicator_df = indicator_df.assign(metric_id=feature_id)
+        if 'metric_id' not in indicator_df.columns:
+            indicator_df = indicator_df.assign(metric_id=feature_id)
 
         if 'geo_id' in indicator_df.columns:
             indicator_df = _standardize_city_metrics_columns(indicator_df, 'geometry')
@@ -1401,7 +1408,7 @@ class Metric():
             print(f">>>Metric {self.metric.__class__.__name__} is already cached ..")
 
 
-    def retrieve_metric(self, geo_zone: GeoZone, s3_bucket: str, s3_env: str, spatial_resolution: int = None) -> (
+    def retrieve_metric(self, geo_zone: GeoZone, s3_bucket: str=None, s3_env: str=None, spatial_resolution: int = None) -> (
             tuple)[Union[pd.Series, pd.DataFrame], str]:
         """
         Pulls metric values from S3 cache or from the source, if not already in cache. If values are pulled from the source,
@@ -1412,24 +1419,34 @@ class Metric():
         :param spatial_resolution: resolution of continuous raster data in meters
         """
 
-        if geo_zone.geo_type != GeoType.CITY:
-            raise ValueError("Non-city data cannot be retrieved.")
-
-        standard_env = standardize_s3_env(s3_env)
-        has_usable_cache = determine_cache_usability(s3_bucket, standard_env, self.metric, geo_zone, None, None)
+        if s3_bucket is None:
+            standard_env = None
+            has_usable_cache = False
+        else:
+            standard_env = standardize_s3_env(s3_env)
+            has_usable_cache = determine_cache_usability(s3_bucket, standard_env, self.metric, geo_zone, None, None)
 
         if has_usable_cache:
-            result_metric, _, _ = retrieve_city_cache(self.metric, geo_extent=geo_zone, aoi_buffer_m=None, s3_bucket=s3_bucket,
+            result_metric, feature_id, _ = retrieve_city_cache(self.metric, geo_extent=geo_zone, aoi_buffer_m=None, s3_bucket=s3_bucket,
                                                     output_env=standard_env)
         else:
             target_uri, _, feature_id, _ = build_file_key(s3_bucket, standard_env, self.metric, geo_zone, None)
             result_metric = self.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
 
+            zones = geo_zone.zones
+            if isinstance(result_metric, pd.DataFrame) and 'zone' in result_metric.columns:
+                zones['index'] = zones['index'].astype(float)
+                result_metric['zone'] = result_metric['zone'].astype(float)
+                results_metric_df = pd.merge(zones, result_metric, left_on='index', right_on='zone', how='left')
+                if 'metric_id' not in results_metric_df.columns:
+                    results_metric_df = results_metric_df.assign(metric_id=feature_id)
+                result_metric = _standardize_city_metrics_columns(results_metric_df, None)
+
             # Opportunistically cache city metric
-            if geo_zone.geo_type == GeoType.CITY:
+            if s3_bucket is not None and geo_zone.geo_type == GeoType.CITY:
                 write_metric(result_metric, target_uri, self.OUTPUT_FILE_FORMAT)
 
-        return result_metric
+        return result_metric, feature_id
 
 
     def _expand_empty_results_to_results_with_null_value(self, geo_zone: GeoZone) -> Union[pd.DataFrame, pd.Series]:

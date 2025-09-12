@@ -18,6 +18,8 @@ OUTPUT_RESULTS_FORMAT = 'csv'  # Default for check-in
 # seconds = 1 hour (Duration needed for fractional vegetation)
 SLOW_TEST_TIMEOUT_SECONDS = 3600
 
+TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI # Default for testing
+S3_ENV=DEFAULT_DEVELOPMENT_ENV
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -293,12 +295,12 @@ def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_z
     try:
         if OUTPUT_RESULTS_FORMAT == 'csv':
             os_file_path = prep_output_path(target_folder, 'metric', metric_id)
-            metric_obj.write(geo_zone=geo_zone, target_file_path=os_file_path)
+            metric_obj.write(geo_zone=geo_zone, s3_bucket=TEST_BUCKET, s3_env=S3_ENV, target_file_path=os_file_path)
             file_exists = verify_file_is_populated(os_file_path)
         else:
             metric_name = metric_obj.__class__.__name__
             os_file_path = os.path.join(metric_geojson_path, f'{metric_name}.geojson')
-            metric_obj.write_as_geojson(geo_zone=geo_zone, target_file_path=os_file_path)
+            metric_obj.write_as_geojson(geo_zone=geo_zone, s3_bucket=TEST_BUCKET, s3_env=S3_ENV, target_file_path=os_file_path)
             file_exists = verify_file_is_populated(os_file_path)
 
         assert file_exists, "Test failed since file did not upload to s3"

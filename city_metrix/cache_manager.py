@@ -23,10 +23,14 @@ def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_b
     # Determine if object is a layer or metric
     feature_base_class_name = class_obj.__class__.__bases__[0].__name__
 
-    file_key = get_cached_file_key(feature_base_class_name, s3_bucket, output_env, cache_folder_name, city_id,
-                                   admin_level, feature_id, file_format)
+    if s3_bucket is not None:
+        file_key = get_cached_file_key(feature_base_class_name, s3_bucket, output_env, cache_folder_name, city_id,
+                                       admin_level, feature_id, file_format)
 
-    file_uri = get_cached_file_uri(s3_bucket, file_key, is_custom_object)
+        file_uri = get_cached_file_uri(s3_bucket, file_key, is_custom_object)
+    else:
+        file_key = None
+        file_uri = None
 
     return file_uri, file_key, feature_id, is_custom_object
 
