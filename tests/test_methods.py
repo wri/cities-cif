@@ -76,6 +76,10 @@ def test_is_openurban_available_for_city():
     test_city = 'ZZZ-Kenntown'
     is_available = is_openurban_available_for_city(city_id=test_city)
     assert is_available == False
+    # Two-part city name
+    test_city = 'ZAF-Cape_Town'
+    is_available = is_openurban_available_for_city(city_id=test_city)
+    assert is_available
 
 
 def test_group_by_large_layer():

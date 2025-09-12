@@ -176,9 +176,14 @@ def is_openurban_available_for_city(city_id):
     for image_id in store.image_ids:
         # Split the string by '/' and take the last part
         last_part = image_id.split('/')[-1]
-        # Take the part after the country code and split by '_' to get the city name
-        city_name = last_part.split('_')[0]
+        city_name = _get_city_part_of_openurban_file_name(last_part)
         if city_name == city_id:
             is_available = True
             break
     return is_available
+
+def _get_city_part_of_openurban_file_name(s):
+    import re
+    # This pattern matches an underscore followed by one or more digits
+    return re.sub(r'_\d+', '', s)
+
