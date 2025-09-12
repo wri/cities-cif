@@ -14,7 +14,7 @@ class OpenUrban(Layer):
         super().__init__(**kwargs)
         self.band = band
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution:int=None, resampling_method:str=None, use_ctcm_bounds:bool = False):
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=None, resampling_method:str=None):
 
         buffered_utm_bbox = bbox.buffer_utm_bbox(10)
         ee_rectangle  = buffered_utm_bbox.to_ee_rectangle()
@@ -39,13 +39,11 @@ class OpenUrban(Layer):
                 ulu,
                 ee_rectangle,
                 1,
-                "urban land use",
-                use_ctcm_bounds
+                "urban land use"
             ).lulc
 
         # Trim back to original AOI
-        if use_ctcm_bounds:
-            result_data = extract_bbox_aoi(result_data, bbox)
+        result_data = extract_bbox_aoi(result_data, bbox)
 
         return result_data
 

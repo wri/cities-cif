@@ -23,14 +23,9 @@ def test_acag_pm2p5():
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_albedo_cloud_masked():
-    data = AlbedoCloudMasked().get_data(BBOX, use_ctcm_bounds=True)
-    assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.0127, 0.6554, 9797, 0)
-    assert get_projection_type(data.crs) == ProjectionType.UTM
-    # default bounds clipping
     data = AlbedoCloudMasked().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.0127, 0.6554, 10197, 0)
+    assert_raster_stats(data, 2, 0.0127, 0.6554, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_albedo():
@@ -87,14 +82,9 @@ def test_esa_world_cover():
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_fab_dem():
-    data = FabDEM().get_data(BBOX, use_ctcm_bounds=True)
-    assert np.size(data) > 0
-    assert_raster_stats(data, 1, 1.0, 47.4, 1088, 0)
-    assert get_projection_type(data.crs) == ProjectionType.UTM
-    # default bounds clipping
     data = FabDEM().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 1.0, 50.4, 1155, 0)
+    assert_raster_stats(data, 1, 1.0, 47.4, 1088, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_fractional_vegetation_percent():
@@ -200,14 +190,9 @@ def test_open_street_map():
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_open_urban_map():
-    data = OpenUrban().get_data(BBOX, use_ctcm_bounds=True)
-    assert np.size(data) > 0
-    assert_raster_stats(data, 0, 110, 622, 976626, 0)
-    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
-    # default bounds clipping
     data = OpenUrban().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 0, 110, 622, 1016566, 0)
+    assert_raster_stats(data, 0, 110, 622, 976626, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_overture_buildings():
@@ -223,15 +208,10 @@ def test_overture_buildings_height():
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_overture_buildings_dsm():
-    data = OvertureBuildingsDSM().get_data(BBOX, use_ctcm_bounds=True)
+    data = OvertureBuildingsDSM().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 1.0, 60.28, 976626, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
-    # default bounds clipping -- Too slow for routine test
-    # data = OvertureBuildingsDSM().get_data(BBOX)
-    # assert np.size(data) > 0
-    # assert_raster_stats(data, 1, 1.0, 60.28, 976626, 0)
-    # assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 # TODO add value testing
 def test_protected_areas():
@@ -292,12 +272,13 @@ def test_tree_canopy_cover_mask():
     assert np.size(data) > 0
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
-def test_tree_canopy_height():
-    data = TreeCanopyHeight().get_data(BBOX, use_ctcm_bounds=True)
+def test_tree_canopy_height_for_ctcm():
+    data = TreeCanopyHeightCTCM().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 0.0, 33.0, 976626, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
-    # default bounds clipping
+
+def test_tree_canopy_height():
     data = TreeCanopyHeight().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 0.0, 33.0, 1016566, 0)

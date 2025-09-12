@@ -46,7 +46,7 @@ class AlbedoCloudMasked(Layer):
         return S2filtered
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method: str = DEFAULT_RESAMPLING_METHOD, use_ctcm_bounds:bool = False):
+                 resampling_method: str = DEFAULT_RESAMPLING_METHOD):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
@@ -120,14 +120,12 @@ class AlbedoCloudMasked(Layer):
             ee_rectangle,
             spatial_resolution,
             "cloud masked albedo",
-            use_ctcm_bounds
         ).albedo_zonal
 
         # clamping all values ≥ 1 down to exactly 1, and leaving values < 1 untouched
         result_data = data.where(data < 1, 1)
 
         # Trim back to original AOI
-        if use_ctcm_bounds:
-            result_data = extract_bbox_aoi(result_data, bbox)
+        result_data = extract_bbox_aoi(result_data, bbox)
 
         return result_data

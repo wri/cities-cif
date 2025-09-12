@@ -28,7 +28,7 @@ class FabDEM(Layer):
         resampling_method: interpolation method used by Google Earth Engine. Valid options: ('bilinear', 'bicubic', 'nearest').
     """
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method:str=DEFAULT_RESAMPLING_METHOD, use_ctcm_bounds:bool = False):
+                 resampling_method:str=DEFAULT_RESAMPLING_METHOD):
         
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
@@ -64,14 +64,12 @@ class FabDEM(Layer):
             ee_rectangle,
             spatial_resolution,
             "FAB DEM",
-            use_ctcm_bounds
         ).b1
 
         # Round value to reduce variability
         result_data = data.round(2)
 
         # Trim back to original AOI
-        if use_ctcm_bounds:
-            result_data = extract_bbox_aoi(result_data, bbox)
+        result_data = extract_bbox_aoi(result_data, bbox)
 
         return result_data
