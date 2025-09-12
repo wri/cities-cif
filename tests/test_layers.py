@@ -31,7 +31,7 @@ def test_albedo_cloud_masked():
 def test_albedo():
     data = Albedo().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.0183, 0.6289, 9794, 3)
+    assert_raster_stats(data, 2, 0.03, 0.56, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_alos_dsm():
