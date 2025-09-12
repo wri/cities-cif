@@ -48,7 +48,7 @@ def test_dem_city():
     time.sleep(60)
 
     data = layer_obj.retrieve_data(GEO_EXTENT, s3_bucket= TEST_BUCKET, aoi_buffer_m= CTCM_PADDED_AOI_BUFFER,
-                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=SUB_AREA, spatial_resolution=1)
+                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_subarea=SUB_AREA, spatial_resolution=1)
     assert np.size(data) > 0
     if GEO_EXTENT == GEOEXTENT_TERESINA_URBAN_EXTENT:
         assert_raster_stats(data, 1, 63.5, 96.2, 3071475, 0)
@@ -71,7 +71,7 @@ def test_overture_buildings_dsm_city():
     time.sleep(60)
 
     data = layer_obj.retrieve_data(GEO_EXTENT, s3_bucket= TEST_BUCKET, aoi_buffer_m= CTCM_PADDED_AOI_BUFFER,
-                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=SUB_AREA, spatial_resolution=1)
+                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_subarea=SUB_AREA, spatial_resolution=1)
     assert np.size(data) > 0
     if GEO_EXTENT == GEOEXTENT_TERESINA_URBAN_EXTENT:
         assert_raster_stats(data, 1, 63.5, 96.2, 3071475, 0)
@@ -96,7 +96,7 @@ def test_open_urban_city():
     time.sleep(60)
 
     data = layer_obj.retrieve_data(GEO_EXTENT, s3_bucket= TEST_BUCKET, aoi_buffer_m= CTCM_PADDED_AOI_BUFFER,
-                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=SUB_AREA, spatial_resolution=1)
+                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_subarea=SUB_AREA, spatial_resolution=1)
 
     assert np.size(data) > 0
     if GEO_EXTENT == GEOEXTENT_TERESINA_URBAN_EXTENT:
@@ -120,7 +120,7 @@ def test_tree_canopy_height_city():
     time.sleep(60)
 
     data = layer_obj.retrieve_data(GEO_EXTENT, s3_bucket= TEST_BUCKET, aoi_buffer_m= CTCM_PADDED_AOI_BUFFER,
-                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=SUB_AREA, spatial_resolution=1)
+                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_subarea=SUB_AREA, spatial_resolution=1)
 
     assert np.size(data) > 0
     if GEO_EXTENT == GEOEXTENT_TERESINA_URBAN_EXTENT:
@@ -144,7 +144,7 @@ def test_albedo_cloud_mask_city():
     time.sleep(60)
 
     data = layer_obj.retrieve_data(GEO_EXTENT, s3_bucket= TEST_BUCKET, aoi_buffer_m= CTCM_PADDED_AOI_BUFFER,
-                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=SUB_AREA, spatial_resolution=1)
+                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_subarea=SUB_AREA, spatial_resolution=1)
 
     assert np.size(data) > 0
     if GEO_EXTENT == GEOEXTENT_TERESINA_URBAN_EXTENT:

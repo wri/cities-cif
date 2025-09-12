@@ -222,7 +222,7 @@ class GeoExtent():
         maxy = float(math.floor(max_y))
         source_bounds = (minx, miny, maxx, maxy)
 
-        # Buffer coordinates
+        # Add a buffer so that a larger area is retrieved from GEE and which can later be clearly trimmed off.
         buffer_distance_m = 10
         buf_minx = minx - buffer_distance_m
         buf_miny = miny - buffer_distance_m
@@ -602,18 +602,18 @@ class LayerGroupBy:
     def _zonal_stats_tile(stats_func, tile_gdf, zones, aggregate, layer, masks, spatial_resolution):
         bbox = GeoExtent(tile_gdf)
 
-        aggregate_data = aggregate.retrieve_data(bbox=bbox, s3_bucket=CIF_CACHE_S3_BUCKET_URI, s3_env=DEFAULT_PRODUCTION_ENV,
-                                                         spatial_resolution=spatial_resolution)
+        aggregate_data = aggregate.retrieve_data(bbox=bbox, s3_bucket=CIF_CACHE_S3_BUCKET_URI,
+                                                 s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution)
 
         if isinstance(aggregate_data, xr.DataArray) and aggregate_data.data.size == 0:
             return None
         else:
-            mask_datum = [mask.retrieve_data(bbox=bbox, s3_bucket=CIF_CACHE_S3_BUCKET_URI, s3_env=DEFAULT_PRODUCTION_ENV,
-                                                     spatial_resolution=spatial_resolution) for mask in masks]
+            mask_datum = [mask.retrieve_data(bbox=bbox, s3_bucket=CIF_CACHE_S3_BUCKET_URI,
+                                        s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution) for mask in masks]
 
             if layer is not None:
-                layer_data = layer.retrieve_data(bbox=bbox, s3_bucket=CIF_CACHE_S3_BUCKET_URI, s3_env=DEFAULT_PRODUCTION_ENV,
-                                                         spatial_resolution=spatial_resolution)
+                layer_data = layer.retrieve_data(bbox=bbox, s3_bucket=CIF_CACHE_S3_BUCKET_URI,
+                                            s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution)
             else:
                 layer_data = None
 
@@ -752,7 +752,8 @@ class Layer():
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = None, resampling_method: str = None) -> \
             Union[xr.DataArray, gpd.GeoDataFrame]:
         """
-        Extract the data from the source and return it in a way we can compare to other layers.
+        Extract the data from the source and return it in a way we can compare to other layers. This is an abstract class
+        to be implemented for each layer.
         :param bbox: a tuple of floats representing the bounding box, (min x, min y, max x, max y)
         :param spatial_resolution: resolution of continuous raster data in meters
         :param resampling_method: interpolation method for continuous raster layers (bilinear, bicubic, nearest)
@@ -764,8 +765,8 @@ class Layer():
               tile_side_length: int = None, buffer_size: int = None, length_units: str = None,
               spatial_resolution: int = None, resampling_method: str = None, **kwargs):
         """
-        Write the layer to a path. Does not apply masks.
-        :param bbox: (min x, min y, max x, max y)
+        Write the layer to a path. Does not apply masks. Function is mostly intended for testing purposes.
+        :param bbox: a GeoExtent object
         :param target_file_path: local path to output to
         :param tile_side_length: optional param to tile the results into multiple files specified as tile length on a side
         :param buffer_size: tile buffer distance
@@ -822,9 +823,13 @@ class Layer():
     def cache_city_data(self, bbox: GeoExtent, s3_bucket: str, s3_env: str, aoi_buffer_m:int=None,
                         spatial_resolution: int = None, force_data_refresh: bool = False):
         """
-        Extract the data from the S3 cache otherwise source and return it in a way we can compare to other layers.
-        :param city_aoi: specifies a specific AOI for a city extent that does not match the standard city extent
-        :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
+        Gets data values from source and writes to an S3 bucket if the target does not already exist.
+        :param bbox: a GeoExtent object
+        :param s3_bucket: name of the S3 bucket
+        :param s3_env: name of the S3 environment folder within the bucket
+        :param aoi_buffer_m: AOI buffering size in meters used for writting to S3
+        :param spatial_resolution: resolution of continuous raster data in meters
+        :param force_data_refresh: whether to force data refresh from source
         """
 
         if bbox.geo_type != GeoType.CITY:
@@ -844,11 +849,17 @@ class Layer():
 
 
     def retrieve_data(self, bbox: GeoExtent, s3_bucket: str, s3_env: str, aoi_buffer_m:int=None,
-                      city_aoi_modifier: (float, float, float, float)=None, spatial_resolution: int = None) -> Union[
+                      city_aoi_subarea: (float, float, float, float)=None, spatial_resolution: int = None) -> Union[
         xr.DataArray, gpd.GeoDataFrame]:
         """
-        Extract the data from the S3 cache otherwise source and return it in a way we can compare to other layers.
-        :param force_data_refresh: specifies whether data files cached in S3 can be used for fulfilling the retrieval.
+        Pulls data values from S3 cache or from the source, if not already in cache. If values are pulled from the source,
+        then opportunistically writes the value to the S3 cache.
+        :param bbox: a GeoExtent object
+        :param s3_bucket: name of the S3 bucket
+        :param s3_env: name of the S3 environment folder within the bucket
+        :param aoi_buffer_m: AOI buffering size in meters used for writting to S3
+        :param city_aoi_subarea: the bounds of a sub-area within a city extent
+        :param spatial_resolution: resolution of continuous raster data in meters
         """
 
         standard_env = standardize_s3_env(s3_env)
@@ -856,17 +867,17 @@ class Layer():
 
         if has_usable_cache:
             result_data, _, _ = retrieve_city_cache(self.aggregate, bbox, aoi_buffer_m, s3_bucket=s3_bucket, output_env=standard_env,
-                                                    city_aoi_modifier=city_aoi_modifier)
+                                                    city_aoi_subarea=city_aoi_subarea)
         else:
-            if city_aoi_modifier is None:
+            if city_aoi_subarea is None:
                 query_geoextent = bbox
             else:
-                query_geoextent = GeoExtent(bbox=city_aoi_modifier, crs=bbox.crs)
+                query_geoextent = GeoExtent(bbox=city_aoi_subarea, crs=bbox.crs)
 
             result_data = self.aggregate.get_data(bbox=query_geoextent, spatial_resolution=spatial_resolution)
 
             # Opportunistically cache city data
-            if bbox.geo_type == GeoType.CITY and city_aoi_modifier is None:
+            if bbox.geo_type == GeoType.CITY and city_aoi_subarea is None:
                 target_uri, _, _, _ = build_file_key(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m)
                 self._build_city_cache(bbox, spatial_resolution, target_uri, aoi_buffer_m)
 
@@ -1265,11 +1276,10 @@ class Metric():
     def write(self, geo_zone: GeoZone, target_file_path: str = None,
               spatial_resolution: int = None, **kwargs):
         """
-        Write the metric to a path. Does not apply masks.
+        Write the metric to a path. Does not apply masks. Mostly intened for testing.
         :param geo_zone: a GeoZone object
         :param target_file_path: local or s3 path to output to
         :param spatial_resolution: resolution of continuous raster data in meters
-        :param force_data_refresh: forces layer data to be pulled from source instead of cache
         """
         if target_file_path is None:
             print("Can't write output to None path")
@@ -1307,10 +1317,11 @@ class Metric():
 
     def write_as_geojson(self, geo_zone: GeoZone, target_file_path: str = None,
                          spatial_resolution: int = None, **kwargs):
-
         """
-        Write the metric to a path. Does not apply masks.
-        :return:
+        Write the metric to a path. Does not apply masks. Intended for testing purposes.
+        :param geo_zone: a GeoZone object
+        :param target_file_path: local or s3 path to output to
+        :param spatial_resolution: resolution of continuous raster data in meters
         """
 
         if target_file_path is None:
@@ -1353,6 +1364,14 @@ class Metric():
 
     def cache_city_metric(self, geo_zone: GeoZone, s3_bucket: str, s3_env: str, spatial_resolution: int = None,
                           force_data_refresh: bool = False) -> tuple[Union[pd.Series, pd.DataFrame], str]:
+        """
+        Gets metric values from source(s) and writes to an S3 bucket if the target does not already exist.
+        :param geo_zone: a GeoZone object
+        :param s3_bucket: name of the S3 bucket
+        :param s3_env: name of the S3 environment folder within the bucket
+        :param spatial_resolution: resolution of continuous raster data in meters
+        :param force_data_refresh: whether to force data refresh from source
+        """
 
         if geo_zone.geo_type != GeoType.CITY:
             raise ValueError("Non-city data cannot be cached.")
@@ -1384,6 +1403,14 @@ class Metric():
 
     def retrieve_metric(self, geo_zone: GeoZone, s3_bucket: str, s3_env: str, spatial_resolution: int = None) -> (
             tuple)[Union[pd.Series, pd.DataFrame], str]:
+        """
+        Pulls metric values from S3 cache or from the source, if not already in cache. If values are pulled from the source,
+        then opportunistically writes the value to the S3 cache.
+        :param geo_zone: a GeoZone object
+        :param s3_bucket: name of the S3 bucket
+        :param s3_env: name of the S3 environment folder within the bucket
+        :param spatial_resolution: resolution of continuous raster data in meters
+        """
 
         if geo_zone.geo_type != GeoType.CITY:
             raise ValueError("Non-city data cannot be retrieved.")

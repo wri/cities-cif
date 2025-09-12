@@ -37,7 +37,7 @@ def test_openurban_city_teresina():
     time.sleep(60)
 
     data = layer_obj.retrieve_data(geo_extent, s3_bucket= TEST_BUCKET, aoi_buffer_m= AOI_BUFFER_M,
-                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=TERESINA_CITY_SUB_AREA, spatial_resolution=1)
+                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_subarea=TERESINA_CITY_SUB_AREA, spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'{OUTPUT_FILE_ROOT}/{geo_extent.city_id}_openurban_test_teresina.tif', GTIFF_FILE_EXTENSION)
 
@@ -58,7 +58,7 @@ def test_openurban_city_florianopolis():
     time.sleep(60)
 
     data = layer_obj.retrieve_data(geo_extent, s3_bucket= TEST_BUCKET, aoi_buffer_m= AOI_BUFFER_M,
-                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_modifier=FLORIANOPOLIS_CITY_SUB_AREA,
+                                   s3_env=DEFAULT_DEVELOPMENT_ENV, city_aoi_subarea=FLORIANOPOLIS_CITY_SUB_AREA,
                                    spatial_resolution=1)
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'{OUTPUT_FILE_ROOT}/{geo_extent.city_id}_openurban_test_florianopolis.tif', GTIFF_FILE_EXTENSION)

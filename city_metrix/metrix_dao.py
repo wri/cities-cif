@@ -145,17 +145,17 @@ def _is_s3_folder_or_file(uri):
     return None
 
 
-def read_geotiff_subarea_from_cache(file_uri, city_aoi_modifier, utm_crs):
+def read_geotiff_subarea_from_cache(file_uri, city_aoi_subarea, utm_crs):
     import json
     import xarray as xr
     from shapely.geometry import box
 
-    query_bounds = box(*city_aoi_modifier)
+    query_bounds = box(*city_aoi_subarea)
     s3_bucket, file_key = _get_uri_pars(file_uri)
 
     object_type = _is_s3_folder_or_file(file_uri)
     if object_type == 'file':
-        subarea_da = _get_sub_area(s3_bucket, file_key, city_aoi_modifier, 0, utm_crs)
+        subarea_da = _get_sub_area(s3_bucket, file_key, city_aoi_subarea, 0, utm_crs)
     else:
         # Load geotiff_index.json from S3
         index_key = f"{file_key}/geotiff_index.json"
@@ -182,7 +182,7 @@ def read_geotiff_subarea_from_cache(file_uri, city_aoi_modifier, utm_crs):
 
             for item in matching_items:
                 tile_key = item["key"]
-                da = _get_sub_area(s3_bucket, tile_key, city_aoi_modifier, 0, crs_str)
+                da = _get_sub_area(s3_bucket, tile_key, city_aoi_subarea, 0, crs_str)
                 data_arrays.append(da)
 
             # Merge into a single DataArray using outer join
@@ -374,68 +374,14 @@ def _write_netcdf(data, uri):
         _create_local_target_folder(uri_path)
         data.to_netcdf(uri_path)
 
-
 def _create_local_target_folder(uri_path):
     output_path = os.path.dirname(uri_path)
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
-
 def _write_dataset(data, uri):
     _verify_datatype('write_dataset()', data, [xr.Dataset], is_spatial=True)
     raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
-
-# def _write_dataset_to_s3(data, uri):
-#     import xarray as xr
-#     import rasterio
-#     from rasterio.transform import from_origin
-#     import numpy as np
-#
-#     def save_xarray_to_geotiff(ds: xr.Dataset, filename: str, band_dim: str = "band") -> None:
-#         """
-#         Save an Xarray Dataset to a GeoTIFF file with all bands using rasterio.
-#
-#         Parameters:
-#         - ds: xarray.Dataset containing the bands and spatial coordinates
-#         - filename: output path for the GeoTIFF
-#         - band_dim: dimension name in ds representing bands (default: 'band')
-#         """
-#         # Extract coordinates
-#         x = ds['x'].values
-#         y = ds['y'].values
-#
-#         # Calculate pixel size assuming uniform spacing
-#         pixel_size_x = (x[-1] - x[0]) / (len(x) - 1)
-#         pixel_size_y = (y[-1] - y[0]) / (len(y) - 1)
-#
-#         # Define transform (upper-left corner)
-#         transform = from_origin(x[0] - pixel_size_x / 2, y[-1] + pixel_size_y / 2, pixel_size_x, pixel_size_y)
-#
-#         # Number of bands and shape
-#         num_bands = ds[band_dim].shape[0] if band_dim in ds.dims else 1
-#         height = len(y)
-#         width = len(x)
-#
-#         # Open rasterio file for writing
-#         with rasterio.open(
-#                 filename,
-#                 'w',
-#                 driver='GTiff',
-#                 height=height,
-#                 width=width,
-#                 count=num_bands,
-#                 dtype=str(ds[ds.data_vars.keys()[0]].dtype),
-#                 crs=ds.attrs.get('crs', 'EPSG:4326'),  # Use WGS84 by default if CRS not provided
-#                 transform=transform
-#         ) as dst:
-#             # Write each band
-#             for i in range(num_bands):
-#                 if num_bands == 1:
-#                     data = ds[list(ds.data_vars.keys())[0]].values
-#                 else:
-#                     data = ds[list(ds.data_vars.keys())[0]].isel({band_dim: i}).values
-#                 dst.write(data, i + 1)
-#
 
 def _verify_datatype(function_name: str, data, verification_classes: list, is_spatial: bool = False):
     data_datatype_name = type(data).__name__

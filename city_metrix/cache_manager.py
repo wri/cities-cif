@@ -31,7 +31,7 @@ def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_b
     return file_uri, file_key, feature_id, is_custom_object
 
 
-def determine_cache_usability(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m=None, city_aoi_modifier=None):
+def determine_cache_usability(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m=None, city_aoi_subarea=None):
     file_uri, _, _, _ = build_file_key(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m)
 
     if geo_extent.geo_type == GeoType.CITY and check_if_cache_object_exists(file_uri):
@@ -39,14 +39,14 @@ def determine_cache_usability(s3_bucket, output_env, class_obj, geo_extent, aoi_
 
     file_format = class_obj.OUTPUT_FILE_FORMAT
 
-    if city_aoi_modifier is not None and file_format != GTIFF_FILE_EXTENSION:
+    if city_aoi_subarea is not None and file_format != GTIFF_FILE_EXTENSION:
         return True
 
     return False
 
 
 def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m: int, s3_bucket: str, output_env: str,
-                        city_aoi_modifier: tuple[float, float, float, float]=None):
+                        city_aoi_subarea: tuple[float, float, float, float]=None):
 
     file_uri, file_key, feature_id, is_custom_layer = build_file_key(s3_bucket, output_env, class_obj, geo_extent,
                                                                      aoi_buffer_m)
@@ -54,11 +54,11 @@ def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m: int, s3_bucket: str
     # Retrieve from cache
     file_format = class_obj.OUTPUT_FILE_FORMAT
     if file_format == GTIFF_FILE_EXTENSION:
-        if city_aoi_modifier is None:
+        if city_aoi_subarea is None:
             data = read_geotiff_from_cache(file_uri)
         else:
             utm_crs = geo_extent.crs
-            data = read_geotiff_subarea_from_cache(file_uri, city_aoi_modifier, utm_crs)
+            data = read_geotiff_subarea_from_cache(file_uri, city_aoi_subarea, utm_crs)
     elif file_format == GEOJSON_FILE_EXTENSION:
         data = read_geojson_from_cache(file_uri)
     elif file_format == NETCDF_FILE_EXTENSION:
