@@ -23,13 +23,13 @@ class ImperviousSurface(Layer):
 
         # load impervious_surface
         # change_year_index is zero if permeable as of 2018
-        impervious_surface = ee.ImageCollection(ee.Image("Tsinghua/FROM-GLC/GAIA/v10").gt(0))
+        impervious_surface = ee.ImageCollection(ee.Image("Tsinghua/FROM-GLC/GAIA/v10"))
 
         ee_rectangle  = bbox.to_ee_rectangle()
         imperv_surf_ic = ee.ImageCollection(impervious_surface
                                             .filterBounds(ee_rectangle['ee_geometry'])
                                             .select('change_year_index')
-                                            .sum()
+                                            .min()
                                             )
 
         data = get_image_collection(
