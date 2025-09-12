@@ -1193,7 +1193,8 @@ def get_image_collection(
         image_collection: ImageCollection,
         ee_rectangle,
         scale: int,
-        name: str = None
+        name: str = None,
+        use_ctcm_bounds: bool = False
 ) -> xr.DataArray:
     """
     Read an ImageCollection from Google Earth Engine into an xarray DataArray
@@ -1234,12 +1235,16 @@ def get_image_collection(
         del data_var.encoding["scale_factor"]
 
     # clip to ee_rectangle
-    west, south, east, north = ee_rectangle['bounds']
-    longitude_range = slice(west, east)
-    latitude_range = slice(south, north)
-    clipped_data = data.sel(x=longitude_range, y=latitude_range)
+    if use_ctcm_bounds:
+        # Do not clip here, since the results will be clipped in the calling class
+        result_data = data
+    else:
+        west, south, east, north = ee_rectangle['bounds']
+        longitude_range = slice(west, east)
+        latitude_range = slice(south, north)
+        result_data = data.sel(x=longitude_range, y=latitude_range)
 
-    return clipped_data
+    return result_data
 
 
 class Metric():

@@ -34,7 +34,7 @@ class OvertureBuildingsDSM(Layer):
         self.city = city
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method:str=DEFAULT_RESAMPLING_METHOD):
+                 resampling_method:str=DEFAULT_RESAMPLING_METHOD, use_ctcm_bounds:bool = False):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
@@ -112,7 +112,8 @@ class OvertureBuildingsDSM(Layer):
         result_dsm.attrs["crs"] = buffered_dem.rio.crs
 
         # Trim back to original AOI
-        bbox_dsm = extract_bbox_aoi(result_dsm, bbox)
+        if use_ctcm_bounds:
+            result_dsm = extract_bbox_aoi(result_dsm, bbox)
 
-        return bbox_dsm
+        return result_dsm
 

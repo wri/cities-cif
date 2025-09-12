@@ -14,7 +14,7 @@ class OpenUrban(Layer):
         super().__init__(**kwargs)
         self.band = band
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution:int=None, resampling_method:str=None):
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=None, resampling_method:str=None, use_ctcm_bounds:bool = False):
 
         buffered_utm_bbox = bbox.buffer_utm_bbox(10)
         ee_rectangle  = buffered_utm_bbox.to_ee_rectangle()
@@ -35,17 +35,19 @@ class OpenUrban(Layer):
                                      .rename('lulc')
                                      )
 
-            data = get_image_collection(
+            result_data = get_image_collection(
                 ulu,
                 ee_rectangle,
                 1,
-                "urban land use"
+                "urban land use",
+                use_ctcm_bounds
             ).lulc
 
         # Trim back to original AOI
-        bbox_results = extract_bbox_aoi(data, bbox)
+        if use_ctcm_bounds:
+            result_data = extract_bbox_aoi(result_data, bbox)
 
-        return bbox_results
+        return result_data
 
 # Define reclassification
 from enum import Enum

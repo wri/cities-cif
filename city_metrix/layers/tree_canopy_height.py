@@ -22,7 +22,7 @@ class TreeCanopyHeight(Layer):
         self.height = height
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+                 resampling_method=None, use_ctcm_bounds:bool=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
@@ -43,7 +43,8 @@ class TreeCanopyHeight(Layer):
             canopy_ht_ic,
             ee_rectangle,
             spatial_resolution,
-            "tree canopy height"
+            "tree canopy height",
+            use_ctcm_bounds
         ).cover_code
         result_data = data.astype("uint8")
 
@@ -55,6 +56,7 @@ class TreeCanopyHeight(Layer):
         result_data['crs'] = utm_crs
 
         # Trim back to original AOI
-        bbox_results = extract_bbox_aoi(result_data, bbox)
+        if use_ctcm_bounds:
+            result_data = extract_bbox_aoi(result_data, bbox)
 
-        return bbox_results
+        return result_data
