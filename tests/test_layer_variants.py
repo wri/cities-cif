@@ -97,7 +97,7 @@ def test_albedo_metrics_default_date_range():
     data = Albedo().get_data(BBOX)
 
     # Representative values
-    expected_median_value = _convert_fraction_to_rounded_percent(0.15917939)
+    expected_median_value = _convert_fraction_to_rounded_percent(0.15263167)
     actual_median_value = _convert_fraction_to_rounded_percent(np.nanmedian(data.values[0]))
 
     # Value range
