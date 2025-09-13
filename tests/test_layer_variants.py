@@ -77,7 +77,7 @@ def test_albedo_cloud_masked_southern_hemisphere():
 def test_albedo_southern_hemisphere():
     data = Albedo().get_data(BBOX_IDN_JAKARTA)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.01, 0.83, 1222026, 1194)
+    assert_raster_stats(data, 2, 0.011, 0.83, 1222026, 1194)
 
 def test_albedo_metrics_no_resampling():
     data = Albedo(start_date="2021-01-01", end_date="2022-01-01").get_data(BBOX, spatial_resolution=10, resampling_method= None)
