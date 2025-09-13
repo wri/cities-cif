@@ -2,7 +2,6 @@ import math
 import os
 import random
 import shutil
-import subprocess
 import tempfile
 import time
 
@@ -28,20 +27,20 @@ from xrspatial import zonal_stats
 from city_metrix import s3_client
 from city_metrix.cache_manager import retrieve_city_cache, build_file_key, is_cache_usable
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
-    DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI
+    DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI, \
+    MULTI_TILE_TILE_INDEX_FILE
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
-                                    get_city, get_city_boundaries, extract_bbox_aoi,
-                                    create_uri_target_folder, write_json, get_key_from_s3_uri,
-                                    get_file_key_from_url, get_bucket_name_from_s3_uri,
+                                    get_city, get_city_boundaries, create_uri_target_folder, get_file_key_from_url,
+                                    get_bucket_name_from_s3_uri,
                                     delete_s3_folder_if_exists, delete_s3_file_if_exists, get_file_path_from_uri,
-                                    extract_bbox_aoi
+                                    extract_bbox_aoi, write_json, write_file_to_s3
                                     )
 from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
                                       parse_city_aoi_json, reproject_units, construct_city_aoi_json,
                                       standardize_y_dimension_direction)
 
 TILE_NUMBER_PADCOUNT = 5
-MAX_RASTER_BYTES_FOR_SINGLE_FILE_OUTPUT = 500000000 # (Note: Teresina FabDem 544997973)
+MAX_RASTER_BYTES_FOR_SINGLE_FILE_OUTPUT = 500 # 500000000 # (Note: Teresina FabDem 544997973)
 dask.config.set({'logging.distributed': 'warning'})
 
 class GeoZone():
@@ -871,7 +870,7 @@ class Layer():
         return result_data
 
 
-    def _build_city_cache(self, bbox, spatial_resolution, target_uri, aoi_buffer_m:int=None, ):
+    def _build_city_cache(self, bbox, spatial_resolution, target_uri, aoi_buffer_m:int=None):
         if bbox.geo_type == GeoType.CITY:
             if hasattr(self.aggregate, 'PROCESSING_TILE_SIDE_M'):
                 tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
@@ -889,6 +888,7 @@ class Layer():
                 result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
                 delete_s3_file_if_exists(target_uri)
                 delete_s3_folder_if_exists(target_uri)
+                create_uri_target_folder(target_uri)
                 write_layer(result_data, target_uri, self.OUTPUT_FILE_FORMAT)
         else:
             raise ValueError(f"Data not cached for {self.aggregate.__class__.__name__}.  Data can only be cached for CITY geo_extent.")
@@ -902,9 +902,21 @@ class Layer():
             results.append(id)
         return results
 
+    def _compute_aoi_bytes(self, bbox):
+        bbox.polygon.area
 
     def _cache_data_by_fishnet_tiles(self, bbox, tile_side_m, spatial_resolution, target_uri):
         # TODO: Code currently only handles raster data
+
+        # Write individual tiles to cache
+        delete_s3_file_if_exists(target_uri)
+        delete_s3_folder_if_exists(target_uri)
+        create_uri_target_folder(target_uri)
+
+        # Add notice file to folder
+        processing_notice_fil_uri = f"{target_uri}/__NOTICE_SYSTEM_IS_ACTIVELY_PROCESSING_TILES.csv"
+        write_file_to_s3(pd.DataFrame(), processing_notice_fil_uri, CSV_FILE_EXTENSION, keep_index=False)
+
         output_as = ProjectionType.UTM
         utm_box = bbox.as_utm_bbox()
         crs = utm_box.crs
@@ -912,6 +924,15 @@ class Layer():
         fishnet = create_fishnet_grid(bbox=utm_box, tile_side_length=tile_side_m, length_units='meters',
                                       spatial_resolution=spatial_resolution, output_as=output_as)
 
+        fishnet['index'] = fishnet.index
+
+        # Temporary hack for testing
+        # fishnet = fishnet.iloc[:2]
+
+        # Write index
+        _write_grid_index_to_cache(fishnet, target_uri, crs)
+
+        failed_writes = []
         with tempfile.TemporaryDirectory() as temp_dir:
             # TODO Add verification of complete set of files
 
@@ -919,12 +940,12 @@ class Layer():
             processed_count = 0
             retry_count = 0
             expected_result_count = len(fishnet)
-            uncompleted_tiles = fishnet
-            while processed_count < expected_result_count and retry_count < 10:
+            incompleted_tiles = fishnet
+            while processed_count < expected_result_count and retry_count < 3:
                 tasks = []
 
-                for index, tile in uncompleted_tiles.iterrows():
-                    task = dask.delayed(self._process_fishnet_tile)(index, tile, crs, spatial_resolution, temp_dir)
+                for index, tile in incompleted_tiles.iterrows():
+                    task = dask.delayed(self._process_fishnet_tile)(index, tile, crs, spatial_resolution, temp_dir, target_uri)
                     tasks.append(task)
 
                 # run them all in parallel with threads
@@ -934,74 +955,28 @@ class Layer():
                 except Exception as e:
                     print(f"Failed to process a tile fo {target_uri}: {e}. Retrying.")
 
-                missing_tiles = [item for item in unretrieved_tile_ids if not isinstance(item, str)]
-                file_paths = self._get_all_tif_file_paths(temp_dir)
-
                 # Note this check only accounts for tiles that were missed due to dask failures and not download errors
-                processed_count = len(file_paths) + len(missing_tiles)
-                if processed_count == expected_result_count:
-                    uncompleted_tiles = gpd.GeoDataFrame(geometry=[])
+                unretrieved_tile_records = [x for x in unretrieved_tile_ids if x is not None]
+                if len(unretrieved_tile_records) == 0:
+                    incompleted_tiles = gpd.GeoDataFrame(geometry=[])
                 else:
+                    file_paths = self._get_all_tif_file_paths(temp_dir)
                     completed_tile_ids = self._get_completed_tile_ids(file_paths)
-                    uncompleted_tiles = fishnet.drop(completed_tile_ids).drop(missing_tiles)
+                    incompleted_tiles = fishnet.drop(completed_tile_ids)
 
                 retry_count +=1
 
-            # Second, write data to target S3 cache
-            total_file_bytes = get_folder_size(temp_dir)
-            file_paths = self._get_all_tif_file_paths(temp_dir)
-            if total_file_bytes <= MAX_RASTER_BYTES_FOR_SINGLE_FILE_OUTPUT:
-                # Combine tiles into a single file and write to cache
-                import rasterio
-                from rasterio.merge import merge
-                import os
-                try:
-                    src_files_to_mosaic = [rasterio.open(fp) for fp in file_paths]
-                    mosaic, out_trans = merge(src_files_to_mosaic)
+        # Write incompleted tile ids to cache
+        if len(unretrieved_tile_records) > 0:
+            errors_df = pd.DataFrame(unretrieved_tile_records, columns=["index", "error"])
+            errors_df.set_index('index', inplace=True)
+            incomplete_tile_geometry = incompleted_tiles[['index','geometry']]
+            df_joined = pd.merge(errors_df, incomplete_tile_geometry, on='index', how='left')
+            uri = f"{target_uri}/metadata_unretrieved_tiles.csv"
+            write_file_to_s3(df_joined, uri, CSV_FILE_EXTENSION, keep_index=False)
 
-                    # Step 4: Copy metadata and write to new file
-                    out_meta = src_files_to_mosaic[0].meta.copy()
-                    out_meta.update({
-                        "driver": "GTiff",
-                        "height": mosaic.shape[1],
-                        "width": mosaic.shape[2],
-                        "transform": out_trans
-                    })
-
-                    temp_file_path = os.path.join(temp_dir, 'composite_layer.tif')
-                    with rasterio.open(temp_file_path, "w", **out_meta) as dest:
-                        dest.write(mosaic)
-
-                    # write mosaic to cache
-                    create_uri_target_folder(target_uri)
-                    delete_s3_file_if_exists(target_uri)
-                    delete_s3_folder_if_exists(target_uri)
-                    self._write_data_to_cache(temp_file_path, target_uri)
-                except  Exception as e:
-                    raise Exception(f"Failed to process {target_uri}: {e}")
-            else:
-                # Write individual tiles to cache
-                create_uri_target_folder(target_uri)
-                delete_s3_file_if_exists(target_uri)
-                delete_s3_folder_if_exists(target_uri)
-
-                tile_indices = []
-                for file in file_paths:
-                    tile = Path(file).stem
-
-                    # extract the index
-                    index = int(tile[len('tile_'):])
-                    tile_indices.append(index)
-
-                    target_tile_uri = f"{target_uri}/{tile}.{GTIFF_FILE_EXTENSION}"
-
-                    try:
-                        self._write_data_to_cache(file, target_tile_uri)
-                    except  Exception as e:
-                        raise Exception(f"Failed to process {target_tile_uri}: {e}")
-
-                # Write after all other files so file presence can be used as indication of complete data upload
-                self._write_grid_index_to_cache(fishnet, tile_indices, target_uri, crs)
+        # remove the notice file
+        delete_s3_file_if_exists(target_uri)
 
     def _write_data_to_cache(self, source_file_path, target_tile_uri):
         if target_tile_uri.startswith('s3://'):
@@ -1014,28 +989,6 @@ class Layer():
         else:
             target_file_path = get_file_path_from_uri(target_tile_uri)
             shutil.move(source_file_path, target_file_path)
-
-
-    def _write_grid_index_to_cache(self, fishnet, tile_indices, file_uri, crs):
-        import json
-        json_snippets = []
-        for index, tile in fishnet.iterrows():
-            if index in tile_indices:
-                tile_bounds = tile.geometry.bounds
-                tile_file_name = self._construct_tile_name(index)
-                tile_uri = f"{file_uri}/{tile_file_name}"
-                key = get_key_from_s3_uri(tile_uri)
-                tile_row = {
-                    "key": key,
-                    "bbox": tile_bounds,
-                    "crs": crs
-                }
-                snippet = json.dumps(tile_row)
-                json_snippets.append(snippet)
-
-        metadata_file = f"{file_uri}/geotiff_index.json"
-        parsed_snippets = [json.loads(snippet) for snippet in json_snippets]
-        write_json(parsed_snippets, metadata_file)
 
 
     def _run_tasks(self, tasks, target_gb: int):
@@ -1077,7 +1030,7 @@ class Layer():
         ]
         return tif_files
 
-    def _process_fishnet_tile(self, index, tile, crs, spatial_resolution, temp_dir):
+    def _process_fishnet_tile(self, index, tile, crs, spatial_resolution, temp_dir, target_uri):
         tile_bounds = tile['geometry'].bounds
         geo_extent = GeoExtent(tile_bounds, crs)
 
@@ -1086,11 +1039,18 @@ class Layer():
 
         retry_count = 0
         tile_data = None
+        failure_message = ''
         while tile_data is None and retry_count < 3:
-            tile_data = self.aggregate.get_data(bbox=buffered_utm_bbox, spatial_resolution=spatial_resolution)
+            failure_message = ''
+            try:
+                tile_data = self.aggregate.get_data(bbox=buffered_utm_bbox, spatial_resolution=spatial_resolution)
+            except Exception as e:
+                failure_message = str(e)
+
             # pause to avoid over-contention against service
             random_wait = random.randint(2,5)
             time.sleep(random_wait)
+
             retry_count += 1
 
         if tile_data is None:
@@ -1101,19 +1061,25 @@ class Layer():
             # clip back to original tile extent
             clipped_tile = extract_bbox_aoi(tile_data, geo_extent)
 
-            file_name = self._construct_tile_name(index)
+            file_name = construct_tile_name(index)
             temp_file_path = os.path.join(temp_dir, file_name)
             write_layer(clipped_tile, temp_file_path, GTIFF_FILE_EXTENSION)
 
+            # Cache the tile to S3 and remove temporary file
+            target_tile_uri = f"{target_uri}/{file_name}"
+            try:
+                self._write_data_to_cache(temp_file_path, target_tile_uri)
+            except  Exception as e:
+                raise Exception(f"Failed to process {target_tile_uri}: {e}")
+            os.remove(temp_file_path)
+
             unretrieved_tile_id = ''
 
-        return unretrieved_tile_id
-
-    def _construct_tile_name(self, tile_index):
-        padded_index = str(tile_index).zfill(TILE_NUMBER_PADCOUNT)
-        file_name = f'tile_{padded_index}.tif'
-        return file_name
-
+        if unretrieved_tile_id != '':
+            unretrieved_results = {unretrieved_tile_id, failure_message}
+        else:
+            unretrieved_results = None
+        return unretrieved_results
 
     def mask(self, *layers):
         """
@@ -1510,3 +1476,31 @@ def string_to_float_list(s, delimiter=","):
 
     # Convert to int (or float if needed)
     return [float(x) for x in elements if x]
+
+
+def _write_grid_index_to_cache(fishnet, file_uri, crs):
+    tiles_metadata = []
+    for index, tile in fishnet.iterrows():
+        tile_bounds = tile.geometry.bounds
+        tile_file_name = construct_tile_name(index)
+        tile_row = {
+            "tile_name": tile_file_name,
+            "bbox": tile_bounds
+        }
+        tiles_metadata.append(tile_row)
+
+    # Store CRS and file_uri at the top level
+    metadata = {
+        "crs": crs,
+        "file_uri": file_uri,
+        "tiles": tiles_metadata
+    }
+
+    metadata_file = f"{file_uri}/{MULTI_TILE_TILE_INDEX_FILE}"
+    write_json(metadata, metadata_file)
+
+
+def construct_tile_name(tile_index):
+    padded_index = str(tile_index).zfill(TILE_NUMBER_PADCOUNT)
+    file_name = f'tile_{padded_index}.tif'
+    return file_name

@@ -30,6 +30,8 @@ CTCM_MAX_TILE_BUFFER_M = 600
 # Ensure complete TCM tile-sampling coverage by adding extra buffer
 CTCM_PADDED_AOI_BUFFER = CTCM_MAX_TILE_BUFFER_M + 100
 
+MULTI_TILE_TILE_INDEX_FILE = 'geotiff_index.json'
+
 class GeoType(Enum):
     CITY = 0
     GEOMETRY = 1

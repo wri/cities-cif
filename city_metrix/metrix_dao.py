@@ -7,14 +7,13 @@ import pandas as pd
 import geopandas as gpd
 import json
 from pathlib import Path
-from geopandas import GeoDataFrame
 from rioxarray import rioxarray
 from urllib.parse import urlparse
 
 from city_metrix import s3_client
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
-    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, CIF_DASHBOARD_LAYER_S3_BUCKET_URI, CIF_CACHE_S3_BUCKET_URI, \
-    LOCAL_CACHE_URI, JSON_FILE_EXTENSION
+    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, CIF_DASHBOARD_LAYER_S3_BUCKET_URI, LOCAL_CACHE_URI, JSON_FILE_EXTENSION, \
+    MULTI_TILE_TILE_INDEX_FILE
 from city_metrix.metrix_tools import get_crs_from_data, standardize_y_dimension_direction
 
 
@@ -121,13 +120,13 @@ def read_geotiff_from_cache(file_uri):
 
     return result_data
 
-def _get_uri_pars(uri):
+def _get_uri_parts(uri):
     s3_bucket = get_bucket_name_from_s3_uri(uri)
     file_key = get_file_key_from_url(uri)
     return s3_bucket, file_key
 
 def _is_s3_folder_or_file(uri):
-    s3_bucket, file_key = _get_uri_pars(uri)
+    s3_bucket, file_key = _get_uri_parts(uri)
 
     # Add a trailing slash to the path to check for a folder
     folder_path = file_key if file_key.endswith('/') else file_key + '/'
@@ -153,45 +152,45 @@ def read_geotiff_subarea_from_cache(file_uri, city_aoi_subarea, utm_crs):
     from shapely.geometry import box
 
     query_bounds = box(*city_aoi_subarea)
-    s3_bucket, file_key = _get_uri_pars(file_uri)
+    s3_bucket, file_key = _get_uri_parts(file_uri)
 
     object_type = _is_s3_folder_or_file(file_uri)
     if object_type == 'file':
         subarea_da = _process_geotiff_sub_area(s3_bucket, file_key, city_aoi_subarea, 0, utm_crs)
     else: # for a folder, process all files
         # Load geotiff_index.json from S3
-        index_key = f"{file_key}/geotiff_index.json"
+        index_key = f"{file_key}/{MULTI_TILE_TILE_INDEX_FILE}"
         index_obj = s3_client.get_object(Bucket=s3_bucket, Key=index_key)
         metadata = json.loads(index_obj['Body'].read().decode('utf-8'))
 
+        # Access top-level CRS and tile list
+        file_uri = metadata.get("file_uri")
+        crs_str = metadata.get("crs")
+        tiles = metadata.get("tiles", [])
+
         # Filter GeoTIFFs that intersect the bounding box
         matching_items = [
-            item for item in metadata
+            item for item in tiles
             if box(*item["bbox"]).intersects(query_bounds)
         ]
 
-        # Extract CRS from the first matching item
-        if matching_items:
-            crs_str = matching_items[0]["crs"]
-        else:
+        if not matching_items:
             raise ValueError("No overlapping GeoTIFFs found.")
 
-        if len(matching_items) == 0:
-            subarea_da = None
-        else:
-            # Read and extract overlapping data
-            data_arrays = []
+        # Read and extract overlapping data
+        data_arrays = []
+        for item in matching_items:
+            tile_name = item["tile_name"]
+            tile_uri = f"{file_uri}/{tile_name}"
+            tile_key = _get_uri_parts(tile_uri)[1]
+            da = _process_geotiff_sub_area(s3_bucket, tile_key, city_aoi_subarea, 0, crs_str)
+            data_arrays.append(da)
 
-            for item in matching_items:
-                tile_key = item["key"]
-                da = _process_geotiff_sub_area(s3_bucket, tile_key, city_aoi_subarea, 0, crs_str)
-                data_arrays.append(da)
-
-            # Merge into a single DataArray using outer join
-            subarea_da = xr.concat(data_arrays, dim="tile", join="outer").max("tile", skipna=True)
-            subarea_da.rio.write_crs(da.rio.crs, inplace=True)
-            subarea_da.rio.write_transform(da.rio.transform(), inplace=True)
-            subarea_da.attrs["crs"] = utm_crs
+        # Merge into a single DataArray using outer join
+        subarea_da = xr.concat(data_arrays, dim="tile", join="outer").max("tile", skipna=True)
+        subarea_da.rio.write_crs(da.rio.crs, inplace=True)
+        subarea_da.rio.write_transform(da.rio.transform(), inplace=True)
+        subarea_da.attrs["crs"] = utm_crs
 
     return subarea_da
 
@@ -297,7 +296,7 @@ def write_layer(data, uri, file_format):
         raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
 
 
-def _write_file_to_s3(data, uri, file_extension):
+def write_file_to_s3(data, uri, file_extension, keep_index:bool=False):
     import shutil
     s3_bucket = get_bucket_name_from_s3_uri(uri)
     file_key = get_file_key_from_url(uri)
@@ -312,7 +311,10 @@ def _write_file_to_s3(data, uri, file_extension):
         elif file_extension == NETCDF_FILE_EXTENSION:
             data.to_netcdf(temp_file)
         elif file_extension == CSV_FILE_EXTENSION:
-            data.to_csv(temp_file, header=True, index=False)
+            if keep_index:
+                data.to_csv(temp_file, header=True, index=True, index_label='index')
+            else:
+                data.to_csv(temp_file, header=True, index=False)
         elif file_extension == JSON_FILE_EXTENSION:
             combined_json = json.dumps(data, indent=4)
             with open(temp_file, 'w') as file:
@@ -333,7 +335,7 @@ def _write_file_to_s3(data, uri, file_extension):
 def write_csv(data, uri):
     _verify_datatype('write_csv()', data, [pd.Series, pd.DataFrame], is_spatial=False)
     if get_uri_scheme(uri) == 's3':
-        _write_file_to_s3(data, uri, CSV_FILE_EXTENSION)
+        write_file_to_s3(data, uri, CSV_FILE_EXTENSION)
     else:
         file_path = os.path.normpath(get_file_path_from_uri(uri))
         _create_local_target_folder(file_path)
@@ -343,7 +345,7 @@ def write_csv(data, uri):
 def write_geojson(data, uri):
     _verify_datatype('write_geojson()', data, [gpd.GeoDataFrame], is_spatial=True)
     if get_uri_scheme(uri) == 's3':
-        _write_file_to_s3(data, uri, GEOJSON_FILE_EXTENSION)
+        write_file_to_s3(data, uri, GEOJSON_FILE_EXTENSION)
     else:
         uri_path = os.path.normpath(get_file_path_from_uri(uri))
         _create_local_target_folder(uri_path)
@@ -351,7 +353,7 @@ def write_geojson(data, uri):
 
 def write_json(data, uri):
     if get_uri_scheme(uri) == 's3':
-        _write_file_to_s3(data, uri, JSON_FILE_EXTENSION)
+        write_file_to_s3(data, uri, JSON_FILE_EXTENSION)
     else:
         target_path = os.path.normpath(get_file_path_from_uri(uri))
         _create_local_target_folder(target_path)
@@ -362,7 +364,7 @@ def _write_geotiff(data, uri):
     _verify_datatype('write_geotiff()', data, [xr.DataArray], is_spatial=True)
     _, standardized_array = standardize_y_dimension_direction(data)
     if get_uri_scheme(uri) == 's3':
-        _write_file_to_s3(standardized_array, uri, GTIFF_FILE_EXTENSION)
+        write_file_to_s3(standardized_array, uri, GTIFF_FILE_EXTENSION)
     else:
         uri_path = os.path.normpath(get_file_path_from_uri(uri))
         _create_local_target_folder(uri_path)
@@ -371,7 +373,7 @@ def _write_geotiff(data, uri):
 def _write_netcdf(data, uri):
     _verify_datatype('write_netcdf()', data, [xr.DataArray], is_spatial=False)
     if get_uri_scheme(uri) == 's3':
-        _write_file_to_s3(data, uri, NETCDF_FILE_EXTENSION)
+        write_file_to_s3(data, uri, NETCDF_FILE_EXTENSION)
     else:
         uri_path = os.path.normpath(get_file_path_from_uri(uri))
         _create_local_target_folder(uri_path)
@@ -488,7 +490,6 @@ def get_city_boundaries(city_id: str, admin_level: str):
 
 
 def _is_file_less_than_one_day_old(file_path):
-    import time
     from datetime import datetime, timedelta
     # Get the file's modification time
     file_mod_time = os.path.getmtime(file_path)

@@ -10,16 +10,16 @@ from city_metrix.layers import OvertureBuildingsDSM, FabDEM, OpenUrban, AlbedoCl
 from city_metrix.metrix_tools import get_projection_type
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.resources.file_caching.bbox_urban_extents import GEOEXTENT_TERESINA_URBAN_EXTENT, \
-    GEOEXTENT_FLORIANOPOLIS_URBAN_EXTENT, GEOEXTENT_CAPETOWN_BIZDISTRICT_EXTENT
+    GEOEXTENT_FLORIANOPOLIS_URBAN_EXTENT, GEOEXTENT_CAPETOWN_URBAN_EXTENT
 from tests.test_layers import assert_raster_stats
 from tests.resources.tools import _evaluate_bounds
 
 TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI # Default for testing
 # TEST_BUCKET = CTCM_CACHE_S3_BUCKET_URI
 
-# GEO_EXTENT = GEOEXTENT_TERESINA_URBAN_EXTENT # Default for testing
+GEO_EXTENT = GEOEXTENT_TERESINA_URBAN_EXTENT # Default for testing
 # GEO_EXTENT = GEOEXTENT_FLORIANOPOLIS_URBAN_EXTENT
-GEO_EXTENT = GEOEXTENT_CAPETOWN_BIZDISTRICT_EXTENT
+# GEO_EXTENT = GEOEXTENT_CAPETOWN_URBAN_EXTENT
 
 TERESINA_CITY_SUB_AREA = (739568,9432142, 741393,9433825)
 FLORIANOPOLIS_CITY_SUB_AREA = (729496,6933650, 731047,6934496)
@@ -54,7 +54,7 @@ def test_dem_city():
         assert_raster_stats(data, 1, 63.5, 96.2, 3071475, 0)
     elif GEO_EXTENT == GEOEXTENT_FLORIANOPOLIS_URBAN_EXTENT:
         assert_raster_stats(data, 1, 0.0, 12.4, 1312146, 0)
-    elif GEO_EXTENT == GEOEXTENT_CAPETOWN_BIZDISTRICT_EXTENT:
+    elif GEO_EXTENT == GEOEXTENT_CAPETOWN_URBAN_EXTENT:
         assert_raster_stats(data, 1, 6.30, 151.09, 1390730, 0)
     assert _evaluate_bounds(SUB_AREA, data)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
@@ -77,7 +77,7 @@ def test_overture_buildings_dsm_city():
         assert_raster_stats(data, 1, 63.5, 96.2, 3071475, 0)
     elif GEO_EXTENT == GEOEXTENT_FLORIANOPOLIS_URBAN_EXTENT:
         assert_raster_stats(data, 1, 0.0, 12.4, 1312146, 0)
-    elif GEO_EXTENT == GEOEXTENT_CAPETOWN_BIZDISTRICT_EXTENT:
+    elif GEO_EXTENT == GEOEXTENT_CAPETOWN_URBAN_EXTENT:
         assert_raster_stats(data, 1, 6.30, 156.71, 1390730, 0)
     assert _evaluate_bounds(SUB_AREA, data)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
@@ -103,7 +103,7 @@ def test_open_urban_city():
         assert_raster_stats(data, 1, 110.0, 620.0, 3071475, 0)
     elif GEO_EXTENT == GEOEXTENT_FLORIANOPOLIS_URBAN_EXTENT:
         assert_raster_stats(data, 1, 110.0, 620.0, 1312146, 0)
-    elif GEO_EXTENT == GEOEXTENT_CAPETOWN_BIZDISTRICT_EXTENT:
+    elif GEO_EXTENT == GEOEXTENT_CAPETOWN_URBAN_EXTENT:
         assert_raster_stats(data, 2, 110.00, 620.00, 1390730, 0)
     assert _evaluate_bounds(SUB_AREA, data)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
@@ -127,7 +127,7 @@ def test_tree_canopy_height_city():
         assert_raster_stats(data, 1, 0.0, 20.0, 3071475, 0)
     elif GEO_EXTENT == GEOEXTENT_FLORIANOPOLIS_URBAN_EXTENT:
         assert_raster_stats(data, 1, 0.0, 27.0, 1312146, 0)
-    elif GEO_EXTENT == GEOEXTENT_CAPETOWN_BIZDISTRICT_EXTENT:
+    elif GEO_EXTENT == GEOEXTENT_CAPETOWN_URBAN_EXTENT:
         assert_raster_stats(data, 1, 0.00, 18.00, 1390730, 0)
     assert _evaluate_bounds(SUB_AREA, data)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
@@ -151,7 +151,7 @@ def test_albedo_cloud_mask_city():
         assert_raster_stats(data, 1, 0.11, 0.68, 3071475, 0)
     elif GEO_EXTENT == GEOEXTENT_FLORIANOPOLIS_URBAN_EXTENT:
         assert_raster_stats(data, 1, 0.03, 0.47, 1312146, 0)
-    elif GEO_EXTENT == GEOEXTENT_CAPETOWN_BIZDISTRICT_EXTENT:
+    elif GEO_EXTENT == GEOEXTENT_CAPETOWN_URBAN_EXTENT:
         assert_raster_stats(data, 1, 0.03, 0.65, 1390730, 0)
     assert _evaluate_bounds(SUB_AREA, data)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
