@@ -42,8 +42,8 @@ class ImperviousSurface(Layer):
         # 34 is 1985 impervious
         # 0 is still pervious as of 2018
         year_index = 1 + 2018 - self.year
-        data_crs = data.crs
-        data = xr.where(data >= year_index, 1, np.nan)
-        data = data.rio.write_crs(data_crs).assign_attrs(data.attrs)
+
+        res = xr.where(data >= year_index, 1, np.nan)
+        res = res.rio.write_crs(data.crs).assign_attrs(data.attrs)
 
         return data
