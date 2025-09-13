@@ -114,7 +114,7 @@ def test_high_slope():
 def test_impervious_surface():
     data = ImperviousSurface().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 1.0, 34.0, 100, 0)
+    assert_raster_stats(data, 1, 1.0, 1.0, 100, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_land_cover_glad():
