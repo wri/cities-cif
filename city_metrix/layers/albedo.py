@@ -21,7 +21,7 @@ class Albedo(Layer):
         end_date: ending date for data retrieval
         threshold: threshold value for filtering the retrieval
     """
-    def __init__(self, start_date:str=None, end_date:str=None, threshold=None, **kwargs):
+    def __init__(self, start_date:str='2021-01-01', end_date:str='2022-01-01', threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
