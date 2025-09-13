@@ -28,7 +28,7 @@ from city_metrix import s3_client
 from city_metrix.cache_manager import retrieve_city_cache, build_file_key, is_cache_usable
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI, \
-    MULTI_TILE_TILE_INDEX_FILE
+    MULTI_TILE_TILE_INDEX_FILE, PROCESSING_KNOWN_ISSUE_FLAG
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_boundaries, create_uri_target_folder, get_file_key_from_url,
                                     get_bucket_name_from_s3_uri,
@@ -950,6 +950,7 @@ class Layer():
 
                 # run them all in parallel with threads
                 target_gb = 3
+                unretrieved_tile_ids = []
                 try:
                     unretrieved_tile_ids = self._run_tasks(tasks, target_gb)
                 except Exception as e:
@@ -976,7 +977,8 @@ class Layer():
             write_file_to_s3(df_joined, uri, CSV_FILE_EXTENSION, keep_index=False)
 
         # remove the notice file
-        delete_s3_file_if_exists(target_uri)
+        delete_s3_file_if_exists(processing_notice_fil_uri)
+
 
     def _write_data_to_cache(self, source_file_path, target_tile_uri):
         if target_tile_uri.startswith('s3://'):
@@ -1044,8 +1046,10 @@ class Layer():
             failure_message = ''
             try:
                 tile_data = self.aggregate.get_data(bbox=buffered_utm_bbox, spatial_resolution=spatial_resolution)
-            except Exception as e:
-                failure_message = str(e)
+            except Exception as e_msg:
+                failure_message = str(e_msg)
+                if PROCESSING_KNOWN_ISSUE_FLAG in str(e_msg):
+                    break
 
             # pause to avoid over-contention against service
             random_wait = random.randint(2,5)

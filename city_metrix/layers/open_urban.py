@@ -1,6 +1,6 @@
 import ee
 
-from city_metrix.constants import GTIFF_FILE_EXTENSION
+from city_metrix.constants import GTIFF_FILE_EXTENSION, PROCESSING_KNOWN_ISSUE_FLAG
 from city_metrix.metrix_dao import extract_bbox_aoi
 from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
 
@@ -25,7 +25,7 @@ class OpenUrban(Layer):
         # Check for data
         data = None
         if dataset.filterBounds(ee_rectangle['ee_geometry']).size().getInfo() == 0:
-            raise ValueError("No OpenUrban data available for this AOI")
+            raise ValueError(f"{PROCESSING_KNOWN_ISSUE_FLAG} No OpenUrban data available for this AOI")
         else:
             ulu = ee.ImageCollection(dataset
                                      .filterBounds(ee_rectangle['ee_geometry'])
