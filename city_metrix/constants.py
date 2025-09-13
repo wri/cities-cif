@@ -18,8 +18,9 @@ CIF_DASHBOARD_LAYER_S3_BUCKET_URI = 's3://wri-cities-data-api'
 CIF_CACHE_S3_BUCKET_URI = 's3://wri-cities-indicators'  # 's3://cities-test-sandbox' # 's3://cities-cache-store'
 CIF_TESTING_S3_BUCKET_URI = 's3://cities-test-sandbox'  # not used in new file storage structure
 
-local_cache_directory = os.path.join(Path.home(), 'CIF_local_cache')
-LOCAL_CACHE_URI = f'file://{local_cache_directory}'
+#local_cache_directory = os.path.join(Path.home(), 'CIF_local_cache')
+#LOCAL_CACHE_URI = f'file://{local_cache_directory}'
+LOCAL_CACHE_URI = CIF_CACHE_S3_BUCKET_URI
 
 CITIES_DATA_API_URL = "cities-data-api.wri.org"  # "dev.cities-data-api.wri.org"
 
