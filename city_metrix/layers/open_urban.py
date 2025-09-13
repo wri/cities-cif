@@ -25,7 +25,7 @@ class OpenUrban(Layer):
         # Check for data
         data = None
         if dataset.filterBounds(ee_rectangle['ee_geometry']).size().getInfo() == 0:
-            print("No OpenUrban Data Available")
+            raise ValueError("No OpenUrban data available for this AOI")
         else:
             ulu = ee.ImageCollection(dataset
                                      .filterBounds(ee_rectangle['ee_geometry'])
