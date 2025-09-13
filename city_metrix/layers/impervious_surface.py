@@ -46,4 +46,4 @@ class ImperviousSurface(Layer):
         res = xr.where(data >= year_index, 1, np.nan)
         res = res.rio.write_crs(data.crs).assign_attrs(data.attrs)
 
-        return data
+        return res
