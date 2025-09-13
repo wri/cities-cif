@@ -9,7 +9,7 @@ from city_metrix.layers import TreeCanopyHeight, WorldPop, WorldPopClass, UrbanL
 
 class CanopyAreaPerResident__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
-    CUSTOM_TILE_SIDE_M = 10000
+    CUSTOM_TILE_SIDE_M = 5000
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["height", "agesex_classes", "informal_only", "year"]
 

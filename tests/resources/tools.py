@@ -1,3 +1,4 @@
+import math
 import os
 import shutil
 
@@ -17,6 +18,9 @@ def prep_output_path(output_folder, model_name, file_name):
     return file_path
 
 def verify_file_is_populated(file_path):
+    if not os.path.exists(file_path):
+        return False
+
     is_populated = True if os.path.getsize(file_path) > 0 else False
     return is_populated
 
@@ -52,3 +56,11 @@ def delete_path_on_os(path):
 def get_test_bbox(sample_box):
     bbox = sample_box if USE_WGS_BBOX else sample_box.as_geographic_bbox()
     return bbox
+
+def _evaluate_bounds(expected_bounds, data):
+    min_x = math.floor(data["x"].min().item())
+    max_x = math.ceil(data["x"].max().item())
+    min_y = math.floor(data["y"].min().item())
+    max_y = math.ceil(data["y"].max().item())
+    actual_bounds = (min_x, min_y, max_x, max_y)
+    return actual_bounds==expected_bounds

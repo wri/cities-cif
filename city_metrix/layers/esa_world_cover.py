@@ -24,6 +24,7 @@ class EsaWorldCover(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["land_cover_class"]
     MINOR_NAMING_ATTS = None
+    PROCESSING_TILE_SIDE_M = 5000
     STAC_CATALOG_URI = "https://services.terrascope.be/stac/"
     STAC_COLLECTION_ID = "urn:eop:VITO:ESA_WorldCover_10m_2020_AWS_V1"
     STAC_ASSET_ID = "ESA_WORLDCOVER_10M_MAP"

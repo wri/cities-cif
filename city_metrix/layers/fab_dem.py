@@ -2,6 +2,7 @@ import ee
 
 from city_metrix.metrix_model import (Layer, get_image_collection, set_resampling_for_continuous_raster,
                                       validate_raster_resampling_method, GeoExtent)
+from ..metrix_dao import extract_bbox_aoi
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
@@ -11,6 +12,12 @@ class FabDEM(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
+    PROCESSING_TILE_SIDE_M = 5000
+    # tile-size testing for Teresina
+    # 1. no tiling = 6:49 min (run mode)
+    # 2. 10k = 19:00 (debug mode)
+    # 3. 20k = 8:17 (run mode)
+    # 4. 30k = 7:41 (run mode) no tmp directory observed since city area is smaller, so same as no tiling
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -27,9 +34,10 @@ class FabDEM(Layer):
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 
-        fab_dem = ee.ImageCollection("projects/sat-io/open-datasets/FABDEM")
+        buffered_utm_bbox = bbox.buffer_utm_bbox(10)
+        ee_rectangle  = buffered_utm_bbox.to_ee_rectangle()
 
-        ee_rectangle  = bbox.to_ee_rectangle()
+        fab_dem = ee.ImageCollection("projects/sat-io/open-datasets/FABDEM")
 
         # Based on testing, this kernel reduces some noise while maintaining range of values
         kernel = ee.Kernel.gaussian(
@@ -55,10 +63,13 @@ class FabDEM(Layer):
             fab_dem_elev_ic,
             ee_rectangle,
             spatial_resolution,
-            "FAB DEM"
+            "FAB DEM",
         ).b1
 
         # Round value to reduce variability
-        rounded_data = data.round(2)
+        result_data = data.round(2)
 
-        return rounded_data
+        # Trim back to original AOI
+        result_data = extract_bbox_aoi(result_data, bbox)
+
+        return result_data

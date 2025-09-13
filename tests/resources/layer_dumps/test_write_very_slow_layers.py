@@ -1,6 +1,6 @@
 import pytest
 
-from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, CIF_TESTING_S3_BUCKET_URI
 from city_metrix.layers import *
 from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
@@ -49,7 +49,7 @@ def test_UtGlobus_write_small_bbox(target_folder):
     _write_verify(layer_obj, bbox, file_path)
 
 def _write_verify(layer_obj, bbox, file_path):
-    layer_obj.write(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path, tile_side_length=None)
+    layer_obj.write(bbox=bbox, target_file_path=file_path, tile_side_length=None)
     assert verify_file_is_populated(file_path)
 
     if not PRESERVE_RESULTS_ON_OS:

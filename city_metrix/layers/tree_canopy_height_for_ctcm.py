@@ -6,7 +6,7 @@ from ..metrix_dao import extract_bbox_aoi
 
 DEFAULT_SPATIAL_RESOLUTION = 1
 
-class TreeCanopyHeight(Layer):
+class TreeCanopyHeightCTCM(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     PROCESSING_TILE_SIDE_M = 5000
     MAJOR_NAMING_ATTS = None
@@ -53,5 +53,8 @@ class TreeCanopyHeight(Layer):
         utm_crs = ee_rectangle['crs']
         result_data = result_data.rio.write_crs(utm_crs)
         result_data['crs'] = utm_crs
+
+        # Trim back to original AOI
+        result_data = extract_bbox_aoi(result_data, bbox)
 
         return result_data

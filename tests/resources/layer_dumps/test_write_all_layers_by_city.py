@@ -1,15 +1,15 @@
 import pytest
 import timeout_decorator
 
-from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, CIF_TESTING_S3_BUCKET_URI
 from city_metrix.layers import *
-from city_metrix.cache_manager import check_if_cache_file_exists
+from city_metrix.cache_manager import is_cache_object_available
 from ...tools.general_tools import get_test_cache_variables
 from tests.resources.tools import cleanup_cache_files, prep_output_path
 from ..bbox_constants import GEOEXTENT_TERESINA
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
 
-PRESERVE_RESULTS_ON_OS = False # False - Default for check-in
+PRESERVE_RESULTS_ON_OS = True # False - Default for check-in
 
 SLOW_TEST_TIMEOUT_SECONDS = 2100 # seconds = 35 minutes (Duration needed for fractional vegegation)
 
@@ -306,16 +306,17 @@ def test_WorldPop_write_by_city(target_folder):
 
 def _run_write_layers_by_city_test(layer_obj, target_folder):
     geo_extent = PROCESSING_CITY
-    file_key, file_uri, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent)
+    file_key, _, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent, CIF_TESTING_S3_BUCKET_URI)
 
-    if PRESERVE_RESULTS_ON_OS:
-        os_file_path = prep_output_path(target_folder, 'layer', layer_id)
-    else:
-        os_file_path = None
+    os_file_path = prep_output_path(target_folder, 'layer', layer_id)
+
     try:
         # Do not force data refresh to avoid collisions with concurrent tests
-        layer_obj.write(bbox=geo_extent, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri= os_file_path, force_data_refresh=True)
-        cache_file_exists = check_if_cache_file_exists(file_uri)
+        layer_obj.write(bbox=geo_extent, target_file_path=os_file_path, tile_side_length=5000, length_units='meters')
+        file_uri = 'file://' + os_file_path
+        tiled_file_uri = file_uri + '/tile_0001.tif'
+        cache_file_exists = True if is_cache_object_available(file_uri) or is_cache_object_available(
+            tiled_file_uri) else False
         assert cache_file_exists, "Test failed since file did not upload to s3"
     finally:
         cleanup_os_file_path = None if PRESERVE_RESULTS_ON_OS else os_file_path

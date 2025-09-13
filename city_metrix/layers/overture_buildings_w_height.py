@@ -13,8 +13,8 @@ STANDARD_SINGLE_STORY_BUILDING_SQM = 50
 
 class OvertureBuildingsHeight(Layer):
     OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = ["city"]
-    MINOR_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["city"]
 
     """
     Attributes:
@@ -30,16 +30,20 @@ class OvertureBuildingsHeight(Layer):
 
         # Load the datasets
         # Specify DEFAULT_DEVELOPMENT_ENV since below are not Dashboard layers
-        overture_buildings = OvertureBuildings().get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV)
-        ut_globus = UtGlobus(self.city).get_data_with_caching(bbox=bbox, s3_env=DEFAULT_DEVELOPMENT_ENV)
+        overture_buildings = OvertureBuildings().get_data(bbox=bbox)
+        ut_globus = UtGlobus(self.city).get_data(bbox=bbox)
         if len(ut_globus) == 0:
             result_building_heights = overture_buildings
-            result_building_heights.rename(
-                columns={"height": "overture_height"},
-                inplace=True,
-            )
-            result_building_heights['height'] = result_building_heights['overture_height']
-            result_building_heights['height_source'] = 'Overture'
+            if hasattr(overture_buildings, 'height'):
+                result_building_heights.rename(
+                    columns={"height": "overture_height"},
+                    inplace=True,
+                )
+                result_building_heights['height'] = result_building_heights['overture_height']
+                result_building_heights['height_source'] = 'Overture'
+            else:
+                result_building_heights['height'] = None
+
         else:
             ut_globus = ut_globus.to_crs(overture_buildings.crs)
 
@@ -83,9 +87,13 @@ class OvertureBuildingsHeight(Layer):
         empty_height_blgs = result_building_heights[result_building_heights['height'].isna() | (result_building_heights['height'] == 0)]
         if len(empty_height_blgs) > 0:
             empty_height_blgs.loc[:, ['height', 'height_source']] = [STANDARD_BUILDING_FLOOR_HEIGHT_M, 'Remainder']
+            result_building_heights.loc[empty_height_blgs.index, ['height', 'height_source']] = (
+                empty_height_blgs)[['height', 'height_source']]
 
         utm_crs = bbox.as_utm_bbox().crs
         result_building_heights = result_building_heights.to_crs(utm_crs)
+
+        result_building_heights["height"] = pd.to_numeric(result_building_heights["height"], errors="coerce")
         result_building_heights['height'] = result_building_heights['height'].round(2)
 
         return result_building_heights
