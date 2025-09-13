@@ -914,7 +914,7 @@ class Layer():
         create_uri_target_folder(target_uri)
 
         # Add notice file to folder
-        processing_notice_fil_uri = f"{target_uri}/__NOTICE_SYSTEM_IS_ACTIVELY_PROCESSING_TILES.csv"
+        processing_notice_fil_uri = f"{target_uri}/___NOTICE_SYSTEM_IS_ACTIVELY_PROCESSING_TILES__.csv"
         write_file_to_s3(pd.DataFrame(), processing_notice_fil_uri, CSV_FILE_EXTENSION, keep_index=False)
 
         output_as = ProjectionType.UTM
@@ -923,28 +923,24 @@ class Layer():
 
         fishnet = create_fishnet_grid(bbox=utm_box, tile_side_length=tile_side_m, length_units='meters',
                                       spatial_resolution=spatial_resolution, output_as=output_as)
-
         fishnet['index'] = fishnet.index
 
         # Temporary hack for testing
-        # fishnet = fishnet.iloc[:2]
+        # fishnet = fishnet.iloc[:3]
 
         # Write index
         _write_grid_index_to_cache(fishnet, target_uri, crs)
 
-        failed_writes = []
         with tempfile.TemporaryDirectory() as temp_dir:
             # TODO Add verification of complete set of files
 
-            # First, read from source and write to local temp directory
-            processed_count = 0
+            # Read from source and write to local temp directory
             retry_count = 0
-            expected_result_count = len(fishnet)
-            incompleted_tiles = fishnet
-            while processed_count < expected_result_count and retry_count < 3:
+            unretrieved_tiles = fishnet
+            while len(unretrieved_tiles) > 0 and retry_count < 3:
                 tasks = []
 
-                for index, tile in incompleted_tiles.iterrows():
+                for index, tile in unretrieved_tiles.iterrows():
                     task = dask.delayed(self._process_fishnet_tile)(index, tile, crs, spatial_resolution, temp_dir, target_uri)
                     tasks.append(task)
 
@@ -959,19 +955,19 @@ class Layer():
                 # Note this check only accounts for tiles that were missed due to dask failures and not download errors
                 unretrieved_tile_records = [x for x in unretrieved_tile_ids if x is not None]
                 if len(unretrieved_tile_records) == 0:
-                    incompleted_tiles = gpd.GeoDataFrame(geometry=[])
+                    unretrieved_tiles = gpd.GeoDataFrame(geometry=[])
                 else:
-                    file_paths = self._get_all_tif_file_paths(temp_dir)
+                    file_paths = self._list_all_tiff_filepaths_in_s3_folder(target_uri)
                     completed_tile_ids = self._get_completed_tile_ids(file_paths)
-                    incompleted_tiles = fishnet.drop(completed_tile_ids)
+                    unretrieved_tiles = fishnet.drop(completed_tile_ids)
 
                 retry_count +=1
 
-        # Write incompleted tile ids to cache
+        # Write unretrieved tiles with error and geometry cache
         if len(unretrieved_tile_records) > 0:
             errors_df = pd.DataFrame(unretrieved_tile_records, columns=["index", "error"])
             errors_df.set_index('index', inplace=True)
-            incomplete_tile_geometry = incompleted_tiles[['index','geometry']]
+            incomplete_tile_geometry = unretrieved_tiles[['index','geometry']]
             df_joined = pd.merge(errors_df, incomplete_tile_geometry, on='index', how='left')
             uri = f"{target_uri}/metadata_unretrieved_tiles.csv"
             write_file_to_s3(df_joined, uri, CSV_FILE_EXTENSION, keep_index=False)
@@ -1013,18 +1009,30 @@ class Layer():
 
         memory_limit = f"{target_gb}GB"
 
-        unretrieved_tile_ids = compute(
-            *tasks,
-            scheduler="threads",
-            num_workers=num_workers,
-            threads_per_worker=1,
-            memory_limit=memory_limit,
-        )
+        self.compute = compute(*tasks, scheduler="threads", num_workers=num_workers, threads_per_worker=1,
+                               memory_limit=memory_limit, )
+        unretrieved_tile_ids = self.compute
 
         return unretrieved_tile_ids
 
 
-    def _get_all_tif_file_paths(self, directory):
+    def _list_all_tiff_filepaths_in_s3_folder(self, target_uri):
+        file_key = get_file_key_from_url(target_uri)
+        s3_bucket = get_bucket_name_from_s3_uri(target_uri)
+        
+        # List objects in the specified bucket and prefix
+        response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=file_key)
+
+        # Extract filenames with .tif extension
+        tif_files = [
+            obj['Key'] for obj in response.get('Contents', [])
+            if obj['Key'].endswith('.tif')
+        ]
+
+        return tif_files
+
+
+    def _list_all_tif_filepaths_in_folder(self, directory):
         tif_files = [
             os.path.join(directory, f)
             for f in os.listdir(directory)
@@ -1084,6 +1092,7 @@ class Layer():
         else:
             unretrieved_results = None
         return unretrieved_results
+    
 
     def mask(self, *layers):
         """
