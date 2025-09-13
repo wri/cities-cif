@@ -5,7 +5,7 @@ import timeout_decorator
 
 from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, CIF_TESTING_S3_BUCKET_URI
 from city_metrix.metrics import *
-from city_metrix.cache_manager import check_if_cache_object_exists
+from city_metrix.cache_manager import is_cache_object_available
 from ...tools.general_tools import get_test_cache_variables
 from ..bbox_constants import GEOZONE_TERESINA, GEOEXTENT_TERESINA
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel

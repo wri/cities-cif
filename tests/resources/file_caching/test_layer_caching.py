@@ -3,7 +3,7 @@ import pytest
 
 from city_metrix.constants import CIF_TESTING_S3_BUCKET_URI, DEFAULT_DEVELOPMENT_ENV
 from city_metrix.layers import AcagPM2p5, Era5HottestDay, UrbanExtents, OpenStreetMapClass, OpenStreetMap
-from city_metrix.cache_manager import check_if_cache_object_exists
+from city_metrix.cache_manager import is_cache_object_available
 from tests.resources.conftest import DUMP_RUN_LEVEL, DumpRunLevel
 from tests.tools.general_tools import get_test_cache_variables
 from tests.resources.bbox_constants import GEOEXTENT_TERESINA
@@ -52,7 +52,7 @@ def _run_cache_test(layer_obj):
     data = layer_obj.cache_city_data(bbox=GEO_EXTENT_PROCESSING_CITY, s3_bucket=TEST_BUCKET, s3_env=DEFAULT_DEVELOPMENT_ENV, force_data_refresh=True)
     assert np.size(data) > 0
 
-    cache_file_exists = check_if_cache_object_exists(file_uri)
+    cache_file_exists = is_cache_object_available(file_uri)
     assert cache_file_exists
 
     return is_custom_layer

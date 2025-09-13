@@ -36,7 +36,7 @@ class RiparianAreas(Layer):
         # read HAND data to generate drainage paths
         # Specify DEFAULT_DEVELOPMENT_ENV since this is not a default layer
         hand = (HeightAboveNearestDrainage(river_head=self.river_head, thresh=self.thresh)
-                .retrieve_data(bbox=bbox, s3_bucket=CIF_CACHE_S3_BUCKET_URI, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution))
+                .get_data(bbox=bbox, spatial_resolution=spatial_resolution))
 
         # Read surface water occurance
         water = ee.Image('JRC/GSW1_4/GlobalSurfaceWater').select(['occurrence']).gte(50)

@@ -26,11 +26,11 @@ from shapely.geometry import box
 from xrspatial import zonal_stats
 
 from city_metrix import s3_client
-from city_metrix.cache_manager import retrieve_city_cache, build_file_key, determine_cache_usability
+from city_metrix.cache_manager import retrieve_city_cache, build_file_key, is_cache_usable
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
-                                    get_city, get_city_admin_boundaries, extract_tif_subarea,
+                                    get_city, get_city_boundaries, extract_bbox_aoi,
                                     create_uri_target_folder, write_json, get_key_from_s3_uri,
                                     get_file_key_from_url, get_bucket_name_from_s3_uri,
                                     delete_s3_folder_if_exists, delete_s3_file_if_exists, get_file_path_from_uri,
@@ -70,15 +70,11 @@ class GeoZone():
             city_data = get_city(self.city_id)
             if self.aoi_id == 'city_admin_level':
                 self.admin_level = city_data.get(self.aoi_id, None)
-            else:
+            elif self.aoi_id == 'urban_extent':
                 self.admin_level = self.aoi_id
-            # else:
-            #     raise ValueError(
-            #         f"City metadata for {self.city_id} does not have geometry for aoi_id: '{self.aoi_id}'")
 
-            # get city bbox from composite of admin areas and project
             # bbox is always projected to UTM
-            self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level, city_data)
+            self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
 
         self.bounds = self.bbox
         self.epsg_code = int(self.crs.split(':')[1])
@@ -95,38 +91,25 @@ class GeoZone():
         self.centroid = self.polygon.centroid
 
 
-def _build_aoi_from_city_boundaries(city_id, admin_level, city_data):
-    if admin_level.lower() == 'adm4union':
-        # Construct bbox from total bounds of all admin levels
-        boundaries_gdf = get_city_admin_boundaries(city_id)
-        if len(boundaries_gdf) == 1:
-            west, south, east, north = boundaries_gdf.bounds
-        else:
-            west, south, east, north = boundaries_gdf.total_bounds
-    else:
-        bbox_str = city_data['bounding_box'][admin_level]
-        wgs_bbox = string_to_float_list(bbox_str)
-        west, south, east, north = wgs_bbox
-        boundaries_gdf = None
+def _build_aoi_from_city_boundaries(city_id, geo_feature):
+    boundaries_gdf = get_city_boundaries(city_id, geo_feature)
+    west, south, east, north = boundaries_gdf.total_bounds
 
     # determine UTM CRS
     centroid = shapely.box(west, south, east, north).centroid
     utm_crs = get_utm_zone_from_latlon_point(centroid)
 
-    # reproject geodataframe to UTM
-    if admin_level.lower() == 'adm4union':
-        zones = boundaries_gdf.to_crs(utm_crs)
-        if len(boundaries_gdf) == 1:
-            reproj_west, reproj_south, reproj_east, reproj_north = zones.bounds
-        else:
-            reproj_west, reproj_south, reproj_east, reproj_north = zones.total_bounds
-    else:
-        bbox = reproject_units(south, west, north, east, WGS_CRS, utm_crs)
-        reproj_south, reproj_west, reproj_north, reproj_east = bbox
-        zones = None
+    bbox = reproject_units(south, west, north, east, WGS_CRS, utm_crs)
+    reproj_south, reproj_west, reproj_north, reproj_east = bbox
 
     # Round coordinates to whole units
     bbox = (math.floor(reproj_west), math.floor(reproj_south), math.ceil(reproj_east), math.ceil(reproj_north))
+
+    if geo_feature.lower() == 'adm4union':
+        # reproject geodataframe to UTM
+        zones = boundaries_gdf.to_crs(utm_crs)
+    else:
+        zones = None
 
     return bbox, utm_crs, zones
 
@@ -839,7 +822,7 @@ class Layer():
         if force_data_refresh:
             has_usable_cache = False
         else:
-            has_usable_cache = determine_cache_usability(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m, aoi_buffer_m)
+            has_usable_cache = is_cache_usable(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m, aoi_buffer_m)
 
         if not has_usable_cache:
             target_uri, _, _, _ = build_file_key(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m)
@@ -867,7 +850,7 @@ class Layer():
             has_usable_cache = False
         else:
             standard_env = standardize_s3_env(s3_env)
-            has_usable_cache = determine_cache_usability(s3_bucket, standard_env, self.aggregate, bbox, None, None)
+            has_usable_cache = is_cache_usable(s3_bucket, standard_env, self.aggregate, bbox, None, None)
 
         if has_usable_cache:
             result_data, _, _ = retrieve_city_cache(self.aggregate, bbox, aoi_buffer_m, s3_bucket=s3_bucket, output_env=standard_env,
@@ -1116,7 +1099,7 @@ class Layer():
             _, tile_data = standardize_y_dimension_direction(tile_data)
 
             # clip back to original tile extent
-            clipped_tile = extract_tif_subarea(tile_data, geo_extent)
+            clipped_tile = extract_bbox_aoi(tile_data, geo_extent)
 
             file_name = self._construct_tile_name(index)
             temp_file_path = os.path.join(temp_dir, file_name)
@@ -1296,11 +1279,12 @@ class Metric():
         if isinstance(indicator, (float, int)):
             indicator = pd.Series([indicator])
 
-        result_df = geo_zone.zones
         if isinstance(indicator, Series):
             indicator.name = 'value'
+            result_df = geo_zone.zones
             indicator_df = pd.concat([result_df, indicator], axis=1)
         elif isinstance(indicator, pd.DataFrame):
+            result_df = geo_zone.zones
             indicator_df = pd.concat([result_df, indicator], axis=1)
         else:
             indicator_df = indicator
@@ -1382,7 +1366,7 @@ class Metric():
         if force_data_refresh:
             has_usable_cache = False
         else:
-            has_usable_cache = determine_cache_usability(s3_bucket, standard_env, self.metric, geo_zone, None, None)
+            has_usable_cache = is_cache_usable(s3_bucket, standard_env, self.metric, geo_zone, None, None)
 
         if not has_usable_cache and geo_zone.geo_type == GeoType.CITY:
             target_uri, _, feature_id, _ = build_file_key(s3_bucket, standard_env, self.metric, geo_zone, None)
@@ -1418,7 +1402,7 @@ class Metric():
             has_usable_cache = False
         else:
             standard_env = standardize_s3_env(s3_env)
-            has_usable_cache = determine_cache_usability(s3_bucket, standard_env, self.metric, geo_zone, None, None)
+            has_usable_cache = is_cache_usable(s3_bucket, standard_env, self.metric, geo_zone, None, None)
 
         if has_usable_cache:
             result_metric, feature_id, _ = retrieve_city_cache(self.metric, geo_extent=geo_zone, aoi_buffer_m=None, s3_bucket=s3_bucket,

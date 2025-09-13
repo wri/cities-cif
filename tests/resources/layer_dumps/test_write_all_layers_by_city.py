@@ -3,7 +3,7 @@ import timeout_decorator
 
 from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, CIF_TESTING_S3_BUCKET_URI
 from city_metrix.layers import *
-from city_metrix.cache_manager import check_if_cache_object_exists
+from city_metrix.cache_manager import is_cache_object_available
 from ...tools.general_tools import get_test_cache_variables
 from tests.resources.tools import cleanup_cache_files, prep_output_path
 from ..bbox_constants import GEOEXTENT_TERESINA
@@ -315,7 +315,7 @@ def _run_write_layers_by_city_test(layer_obj, target_folder):
         layer_obj.write(bbox=geo_extent, target_file_path=os_file_path, tile_side_length=5000, length_units='meters')
         file_uri = 'file://' + os_file_path
         tiled_file_uri = file_uri + '/tile_0001.tif'
-        cache_file_exists = True if check_if_cache_object_exists(file_uri) or check_if_cache_object_exists(
+        cache_file_exists = True if is_cache_object_available(file_uri) or is_cache_object_available(
             tiled_file_uri) else False
         assert cache_file_exists, "Test failed since file did not upload to s3"
     finally:

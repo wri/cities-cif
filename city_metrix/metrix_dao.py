@@ -146,6 +146,8 @@ def _is_s3_folder_or_file(uri):
 
 
 def read_geotiff_subarea_from_cache(file_uri, city_aoi_subarea, utm_crs):
+    # This function either calls the sub-area processing code for a file object or loops over
+    # all files in a folder, calling the sub-area proceing code
     import json
     import xarray as xr
     from shapely.geometry import box
@@ -155,8 +157,8 @@ def read_geotiff_subarea_from_cache(file_uri, city_aoi_subarea, utm_crs):
 
     object_type = _is_s3_folder_or_file(file_uri)
     if object_type == 'file':
-        subarea_da = _get_sub_area(s3_bucket, file_key, city_aoi_subarea, 0, utm_crs)
-    else:
+        subarea_da = _process_geotiff_sub_area(s3_bucket, file_key, city_aoi_subarea, 0, utm_crs)
+    else: # for a folder, process all files
         # Load geotiff_index.json from S3
         index_key = f"{file_key}/geotiff_index.json"
         index_obj = s3_client.get_object(Bucket=s3_bucket, Key=index_key)
@@ -182,7 +184,7 @@ def read_geotiff_subarea_from_cache(file_uri, city_aoi_subarea, utm_crs):
 
             for item in matching_items:
                 tile_key = item["key"]
-                da = _get_sub_area(s3_bucket, tile_key, city_aoi_subarea, 0, crs_str)
+                da = _process_geotiff_sub_area(s3_bucket, tile_key, city_aoi_subarea, 0, crs_str)
                 data_arrays.append(da)
 
             # Merge into a single DataArray using outer join
@@ -194,7 +196,8 @@ def read_geotiff_subarea_from_cache(file_uri, city_aoi_subarea, utm_crs):
     return subarea_da
 
 
-def _get_sub_area(s3_bucket, key, bbox, pad, utm_crs):
+def _process_geotiff_sub_area(s3_bucket, key, bbox, pad, utm_crs):
+    # function uses rasterio.windows to get geotiff sub=area
     from rasterio.io import MemoryFile
     from rasterio.windows import from_bounds, Window
     from rasterio.transform import xy
@@ -426,21 +429,14 @@ def _verify_api_cache_file(query_uri, qualifier, file_extension):
 
 
 def get_city(city_id: str):
-    query_uri = f"https://{CITIES_DATA_API_URL}/cities/{city_id}"
+    query_uri = f"{CITIES_DATA_API_URL}/cities/{city_id}"
     is_cache_file_usable, cache_uri, cache_file_path = _verify_api_cache_file(query_uri, 'city_details', 'json')
 
-    city_json = None
     if is_cache_file_usable:
         with open(cache_file_path, 'r') as file:
             city_json = json.load(file)
     else:
-        try:
-            city = requests.get(query_uri)
-            if city.status_code in range(200, 206):
-                city_json =  city.json()
-        except Exception as e_msg:
-            raise Exception(f"API call for city failed with error: {e_msg}")
-
+        city_json = query_api(query_uri)
         uri_path = os.path.normpath(get_file_path_from_uri(cache_uri))
         _create_local_target_folder(uri_path)
         with open(uri_path, "w") as file:
@@ -449,27 +445,45 @@ def get_city(city_id: str):
     return city_json
 
 
-def get_city_admin_boundaries(city_id: str) -> GeoDataFrame:
-    query_uri = f"https://{CITIES_DATA_API_URL}/cities/{city_id}/"
-    is_cache_file_usable, cache_uri, _ = _verify_api_cache_file(query_uri, 'admin_boundaries', GEOJSON_FILE_EXTENSION)
+def query_api(query_uri):
+    response_json = None
+    try:
+        response = requests.get(query_uri)
+        if response.status_code in range(200, 206):
+            response_json = response.json()
+    except Exception as e_msg:
+        raise Exception(f"API call failed with error: {e_msg}")
+    return response_json
 
-    boundaries_geojson = None
+def get_city_boundaries(city_id: str, admin_level: str):
+    if admin_level.lower() == 'adm4union':
+        query_uri = f"{CITIES_DATA_API_URL}/cities/{city_id}/"
+        is_cache_file_usable, cache_uri, _ = _verify_api_cache_file(query_uri, 'admin_boundaries',
+                                                                    GEOJSON_FILE_EXTENSION)
+    elif admin_level.lower() == 'urban_extent':
+        query_uri = f'{CIF_DASHBOARD_LAYER_S3_BUCKET_URI}/data/dev/boundaries/geojson/{city_id}__urban_extent.geojson'
+        is_cache_file_usable, cache_uri, _ = _verify_api_cache_file(query_uri, None, GEOJSON_FILE_EXTENSION)
+    else:
+        raise ValueError('Invalid admin_level')
+
     if is_cache_file_usable:
         boundaries_geojson = read_geojson_from_cache(cache_uri)
     else:
-        try:
-            city_boundary = requests.get(query_uri)
-            if city_boundary.status_code in range(200, 206):
-                boundaries_uri = city_boundary.json()['layers_url']['geojson']
-                boundaries_geojson = read_geojson_from_cache(boundaries_uri)
-        except Exception as e_msg:
-            raise Exception(f"API call for city-admin boundary failed with error: {e_msg}")
+        if admin_level.lower() == 'adm4union':
+            response = query_api(query_uri)
+            boundaries_uri = response['layers_url']['geojson']
+            boundaries_geojson = read_geojson_from_cache(boundaries_uri)
+        elif admin_level.lower() == 'urban_extent':
+            boundaries_geojson = read_geojson_from_cache(query_uri)
 
-        write_geojson(boundaries_geojson, cache_uri)
+    if admin_level.lower() == 'adm4union':
+        geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
+    elif admin_level.lower() == 'urban_extent':
+        geom_columns = ['geometry']
 
-    geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
     boundaries = boundaries_geojson[geom_columns]
     boundaries_with_index = boundaries.reset_index()
+
     return boundaries_with_index
 
 
@@ -550,7 +564,7 @@ def remove_scheme_from_uri(uri):
     return uri_without_scheme
 
 
-def extract_tif_subarea(tif_da, bbox):
+def extract_bbox_aoi(tif_da, bbox):
     import os
     import rasterio
     from rasterio.windows import from_bounds
@@ -560,52 +574,12 @@ def extract_tif_subarea(tif_da, bbox):
         write_layer(tif_da, file_uri, GTIFF_FILE_EXTENSION)
 
         with rasterio.open(temp_file) as src:
-            xmin, ymin, xmax, ymax = bbox.bounds
-            window = from_bounds(xmin, ymin, xmax, ymax, transform=src.transform)
-            subarea = src.read(1, window=window)
-            sub_transform = src.window_transform(window)
-
-            crs = tif_da.rio.crs.to_epsg()
-
-            # Clean metadata
-            meta = {
-                "driver": "GTiff",
-                "dtype": subarea.dtype.name,
-                "nodata": None,
-                "width": subarea.shape[1],
-                "height": subarea.shape[0],
-                "count": 1,
-                "crs": crs,
-                "transform": sub_transform
-            }
-
-            output_path = os.path.join(temp_dir, 'tempfile2.tif')
-            with rasterio.open(output_path, "w", **meta) as dst:
-                dst.write(subarea, 1)
-
-            file_uri = f"file://{output_path}"
-            query_da = read_geotiff_from_cache(file_uri)
-
-        return query_da
-
-
-def extract_bbox_aoi(buffered_data, bbox):
-    import os
-    import rasterio
-    from rasterio.windows import from_bounds
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_file = os.path.join(temp_dir, 'tempfile.tif')
-        file_uri = f"file://{temp_file}"
-        write_layer(buffered_data, file_uri, GTIFF_FILE_EXTENSION)
-
-        with rasterio.open(temp_file) as src:
             xmin, ymin, xmax, ymax = bbox.as_utm_bbox().bounds
             window = from_bounds(xmin, ymin, xmax, ymax, transform=src.transform)
             subarea = src.read(1, window=window)
             sub_transform = src.window_transform(window)
 
-            epsg_code = buffered_data.rio.crs.to_epsg()
-            utm_crs = f'EPSG:{epsg_code}'
+            utm_crs = tif_da.rio.crs.to_epsg()
 
             # Clean metadata
             meta = {
@@ -624,6 +598,6 @@ def extract_bbox_aoi(buffered_data, bbox):
                 dst.write(subarea, 1)
 
             file_uri = f"file://{output_path}"
-            query_data = read_geotiff_from_cache(file_uri)
+            query_da = read_geotiff_from_cache(file_uri)
 
-        return query_data
+        return query_da

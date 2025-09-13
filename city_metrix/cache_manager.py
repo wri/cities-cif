@@ -35,15 +35,18 @@ def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_b
     return file_uri, file_key, feature_id, is_custom_object
 
 
-def determine_cache_usability(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m=None, city_aoi_subarea=None):
+def is_cache_usable(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m=None, city_aoi_subarea=None):
+    # Function determines if the cache can be used based on some limited criteria
+
     file_uri, _, _, _ = build_file_key(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m)
 
-    if geo_extent.geo_type == GeoType.CITY and check_if_cache_object_exists(file_uri):
+    # If the GeoExtent is for a full city and the cache data are available, then the cache is usable
+    if geo_extent.geo_type == GeoType.CITY and is_cache_object_available(file_uri):
         return True
 
+    # For a city sub_area, cache is available for GeoTiff files only
     file_format = class_obj.OUTPUT_FILE_FORMAT
-
-    if city_aoi_subarea is not None and file_format != GTIFF_FILE_EXTENSION:
+    if city_aoi_subarea is not None and is_cache_object_available(file_uri) and file_format == GTIFF_FILE_EXTENSION:
         return True
 
     return False
@@ -51,7 +54,6 @@ def determine_cache_usability(s3_bucket, output_env, class_obj, geo_extent, aoi_
 
 def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m: int, s3_bucket: str, output_env: str,
                         city_aoi_subarea: tuple[float, float, float, float]=None):
-
     file_uri, file_key, feature_id, is_custom_layer = build_file_key(s3_bucket, output_env, class_obj, geo_extent,
                                                                      aoi_buffer_m)
 
@@ -59,8 +61,10 @@ def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m: int, s3_bucket: str
     file_format = class_obj.OUTPUT_FILE_FORMAT
     if file_format == GTIFF_FILE_EXTENSION:
         if city_aoi_subarea is None:
+            # when a subarea within a city is not specified, simply retrieve the entire cached file.
             data = read_geotiff_from_cache(file_uri)
         else:
+            # when a subarea within a city is specified, then retrieve part of parts of files.
             utm_crs = geo_extent.crs
             data = read_geotiff_subarea_from_cache(file_uri, city_aoi_subarea, utm_crs)
     elif file_format == GEOJSON_FILE_EXTENSION:
@@ -252,7 +256,7 @@ def _construct_kv_string(key, value, separator):
     return f"{separator}{key}_{value}"
 
 
-def check_if_cache_object_exists(file_uri):
+def is_cache_object_available(file_uri):
     uri_scheme = get_uri_scheme(file_uri)
     file_key = get_file_path_from_uri(file_uri)
     if uri_scheme == "s3":
@@ -285,7 +289,7 @@ def get_cached_file_uri(s3_bucket, file_key, is_custom_layer):
         if s3_bucket in (CIF_CACHE_S3_BUCKET_URI, CTCM_CACHE_S3_BUCKET_URI, CIF_TESTING_S3_BUCKET_URI):
             uri = s3_bucket
         else:
-            raise ValueError("Invalid s3 bucket name {s3_bucket}")
+            raise ValueError(f"Invalid s3 bucket name {s3_bucket}")
 
     if get_uri_scheme(uri) in ('s3', 'file'):
         file_uri = f"{uri}/{file_key}"

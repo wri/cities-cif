@@ -33,7 +33,7 @@ class HighSlope(Layer):
         validate_raster_resampling_method(resampling_method)
 
         # Specify DEFAULT_DEVELOPMENT_ENV since NasaDEM is not a Dashboard layer
-        nasa_dem = NasaDEM().retrieve_data(bbox=bbox, s3_bucket=CIF_CACHE_S3_BUCKET_URI, s3_env=DEFAULT_DEVELOPMENT_ENV, spatial_resolution=spatial_resolution)
+        nasa_dem = NasaDEM().get_data(bbox=bbox, spatial_resolution=spatial_resolution)
 
         slope_data = slope(nasa_dem)
         # filter for steep slope
