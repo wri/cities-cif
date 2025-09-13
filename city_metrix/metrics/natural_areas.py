@@ -11,15 +11,16 @@ class NaturalAreas__Percent(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self,  **kwargs):
+    def __init__(self,  year=2020, **kwargs):
         super().__init__(**kwargs)
+        self.year = year
         self.unit = 'percent'
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
-        natural_areas = NaturalAreas().groupby(geo_zone).mean()
+        natural_areas = NaturalAreas(year=self.year).groupby(geo_zone).mean()
 
         if isinstance(natural_areas, pd.DataFrame):
             result = natural_areas.copy()

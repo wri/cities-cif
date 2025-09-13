@@ -11,7 +11,7 @@ class CanopyAreaPerResident__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     CUSTOM_TILE_SIDE_M = 10000
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "agesex_classes", "informal_only", "year"]
+    MINOR_NAMING_ATTS = ["height", "agesex_classes", "informal_only"]
 
     def __init__(self,
                  agesex_classes=[],
@@ -60,7 +60,7 @@ class CanopyAreaPerResident__SquareMeters(Metric):
 class CanopyAreaPerResidentChildren__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "year"]
+    MINOR_NAMING_ATTS = ["height"]
 
     def __init__(self, height=3, year=2025, **kwargs):
         super().__init__(**kwargs)
@@ -80,7 +80,7 @@ class CanopyAreaPerResidentChildren__SquareMeters(Metric):
 class CanopyAreaPerResidentElderly__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "year"]
+    MINOR_NAMING_ATTS = ["height"]
 
     def __init__(self, height=3, year=2025, **kwargs):
         super().__init__(**kwargs)
@@ -100,7 +100,7 @@ class CanopyAreaPerResidentElderly__SquareMeters(Metric):
 class CanopyAreaPerResidentFemale__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "year"]
+    MINOR_NAMING_ATTS = ["height"]
 
     def __init__(self, height=3, year=2025, **kwargs):
         super().__init__(**kwargs)
@@ -120,7 +120,7 @@ class CanopyAreaPerResidentFemale__SquareMeters(Metric):
 class CanopyAreaPerResidentInformal__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "year"]
+    MINOR_NAMING_ATTS = ["height"]
 
     def __init__(self, height=3, year=2025, **kwargs):
         super().__init__(**kwargs)

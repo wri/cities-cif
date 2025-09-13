@@ -22,7 +22,7 @@ def build_file_key(output_env, class_obj, geo_extent):
     file_key = get_cached_file_key(feature_base_class_name, output_env, cache_folder_name, city_id,
                                    admin_level, feature_id, file_format)
 
-    file_uri = get_cached_file_uri(file_key, is_custom_object)
+    file_uri = get_cached_file_uri(file_key, (False and is_custom_object))
 
     return file_uri, file_key, feature_id, is_custom_object
 
