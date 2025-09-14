@@ -90,6 +90,7 @@ class AccessibleCountPopWeighted(Layer):
         self.worldpop_year = worldpop_year
         self.informal_only = informal_only
 
+
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=WORLDPOP_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_cache_retrieval=False):
         utm_crs = bbox.as_utm_bbox().crs
@@ -97,10 +98,14 @@ class AccessibleCountPopWeighted(Layer):
         if self.informal_only:
             informal_layer = UrbanLandUse(return_value=INFORMAL_CLASS)
             population_layer.masks.append(informal_layer)
-        population_data = population_layer.get_data(bbox, spatial_resolution=spatial_resolution)
+        population_data = population_layer.get_data(bbox.buffer_utm_bbox(500), spatial_resolution=WORLDPOP_SPATIAL_RESOLUTION)
         count_layer = AccessibleCount(amenity=self.amenity, city_id=self.city_id, level=self.level, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project)
-        count_data = count_layer.get_data(bbox, spatial_resolution=WORLDPOP_SPATIAL_RESOLUTION)
-        numerator = xr.DataArray(count_data.fillna(0).to_numpy() * population_data.to_numpy(), dims=['y', 'x'], coords={'y': count_data.y, 'x': count_data.x})
+        count_data = count_layer.get_data(bbox, spatial_resolution=WORLDPOP_SPATIAL_RESOLUTION).fillna(0)
+        aligned = xr.align(count_data, population_data, join='left')
+        count_data = aligned[0].to_numpy()
+        population_data = aligned[1].to_numpy()
+
+        numerator = xr.DataArray(count_data * population_data, dims=['y', 'x'], coords={'y': count_data.y, 'x': count_data.x})
         result = numerator / population_data.mean()
         result.rio.write_crs(utm_crs, inplace=True)
         return result
