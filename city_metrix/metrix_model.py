@@ -932,10 +932,10 @@ class Layer():
 
         # Write grid to S3
         fishnet['tile_name'] = 'tile_' + fishnet['index'].astype(str).str.zfill(TILE_NUMBER_PADCOUNT)
-        fishnet_grid = fishnet[['index', 'tile_name', 'geometry']]
-        fishnet_grid['success'] = 'unknown'
+        fishnet['success'] = 'unknown'
+        fishnet = fishnet[['index', 'tile_name', 'success', 'geometry']]
         grid_file_uri = f"{target_uri}/fishnet_grid.json"
-        write_file_to_s3(fishnet_grid, grid_file_uri, GEOJSON_FILE_EXTENSION)
+        write_file_to_s3(fishnet, grid_file_uri, GEOJSON_FILE_EXTENSION)
 
         # Write index
         _write_grid_index_to_cache(fishnet, target_uri, crs)
@@ -986,7 +986,7 @@ class Layer():
             write_file_to_s3(df_joined, uri, CSV_FILE_EXTENSION, keep_index=False)
 
             # create updated fishnet grid showing download failures
-            new_fishnet_grid = fishnet_grid.merge(errors_df, on='index', how='left', indicator=True)
+            new_fishnet_grid = fishnet.merge(errors_df, on='index', how='left', indicator=True)
 
             # Add 'failed' column: True if match found, else False
             new_fishnet_grid['success'] = new_fishnet_grid['_merge'] != 'both'
