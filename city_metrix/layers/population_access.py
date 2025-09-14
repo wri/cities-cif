@@ -16,6 +16,18 @@ WORLDPOP_SPATIAL_RESOLUTION = 100
 INFORMAL_CLASS = 3
 SUPPORTED_AMENITIES = ('commerce', 'economic', 'healthcare', 'openspace', 'schools', 'transit')
 
+def _get_aligned_dataarray(ref_array, data_array):
+    # returns DataArray with data from data_array, but with shape and coords from ref_array
+    # ref_array must fit geographically within data_array
+    # dims must be y, x
+    
+    first_corner = data_array.sel(x=ref_array.x[0], y=ref_array.y[0], method='nearest')
+    x0 = first_corner.x.data.tolist()
+    y0 = first_corner.y.data.tolist()
+    x0_idx = list(data_array.x).index(x0)
+    y0_idx = list(data_array.y).index(y0)
+    return data_array[y0_idx:y0_idx + ref_array.shape[0], x0_idx:x0_idx + ref_array.shape[1]]
+
 class AccessibleCount(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["project"]
@@ -101,11 +113,14 @@ class AccessibleCountPopWeighted(Layer):
         population_data = population_layer.get_data(bbox.buffer_utm_bbox(500), spatial_resolution=WORLDPOP_SPATIAL_RESOLUTION)
         count_layer = AccessibleCount(amenity=self.amenity, city_id=self.city_id, level=self.level, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project)
         count_data = count_layer.get_data(bbox, spatial_resolution=WORLDPOP_SPATIAL_RESOLUTION).fillna(0)
-        aligned = xr.align(count_data, population_data, join='left')
-        count_data = aligned[0].to_numpy()
-        population_data = aligned[1].to_numpy()
 
-        numerator = xr.DataArray(count_data * population_data, dims=['y', 'x'], coords={'y': count_data.y, 'x': count_data.x})
-        result = numerator / population_data.mean()
+        aligned_population_data = _get_aligned_dataarray(count_data, population_data)
+
+        aligned = xr.align(count_data, population_data, join='left')
+        count_array = count_data.to_numpy()
+        population_array = aligned_population_data.to_numpy()
+
+        numerator = xr.DataArray(count_array * population_array, dims=['y', 'x'], coords={'y': count_data.y, 'x': count_data.x})
+        result = numerator / aligned_population_data.mean()
         result.rio.write_crs(utm_crs, inplace=True)
         return result

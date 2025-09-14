@@ -220,7 +220,7 @@ class AccessToPublicTransportation_TotalPopulation__Percent(_AccessPopulationPer
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, worldpop_year=2020, **kwargs):
+    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='transit', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToPublicTransportation_Children__Percent(_AccessPopulationPercentChildren):
