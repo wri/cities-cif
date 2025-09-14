@@ -914,8 +914,8 @@ class Layer():
         create_uri_target_folder(target_uri)
 
         # Add notice file to folder
-        processing_notice_fil_uri = f"{target_uri}/___NOTICE_SYSTEM_IS_ACTIVELY_PROCESSING_TILES__.csv"
-        write_file_to_s3(pd.DataFrame(), processing_notice_fil_uri, CSV_FILE_EXTENSION, keep_index=False)
+        processing_notice_file_uri = f"{target_uri}/___NOTICE_SYSTEM_IS_ACTIVELY_PROCESSING_TILES__.csv"
+        write_file_to_s3(pd.DataFrame(), processing_notice_file_uri, CSV_FILE_EXTENSION, keep_index=False)
 
         output_as = ProjectionType.UTM
         utm_box = bbox.as_utm_bbox()
@@ -924,16 +924,23 @@ class Layer():
         fishnet = create_fishnet_grid(bbox=utm_box, tile_side_length=tile_side_m, length_units='meters',
                                       spatial_resolution=spatial_resolution, output_as=output_as)
         fishnet['index'] = fishnet.index
+        fishnet['download_failed'] = 'unknow'
+        fishnet = fishnet[['index','geometry']]
 
         # Temporary hack for testing
-        # fishnet = fishnet.iloc[:3]
+        # fishnet = fishnet.iloc[:6]
+
+        # Write grid to S3
+        fishnet['tile_name'] = 'tile_' + fishnet['index'].astype(str).str.zfill(TILE_NUMBER_PADCOUNT)
+        fishnet_grid = fishnet[['index', 'tile_name', 'geometry']]
+        fishnet_grid['success'] = 'unknown'
+        grid_file_uri = f"{target_uri}/fishnet_grid.json"
+        write_file_to_s3(fishnet_grid, grid_file_uri, GEOJSON_FILE_EXTENSION)
 
         # Write index
         _write_grid_index_to_cache(fishnet, target_uri, crs)
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            # TODO Add verification of complete set of files
-
             # Read from source and write to local temp directory
             retry_count = 0
             unretrieved_tiles = fishnet
@@ -946,14 +953,14 @@ class Layer():
 
                 # run them all in parallel with threads
                 target_gb = 3
-                unretrieved_tile_ids = []
+                retrieval_errors = []
                 try:
-                    unretrieved_tile_ids = self._run_tasks(tasks, target_gb)
+                    retrieval_errors = self._run_tasks(tasks, target_gb)
                 except Exception as e:
                     print(f"Failed to process a tile fo {target_uri}: {e}. Retrying.")
 
                 # Note this check only accounts for tiles that were missed due to dask failures and not download errors
-                unretrieved_tile_records = [x for x in unretrieved_tile_ids if x is not None]
+                unretrieved_tile_records = [(k, v) for error in retrieval_errors for k, v in error.items() if v is not None]
                 if len(unretrieved_tile_records) == 0:
                     unretrieved_tiles = gpd.GeoDataFrame(geometry=[])
                 else:
@@ -963,17 +970,34 @@ class Layer():
 
                 retry_count +=1
 
-        # Write unretrieved tiles with error and geometry cache
+        # Write unretrieved tiles with error and geometry to file in cache
         if len(unretrieved_tile_records) > 0:
             errors_df = pd.DataFrame(unretrieved_tile_records, columns=["index", "error"])
             errors_df.set_index('index', inplace=True)
-            incomplete_tile_geometry = unretrieved_tiles[['index','geometry']]
-            df_joined = pd.merge(errors_df, incomplete_tile_geometry, on='index', how='left')
-            uri = f"{target_uri}/metadata_unretrieved_tiles.csv"
+            errors_df.reset_index(inplace=True)
+
+            incomplete_tile_geometry = unretrieved_tiles.reset_index(drop=True)
+
+            df_joined = pd.merge(errors_df, incomplete_tile_geometry, on='index', how='left').reset_index(drop=True)
+            df_joined = df_joined[['tile_name', 'error', 'geometry']].reset_index(drop=True)
+
+            # write failures
+            uri = f"{target_uri}/failed_downloads.csv"
             write_file_to_s3(df_joined, uri, CSV_FILE_EXTENSION, keep_index=False)
 
+            # create updated fishnet grid showing download failures
+            new_fishnet_grid = fishnet_grid.merge(errors_df, on='index', how='left', indicator=True)
+
+            # Add 'failed' column: True if match found, else False
+            new_fishnet_grid['success'] = new_fishnet_grid['_merge'] != 'both'
+
+            # Drop the merge indicator column if not needed
+            new_fishnet_grid.drop(columns=['error','_merge'], inplace=True)
+            result_df = new_fishnet_grid[['tile_name', 'success', 'geometry']].reset_index(drop=True)
+            write_file_to_s3(result_df, grid_file_uri, GEOJSON_FILE_EXTENSION)
+
         # remove the notice file
-        delete_s3_file_if_exists(processing_notice_fil_uri)
+        delete_s3_file_if_exists(processing_notice_file_uri)
 
 
     def _write_data_to_cache(self, source_file_path, target_tile_uri):
@@ -1053,7 +1077,13 @@ class Layer():
         while tile_data is None and retry_count < 3:
             failure_message = ''
             try:
-                tile_data = self.aggregate.get_data(bbox=buffered_utm_bbox, spatial_resolution=spatial_resolution)
+                # # ---- Use for testing failures
+                # if index % 2 == 0:
+                #     tile_data = None
+                #     raise Exception(f"{PROCESSING_KNOWN_ISSUE_FLAG} something went wrong")
+                # else:
+                # # ----
+                    tile_data = self.aggregate.get_data(bbox=buffered_utm_bbox, spatial_resolution=spatial_resolution)
             except Exception as e_msg:
                 failure_message = str(e_msg)
                 if PROCESSING_KNOWN_ISSUE_FLAG in str(e_msg):
@@ -1065,9 +1095,7 @@ class Layer():
 
             retry_count += 1
 
-        if tile_data is None:
-            unretrieved_tile_id = index
-        else:
+        if tile_data is not None:
             _, tile_data = standardize_y_dimension_direction(tile_data)
 
             # clip back to original tile extent
@@ -1085,13 +1113,11 @@ class Layer():
                 raise Exception(f"Failed to process {target_tile_uri}: {e}")
             os.remove(temp_file_path)
 
-            unretrieved_tile_id = ''
-
-        if unretrieved_tile_id != '':
-            unretrieved_results = {unretrieved_tile_id, failure_message}
+            retrieval_errors = {index: None}
         else:
-            unretrieved_results = None
-        return unretrieved_results
+            retrieval_errors = {index: failure_message}
+
+        return retrieval_errors
     
 
     def mask(self, *layers):
