@@ -21,6 +21,7 @@ class _CountAccessiblePopWeighted(Metric):
         self.travel_mode = travel_mode
         self.threshold = threshold
         self.unit = unit
+        self.osm_year = 2025
         self.worldpop_agesex_classes = worldpop_agesex_classes
         self.worldpop_year = worldpop_year
         self.informal_only = informal_only
@@ -63,17 +64,17 @@ class _CountAccessiblePopWeightedInformal(_CountAccessiblePopWeighted):
 
 #************************************************
 class CountPotentialEmployers__TotalPopulationPopWeightedCount(_CountAccessiblePopWeightedAll):
-    def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
+    def __init__(self, city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
 class CountPotentialEmployers__AdultsPopWeightedCount(_CountAccessiblePopWeightedAdults):
-    def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
+    def __init__(self, city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
 class CountPotentialEmployers__FemalePopWeightedCount(_CountAccessiblePopWeightedFemale):
-    def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
+    def __init__(self, city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)
 
 class CountPotentialEmployers__InformalPopWeightedCount(_CountAccessiblePopWeightedInformal):
-    def __init__(self, city_id, level, travel_mode, threshold, unit, worldpop_year=2020, **kwargs):
+    def __init__(self, city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, worldpop_year=worldpop_year, **kwargs)

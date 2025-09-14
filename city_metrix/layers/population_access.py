@@ -21,7 +21,7 @@ class AccessibleCount(Layer):
     MAJOR_NAMING_ATTS = ["project"]
     MINOR_NAMING_ATTS = ["amenity", "city_id", "level", "travel_mode", "threshold", "unit"]
 
-    def __init__(self, amenity='economic', city_id='KEN-Nairobi', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', project=None, **kwargs):
+    def __init__(self, amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', project=None, **kwargs):
         super().__init__(**kwargs)
         self.city_id = city_id
         self.level = level
@@ -33,7 +33,7 @@ class AccessibleCount(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_cache_retrieval=False):
-        if self.project is None:
+        if self.project is not None:
             project_tag = '__' + self.project
         else:
             project_tag = ''
@@ -55,7 +55,7 @@ class AccessibleRegion(Layer):
     MAJOR_NAMING_ATTS = ["amenity", "city_id", "level", "travel_mode", "threshold", "unit"]
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, amenity='economic', city_id='KEN-Nairobi', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', **kwargs):
+    def __init__(self, amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', project=None, **kwargs):
         super().__init__(**kwargs)
         self.city_id = city_id
         self.level = level
@@ -63,10 +63,11 @@ class AccessibleRegion(Layer):
         self.travel_mode = travel_mode
         self.threshold = threshold
         self.unit = unit
+        self.project = project
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_cache_retrieval=False):
-        accessible_count = AccessibleCount(amenity=self.amenity, city_id=self.city_id, level=self.level, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit).get_data(bbox)
+        accessible_count = AccessibleCount(amenity=self.amenity, city_id=self.city_id, level=self.level, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project).get_data(bbox)
         ds = xr.where(accessible_count > 0, 1, np.nan, True)
         ds.rio.write_crs(bbox.as_utm_bbox().crs, inplace=True).squeeze()
         return ds
@@ -76,7 +77,7 @@ class AccessibleCountPopWeighted(Layer):
     MAJOR_NAMING_ATTS = ["amenity", "city_id", "level", "travel_mode", "threshold", "unit", "worldpop_agesex_classes", "worldpop_year", "informal_only"]
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, amenity='jobs', city_id='KEN-Nairobi', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False, **kwargs):
+    def __init__(self, amenity='jobs', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False, **kwargs):
         super().__init__(**kwargs)
         self.city_id = city_id
         self.level = level
@@ -84,6 +85,7 @@ class AccessibleCountPopWeighted(Layer):
         self.travel_mode = travel_mode
         self.threshold = threshold
         self.unit = unit
+        self.project = project
         self.worldpop_agesex_classes = worldpop_agesex_classes
         self.worldpop_year = worldpop_year
         self.informal_only = informal_only
@@ -96,7 +98,7 @@ class AccessibleCountPopWeighted(Layer):
             informal_layer = UrbanLandUse(return_value=INFORMAL_CLASS)
             population_layer.masks.append(informal_layer)
         population_data = population_layer.get_data(bbox, spatial_resolution=spatial_resolution)
-        count_layer = AccessibleCount(amenity=self.amenity, city_id=self.city_id, level=self.level, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit)
+        count_layer = AccessibleCount(amenity=self.amenity, city_id=self.city_id, level=self.level, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project)
         count_data = count_layer.get_data(bbox, spatial_resolution=WORLDPOP_SPATIAL_RESOLUTION)
         numerator = xr.DataArray(count_data.fillna(0).to_numpy() * population_data.to_numpy(), dims=['y', 'x'], coords={'y': count_data.y, 'x': count_data.x})
         result = numerator / population_data.mean()
