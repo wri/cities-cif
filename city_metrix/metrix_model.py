@@ -1,3 +1,4 @@
+import gc
 import math
 import os
 import random
@@ -1089,8 +1090,10 @@ class Layer():
                 if PROCESSING_KNOWN_ISSUE_FLAG in str(e_msg):
                     break
 
-            # pause to avoid over-contention against service
-            random_wait = random.randint(2,5)
+            gc.collect()
+
+            # pause to minimize over-contention between tasks
+            random_wait = random.randint(2, 5)
             time.sleep(random_wait)
 
             retry_count += 1
@@ -1108,9 +1111,12 @@ class Layer():
             # Cache the tile to S3 and remove temporary file
             target_tile_uri = f"{target_uri}/{file_name}"
             try:
+                print(f"Writing tile to {target_uri}")
                 self._write_data_to_cache(temp_file_path, target_tile_uri)
             except  Exception as e:
                 raise Exception(f"Failed to process {target_tile_uri}: {e}")
+
+            gc.collect()
             os.remove(temp_file_path)
 
             retrieval_errors = {index: None}

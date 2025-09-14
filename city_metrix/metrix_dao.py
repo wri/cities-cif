@@ -5,6 +5,7 @@ import requests
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
+import gc
 import json
 from pathlib import Path
 from rioxarray import rioxarray
@@ -278,6 +279,8 @@ def write_metric(data, uri, file_format):
     else:
         raise NotImplementedError("Can only write Series or Dataframe Indicator data.")
 
+    gc.collect()
+
 
 def write_layer(data, uri, file_format):
     if data is None:
@@ -294,6 +297,8 @@ def write_layer(data, uri, file_format):
         write_geojson(data, uri)
     else:
         raise NotImplementedError(f"Write function does not support format: {type(data).__name__}")
+
+    gc.collect()
 
 
 def write_file_to_s3(data, uri, file_extension, keep_index:bool=False):
@@ -329,6 +334,7 @@ def write_file_to_s3(data, uri, file_extension, keep_index:bool=False):
     except Exception as e_msg:
         print(f"Error writing to {file_key}")
 
+    gc.collect()
     shutil.rmtree(temp_dir)
 
 
@@ -411,6 +417,8 @@ def write_tile_grid(tile_grid, output_path, target_file_name):
     tile_grid_file_path = str(os.path.join(output_path, target_file_name))
     tg = tile_grid.drop(columns='immutable_fishnet_geometry', axis=1)
     tg.to_file(tile_grid_file_path)
+
+    gc.collect()
 
 
 # == API queries ==
