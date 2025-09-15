@@ -1,8 +1,9 @@
 import pandas as pd
-from city_metrix.constants import CSV_FILE_EXTENSION
+from typing import Union
 
-from city_metrix.layers import CamsGhg
+from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import Metric, GeoZone
+from city_metrix.layers import CamsGhg
 
 SUPPORTED_SPECIES = CamsGhg.SUPPORTED_SPECIES
 SUPPORTED_YEARS = CamsGhg.SUPPORTED_YEARS
@@ -20,17 +21,16 @@ class GhgEmissions__TonnesPerYear(Metric):
         self.co2e = co2e
         self.year = year
 
-    def get_metric(
-        self, zones: GeoZone, spatial_resolution: int = None
-    ) -> pd.Series:
-
+    def get_metric(self,
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         # supported years: 2010, 2015, 2020, 2023
         if not self.year in SUPPORTED_YEARS:
             raise Exception(f"Unsupported year: {self.year}")
 
         cams_ghg = CamsGhg(species=self.species, sector=self.sector, co2e=self.co2e, year=self.year)
 
-        cams_ghg_mean = cams_ghg.groupby(zones).mean()
+        cams_ghg_mean = cams_ghg.groupby(geo_zone).mean()
 
         return cams_ghg_mean
 
@@ -46,14 +46,14 @@ class GhgTimeSeries__TonnesPerYear(Metric):
         self.sector = sector
         self.co2e = co2e
 
-    def get_metric(
-        self, zones: GeoZone, spatial_resolution: int = None
-    ) -> pd.DataFrame:
+    def get_metric(self,
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
         results = []
         for year in SUPPORTED_YEARS:
             cams_ghg = CamsGhg(species=self.species, sector=self.sector, co2e=self.co2e, year=year)
-            results.append(cams_ghg.groupby(zones).mean().value)
+            results.append(cams_ghg.groupby(geo_zone).mean().value)
         results_df = pd.concat(results, axis=1)
 
         # Update column names

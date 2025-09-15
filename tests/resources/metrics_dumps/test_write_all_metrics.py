@@ -124,6 +124,15 @@ def test_write_era_5_met_preprocessingUmep(target_folder):
     _write_verify(metric_obj, zones, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_ghg_emissions__tonnesperyear(target_folder):
+    zones = SAMPLE_TILED_ZONES
+    file_path = prep_output_path(
+        target_folder, 'metric', 'ghg_emissions__tonnesperyear.csv')
+
+    metric_obj = GhgEmissions__TonnesPerYear()
+    _write_verify(metric_obj, zones, file_path)
+
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_habitat_types_restored__covertypes(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(
