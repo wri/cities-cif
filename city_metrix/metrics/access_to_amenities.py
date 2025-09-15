@@ -110,7 +110,7 @@ class AccessToSchools_TotalPopulation__Percent(_AccessPopulationPercentAll):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
     def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='openspace', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+        super().__init__(amenity='schools', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToSchools_Children__Percent(_AccessPopulationPercentChildren):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
