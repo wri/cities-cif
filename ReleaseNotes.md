@@ -1,5 +1,19 @@
 # Release Notes
 
+## 2025/09/12
+1. fixed several bugs
+1. re-architected the major functions for Layers and Metrics
+1. added s3 caching of tiled layers
+1. added s3_bucket parameter
+1. greatly improved boundary clipping for CTCM layers
+1. Bounds clipping for the CTCM layers collided with the standard clipping used by other CIF layers, so created TreeCanopyHeightCTCM as a workaround. 
+1. Publishing now stores error reports in "metadata" folders in S3 targets.
+1. Re-added opportunistic caching in retrieve_metric/data functions.
+
+# 2025/08/27
+1. Removed opportunistic caching
+2. Added sub-tiled caching for large layers
+
 # 2025/08/07
 1. Added default date range for Albedo layers
 

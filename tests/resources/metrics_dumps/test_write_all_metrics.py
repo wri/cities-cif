@@ -2,7 +2,7 @@
 # Execution configuration is specified in the conftest file
 import pytest
 
-from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, CIF_TESTING_S3_BUCKET_URI
 from city_metrix.metrics import *
 from tests.conftest import create_fishnet_gdf_for_testing
 from tests.resources.bbox_constants import BBOX_IDN_JAKARTA, BBOX_IDN_JAKARTA_LARGE
@@ -368,8 +368,7 @@ def test_write_water_cover__percent(target_folder):
 
 
 def _write_verify(metric_obj, zones, file_path):
-    metric_obj.write(
-        geo_zone=zones, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=file_path)
+    metric_obj.write(geo_zone=zones, target_file_path=file_path)
     assert verify_file_is_populated(file_path)
     if not PRESERVE_RESULTS_ON_OS:
         cleanup_cache_files(None, None, None, file_path)

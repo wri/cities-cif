@@ -25,7 +25,9 @@ Every `layer class` should implement at least a `get_data` function that either 
 
 This will be used in the `indicators` script to collect the data based on a region of interest.
 
-### Indicators
+If you encounter GEE memory issues, add the PROCESSING_TILE_SIDE_M parameter to the layer class and specify a dimension. See AlbedoCloudMasked for an example.
+
+### Indicators/Metrics
 
 The indicators methods are defined in the `metrics` folder. 
 
@@ -45,6 +47,8 @@ For example, you can get the tree cover count in built up land over Jakarta with
 ``
 
 The indicators function takes as input a `GeoDataFrame` (defined by `zones`) and returns the indicator values.
+
+If you encounter GEE memory issues, add the PROCESSING_TILE_SIDE_M parameter to the layer class and specify a dimension and add the custom_tile_size_m size to group by operations that cause the issue. See AreaFractionalVegetationExceedsThreshold__Percent for an example.
 
 ### Cities
 By default we assume you will provide the city boundary files you want to run calculations on. 
