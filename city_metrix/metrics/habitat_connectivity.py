@@ -1,14 +1,14 @@
 import pandas as pd
 import geopandas as gpd
 from typing import Union
-from city_metrix.metrix_model import Metric, GeoZone, GeoExtent, WGS_CRS
-from city_metrix.layers import NaturalAreas
-from city_metrix.constants import CSV_FILE_EXTENSION
-import numpy as np
 import rasterio
 import shapely
-
 import networkx as nx
+
+from city_metrix.constants import CSV_FILE_EXTENSION
+from city_metrix.metrix_model import Metric, GeoZone, GeoExtent, WGS_CRS
+from city_metrix.layers import NaturalAreas
+
 
 class _HabitatConnectivity(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
@@ -20,32 +20,36 @@ class _HabitatConnectivity(Metric):
         self.indicator_name = None
 
     def get_metric(self,
-                geo_zone: GeoZone,
-                spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
+        CONNECTIVITY_DISTANCE = 100  # Max distance two patches can be apart and be considered connected (meter)
+        MIN_PATCHSIZE = 1000  # Min patch size to be included in analysis (sq meter)
+        
+        zones = geo_zone.zones
+        worldcover_layer = NaturalAreas().get_data(GeoExtent(bbox=zones.total_bounds, crs=WGS_CRS))
+        
         def within_distance(idx, gdf):
             connecteds = gdf.loc[[idx]].buffer(CONNECTIVITY_DISTANCE)[idx].intersects(gdf.geometry)
-            return [i for i in list(connecteds.index[connecteds==True]) if not i == idx]
+            return [i for i in list(connecteds.index[connecteds == True]) if not i == idx]
 
-        CONNECTIVITY_DISTANCE = 100    # Max distance two patches can be apart and be considered connected (meter)
-        MIN_PATCHSIZE = 1000    # Min patch size to be included in analysis (sq meter)
-        worldcover_layer = NaturalAreas()
-        
-        result = []
-        zones = geo_zone.zones
+        result_value = []
+        # Reproject polygon if needed
+        if zones.crs != worldcover_layer.rio.crs:
+            zones = zones.to_crs(worldcover_layer.rio.crs)
         for rownum in range(len(zones)):
             zone = zones.iloc[[rownum]]
-            natarea_dataarray = worldcover_layer.get_data(GeoExtent(bbox=zone.total_bounds, crs=WGS_CRS))
+            natarea_dataarray = worldcover_layer.rio.clip(zone.geometry, zone.crs)
             natarea_shapes = rasterio.features.shapes(natarea_dataarray, connectivity=8, transform=natarea_dataarray.rio.transform())  # Polygonize the natural-areas raster
             natarea_shapes = list(natarea_shapes)
-            na_geoms = [i[0] for i in natarea_shapes if i[1]==1]  # Only want the natural areas
+            na_geoms = [i[0] for i in natarea_shapes if i[1] == 1]  # Only want the natural areas
             na_gdf = gpd.GeoDataFrame({'id': range(len(na_geoms)), 'geometry': [shapely.Polygon(j['coordinates'][0]) for j in na_geoms]})
             na_gdf = na_gdf.loc[na_gdf.area > MIN_PATCHSIZE]
-            
+
             connected = {
                 i: within_distance(i, na_gdf) for i in na_gdf.index
             }
-            
+
             # Find clusters from connected pairs
             edges = []
             for k in connected:
@@ -62,22 +66,17 @@ class _HabitatConnectivity(Metric):
                 cluster_areas.append(sum([na_gdf.loc[[j]]['geometry'].area[j] for j in i]))
             if total_area > 0:
                 if self.indicator_name == 'EMS':
-                    result.append((sum([i**2 for i in cluster_areas]) / total_area) / 10000)
-                else: #self.indicator_name == 'coherence'
-                    result.append((sum([i**2 for i in cluster_areas]) / (total_area**2)) * 100)
+                    result_value.append((sum([i**2 for i in cluster_areas]) / total_area) / 10000)
+                else:  # self.indicator_name == 'coherence'
+                    result_value.append((sum([i**2 for i in cluster_areas]) / (total_area**2)) * 100)
             else:
-                result.append(0)
-                
-        return pd.Series(result)
+                result_value.append(0)
 
-class HabitatConnectivityEffectiveMeshSize__Hectares(_HabitatConnectivity):
-    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+        result = pd.DataFrame(zones['index'].copy().rename('zone'))
+        result['value'] = result_value
 
-    def __init__(self,  **kwargs):
-        super().__init__(**kwargs)
-        self.indicator_name = 'EMS'
+        return result
+
 
 class HabitatConnectivityCoherence__Percent(_HabitatConnectivity):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
@@ -87,6 +86,15 @@ class HabitatConnectivityCoherence__Percent(_HabitatConnectivity):
     def __init__(self,  **kwargs):
         super().__init__(**kwargs)
         self.indicator_name = 'coherence'
+        self.unit = 'percent'
 
-    
 
+class HabitatConnectivityEffectiveMeshSize__Hectares(_HabitatConnectivity):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
+    def __init__(self,  **kwargs):
+        super().__init__(**kwargs)
+        self.indicator_name = 'EMS'
+        self.unit = 'hectares'
