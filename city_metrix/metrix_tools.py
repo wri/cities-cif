@@ -1,6 +1,4 @@
 import math
-import os
-from datetime import datetime
 
 import utm
 from typing import Union
@@ -165,3 +163,27 @@ def is_date(string):
         return True
     except ValueError:
         return False
+
+
+def is_openurban_available_for_city(city_id):
+    import ee
+    import xee
+
+    ic = ee.ImageCollection("projects/wri-datalab/cities/OpenUrban/OpenUrban_LULC")
+    store = xee.EarthEngineStore(ic, ee_init_if_necessary=True)
+
+    is_available = False
+    for image_id in store.image_ids:
+        # Split the string by '/' and take the last part
+        last_part = image_id.split('/')[-1]
+        city_name = _get_city_part_of_openurban_file_name(last_part)
+        if city_name == city_id:
+            is_available = True
+            break
+    return is_available
+
+def _get_city_part_of_openurban_file_name(s):
+    import re
+    # This pattern matches an underscore followed by one or more digits
+    return re.sub(r'_\d+', '', s)
+

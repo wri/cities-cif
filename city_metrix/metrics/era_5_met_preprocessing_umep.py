@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-from city_metrix.constants import CSV_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV
+from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import GeoExtent, Metric, GeoZone
 from city_metrix.metrix_tools import is_date
 from city_metrix.layers import Era5HottestDay
@@ -40,7 +40,7 @@ class Era5MetPreprocessingUmep(Metric):
         bbox = GeoExtent(geo_zone.bounds, geo_zone.crs)
 
         era_5_data = (Era5HottestDay(start_date=self.start_date, end_date=self.end_date, seasonal_utc_offset=self.seasonal_utc_offset)
-                      .get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution))
+                      .get_data(bbox=bbox))
 
         t2m_var = era_5_data.sel(variable='t2m').values
         u10_var = era_5_data.sel(variable='u10').values

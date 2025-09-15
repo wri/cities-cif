@@ -40,3 +40,5 @@ GEOEXTENT_TERESINA = GeoExtent(GEOZONE_TERESINA)
 city_admin = construct_city_aoi_json("BRA-Florianopolis", "city_admin_level")
 GEOZONE_FLORIANOPOLIS = GeoZone(geo_zone=city_admin)
 GEOEXTENT_FLORIANOPOLIS = GeoExtent(GEOZONE_FLORIANOPOLIS)
+
+
