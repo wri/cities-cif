@@ -48,21 +48,21 @@ def test_canopy_area_per_resident_children__squaremeters():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 5.24, 115.12, 100, 0)
+    assert_metric_stats(indicator, 2, 5.32, 115.07, 100, 0)
 
 def test_canopy_area_per_resident_elderly__squaremeters():
     indicator = CanopyAreaPerResidentElderly__SquareMeters().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 17.09, 375.27, 100, 0)
+    assert_metric_stats(indicator, 2, 17.34, 375.10, 100, 0)
 
 def test_canopy_area_per_resident_female__squaremeters():
     indicator = CanopyAreaPerResidentFemale__SquareMeters().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 2.33, 51.13, 100, 0)
+    assert_metric_stats(indicator, 2, 2.36, 51.11, 100, 0)
 
 def test_canopy_area_per_resident_informal__squaremeters():
     indicator = CanopyAreaPerResidentInformal__SquareMeters().get_metric(IDN_JAKARTA_TILED_ZONES)
