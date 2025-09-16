@@ -10,6 +10,7 @@ class BuiltLandWithVegetation__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["year"]
+    CUSTOM_TILE_SIDE_M = 10000
 
     def __init__(self, year=datetime.datetime.now().year, **kwargs):
         super().__init__(**kwargs)
@@ -28,7 +29,8 @@ class BuiltLandWithVegetation__Percent(Metric):
         builtup_layer = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
         vegetation_layer = FractionalVegetationPercent(min_threshold=50)
 
-        vegetation_cover_in_built_land = builtup_layer.mask(vegetation_layer).groupby(geo_zone).count()
+        vegetation_cover_in_built_land = (builtup_layer.mask(vegetation_layer)
+                                          .groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).count())
         built_land = builtup_layer.groupby(geo_zone).count()
 
         if not isinstance(vegetation_cover_in_built_land, (int, float)):

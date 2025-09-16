@@ -15,6 +15,7 @@ from .alos_dsm import AlosDSM
 from .aqueduct_flood import AqueductFlood
 from .average_net_building_height import AverageNetBuildingHeight
 from .built_up_height import BuiltUpHeight
+from .cams_ghg import CamsGhg
 from .cams import Cams
 from .carbon_flux_from_trees import CarbonFluxFromTrees
 from .era_5_hottest_day import Era5HottestDay
@@ -49,6 +50,7 @@ from .species_richness import SpeciesRichness, GBIFTaxonClass
 from .surface_water import SurfaceWater
 from .tree_canopy_cover_mask import TreeCanopyCoverMask
 from .tree_canopy_height import TreeCanopyHeight
+from .tree_canopy_height_for_ctcm import TreeCanopyHeightCTCM
 from .tree_cover import TreeCover
 from .urban_extents import UrbanExtents
 from .urban_land_use import UrbanLandUse
