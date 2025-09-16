@@ -1,12 +1,10 @@
 import random
 import math
 import pytest
-
 from city_metrix.metrics import *
 from tests.conftest import EXECUTE_IGNORED_TESTS, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES_TINY
 PORTLAND_DST_seasonal_utc_offset = -8
 
-# TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
 
 
 def test_area_fractional_vegetation_exceeds_threshold__percent():
@@ -97,8 +95,10 @@ def test_canopy_covered_population_informal__percent():
     assert expected_zone_size == actual_indicator_size
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_era_5_met_preprocess_umep():
+def test_era_5_met_preprocess():
     # Useful site: https://projects.oregonlive.com/weather/temps/
+    indicator = Era5MetPreprocessing().get_metric(USA_OR_PORTLAND_ZONE)
+    non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
     indicator = (Era5MetPreprocessingUmep(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset)
                  .get_metric(USA_OR_PORTLAND_ZONE))
     non_nullable_variables = ['temp', 'rh', 'global_rad', 'direct_rad', 'diffuse_rad', 'wind', 'vpd']
@@ -220,6 +220,20 @@ def test_natural_areas__percent():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
+def test_children_access_open_space():
+    from geopandas import GeoDataFrame
+    zones = GeoZone(GeoDataFrame.from_file('https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/ARG-Buenos_Aires.geojson'))
+    indicator = AccessToOpenSpace_Children__Percent('ARG-Buenos_Aires', 'adminbound', 'walk', 15, 'minutes').get_metric(zones)
+    assert actual_indicator_size > 0
+
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
+# def test_count_accessible_amenities_all():
+    # rom .conftest import create_fishnet_grid
+    # NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
+    # indicator = AccessPopulationCountAll('BRA-Belo_Horizonte', 'jobs', 'walk', '15', 'minutes')
+    # assert actual_indicator_size > 0
 
 def test_number_species_bird_richness__species():
     random.seed(42)
