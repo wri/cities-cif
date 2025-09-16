@@ -58,6 +58,11 @@ def test_BuiltUpHeight_write_by_city(target_folder):
     layer_obj = BuiltUpHeight()
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since TEST_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_CamsGhg_write_by_city(target_folder):
+    layer_obj = CamsGhg()
+    _run_write_layers_by_city_test(layer_obj, target_folder)
+
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_Cams_write_by_city(target_folder):
