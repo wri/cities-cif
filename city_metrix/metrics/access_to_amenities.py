@@ -10,11 +10,9 @@ DEFAULT_SPATIAL_RESOLUTION = 100
 INFORMAL_CLASS = 3
 
 class _AccessPopulationPercent(Metric):
-    def __init__(self, amenity, city_id, level, travel_mode, threshold, unit, worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False, project=None, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, worldpop_agesex_classes=[], worldpop_year=2020, informal_only=False, project=None, **kwargs):
         super().__init__(**kwargs)
         self.amenity = amenity
-        self.city_id = city_id
-        self.level = level
         self.travel_mode = travel_mode
         self.threshold = threshold
         self.unit = unit
@@ -27,7 +25,9 @@ class _AccessPopulationPercent(Metric):
     def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = DEFAULT_SPATIAL_RESOLUTION) -> Union[pd.DataFrame | pd.Series]:
-        access_layer = AccessibleRegion(amenity=self.amenity, city_id=self.city_id, level=self.level, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project)
+        city_id geo_zone.city_id
+        level = {'city_admin_level': 'adminbound', 'urban_extent': 'urbextbound'}[geo_zone.aoi_id]
+        access_layer = AccessibleRegion(amenity=self.amenity, city_id=city_id, level=level, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project)
         accesspop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year, masks=[access_layer,])
         totalpop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year)
         if self.informal_only:
@@ -46,24 +46,24 @@ class _AccessPopulationPercent(Metric):
         return accesspop_result
 
 class _AccessPopulationPercentAll(_AccessPopulationPercent):
-    def __init__(self, amenity, city_id, level, travel_mode, threshold, unit, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity=amenity, city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=False, **kwargs)
+    def __init__(self, amenity, travel_mode, threshold, unit, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=False, **kwargs)
 
 class _AccessPopulationPercentChildren(_AccessPopulationPercent):
-    def __init__(self, amenity, city_id, level, travel_mode, threshold, unit, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity=amenity, city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_agesex_classes=WorldPopClass.CHILDREN, worldpop_year=worldpop_year, informal_only=False, **kwargs)
+    def __init__(self, amenity, travel_mode, threshold, unit, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_agesex_classes=WorldPopClass.CHILDREN, worldpop_year=worldpop_year, informal_only=False, **kwargs)
 
 class _AccessPopulationPercentElderly(_AccessPopulationPercent):
-    def __init__(self, amenity, city_id, level, travel_mode, threshold, unit, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity=amenity, city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_agesex_classes=WorldPopClass.ELDERLY, worldpop_year=worldpop_year, informal_only=False, **kwargs)
+    def __init__(self, amenity, travel_mode, threshold, unit, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_agesex_classes=WorldPopClass.ELDERLY, worldpop_year=worldpop_year, informal_only=False, **kwargs)
 
 class _AccessPopulationPercentFemale(_AccessPopulationPercent):
-    def __init__(self, amenity, city_id, level, travel_mode, threshold, unit, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity=amenity, city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_agesex_classes=WorldPopClass.FEMALE, worldpop_year=worldpop_year, informal_only=False, **kwargs)
+    def __init__(self, amenity, travel_mode, threshold, unit, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_agesex_classes=WorldPopClass.FEMALE, worldpop_year=worldpop_year, informal_only=False, **kwargs)
 
 class _AccessPopulationPercentInformal(_AccessPopulationPercent):
-    def __init__(self, amenity, city_id, level, travel_mode, threshold, unit, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity=amenity, city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=True, **kwargs)
+    def __init__(self, amenity, travel_mode, threshold, unit, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=True, **kwargs)
 
 
 
@@ -72,36 +72,36 @@ class AccessToOpenSpace_TotalPopulation__Percent(_AccessPopulationPercentAll):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='openspace', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='openspace', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToOpenSpace_Children__Percent(_AccessPopulationPercentChildren):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='openspace', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='openspace', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToOpenSpace_Elderly__Percent(_AccessPopulationPercentElderly):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='openspace', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='openspace', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToOpenSpace_Female__Percent(_AccessPopulationPercentFemale):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='openspace', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='openspace', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToOpenSpace_Informal__Percent(_AccessPopulationPercentInformal):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='openspace', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='openspace', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 #*********************** schools ***********************
@@ -109,36 +109,36 @@ class AccessToSchools_TotalPopulation__Percent(_AccessPopulationPercentAll):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='schools', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='schools', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToSchools_Children__Percent(_AccessPopulationPercentChildren):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='schools', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='schools', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToSchools_Elderly__Percent(_AccessPopulationPercentElderly):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='schools', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='schools', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToSchools_Female__Percent(_AccessPopulationPercentFemale):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='schools', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='schools', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToSchools_Informal__Percent(_AccessPopulationPercentInformal):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='schools', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='schools', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 #*********************** goods & services ***********************
@@ -146,36 +146,36 @@ class AccessToGoodsAndServices_TotalPopulation__Percent(_AccessPopulationPercent
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='commerce', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='commerce', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToGoodsAndServices_Children__Percent(_AccessPopulationPercentChildren):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='commerce', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='commerce', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToGoodsAndServices_Elderly__Percent(_AccessPopulationPercentElderly):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='commerce', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='commerce', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToGoodsAndServices_Female__Percent(_AccessPopulationPercentFemale):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='commerce', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='commerce', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToGoodsAndServices_Informal__Percent(_AccessPopulationPercentInformal):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='commerce', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='commerce', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 #*********************** potential employment ***********************
@@ -183,36 +183,36 @@ class AccessToPotentialEmployment_TotalPopulation__Percent(_AccessPopulationPerc
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToPotentialEmployment_Children__Percent(_AccessPopulationPercentChildren):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToPotentialEmployment_Elderly__Percent(_AccessPopulationPercentElderly):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToPotentialEmployment_Female__Percent(_AccessPopulationPercentFemale):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToPotentialEmployment_Informal__Percent(_AccessPopulationPercentInformal):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 #*********************** public transportation ***********************
@@ -220,36 +220,36 @@ class AccessToPublicTransportation_TotalPopulation__Percent(_AccessPopulationPer
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='transit', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='transit', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToPublicTransportation_Children__Percent(_AccessPopulationPercentChildren):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='transit', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='transit', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToPublicTransportation_Elderly__Percent(_AccessPopulationPercentElderly):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='transit', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='transit', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToPublicTransportation_Female__Percent(_AccessPopulationPercentFemale):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='transit', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='transit', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToPublicTransportation_Informal__Percent(_AccessPopulationPercentInformal):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='transit', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='transit', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 #*********************** healthcare ***********************
@@ -257,33 +257,33 @@ class AccessToHealthcare_TotalPopulation__Percent(_AccessPopulationPercentAll):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='healthcare', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='healthcare', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToHealthcare_Children__Percent(_AccessPopulationPercentChildren):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='healthcare', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='healthcare', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToHealthcare_Elderly__Percent(_AccessPopulationPercentElderly):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='healthcare', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='healthcare', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToHealthcare_Female__Percent(_AccessPopulationPercentFemale):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='healthcare', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='healthcare', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToHealthcare_Informal__Percent(_AccessPopulationPercentInformal):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit", "osm_year", "project"]
-    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
-        super().__init__(amenity='healthcare', city_id=city_id, level=level, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='healthcare', travel_mode=travel_mode, threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
