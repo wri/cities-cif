@@ -24,8 +24,7 @@ def test_percent_built_area_without_tree_cover__percent():
     assert_metric_stats(indicator, 2, 89.00, 97.94, 100, 0)
 
 def test_built_land_with_high_lst__percent():
-    sample_zones = IDN_JAKARTA_TILED_ZONES
-    indicator = BuiltLandWithHighLST__Percent().get_metric(sample_zones)
+    indicator = BuiltLandWithHighLST__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
@@ -130,6 +129,20 @@ def test_ghg_emissions__tonnes():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 3173212.00, 3173212.00, 100, 0)
+
+def test_habitat_connectivity_coherence__percent():
+    indicator = HabitatConnectivityCoherence__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 14.69, 100, 100, 0)
+
+def test_habitat_connectivity_effective_mesh_size__hectares():
+    indicator = HabitatConnectivityEffectiveMeshSize__Hectares().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.35, 74.81, 100, 0)
 
 def test_habitat_types_restored__covertypes():
     indicator = HabitatTypesRestored__CoverTypes().get_metric(IDN_JAKARTA_TILED_ZONES)
