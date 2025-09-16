@@ -58,6 +58,12 @@ def test_built_up_height():
     assert_raster_stats(data, 1, 0, 14.61, 100, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
+def test_cams_ghg():
+    data = CamsGhg().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 1, 612278.8, 612278.8, 1, 0)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_cams():
     data = Cams().get_data(BBOX)
