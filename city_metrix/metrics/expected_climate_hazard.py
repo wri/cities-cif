@@ -258,7 +258,7 @@ class FutureHeatwaveFrequency__Heatwaves(Metric):
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
-        return float(round(result, 1))
+        return pd.Series([float(round(result, 1))])
 
 class FutureHeatwaveMaxduration__Days(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
@@ -284,7 +284,7 @@ class FutureHeatwaveMaxduration__Days(Metric):
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
-        return float(round(result, 1))
+        return pd.Series([float(round(result, 1))])
 
 class FutureDaysAbove35__Days(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
@@ -309,7 +309,7 @@ class FutureDaysAbove35__Days(Metric):
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
-        return float(round(result, 1))
+        return pd.Series([float(round(result, 1))])
 
 class FutureAnnualMaxtemp__DegreesCelsius(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
@@ -334,7 +334,7 @@ class FutureAnnualMaxtemp__DegreesCelsius(Metric):
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
-        return float(round(result, 1))
+        return pd.Series([float(round(result, 1))])
 
 class FutureExtremePrecipitationDays__Days(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
@@ -360,4 +360,4 @@ class FutureExtremePrecipitationDays__Days(Metric):
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval((geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
-        return float(round(result, 1))
+        return pd.Series([float(round(result, 1))])

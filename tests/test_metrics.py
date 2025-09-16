@@ -130,15 +130,15 @@ def test_future_annual_maxtemp():
 
 def test_future_days_above_35():
     indicator = FutureDaysAbove35__Days(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
-    assert indicator == 1.7   # Returns just one number
+    assert indicator[0] == 1.7   # Returns just one number
 
 def test_future_extreme_precipitation_days():
     indicator = FutureExtremePrecipitationDays__Days(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
-    assert indicator == 1   # Returns just one number
+    assert indicator[0] == 1   # Returns just one number
 
 def test_future_heatwave_frequency():
     indicator = FutureHeatwaveFrequency__Heatwaves(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
-    assert indicator == 22.1   # Returns just one number
+    assert indicator[0] == 22.1   # Returns just one number
 
 def test_habitat_types_restored__covertypes():
     indicator = HabitatTypesRestored__CoverTypes().get_metric(IDN_JAKARTA_TILED_ZONES)
