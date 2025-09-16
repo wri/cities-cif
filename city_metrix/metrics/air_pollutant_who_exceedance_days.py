@@ -1,6 +1,7 @@
 import pandas as pd
 from typing import Union
 from city_metrix.constants import CSV_FILE_EXTENSION
+import pandas as pd
 import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries
 import numpy as np
@@ -107,5 +108,5 @@ class AirPollutantWhoExceedance__Days(Metric):
                 maxconc_by_day = ds.resample({'time': '1D'}).mean().data
                 excdays.append([conc > s.value['who_threshold'] for conc in maxconc_by_day])
         excdays_np = np.vstack(excdays)
-        return np.any(excdays_np, axis=0).sum()
+        return pd.Series([np.any(excdays_np, axis=0).sum()])
 
