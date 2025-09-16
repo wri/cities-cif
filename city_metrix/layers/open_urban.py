@@ -1,12 +1,14 @@
 import ee
 
-from city_metrix.constants import GTIFF_FILE_EXTENSION
+from city_metrix.constants import GTIFF_FILE_EXTENSION, PROCESSING_KNOWN_ISSUE_FLAG
+from city_metrix.metrix_dao import extract_bbox_aoi
 from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
 
 class OpenUrban(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
+    PROCESSING_TILE_SIDE_M = 5000
 
     def __init__(self, band='b1', **kwargs):
         super().__init__(**kwargs)
@@ -14,14 +16,16 @@ class OpenUrban(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=None, resampling_method:str=None):
 
+        buffered_utm_bbox = bbox.buffer_utm_bbox(10)
+        ee_rectangle  = buffered_utm_bbox.to_ee_rectangle()
+
         dataset = ee.ImageCollection("projects/wri-datalab/cities/OpenUrban/OpenUrban_LULC")
         ## It is important if the cif code is pulling data from GEE to take the maximum value where the image tiles overlap
 
         # Check for data
         data = None
-        ee_rectangle = bbox.to_ee_rectangle()
         if dataset.filterBounds(ee_rectangle['ee_geometry']).size().getInfo() == 0:
-            print("No OpenUrban Data Available")
+            raise ValueError(f"{PROCESSING_KNOWN_ISSUE_FLAG} No OpenUrban data available for this AOI")
         else:
             ulu = ee.ImageCollection(dataset
                                      .filterBounds(ee_rectangle['ee_geometry'])
@@ -31,14 +35,17 @@ class OpenUrban(Layer):
                                      .rename('lulc')
                                      )
 
-            data = get_image_collection(
+            result_data = get_image_collection(
                 ulu,
                 ee_rectangle,
                 1,
                 "urban land use"
             ).lulc
 
-        return data
+        # Trim back to original AOI
+        result_data = extract_bbox_aoi(result_data, bbox)
+
+        return result_data
 
 # Define reclassification
 from enum import Enum

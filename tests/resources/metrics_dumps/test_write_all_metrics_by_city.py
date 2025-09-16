@@ -3,13 +3,13 @@ import tempfile
 import pytest
 import timeout_decorator
 
-from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV
+from city_metrix.constants import DEFAULT_DEVELOPMENT_ENV, CIF_TESTING_S3_BUCKET_URI
 from city_metrix.metrics import *
-from city_metrix.cache_manager import check_if_cache_file_exists
+from city_metrix.cache_manager import is_cache_object_available
 from ...tools.general_tools import get_test_cache_variables
 from ..bbox_constants import GEOZONE_TERESINA, GEOEXTENT_TERESINA
 from ..conftest import DUMP_RUN_LEVEL, DumpRunLevel
-from ..tools import prep_output_path, cleanup_cache_files
+from ..tools import prep_output_path, cleanup_cache_files, verify_file_is_populated
 
 PRESERVE_RESULTS_ON_OS = False  # False - Default for check-in
 OUTPUT_RESULTS_FORMAT = 'csv'  # Default for check-in
@@ -18,6 +18,8 @@ OUTPUT_RESULTS_FORMAT = 'csv'  # Default for check-in
 # seconds = 1 hour (Duration needed for fractional vegetation)
 SLOW_TEST_TIMEOUT_SECONDS = 3600
 
+TEST_BUCKET = CIF_TESTING_S3_BUCKET_URI # Default for testing
+S3_ENV=DEFAULT_DEVELOPMENT_ENV
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
@@ -101,6 +103,20 @@ def test_write_CanopyCoveredPopulation__Percent(target_folder):
 def test_write_Era5MetPreprocessingUmep(target_folder):
     metric_obj = Era5MetPreprocessingUmep(
         start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=-3)
+    _run_write_metrics_by_city_test(
+        metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_HabitatConnectivityCoherence__Percent(target_folder):
+    metric_obj = HabitatConnectivityCoherence__Percent()
+    _run_write_metrics_by_city_test(
+        metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
+
+@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
+@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
+def test_write_HabitatConnectivityEffectiveMeshSize__Hectares(target_folder):
+    metric_obj = HabitatConnectivityEffectiveMeshSize__Hectares()
     _run_write_metrics_by_city_test(
         metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
 
@@ -285,7 +301,7 @@ def test_write_WaterCover__Percent(target_folder):
 
 
 def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_zone):
-    file_key, file_uri, metric_id, _ = get_test_cache_variables(metric_obj, geo_extent)
+    _, _, metric_id, _ = get_test_cache_variables(metric_obj, geo_extent, CIF_TESTING_S3_BUCKET_URI)
     temp_dir = tempfile.gettempdir()
     metric_geojson_path = os.path.join(temp_dir, 'test_result_tif_files', 'metric_geojson')
 
@@ -293,17 +309,15 @@ def _run_write_metrics_by_city_test(metric_obj, target_folder, geo_extent, geo_z
     try:
         if OUTPUT_RESULTS_FORMAT == 'csv':
             os_file_path = prep_output_path(target_folder, 'metric', metric_id)
-            metric_obj.write(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=os_file_path,
-                             force_data_refresh=True)
-            cache_file_exists = check_if_cache_file_exists(file_uri)
+            metric_obj.write(geo_zone=geo_zone, s3_bucket=TEST_BUCKET, s3_env=S3_ENV, target_file_path=os_file_path)
+            file_exists = verify_file_is_populated(os_file_path)
         else:
             metric_name = metric_obj.__class__.__name__
             os_file_path = os.path.join(metric_geojson_path, f'{metric_name}.geojson')
-            metric_obj.write_as_geojson(geo_zone=geo_zone, s3_env=DEFAULT_DEVELOPMENT_ENV, output_uri=os_file_path,
-                                        force_data_refresh=True)
-            cache_file_exists = check_if_cache_file_exists(file_uri)
+            metric_obj.write_as_geojson(geo_zone=geo_zone, s3_bucket=TEST_BUCKET, s3_env=S3_ENV, target_file_path=os_file_path)
+            file_exists = verify_file_is_populated(os_file_path)
 
-        assert cache_file_exists, "Test failed since file did not upload to s3"
+        assert file_exists, "Test failed since file did not upload to s3"
     finally:
         if PRESERVE_RESULTS_ON_OS and OUTPUT_RESULTS_FORMAT == 'geojson':
             import shutil

@@ -34,8 +34,7 @@ def test_percent_built_area_without_tree_cover__percent():
     assert_metric_stats(indicator, 2, 89.00, 97.94, 100, 0)
 
 def test_built_land_with_high_lst__percent():
-    sample_zones = IDN_JAKARTA_TILED_ZONES
-    indicator = BuiltLandWithHighLST__Percent().get_metric(sample_zones)
+    indicator = BuiltLandWithHighLST__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
@@ -60,21 +59,21 @@ def test_canopy_area_per_resident_children__squaremeters():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 5.24, 115.12, 100, 0)
+    assert_metric_stats(indicator, 2, 5.32, 115.07, 100, 0)
 
 def test_canopy_area_per_resident_elderly__squaremeters():
     indicator = CanopyAreaPerResidentElderly__SquareMeters().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 17.09, 375.27, 100, 0)
+    assert_metric_stats(indicator, 2, 17.34, 375.10, 100, 0)
 
 def test_canopy_area_per_resident_female__squaremeters():
     indicator = CanopyAreaPerResidentFemale__SquareMeters().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 2.33, 51.13, 100, 0)
+    assert_metric_stats(indicator, 2, 2.36, 51.11, 100, 0)
 
 def test_canopy_area_per_resident_informal__squaremeters():
     indicator = CanopyAreaPerResidentInformal__SquareMeters().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -133,6 +132,20 @@ def test_era_5_met_preprocess_upenn():
     assert has_empty_required_cells == False
     assert len(indicator) == 24
     assert_metric_stats(indicator[['DHI']], 2, 0.00, 312.15, 24, 0)
+
+def test_habitat_connectivity_coherence__percent():
+    indicator = HabitatConnectivityCoherence__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 14.69, 100, 100, 0)
+
+def test_habitat_connectivity_effective_mesh_size__hectares():
+    indicator = HabitatConnectivityEffectiveMeshSize__Hectares().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.35, 74.81, 100, 0)
 
 def test_habitat_types_restored__covertypes():
     indicator = HabitatTypesRestored__CoverTypes().get_metric(IDN_JAKARTA_TILED_ZONES)
