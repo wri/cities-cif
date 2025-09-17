@@ -850,7 +850,7 @@ class Layer():
             has_usable_cache = False
         else:
             standard_env = standardize_s3_env(s3_env)
-            has_usable_cache = is_cache_usable(s3_bucket, standard_env, self.aggregate, bbox, None, None)
+            has_usable_cache = is_cache_usable(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m, None)
 
         if has_usable_cache:
             result_data, _, _ = retrieve_city_cache(self.aggregate, bbox, aoi_buffer_m, s3_bucket=s3_bucket, output_env=standard_env,
