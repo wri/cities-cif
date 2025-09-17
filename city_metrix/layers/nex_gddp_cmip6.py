@@ -139,10 +139,10 @@ def get_var(varname, model, latlon, start_year=HIST_START, end_year=HIST_END, ye
         while not success:
             try:
                 if not yearshift:
-                    data_vars = dataset.select([varname, NexGddpCmip6Variables[varname].value['era_varname']][int(model == 'ERA5')]).filter(
+                    data_vars = dataset.select([varname, NexGddpCmip6Variables[varname].value[0]['era_varname']][int(model == 'ERA5')]).filter(
                         ee.Filter.date('{0}-01-01'.format(start_year), '{0}-01-01'.format(end_year + 1)))
                 else:
-                    data_vars = dataset.select([varname, NexGddpCmip6Variables[varname].value['era_varname']][int(model == 'ERA5')]).filter(
+                    data_vars = dataset.select([varname, NexGddpCmip6Variables[varname].value[0]['era_varname']][int(model == 'ERA5')]).filter(
                         ee.Filter.date('{0}-07-01'.format(start_year-1), '{0}-07-01'.format(end_year)))
                 success = True
             except:
@@ -153,7 +153,7 @@ def get_var(varname, model, latlon, start_year=HIST_START, end_year=HIST_END, ye
             gee_geom, DEFAULT_SPATIAL_RESOLUTION, 'epsg:4326').getInfo()[1:]]
         result = removeLeapDays(
             np.array(result), start_year, end_year, yearshift)
-    return NexGddpCmip6Variables[varname].value[['nex_transform', 'era_transform'][int(model == 'ERA5')]](result)
+    return NexGddpCmip6Variables[varname].value[0][['nex_transform', 'era_transform'][int(model == 'ERA5')]](result)
 
 
 def get_rmsd(d1, d2):
@@ -416,6 +416,7 @@ class NexGddpCmip6(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        
         latlon = (bbox.as_geographic_bbox().centroid.y,
                   bbox.as_geographic_bbox().centroid.x)
         best_models, hist_mods, hist_obs = get_best_models(
