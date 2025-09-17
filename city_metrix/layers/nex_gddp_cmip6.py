@@ -3,6 +3,7 @@ import calendar
 import math
 import ee
 import numpy as np
+from enum import Enum
 
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
@@ -44,41 +45,6 @@ EXCLUDED_MODELS = ['GFDL-CM4_gr2', 'ERA5']
 HURS_EXCLUDED = ['BCC-CSM2-MR', 'NESM3', 'KIOST-ESM']
 HUSS_EXCLUDED = ['IPSL-CM6A-LR', 'MIROC6', 'NESM3']
 MODELS = [i for i in MODEL_INFO if not i in EXCLUDED_MODELS]
-
-# Unit conversions and variable names for NEX-GDDP-CMIP6 and ERA5
-VARIABLES = {
-    'tas': {
-        'era_varname': 'mean_2m_air_temperature',
-        'nex_transform': lambda x: x - 273.5,
-        'era_transform': lambda x: x - 273.5
-    },
-    'tasmax': {
-        'era_varname': 'maximum_2m_air_temperature',
-        'nex_transform': lambda x: x - 273.5,
-        'era_transform': lambda x: x - 273.5
-    },
-    'tasmin': {
-        'era_varname': 'minimum_2m_air_temperature',
-        'nex_transform': lambda x: x - 273.5,
-        'era_transform': lambda x: x - 273.5
-    },
-    'pr': {
-        'era_varname': 'total_precipitation',
-        'nex_transform': lambda x: x * 86400,
-        'era_transform': lambda x: x * 1000
-    },
-    'hurs': {
-        'era_varname': None,
-        'nex_transform': lambda x: x,
-        'era_transform': lambda x: x
-    },
-    'maxwetbulb': {
-        'era_varname': None,
-        'nex_transform': lambda x: x,
-        'era_transform': lambda x: x
-    }
-}
-
 HIST_START = 1980
 HIST_END = 2014
 
@@ -173,10 +139,10 @@ def get_var(varname, model, latlon, start_year=HIST_START, end_year=HIST_END, ye
         while not success:
             try:
                 if not yearshift:
-                    data_vars = dataset.select([varname, VARIABLES[varname]['era_varname']][int(model == 'ERA5')]).filter(
+                    data_vars = dataset.select([varname, NexGddpCmip6Variables[varname].value['era_varname']][int(model == 'ERA5')]).filter(
                         ee.Filter.date('{0}-01-01'.format(start_year), '{0}-01-01'.format(end_year + 1)))
                 else:
-                    data_vars = dataset.select([varname, VARIABLES[varname]['era_varname']][int(model == 'ERA5')]).filter(
+                    data_vars = dataset.select([varname, NexGddpCmip6Variables[varname].value['era_varname']][int(model == 'ERA5')]).filter(
                         ee.Filter.date('{0}-07-01'.format(start_year-1), '{0}-07-01'.format(end_year)))
                 success = True
             except:
@@ -187,7 +153,7 @@ def get_var(varname, model, latlon, start_year=HIST_START, end_year=HIST_END, ye
             gee_geom, DEFAULT_SPATIAL_RESOLUTION, 'epsg:4326').getInfo()[1:]]
         result = removeLeapDays(
             np.array(result), start_year, end_year, yearshift)
-    return VARIABLES[varname][['nex_transform', 'era_transform'][int(model == 'ERA5')]](result)
+    return NexGddpCmip6Variables[varname].value[['nex_transform', 'era_transform'][int(model == 'ERA5')]](result)
 
 
 def get_rmsd(d1, d2):
@@ -390,6 +356,40 @@ def get_best_models(varname, latlon, hist_start, hist_end, num_bestmodels):
     return best_models, {model: hist_mods[model] for model in best_models}, hist_obs
 
 
+class NexGddpCmip6Variables(Enum):
+    # Unit conversions and variable names for NEX-GDDP-CMIP6 and ERA5
+    tas = {
+        'era_varname': 'mean_2m_air_temperature',
+        'nex_transform': lambda x: x - 273.5,
+        'era_transform': lambda x: x - 273.5
+    }
+    tasmax = {
+        'era_varname': 'maximum_2m_air_temperature',
+        'nex_transform': lambda x: x - 273.5,
+        'era_transform': lambda x: x - 273.5
+    },
+    tasmin = {
+        'era_varname': 'minimum_2m_air_temperature',
+        'nex_transform': lambda x: x - 273.5,
+        'era_transform': lambda x: x - 273.5
+    },
+    pr = {
+        'era_varname': 'total_precipitation',
+        'nex_transform': lambda x: x * 86400,
+        'era_transform': lambda x: x * 1000
+    },
+    hurs = {
+        'era_varname': None,
+        'nex_transform': lambda x: x,
+        'era_transform': lambda x: x
+    },
+    maxwetbulb = {
+        'era_varname': None,
+        'nex_transform': lambda x: x,
+        'era_transform': lambda x: x
+    }
+
+
 class NexGddpCmip6(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
@@ -420,14 +420,14 @@ class NexGddpCmip6(Layer):
                   bbox.as_geographic_bbox().centroid.x)
         best_models, hist_mods, hist_obs = get_best_models(
             'tasmax', latlon, HIST_START, HIST_END, self.num_models)
-        
+
         calibration_fxns = {}
         for model in best_models:
             o_quarters = quarters(hist_obs, HIST_START, HIST_END)
             m_quarters = quarters(hist_mods[model], HIST_START, HIST_END)
             calibration_fxns[model] = [calibration_function(
                 o_quarters[i].flatten(), m_quarters[i].flatten()) for i in range(4)]
-        
+
         fut_mods = {}
         for model in best_models:
             uncalibrated_data = get_var(

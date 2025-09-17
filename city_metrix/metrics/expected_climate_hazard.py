@@ -5,10 +5,10 @@ from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import Metric, GeoExtent, GeoZone
-from city_metrix.layers import NexGddpCmip6
+from city_metrix.layers import NexGddpCmip6, NexGddpCmip6Variables
 
-VARIABLES = NexGddpCmip6.VARIABLES
-HIST_START, HIST_END = 1980, 2014
+HIST_START = 1980
+HIST_END = 2014
 MIN_HEATWAVE_DURATION = 3
 HEATWAVE_INTENSITY_PERCENTILE = 90
 
@@ -31,13 +31,13 @@ def percentile(latlon, varname, pctl, want_summer_only=True):
     # Returns 90th percentile tasmax over 1980-2014 for June-July_Aug or Dec-Jan_Feb (if SH) for given latlon
     southern_hem = latlon[0] < 0
     dataset = ee.ImageCollection("ECMWF/ERA5/DAILY")
-    era_varname = VARIABLES[varname]['era_varname']
+    era_varname = NexGddpCmip6Variables[varname].value['era_varname']
     gee_geom = ee.Geometry.Point((latlon[1], latlon[0]))
     success = False
     retries = 0
     while not success:
         try:
-            alldays = VARIABLES[varname]['era_transform'](np.array([i[4] for i in dataset.select(era_varname).filter(
+            alldays = NexGddpCmip6Variables[varname].value['era_transform'](np.array([i[4] for i in dataset.select(era_varname).filter(
                 ee.Filter.date(f'{HIST_START}-01-01', f'{HIST_END + 1}-01-01')).getRegion(gee_geom, 27830, 'epsg:4326').getInfo()[1:]]))
             success = True
         except:
