@@ -42,7 +42,7 @@ class _CamsAnnual__Tonnes():
         cams_annual = cams_annual.rio.reproject(bbox.as_utm_bbox().crs)
         return cams_annual
 
-class AirPollutant_AnnualDailyMean__Tonnes(Metric):
+class AirPollutantAnnualDailyMean__Tonnes(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["species", "year"]
@@ -69,7 +69,7 @@ class AirPollutant_AnnualDailyMean__Tonnes(Metric):
         result = pd.DataFrame({'species': [sp.value['name'] for sp in requested_species], 'value': [float(means.sel(variable=sp.value['eac4_varname']).data) for sp in requested_species]})
         return result
 
-class AirPollutant_AnnualDailyMax__Tonnes(Metric):
+class AirPollutantAnnualDailyMax__Tonnes(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["species", "year"]
@@ -96,7 +96,7 @@ class AirPollutant_AnnualDailyMax__Tonnes(Metric):
         result = pd.DataFrame({'species': [sp.value['name'] for sp in requested_species], 'value': [float(maxes.sel(variable=sp.value['eac4_varname']).data) for sp in requested_species]})
         return result
 
-class AirPollutant_AnnualDailySocialCost__USD(Metric):
+class AirPollutantAnnualDailySocialCost__USD(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["species", "year"]
