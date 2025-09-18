@@ -30,6 +30,8 @@ class _CamsAnnual__Tonnes():
             cams_annual = cams_daily.resample({'valid_time': '1Y'}).mean().squeeze("valid_time")
         elif self.statistic == 'max':
             cams_annual = cams_daily.resample({'valid_time': '1Y'}).max().squeeze("valid_time")
+        elif self.statistic == 'sum':
+            cams_annual = cams_daily.resample({'valid_time': '1Y'}).sum().squeeze("valid_time")
         else:
             raise Exception(f'Unsupported stat type {self.statistic}')
         
@@ -96,7 +98,7 @@ class AirPollutant_AnnualDailyMax__Tonnes(Metric):
         result = pd.DataFrame({'species': [sp.value['name'] for sp in requested_species], 'value': [float(maxes.sel(variable=sp.value['eac4_varname']).data) for sp in requested_species]})
         return result
 
-class AirPollutant_AnnualDailySocialCost__USD(Metric):
+class AirPollutant_AnnualTotalSocialCost__USD(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["species", "year"]
@@ -114,7 +116,7 @@ class AirPollutant_AnnualDailySocialCost__USD(Metric):
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> pd.DataFrame:
         bbox = GeoExtent(geo_zone)
-        cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic='mean', year=self.year).get_metric(geo_zone)
+        cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic='sum', year=self.year).get_metric(geo_zone)
         if self.species:
             requested_species = self.species
         else:
