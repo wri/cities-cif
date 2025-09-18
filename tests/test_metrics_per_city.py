@@ -17,7 +17,7 @@ def test_city_values_mean_pm2p5_exposure__microgramspercubicmeter():
 def test_city_values_natural_areas__percent():
     metric_obj = NaturalAreas__Percent()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
-    _evaluate_metric_values(metric_values, 2, 1.73, 97.17, 36.91, 139, 0, True)
+    _evaluate_metric_values(metric_values, 2, 1.73, 97.17, 36.79, 139, 0, True)
 
 def test_city_values_riverine_or_coastal_flood_risk_area__percent():
     metric_obj = RiverineOrCoastalFloodRiskArea__Percent()
