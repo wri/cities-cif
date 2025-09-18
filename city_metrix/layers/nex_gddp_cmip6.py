@@ -49,38 +49,6 @@ HIST_START = 1980
 HIST_END = 2014
 
 
-def d2j(datestring):
-    # Date to Julian date
-    d = datetime.date.fromisoformat(datestring)
-    jday = d.timetuple().tm_yday
-    if calendar.isleap(d.year) and jday > 59:
-        jday -= 1
-    return jday
-
-
-def removeLeapDays(arr, start_year, end_year, yearshift=False):
-    if not yearshift:
-        indices = []
-        jan1_idx = 0
-        for year in range(start_year, end_year+1):
-            indices += [jan1_idx + i for i in range(365)]
-            jan1_idx += 365
-            if calendar.isleap(year):
-                jan1_idx += 1
-        return arr[indices]
-    else:
-        indices = []
-        jul1_idx = 0
-        for year in range(start_year-1, end_year):
-            indices += [jul1_idx + i for i in range(183)]
-            jul1_idx += 183
-            if calendar.isleap(year):
-                jul1_idx += 1
-            indices += [jul1_idx + i for i in range(182)]
-            jul1_idx += 182
-        return arr[indices]
-
-
 def hurs_era(latlon, start_year=HIST_START, end_year=HIST_END, yearshift=False, scenario='ssp585'):
     def relhum(T, Tdp):
         # relative humidity as percent on [0, 100]
@@ -114,7 +82,7 @@ def hurs_era(latlon, start_year=HIST_START, end_year=HIST_END, yearshift=False, 
     era_dewpoint = get_eradata('dewpoint_2m_temperature')-273.15
     era_maxtemp = get_eradata('maximum_2m_air_temperature')-273.15
     hurs_obs = relhum(era_maxtemp, era_dewpoint)
-    return removeLeapDays(hurs_obs, start_year, end_year, yearshift)
+    return NexGddpCmip6.removeLeapDays(hurs_obs, start_year, end_year, yearshift)
 
 
 def get_var(varname, model, latlon, start_year=HIST_START, end_year=HIST_END, yearshift=False, scenario='ssp585'):
@@ -151,7 +119,7 @@ def get_var(varname, model, latlon, start_year=HIST_START, end_year=HIST_END, ye
                     raise Exception('Too many fetch-ERA5 retries')
         result = [i[4] for i in data_vars.getRegion(
             gee_geom, DEFAULT_SPATIAL_RESOLUTION, 'epsg:4326').getInfo()[1:]]
-        result = removeLeapDays(
+        result = NexGddpCmip6.removeLeapDays(
             np.array(result), start_year, end_year, yearshift)
     return NexGddpCmip6Variables[varname].value[0][['nex_transform', 'era_transform'][int(model == 'ERA5')]](result)
 
@@ -412,6 +380,29 @@ class NexGddpCmip6(Layer):
         self.end_year = end_year
         self.scenario = scenario
         self.num_models = num_models
+
+    def removeLeapDays(arr, start_year, end_year, yearshift=False):
+        if not yearshift:
+            indices = []
+            jan1_idx = 0
+            for year in range(start_year, end_year+1):
+                indices += [jan1_idx + i for i in range(365)]
+                jan1_idx += 365
+                if calendar.isleap(year):
+                    jan1_idx += 1
+            return arr[indices]
+        else:
+            indices = []
+            jul1_idx = 0
+            for year in range(start_year-1, end_year):
+                indices += [jul1_idx + i for i in range(183)]
+                jul1_idx += 183
+                if calendar.isleap(year):
+                    jul1_idx += 1
+                indices += [jul1_idx + i for i in range(182)]
+                jul1_idx += 182
+            return arr[indices]
+
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
