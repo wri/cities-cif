@@ -7,17 +7,25 @@ from tests.conftest import EXECUTE_IGNORED_TESTS, IDN_JAKARTA_TILED_ZONES, IDN_J
 PORTLAND_DST_seasonal_utc_offset = -8
 
 
-
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_air_pollutant_annual_daily_statistic():
-    indicator = AirPollutant__AnnualDailyStatistic().get_data(IDN_JAKARTA_TILED_ZONES)
+def test_air_pollutant_annual_daily_max__tonnes():
+    indicator = AirPollutantAnnualDailyMax__Tonnes().get_metric(IDN_JAKARTA_TILED_ZONES)
     assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_air_pollutant_who_exceedance_days():
-    indicator = AirPollutantWhoExceedance__Days().get_data(IDN_JAKARTA_TILED_ZONES)
+def test_air_pollutant_annual_daily_mean__tonnes():
+    indicator = AirPollutantAnnualDailyMean__Tonnes().get_metric(IDN_JAKARTA_TILED_ZONES)
     assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
 
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_air_pollutant_annual_daily_social_cost__usd():
+    indicator = AirPollutantAnnualDailySocialCost__USD().get_metric(IDN_JAKARTA_TILED_ZONES)
+    assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_air_pollutant_who_exceedance__days():
+    indicator = AirPollutantWhoExceedance__Days().get_metric(IDN_JAKARTA_TILED_ZONES)
+    assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
 
 def test_area_fractional_vegetation_exceeds_threshold__percent():
     indicator = AreaFractionalVegetationExceedsThreshold__Percent().get_metric(ARG_BUENOS_AIRES_TILED_ZONES_TINY)
