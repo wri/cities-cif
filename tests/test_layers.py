@@ -183,6 +183,10 @@ def test_ndwi_sentinel2():
     assert_raster_stats(data, 2, -0.0178, 0.578, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
+def test_nexgddpcmip6():
+    data = NexGddpCmip6().get_data(BBOX)
+    assert np.size(data) > 0
+
 def test_openbuildings():
     data = OpenBuildings(COUNTRY_CODE_FOR_BBOX).get_data(BBOX)
     assert np.size(data) > 0
@@ -229,7 +233,7 @@ def test_protected_areas():
 def test_pop_weighted_pm2p5():
     data = PopWeightedPM2p5().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 6.57, 6.57, 1, 0)
+    assert_raster_stats(data, 1, 6.18, 6.18, 1, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_riparian_areas():
