@@ -102,7 +102,7 @@ class AirPollutantAnnualDailyMax__Tonnes(Metric):
 
         return result
 
-class AirPollutant_AnnualTotalSocialCost__USD(Metric):
+class AirPollutantAnnualTotalSocialCost__USD(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["species", "year"]
