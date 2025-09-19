@@ -18,8 +18,8 @@ def test_air_pollutant_annual_daily_mean__tonnes():
     assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_air_pollutant_annual_daily_social_cost__usd():
-    indicator = AirPollutantAnnualDailySocialCost__USD().get_metric(IDN_JAKARTA_TILED_ZONES)
+def test_air_pollutant_annual_total_social_cost__usd():
+    indicator = AirPollutantAnnualTotalSocialCost__USD().get_metric(IDN_JAKARTA_TILED_ZONES)
     assert indicator.size > 0 # Note that this metric returns same size result regardless of geometry size
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")

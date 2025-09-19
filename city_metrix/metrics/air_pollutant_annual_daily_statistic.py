@@ -60,7 +60,6 @@ class AirPollutantAnnualDailyMean__Tonnes(Metric):
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        bbox = GeoExtent(geo_zone)
         cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic='mean', year=self.year).get_metric(geo_zone)
         if self.species:
             requested_species = self.species
@@ -90,7 +89,6 @@ class AirPollutantAnnualDailyMax__Tonnes(Metric):
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        bbox = GeoExtent(geo_zone)
         cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic='max', year=self.year).get_metric(geo_zone)
         if self.species:
             requested_species = self.species
@@ -119,7 +117,6 @@ class AirPollutantAnnualTotalSocialCost__USD(Metric):
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        bbox = GeoExtent(geo_zone)
         cams_annual = _CamsAnnual__Tonnes(species=self.species, statistic='sum', year=self.year).get_metric(geo_zone)
         if self.species:
             requested_species = self.species
