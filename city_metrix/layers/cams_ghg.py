@@ -69,7 +69,7 @@ class CamsGhg(Layer):
                 ee_rectangle,
                 spatial_resolution,
                 "CAMS GHG"
-            )['self.species']
+            )[f'{self.species}']
 
         else:  # Sum over all species
             allrasters_list = []
