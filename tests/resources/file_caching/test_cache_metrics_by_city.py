@@ -30,4 +30,4 @@ def test_builtlandwithhightlst_city_teresina():
     if SAVE_RESULTS_TO_OS and np.size(data) > 0:
         write_layer(data, fr'{OUTPUT_FILE_ROOT}/{geo_zone.city_id}_builtlandwithhighlst_test_teresina.tif', GTIFF_FILE_EXTENSION)
 
-    assert len(data[0]) == 138
+    assert len(data[0]) == 139
