@@ -1118,6 +1118,14 @@ class Layer():
 
             retrieval_errors = {index: None}
         else:
+            file_name = construct_tile_name(index, processing_had_failure=True)
+            target_tile_uri = f"{target_uri}/{file_name}"
+
+            # write empty placeholder file to s3
+            bucket = get_bucket_name_from_s3_uri(target_tile_uri)
+            file_key = get_file_key_from_url(target_tile_uri)
+            s3_client.put_object(Bucket=bucket, Key=file_key, Body='')
+
             retrieval_errors = {index: failure_message}
 
         return retrieval_errors
@@ -1542,7 +1550,10 @@ def _write_grid_index_to_cache(fishnet, file_uri, crs):
     write_json(metadata, metadata_file)
 
 
-def construct_tile_name(tile_index):
+def construct_tile_name(tile_index, processing_had_failure: bool = False):
     padded_index = str(tile_index).zfill(TILE_NUMBER_PADCOUNT)
-    file_name = f'tile_{padded_index}.tif'
+    if processing_had_failure is False:
+        file_name = f'tile_{padded_index}.tif'
+    else:
+        file_name = f'tile_{padded_index}_processing_failed.tif'
     return file_name
