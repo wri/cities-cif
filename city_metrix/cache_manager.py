@@ -256,6 +256,31 @@ def check_if_cache_file_exists(file_uri):
         uri_path = os.path.normpath(get_file_path_from_uri(file_key))
         return os.path.exists(uri_path)
 
+def is_cache_object_available(file_uri):
+    uri_scheme = get_uri_scheme(file_uri)
+    file_key = get_file_path_from_uri(file_uri)
+    if uri_scheme == "s3":
+        s3_bucket = get_bucket_name_from_s3_uri(file_uri)
+        # Add a trailing slash to the path to check for a folder
+        folder_path = file_key if file_key.endswith('/') else file_key + '/'
+
+        # Check for file
+        file_response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=file_key, MaxKeys=1)
+        if 'Contents' in file_response:
+            return True
+        else:
+            return False
+
+        # Check for folder
+        folder_response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=folder_path, MaxKeys=1)
+        if 'Contents' in folder_response:
+            return True
+        else:
+            return False
+    else:
+        uri_path = os.path.normpath(get_file_path_from_uri(file_key))
+        return os.path.exists(uri_path)
+
 def get_cached_file_uri(s3_bucket, file_key, is_custom_layer):
     uri = LOCAL_CACHE_URI if is_custom_layer else s3_bucket
 

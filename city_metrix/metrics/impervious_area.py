@@ -25,7 +25,6 @@ class ImperviousArea__Percent(Metric):
         imperv_fillna = ImperviousSurface(year=self.year)
         imperv_fillna_get_data = imperv_fillna.get_data
         imperv_fillna.get_data = lambda bbox, spatial_resolution: imperv_fillna_get_data(bbox, spatial_resolution).fillna(0)
-
         # count with no NaNs
         imperv_count = imperv.groupby(geo_zone).count()
         # count all pixels

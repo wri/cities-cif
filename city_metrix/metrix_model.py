@@ -102,12 +102,11 @@ def _build_aoi_from_city_boundaries(city_id, geo_feature):
     # Round coordinates to whole units
     bbox = (math.floor(reproj_west), math.floor(reproj_south), math.ceil(reproj_east), math.ceil(reproj_north))
 
-    if geo_feature.lower() == 'city_admin_level':
-        # reproject geodataframe to UTM
-        zones = boundaries_gdf.to_crs(utm_crs)
-    else:
-        zones = None
-
+    #if geo_feature.lower() == 'city_admin_level':
+    #    # reproject geodataframe to UTM
+    zones = boundaries_gdf.to_crs(utm_crs)
+    #else:
+    #    zones = None
     return bbox, utm_crs, zones
 
 
