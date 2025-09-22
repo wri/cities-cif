@@ -27,7 +27,7 @@ dependencies:
   - boto3=1.37.1
   - cdsapi=0.7.5
   - scikit-image=0.25.2
-  - exactextract=0.2.1
+  # - exactextract=0.2.1
   - cfgrib=0.9.15.0
   - scipy=1.15.2
   - numpy=1.26.4 

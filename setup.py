@@ -26,7 +26,7 @@ setup(
         "boto3",
         "cdsapi",
         "scikit-image>=0.25.2",
-        "exactextract>=0.2.0",
+        # "exactextract>=0.2.0",
         "cfgrib",
         "scipy",
         "numpy",
