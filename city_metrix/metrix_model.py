@@ -72,7 +72,6 @@ class GeoZone():
                 self.admin_level = city_data.get(self.aoi_id, None)
             elif self.aoi_id == 'urban_extent':
                 self.admin_level = self.aoi_id
-
             # bbox is always projected to UTM
             self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
 
@@ -103,7 +102,7 @@ def _build_aoi_from_city_boundaries(city_id, geo_feature):
     # Round coordinates to whole units
     bbox = (math.floor(reproj_west), math.floor(reproj_south), math.ceil(reproj_east), math.ceil(reproj_north))
 
-    if geo_feature.lower() == 'adm4union':
+    if geo_feature.lower() == 'city_admin_level':
         # reproject geodataframe to UTM
         zones = boundaries_gdf.to_crs(utm_crs)
     else:

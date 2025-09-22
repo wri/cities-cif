@@ -32,6 +32,22 @@ def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_b
 
     return file_uri, file_key, feature_id, is_custom_object
 
+def is_cache_usable(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m=None, city_aoi_subarea=None):
+    # Function determines if the cache can be used based on some limited criteria
+
+    file_uri, _, _, _ = build_file_key(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m)
+
+    # If the GeoExtent is for a full city and the cache data are available, then the cache is usable
+    if geo_extent.geo_type == GeoType.CITY and is_cache_object_available(file_uri):
+        return True
+
+    # For a city sub_area, cache is available for GeoTiff files only
+    file_format = class_obj.OUTPUT_FILE_FORMAT
+    if city_aoi_subarea is not None and is_cache_object_available(file_uri) and file_format == GTIFF_FILE_EXTENSION:
+        return True
+
+    return False
+
 def retrieve_city_cache(class_obj, geo_extent, output_env, force_data_refresh: bool):
     file_uri, file_key, feature_id, is_custom_layer = build_file_key(output_env, class_obj, geo_extent)
 
@@ -240,8 +256,8 @@ def check_if_cache_file_exists(file_uri):
         uri_path = os.path.normpath(get_file_path_from_uri(file_key))
         return os.path.exists(uri_path)
 
-def get_cached_file_uri(file_key, is_custom_layer):
-    uri = LOCAL_CACHE_URI if is_custom_layer else CIF_CACHE_S3_BUCKET_URI
+def get_cached_file_uri(s3_bucket, file_key, is_custom_layer):
+    uri = LOCAL_CACHE_URI if is_custom_layer else s3_bucket
 
     if get_uri_scheme(uri) in ('s3', 'file'):
         file_uri = f"{uri}/{file_key}"
@@ -256,6 +272,8 @@ def get_cached_file_key(feature_based_class_name, s3_bucket, output_env, feature
         bound_marker = '__urban_extent'
     elif FILE_KEY_ADMINBOUND_MARKER:
         bound_marker = f'__{admin_level}'
+    else:
+        bound_marker = ''
     if feature_based_class_name.lower() == 'layer':
         file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}{bound_marker}__{admin_level}__{feature_id}"
     else:
