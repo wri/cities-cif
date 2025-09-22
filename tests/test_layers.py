@@ -58,6 +58,12 @@ def test_built_up_height():
     assert_raster_stats(data, 1, 0, 14.61, 100, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
+def test_cams_ghg():
+    data = CamsGhg().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 1, 612278.8, 612278.8, 1, 0)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_cams():
     data = Cams().get_data(BBOX)
@@ -84,7 +90,7 @@ def test_esa_world_cover():
 def test_fab_dem():
     data = FabDEM().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 1, 47.4, 1122, 0)
+    assert_raster_stats(data, 1, 1.0, 47.4, 1088, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_fractional_vegetation_percent():
@@ -272,10 +278,16 @@ def test_tree_canopy_cover_mask():
     assert np.size(data) > 0
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
+def test_tree_canopy_height_for_ctcm():
+    data = TreeCanopyHeightCTCM().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 1, 0.0, 33.0, 976626, 0)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+
 def test_tree_canopy_height():
     data = TreeCanopyHeight().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 0.0, 33.0, 976626, 0)
+    assert_raster_stats(data, 1, 0.0, 33.0, 1016566, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_tree_cover():

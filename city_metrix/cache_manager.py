@@ -4,12 +4,15 @@ from enum import Enum
 
 from city_metrix import s3_client
 from city_metrix.constants import GeoType, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION, \
-    CSV_FILE_EXTENSION, LOCAL_CACHE_URI, DEFAULT_PRODUCTION_ENV, CIF_CACHE_S3_BUCKET_URI
+    CSV_FILE_EXTENSION, LOCAL_CACHE_URI, DEFAULT_PRODUCTION_ENV, CIF_CACHE_S3_BUCKET_URI, CTCM_CACHE_S3_BUCKET_URI, \
+    CIF_TESTING_S3_BUCKET_URI, FILE_KEY_ADMINBOUND_MARKER, FILE_KEY_URBEXTBOUND_MARKER, CUSTOM_CACHED_DIFFERENTLY
+
 from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_cache, \
     read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_bucket_name_from_s3_uri, read_csv_from_s3
 from city_metrix.metrix_tools import get_class_from_instance
 
-def build_file_key(output_env, class_obj, geo_extent):
+
+def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_buffer_m: int = None):
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
 
@@ -18,11 +21,14 @@ def build_file_key(output_env, class_obj, geo_extent):
 
     # Determine if object is a layer or metric
     feature_base_class_name = class_obj.__class__.__bases__[0].__name__
+    if s3_bucket is not None:
+        file_key = get_cached_file_key(feature_base_class_name, s3_bucket, output_env, cache_folder_name, city_id,
+                                       admin_level, feature_id, file_format)
+        file_uri = get_cached_file_uri(s3_bucket, file_key, (CUSTOM_CACHED_DIFFERENTLY and is_custom_object))  # False-and so all objs treated as non-custom
 
-    file_key = get_cached_file_key(feature_base_class_name, output_env, cache_folder_name, city_id,
-                                   admin_level, feature_id, file_format)
-
-    file_uri = get_cached_file_uri(file_key, (False and is_custom_object))
+    else:
+        file_key = None
+        file_uri = None
 
     return file_uri, file_key, feature_id, is_custom_object
 
@@ -244,9 +250,20 @@ def get_cached_file_uri(file_key, is_custom_layer):
     return file_uri
 
 
-def get_cached_file_key(feature_based_class_name, output_env, feature_name, city_id, admin_level, feature_id, file_format):
+def get_cached_file_key(feature_based_class_name, s3_bucket, output_env, feature_name, city_id, admin_level, feature_id,
+                        file_format):
+    if admin_level == 'urban_extent' and FILE_KEY_URBEXTBOUND_MARKER:
+        bound_marker = '__urban_extent'
+    elif FILE_KEY_ADMINBOUND_MARKER:
+        bound_marker = f'__{admin_level}'
     if feature_based_class_name.lower() == 'layer':
-        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}.{file_format}"
+        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}{bound_marker}__{admin_level}__{feature_id}"
     else:
-        file_key = f"data/{output_env}/metrics/{city_id}/{city_id}__{feature_id}.{file_format}"
+        file_key = f"data/{output_env}/metrics/{city_id}/{city_id}{bound_marker}__{feature_id}"
+
+    # if city_aoi is not None:
+    #     aoi_uuid = hashkey_from_tuple(city_aoi)
+    #     file_key = f"{file_key}_AoiHash{aoi_uuid}"
+
+    file_key = f"{file_key}.{file_format}"
     return file_key

@@ -13,6 +13,7 @@ class RiparianLandWithVegetationOrWater__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
+    CUSTOM_TILE_SIDE_M = 10000
 
     def __init__(self, year=2024, **kwargs):
         super().__init__(**kwargs)
@@ -34,10 +35,10 @@ class RiparianLandWithVegetationOrWater__Percent(Metric):
         vegetation_layer = FractionalVegetationPercent(min_threshold=MIN_VEGETATION_PERCENT)
 
         riparian_area = riparian_layer.groupby(geo_zone).count()
-        water_area = riparian_layer.mask(water_layer).groupby(geo_zone).count().fillna(0)
-        vegetation_area = riparian_layer.mask(vegetation_layer).groupby(geo_zone).count().fillna(0)
-
-        AND_area = vegetation_layer.mask(water_layer).groupby(geo_zone).count().fillna(0)
+        water_area = riparian_layer.mask(water_layer).groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).count().fillna(0)
+        vegetation_area = riparian_layer.mask(vegetation_layer).groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).count().fillna(0)
+        
+        AND_area = vegetation_layer.mask(water_layer).groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).count().fillna(0)
         OR_area = water_area + vegetation_area - AND_area
 
         if not isinstance(OR_area, (int, float)):

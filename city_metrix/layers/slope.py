@@ -10,7 +10,7 @@ DEFAULT_SPATIAL_RESOLUTION = 30
 class Slope(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ['min_threshold']
 
     """
     Slope from NASADEM, a reanalysis of year-2000 SRTM data

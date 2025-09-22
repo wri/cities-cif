@@ -28,11 +28,12 @@ class BuiltLandWithHighLST__Percent(Metric):
         high_lst = HighLandSurfaceTemperature()
 
         built_land_counts = (built_up_land
-                             .groupby(geo_zone, force_data_refresh=False)
+                             .groupby(geo_zone)
                              .count())
         built_high_lst_counts = (high_lst.mask(built_up_land)
-                                 .groupby(geo_zone, force_data_refresh=False)
+                                 .groupby(geo_zone)
                                  .count())
+
 
         if not isinstance(built_high_lst_counts, (int, float)):
             built_high_lst_counts = built_high_lst_counts.fillna(0)

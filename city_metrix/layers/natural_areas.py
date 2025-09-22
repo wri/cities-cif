@@ -2,7 +2,7 @@ from xrspatial.classify import reclassify
 
 from city_metrix.metrix_model import Layer, GeoExtent
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from ..constants import GTIFF_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV
+from ..constants import GTIFF_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV, CIF_CACHE_S3_BUCKET_URI
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
