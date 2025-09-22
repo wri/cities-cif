@@ -6,11 +6,13 @@ from enum import Enum
 from city_metrix import s3_client
 from city_metrix.constants import GeoType, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION, \
     CSV_FILE_EXTENSION, LOCAL_CACHE_URI, DEFAULT_PRODUCTION_ENV, CIF_CACHE_S3_BUCKET_URI, CTCM_CACHE_S3_BUCKET_URI, \
-    CIF_TESTING_S3_BUCKET_URI
+    CIF_TESTING_S3_BUCKET_URI, FILE_KEY_ADMINBOUND_MARKER, FILE_KEY_URBEXTBOUND_MARKER
 from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_cache, \
     read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_bucket_name_from_s3_uri, read_csv_from_s3, \
     read_geotiff_subarea_from_cache
 from city_metrix.metrix_tools import get_class_from_instance
+
+
 
 
 def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_buffer_m: int = None):
@@ -26,8 +28,8 @@ def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_b
     if s3_bucket is not None:
         file_key = get_cached_file_key(feature_base_class_name, s3_bucket, output_env, cache_folder_name, city_id,
                                        admin_level, feature_id, file_format)
+        file_uri = get_cached_file_uri(s3_bucket, file_key, (False and is_custom_object))  # False-and so all objs treated as non-custom
 
-        file_uri = get_cached_file_uri(s3_bucket, file_key, is_custom_object)
     else:
         file_key = None
         file_uri = None
@@ -300,10 +302,14 @@ def get_cached_file_uri(s3_bucket, file_key, is_custom_layer):
 
 def get_cached_file_key(feature_based_class_name, s3_bucket, output_env, feature_name, city_id, admin_level, feature_id,
                         file_format):
+    if admin_level == 'urban_extent' and FILE_KEY_URBEXTBOUND_MARKER:
+        bound_marker = '__urban_extent'
+    elif FILE_KEY_ADMINBOUND_MARKER:
+        bound_marker = f'__{admin_level}'
     if feature_based_class_name.lower() == 'layer':
-        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}"
+        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}{bound_marker}__{admin_level}__{feature_id}"
     else:
-        file_key = f"data/{output_env}/metrics/{city_id}/{city_id}__{feature_id}"
+        file_key = f"data/{output_env}/metrics/{city_id}/{city_id}{bound_marker}__{feature_id}"
 
     # if city_aoi is not None:
     #     aoi_uuid = hashkey_from_tuple(city_aoi)
