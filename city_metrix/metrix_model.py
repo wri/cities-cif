@@ -1108,7 +1108,7 @@ class Layer():
             # Cache the tile to S3 and remove temporary file
             target_tile_uri = f"{target_uri}/{file_name}"
             try:
-                print(f"Writing tile to {target_uri}")
+                print(f"\nWriting tile to {target_uri}")
                 self._write_data_to_cache(temp_file_path, target_tile_uri)
             except  Exception as e:
                 raise Exception(f"Failed to process {target_tile_uri}: {e}")
