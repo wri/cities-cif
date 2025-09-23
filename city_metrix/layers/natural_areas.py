@@ -21,7 +21,7 @@ class NaturalAreas(Layer):
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        esa_world_cover = EsaWorldCover(year=self.year).get_data_with_caching(bbox=bbox, s3_env=DEFAULT_PRODUCTION_ENV, spatial_resolution=spatial_resolution)
+        esa_world_cover = EsaWorldCover(year=self.year).get_data(bbox=bbox, spatial_resolution=spatial_resolution)
         reclass_map = {
             EsaWorldCoverClass.TREE_COVER.value: 1,
             EsaWorldCoverClass.SHRUBLAND.value: 1,
