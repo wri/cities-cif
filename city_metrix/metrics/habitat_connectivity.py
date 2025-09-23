@@ -72,10 +72,9 @@ class _HabitatConnectivity(Metric):
             else:
                 result_value.append(0)
 
-        result = pd.DataFrame(zones['index'].copy().rename('zone'))
-        result['value'] = result_value
+        zones['value'] = result_value
 
-        return result
+        return zones
 
 
 class HabitatConnectivityCoherence__Percent(_HabitatConnectivity):
