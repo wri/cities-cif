@@ -72,9 +72,10 @@ class _HabitatConnectivity(Metric):
             else:
                 result_value.append(0)
 
-        zones['value'] = result_value
+        result = zones.copy()
+        result['value'] = result_value
 
-        return zones
+        return result
 
 
 class HabitatConnectivityCoherence__Percent(_HabitatConnectivity):
