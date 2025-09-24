@@ -29,7 +29,7 @@ class CamsGhg(Layer):
     SUPPORTED_YEARS = [2010, 2011, 2012, 2013, 2014, 2015,
                        2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
 
-    def __init__(self, species=None, sector='sum', co2e=True, year=2023, **kwargs):
+    def __init__(self, species=None, sector='sum', co2e=True, year=2024, **kwargs):
         super().__init__(**kwargs)
         if species is not None and not species in self.SUPPORTED_SPECIES.keys():
             raise Exception(f'Unsupported species: {species}')

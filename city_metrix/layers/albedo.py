@@ -21,7 +21,7 @@ class Albedo(Layer):
         end_date: ending date for data retrieval; set to None for auto-selected previous year's summer
         threshold: threshold value for filtering the retrieval
     """
-    def __init__(self, start_date:str='2021-01-01', end_date:str='2022-01-01', threshold=None, **kwargs):
+    def __init__(self, start_date:str='2024-01-01', end_date:str='2025-01-01', threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date

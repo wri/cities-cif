@@ -15,11 +15,11 @@ class PopWeightedPM2p5(Layer):
         worldpop_agesex_classes:Enum value from WorldPopClass OR
                                 list of age-sex classes to retrieve (see https://airtable.com/appDWCVIQlVnLLaW2/tblYpXsxxuaOk3PaZ/viwExxAgTQKZnRfWU/recFjH7WngjltFMGi?blocks=hide)
         worldpop_year: year used for data retrieval
-        acag_year: only available year is 2022
+        acag_year: 2010-2023
         acag_return_above:
     """
     # get_data() for this class returns DataArray with pm2.5 concentration multiplied by (pixelpop/meanpop)
-    def __init__(self, worldpop_agesex_classes:WorldPopClass=[], worldpop_year=2020, acag_year=2022, acag_return_above=0, **kwargs):
+    def __init__(self, worldpop_agesex_classes:WorldPopClass=[], worldpop_year=2020, acag_year=2023, acag_return_above=0, **kwargs):
         super().__init__(**kwargs)
         self.worldpop_agesex_classes = worldpop_agesex_classes
         self.worldpop_year = worldpop_year
