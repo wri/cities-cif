@@ -65,4 +65,4 @@ class AirPollutantWhoExceedance__Days(Metric):
                                for conc in maxconc_by_day])
         excdays_np = np.vstack(excdays)
 
-        return pd.Series([np.any(excdays_np, axis=0).sum()])
+        return pd.DataFrame({'zone': [0], 'value': [np.any(excdays_np, axis=0).sum()]})
