@@ -72,8 +72,7 @@ class _HabitatConnectivity(Metric):
             else:
                 result_values.append(0)
 
-        result = zones.copy()
-        result['value'] = result_values
+        result = pd.DataFrame({'zone': zones.index, 'value': result_values})
         return result
 
 
