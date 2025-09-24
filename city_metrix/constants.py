@@ -22,12 +22,6 @@ CIF_TESTING_S3_BUCKET_URI = 's3://cities-test-sandbox'  # not used in new file s
 local_cache_directory = os.path.join(Path.home(), 'CIF_local_cache')
 LOCAL_CACHE_URI = f'file://{local_cache_directory}'
 
-FILE_KEY_ADMINBOUND_MARKER = False
-FILE_KEY_URBEXTBOUND_MARKER = True
-CUSTOM_CACHED_DIFFERENTLY = False
-
-USE_CACHED_LAYERS = False
-
 CITIES_DATA_API_URL = "https://dev.cities-data-api.wri.org" # at later date, consider switching to "cities-data-api.wri.org". Ask Saif
 
 # CTCM features

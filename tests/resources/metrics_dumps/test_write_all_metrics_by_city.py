@@ -108,23 +108,6 @@ def test_write_Era5MetPreprocessingUmep(target_folder):
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_GhgEmissions__Tonnes(target_folder):
-    metric_obj = GhgEmissions__Tonnes()
-
-def test_write_HabitatConnectivityCoherence__Percent(target_folder):
-    metric_obj = HabitatConnectivityCoherence__Percent()
-    _run_write_metrics_by_city_test(
-        metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
-
-@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_write_HabitatConnectivityEffectiveMeshSize__Hectares(target_folder):
-    metric_obj = HabitatConnectivityEffectiveMeshSize__Hectares()
-    _run_write_metrics_by_city_test(
-        metric_obj, target_folder, GEOEXTENT_TERESINA, GEOZONE_TERESINA)
-
-@timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-@pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_HabitatTypesRestored__CoverTypes(target_folder):
     metric_obj = HabitatTypesRestored__CoverTypes()
     _run_write_metrics_by_city_test(

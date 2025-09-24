@@ -13,7 +13,6 @@ from .glad_lulc import LandCoverHabitatChangeGlad
 from .aqueduct_flood import AqueductFlood
 from .average_net_building_height import AverageNetBuildingHeight
 from .built_up_height import BuiltUpHeight
-from .cams_ghg import CamsGhg
 from .cams import Cams
 from .carbon_flux_from_trees import CarbonFluxFromTrees
 from .era_5_hottest_day import Era5HottestDay

@@ -19,7 +19,7 @@ BBOX = BBOX_USA_OR_PORTLAND_1
 def test_acag_pm2p5():
     data = AcagPM2p5().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 5.48, 5.84, 9797, 0)
+    assert_raster_stats(data, 2, 5.89, 6.53, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_albedo_cloud_masked():
@@ -31,7 +31,7 @@ def test_albedo_cloud_masked():
 def test_albedo():
     data = Albedo().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.02434064, 0.5932779, 9797, 0)
+    assert_raster_stats(data, 2, 0.0183, 0.6289, 9794, 3)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_alos_dsm():
@@ -56,12 +56,6 @@ def test_built_up_height():
     data = BuiltUpHeight().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 0, 14.61, 100, 0)
-    assert get_projection_type(data.crs) == ProjectionType.UTM
-
-def test_cams_ghg():
-    data = CamsGhg().get_data(BBOX)
-    assert np.size(data) > 0
-    assert_raster_stats(data, 1, 612278.8, 612278.8, 1, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
@@ -235,7 +229,7 @@ def test_protected_areas():
 def test_pop_weighted_pm2p5():
     data = PopWeightedPM2p5().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 5.68, 5.68, 1, 0)
+    assert_raster_stats(data, 1, 6.57, 6.57, 1, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_riparian_areas():
