@@ -143,6 +143,9 @@ class Era5HottestDay(Layer):
         )
 
         data = xr.merge([data_land, data_general])
+        # add wgs84 lat lon coords
+        data = data.assign_coords(lat=[center_lat], lon=[center_lon])
+
         data = data.to_array()
 
         return data

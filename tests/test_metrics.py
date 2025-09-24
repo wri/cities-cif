@@ -121,7 +121,7 @@ def test_era_5_met_preprocess_upenn():
     has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
     assert has_empty_required_cells == False
     assert len(indicator) == 24
-    assert_metric_stats(indicator[['DHI']], 2, 0.00, 554.42, 24, 0)
+    assert_metric_stats(indicator[['DHI']], 2, 0.00, 312.33, 24, 0)
 
 def test_ghg_emissions__tonnes():
     indicator = GhgEmissions__Tonnes().get_metric(IDN_JAKARTA_TILED_ZONES)

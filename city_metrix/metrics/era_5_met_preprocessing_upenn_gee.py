@@ -53,8 +53,8 @@ class Era5MetPreprocessingUPenn(Metric):
         ssrdc_var = era_5_data.sel(variable='surface_solar_radiation_downward_clear_sky').values
         cdir_var = era_5_data.sel(variable='clear_sky_direct_solar_radiation_at_surface').values
         time_var = era_5_data['time'].values
-        lat_var = era_5_data['y'].values
-        lon_var = era_5_data['x'].values
+        lat_var = era_5_data['lat'].values
+        lon_var = era_5_data['lon'].values
 
         # temps go from K to C; surface radiation goes from J/m^2 to W/m^2 (divide by 3600); wind speed from vectors (pythagorean)
         # rh calculated from temp and dew point; ghi = dni * cos(z) + dhi; z=solar zenith angle

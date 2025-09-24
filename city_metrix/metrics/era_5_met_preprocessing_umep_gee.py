@@ -51,8 +51,8 @@ class Era5MetPreprocessingUmep(Metric):
         sw_var = era_5_data.sel(variable='mean_surface_direct_short_wave_radiation_flux_clear_sky').values
         lw_var = era_5_data.sel(variable='mean_surface_downward_long_wave_radiation_flux_clear_sky').values
         time_var = era_5_data['time'].values
-        lat_var = era_5_data['y'].values
-        lon_var = era_5_data['x'].values
+        lat_var = era_5_data['lat'].values
+        lon_var = era_5_data['lon'].values
 
         # temps go from K to C; global rad (cdir) goes from /hour to /second; wind speed from vectors (pythagorean)
         # rh calculated from temp and dew point; vpd calculated from tepm and rh
