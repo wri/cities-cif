@@ -29,7 +29,7 @@ from city_metrix import s3_client
 from city_metrix.cache_manager import retrieve_city_cache, build_file_key, is_cache_usable
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI, \
-    MULTI_TILE_TILE_INDEX_FILE, PROCESSING_KNOWN_ISSUE_FLAG
+    MULTI_TILE_TILE_INDEX_FILE, PROCESSING_KNOWN_ISSUE_FLAG, USE_CACHED_LAYERS
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_boundaries, create_uri_target_folder, get_file_key_from_url,
                                     get_bucket_name_from_s3_uri,
@@ -848,7 +848,7 @@ class Layer():
             standard_env = standardize_s3_env(s3_env)
             has_usable_cache = is_cache_usable(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m, None)
 
-        if has_usable_cache:
+        if USE_CACHED_LAYERS and has_usable_cache:
             result_data, _, _ = retrieve_city_cache(self.aggregate, bbox, aoi_buffer_m, s3_bucket=s3_bucket, output_env=standard_env,
                                                     city_aoi_subarea=city_aoi_subarea)
         else:

@@ -26,6 +26,8 @@ FILE_KEY_ADMINBOUND_MARKER = False
 FILE_KEY_URBEXTBOUND_MARKER = True
 CUSTOM_CACHED_DIFFERENTLY = False
 
+USE_CACHED_LAYERS = False
+
 CITIES_DATA_API_URL = "https://dev.cities-data-api.wri.org" # at later date, consider switching to "cities-data-api.wri.org". Ask Saif
 
 # CTCM features

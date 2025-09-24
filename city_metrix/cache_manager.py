@@ -48,17 +48,21 @@ def is_cache_usable(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m=N
 
     return False
 
-def retrieve_city_cache(class_obj, geo_extent, output_env, force_data_refresh: bool):
-    file_uri, file_key, feature_id, is_custom_layer = build_file_key(output_env, class_obj, geo_extent)
-
-    if force_data_refresh or geo_extent.geo_type == GeoType.GEOMETRY or not check_if_cache_file_exists(file_uri):
-        return None, feature_id, file_uri
+def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m: int, s3_bucket: str, output_env: str,
+                        city_aoi_subarea: tuple[float, float, float, float]=None):
+    file_uri, file_key, feature_id, is_custom_layer = build_file_key(s3_bucket, output_env, class_obj, geo_extent,
+                                                                     aoi_buffer_m)
 
     # Retrieve from cache
-    data = None
     file_format = class_obj.OUTPUT_FILE_FORMAT
     if file_format == GTIFF_FILE_EXTENSION:
-        data = read_geotiff_from_cache(file_uri)
+        if city_aoi_subarea is None:
+            # when a subarea within a city is not specified, simply retrieve the entire cached file.
+            data = read_geotiff_from_cache(file_uri)
+        else:
+            # when a subarea within a city is specified, then retrieve part of parts of files.
+            utm_crs = geo_extent.crs
+            data = read_geotiff_subarea_from_cache(file_uri, city_aoi_subarea, utm_crs)
     elif file_format == GEOJSON_FILE_EXTENSION:
         data = read_geojson_from_cache(file_uri)
     elif file_format == NETCDF_FILE_EXTENSION:
