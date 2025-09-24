@@ -28,12 +28,15 @@ class _NumberSpecies(Metric):
         speciesrichness_layer = SpeciesRichness(taxon=self.taxon, start_year=self.start_year, end_year=self.end_year, mask_layer=self.mask_layer)
 
         zones = geo_zone.zones
-        results = []
+        result_values = []
         for rownum in range(len(zones)):
             zone = zones.iloc[[rownum]]
-            results.append(speciesrichness_layer.get_data(GeoExtent(zone)).species_count[0])
+            result_values.append(speciesrichness_layer.get_data(GeoExtent(zone)).species_count[0])
 
-        return pd.Series(results)
+        result = zones.copy()
+        result['value'] = result_values
+
+        return result
 
 
 class BirdRichness__Species(_NumberSpecies):
