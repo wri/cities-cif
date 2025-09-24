@@ -12,7 +12,7 @@ MIN_VEGETATION_PERCENT = 50
 class RiparianLandWithVegetationOrWater__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["year"]
+    MINOR_NAMING_ATTS = None
     CUSTOM_TILE_SIDE_M = 10000
 
     def __init__(self, year=2024, **kwargs):

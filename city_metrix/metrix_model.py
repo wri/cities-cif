@@ -29,7 +29,7 @@ from city_metrix import s3_client
 from city_metrix.cache_manager import retrieve_city_cache, build_file_key, is_cache_usable
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI, \
-    MULTI_TILE_TILE_INDEX_FILE, PROCESSING_KNOWN_ISSUE_FLAG
+    MULTI_TILE_TILE_INDEX_FILE, PROCESSING_KNOWN_ISSUE_FLAG, USE_CACHED_LAYERS
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_boundaries, create_uri_target_folder, get_file_key_from_url,
                                     get_bucket_name_from_s3_uri,
@@ -72,7 +72,6 @@ class GeoZone():
                 self.admin_level = city_data.get(self.aoi_id, None)
             elif self.aoi_id == 'urban_extent':
                 self.admin_level = self.aoi_id
-
             # bbox is always projected to UTM
             self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
 
@@ -95,22 +94,19 @@ def _build_aoi_from_city_boundaries(city_id, geo_feature):
     boundaries_gdf = get_city_boundaries(city_id, geo_feature)
     west, south, east, north = boundaries_gdf.total_bounds
 
-    # determine UTM CRS
+    # reproject bounds to UTM
     centroid = shapely.box(west, south, east, north).centroid
     utm_crs = get_utm_zone_from_latlon_point(centroid)
-
-    bbox = reproject_units(south, west, north, east, WGS_CRS, utm_crs)
-    reproj_south, reproj_west, reproj_north, reproj_east = bbox
+    reproj_west, reproj_south, reproj_east, reproj_north = boundaries_gdf.to_crs(utm_crs).total_bounds
 
     # Round coordinates to whole units
     bbox = (math.floor(reproj_west), math.floor(reproj_south), math.ceil(reproj_east), math.ceil(reproj_north))
 
-    if geo_feature.lower() == 'adm4union':
-        # reproject geodataframe to UTM
-        zones = boundaries_gdf.to_crs(utm_crs)
-    else:
-        zones = None
-
+    #if geo_feature.lower() == 'city_admin_level':
+    #    # reproject geodataframe to UTM
+    zones = boundaries_gdf.to_crs(utm_crs)
+    #else:
+    #    zones = None
     return bbox, utm_crs, zones
 
 
@@ -850,9 +846,9 @@ class Layer():
             has_usable_cache = False
         else:
             standard_env = standardize_s3_env(s3_env)
-            has_usable_cache = is_cache_usable(s3_bucket, standard_env, self.aggregate, bbox, None, None)
+            has_usable_cache = is_cache_usable(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m, None)
 
-        if has_usable_cache:
+        if USE_CACHED_LAYERS and has_usable_cache:
             result_data, _, _ = retrieve_city_cache(self.aggregate, bbox, aoi_buffer_m, s3_bucket=s3_bucket, output_env=standard_env,
                                                     city_aoi_subarea=city_aoi_subarea)
         else:
@@ -889,7 +885,6 @@ class Layer():
                 result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
                 delete_s3_file_if_exists(target_uri)
                 delete_s3_folder_if_exists(target_uri)
-                create_uri_target_folder(target_uri)
                 write_layer(result_data, target_uri, self.OUTPUT_FILE_FORMAT)
         else:
             raise ValueError(f"Data not cached for {self.aggregate.__class__.__name__}.  Data can only be cached for CITY geo_extent.")
@@ -1111,7 +1106,7 @@ class Layer():
             # Cache the tile to S3 and remove temporary file
             target_tile_uri = f"{target_uri}/{file_name}"
             try:
-                print(f"Writing tile to {target_uri}")
+                print(f"\nWriting tile to {target_uri}")
                 self._write_data_to_cache(temp_file_path, target_tile_uri)
             except  Exception as e:
                 raise Exception(f"Failed to process {target_tile_uri}: {e}")
@@ -1121,6 +1116,14 @@ class Layer():
 
             retrieval_errors = {index: None}
         else:
+            file_name = construct_tile_name(index, processing_had_failure=True)
+            target_tile_uri = f"{target_uri}/{file_name}"
+
+            # write empty placeholder file to s3
+            bucket = get_bucket_name_from_s3_uri(target_tile_uri)
+            file_key = get_file_key_from_url(target_tile_uri)
+            s3_client.put_object(Bucket=bucket, Key=file_key, Body='')
+
             retrieval_errors = {index: failure_message}
 
         return retrieval_errors
@@ -1545,7 +1548,10 @@ def _write_grid_index_to_cache(fishnet, file_uri, crs):
     write_json(metadata, metadata_file)
 
 
-def construct_tile_name(tile_index):
+def construct_tile_name(tile_index, processing_had_failure: bool = False):
     padded_index = str(tile_index).zfill(TILE_NUMBER_PADCOUNT)
-    file_name = f'tile_{padded_index}.tif'
+    if processing_had_failure is False:
+        file_name = f'tile_{padded_index}.tif'
+    else:
+        file_name = f'tile_{padded_index}_processing_failed.tif'
     return file_name

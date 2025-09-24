@@ -46,6 +46,8 @@ class UrbanLandUse(Layer):
                                      .reduce(ee.Reducer.firstNonNull())
                                      .rename('lulc')
                                      )
+        if spatial_resolution > DEFAULT_SPATIAL_RESOLUTION:
+            ulu_ic = ulu_ic.map(lambda x: x.setDefaultProjection(crs=x.projection().crs(), scale=DEFAULT_SPATIAL_RESOLUTION).reduceResolution(ee.Reducer.mode(), bestEffort=False, maxPixels=800).reproject(crs=x.projection().crs(), scale=spatial_resolution))
 
         data = get_image_collection(
             ulu_ic,
