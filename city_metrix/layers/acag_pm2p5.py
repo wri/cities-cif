@@ -12,10 +12,10 @@ class AcagPM2p5(Layer):
     MINOR_NAMING_ATTS = ["return_above"]
     """
     Attributes:
-        year: only available year is 2022
+        year: 2010-2023
         return_above:
     """
-    def __init__(self, year=2022, return_above=0, **kwargs):
+    def __init__(self, year=2023, return_above=0, **kwargs):
         super().__init__(**kwargs)
         self.year = year
         self.return_above = return_above

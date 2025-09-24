@@ -9,7 +9,7 @@ from city_metrix.layers import OpenStreetMap, OpenStreetMapClass, WorldPop
 class HospitalsPerTenThousandResidents__Hospitals(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["year"]
+    MINOR_NAMING_ATTS = None
 
     def __init__(self, year=datetime.datetime.now().year, **kwargs):
         super().__init__(**kwargs)

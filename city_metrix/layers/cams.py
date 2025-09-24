@@ -57,13 +57,12 @@ class Cams(Layer):
     OUTPUT_FILE_FORMAT = NETCDF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
-
-    def __init__(self, start_date="2023-01-01", end_date="2023-12-31", species=[], **kwargs):
-        """
-        Attributes:
-            start_date: starting date for data retrieval
-            end_date: ending date for data retrieval
-        """
+    """
+    Attributes:
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
+    """
+    def __init__(self, start_date="2024-01-01", end_date="2024-12-31", **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date

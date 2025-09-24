@@ -36,3 +36,4 @@ dependencies:
   - ipython=8.34.0
   - timeout-decorator
   - pvlib=0.13.0
+  - pyopenssl>=23.2.0

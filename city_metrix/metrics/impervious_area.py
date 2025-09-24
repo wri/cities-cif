@@ -11,20 +11,20 @@ class ImperviousArea__Percent(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, year=2018, **kwargs):
         super().__init__(**kwargs)
+        self.year = year
         self.unit = 'percent'
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        imperv = ImperviousSurface()
+        imperv = ImperviousSurface(year=self.year)
 
         # monkey‐patch impervious get_data to fill na
-        imperv_fillna = ImperviousSurface()
+        imperv_fillna = ImperviousSurface(year=self.year)
         imperv_fillna_get_data = imperv_fillna.get_data
         imperv_fillna.get_data = lambda bbox, spatial_resolution: imperv_fillna_get_data(bbox, spatial_resolution).fillna(0)
-
         # count with no NaNs
         imperv_count = imperv.groupby(geo_zone).count()
         # count all pixels
