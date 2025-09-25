@@ -236,7 +236,7 @@ def test_number_species_arthropod_richness__species():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 33.0, 33.0, 39, 1)
+    assert_metric_stats(indicator, 1, 33.0, 33.0, 1, 39)
 
 def test_number_species_vascular_plant_richness__species():
     random.seed(42)
