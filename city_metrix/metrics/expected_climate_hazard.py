@@ -131,7 +131,7 @@ class Hazard:
         return result
 
 
-class Tempwave_count(Hazard):
+class TempwaveCount(Hazard):
     def __init__(self, min_duration, threshold):
         super().__init__()
         if type(threshold) == np.ndarray and threshold.size % 365 != 0:
@@ -152,7 +152,7 @@ class Tempwave_count(Hazard):
         return result_dist
 
 
-class Tempwave_duration(Hazard):
+class TempwaveDuration(Hazard):
     def __init__(self, threshold):
         super().__init__()
         if type(threshold) == np.ndarray and threshold.size % 365 != 0:
@@ -232,7 +232,7 @@ class FutureHeatwaveFrequency__Heatwaves(Metric):
         bbox = GeoExtent(geo_zone)
         threshold = percentile((geo_zone.centroid.y, geo_zone.centroid.x),
                                'tasmax', HEATWAVE_INTENSITY_PERCENTILE, True)
-        haz = Tempwave_count(MIN_HEATWAVE_DURATION, threshold)
+        haz = TempwaveCount(MIN_HEATWAVE_DURATION, threshold)
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
@@ -241,7 +241,7 @@ class FutureHeatwaveFrequency__Heatwaves(Metric):
         return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
 
 
-class FutureHeatwaveMaxduration__Days(Metric):
+class FutureHeatwaveMaxDuration__Days(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ['start_year', 'end_year']
     MINOR_NAMING_ATTS = ['model_rank']
@@ -262,7 +262,7 @@ class FutureHeatwaveMaxduration__Days(Metric):
         bbox = GeoExtent(geo_zone)
         threshold = percentile((geo_zone.centroid.y, geo_zone.centroid.x),
                                'tasmax', HEATWAVE_INTENSITY_PERCENTILE, True)
-        haz = Tempwave_duration(threshold)
+        haz = TempwaveDuration(threshold)
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
@@ -299,7 +299,7 @@ class FutureDaysAbove35__Days(Metric):
         return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
 
 
-class FutureAnnualMaxtemp__DegreesCelsius(Metric):
+class FutureAnnualMaxTemp__DegreesCelsius(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ['start_year', 'end_year']
     MINOR_NAMING_ATTS = ['model_rank']

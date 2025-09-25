@@ -123,8 +123,8 @@ def test_era_5_met_preprocess_upenn():
     assert len(indicator) == 24
     assert_metric_stats(indicator[['DHI']], 2, 0.00, 312.15, 24, 0)
 
-def test_future_annual_maxtemp__degreescelsius():
-    indicator = FutureAnnualMaxtemp__DegreesCelsius(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
+def test_future_annual_max_temp__degreescelsius():
+    indicator = FutureAnnualMaxTemp__DegreesCelsius(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
     assert indicator.value[0] == 34.9  # Returns just one number
 
 def test_future_days_above_35__days():
@@ -138,6 +138,10 @@ def test_future_extreme_precipitation__days():
 def test_future_heatwave_frequency__heatwaves():
     indicator = FutureHeatwaveFrequency__Heatwaves(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
     assert indicator.value[0] == 22.2   # Returns just one number
+
+def test_future_heatwave_max_duration__days():
+    indicator = FutureHeatwaveMaxDuration__Days(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
+    assert indicator.value[0] == 81.5   # Returns just one number
 
 def test_ghg_emissions__tonnes():
     indicator = GhgEmissions__Tonnes().get_metric(IDN_JAKARTA_TILED_ZONES)

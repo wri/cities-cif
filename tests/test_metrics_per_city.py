@@ -24,6 +24,7 @@ def test_city_values_riverine_or_coastal_flood_risk_area__percent():
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
     _evaluate_metric_values(metric_values, 2, 0.0, 100.0, 86.57, 71, 1, True)
 
+
 def _evaluate_metric_values(metric_values, digits, expected_min, expected_max, expected_mean, expected_count, expected_zero_count, expect_zone_continuity):
     value_series = _convert_to_series(metric_values, 'value')
     min_val = round(value_series.min(), digits)
