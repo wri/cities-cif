@@ -13,6 +13,8 @@ class SteeplySlopedLandWithVegetation__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["year"]
+    CUSTOM_TILE_SIDE_M = 10000
+
 
     def __init__(self, year=2024, **kwargs):
         super().__init__(**kwargs)
@@ -32,7 +34,8 @@ class SteeplySlopedLandWithVegetation__Percent(Metric):
         steep_layer = Slope(min_threshold=MIN_SLOPE_DEGREES)
         vegetation_layer = FractionalVegetationPercent(min_threshold=MIN_VEGETATION_PERCENT)
 
-        vegetated_steep_area = steep_layer.mask(vegetation_layer).groupby(geo_zone).count().fillna(0)
+        vegetated_steep_area = (steep_layer.mask(vegetation_layer)
+                                .groupby(geo_zone, custom_tile_size_m=self.CUSTOM_TILE_SIDE_M).count().fillna(0))
         steep_area = steep_layer.groupby(geo_zone).count()
 
         if isinstance(steep_area, pd.DataFrame):
