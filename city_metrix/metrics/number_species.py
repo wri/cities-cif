@@ -29,15 +29,9 @@ class _NumberSpecies(Metric):
 
         zones = geo_zone.zones
         union_zone = geo_zone.zones.dissolve()
-        union_result = speciesrichness_layer.get_data(GeoExtent(union_zone)).species_count[0]
-        result = pd.DataFrame({'zone': [0], 'value': [union_result]})
-        # result_values = []
-        # for rownum in range(len(zones)):
-        #     zone = zones.iloc[[rownum]]
-        #     result_values.append(speciesrichness_layer.get_data(GeoExtent(zone)).species_count[0])
-
-        # result = pd.DataFrame({'zone': zones.index, 'value': result_values})
-
+        union_result = speciesrichness_layer.get_data(GeoExtent(union_zone)).species_count[0]  # Only return result for union geometry
+        result = union_zone.copy()
+        result['value'] = [union_result]
         return result
 
 
