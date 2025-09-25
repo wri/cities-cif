@@ -7,7 +7,7 @@ from city_metrix.constants import ProjectionType
 from city_metrix.layers import *
 from city_metrix.metrix_tools import get_projection_type
 from tests.conftest import EXECUTE_IGNORED_TESTS
-from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1, BUENOS_AIRES_WGS84
+from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1, BBOX_ARG_BUENOS_AIRES
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC and is a stable region
@@ -124,7 +124,7 @@ def test_impervious_surface():
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_key_biodiversity_areas():
-    data = KeyBiodiversityAreas('ARG').get_data(BUENOS_AIRES_WGS84)
+    data = KeyBiodiversityAreas('ARG').get_data(BBOX_ARG_BUENOS_AIRES)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 1.0, 1.0, 69407, 817987)
     assert get_projection_type(data.crs) == ProjectionType.UTM

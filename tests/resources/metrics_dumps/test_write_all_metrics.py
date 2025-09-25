@@ -187,7 +187,8 @@ def test_write_impervious_surface_on_urbanized_land__percent(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_key_biodiversity_area_protected__percent(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','key_biodiversity_area_protected__percent.csv')
+    file_path = prep_output_path(
+        target_folder, 'metric', 'key_biodiversity_area_protected__percent.csv')
 
     metric_obj = KeyBiodiversityAreaProtected__Percent()
     _write_verify(metric_obj, zones, file_path)
@@ -195,7 +196,8 @@ def test_write_key_biodiversity_area_protected__percent(target_folder):
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_write_key_biodiversity_area_undeveloped_percent(target_folder):
     zones = SAMPLE_TILED_ZONES
-    file_path = prep_output_path(target_folder, 'metric','key_biodiversity_area_undeveloped_percent.csv')
+    file_path = prep_output_path(
+        target_folder, 'metric', 'key_biodiversity_area_undeveloped_percent.csv')
 
     metric_obj = KeyBiodiversityAreaUndeveloped__Percent()
     _write_verify(metric_obj, zones, file_path)

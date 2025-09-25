@@ -17,8 +17,8 @@ from .land_near_natural_drainage import LandNearNaturalDrainage__Percent
 from .mean_pm2p5_exposure import *
 from .mean_tree_cover import MeanTreeCover__Percent
 from .natural_areas import NaturalAreas__Percent
-from .percent_key_biodiversity_area_not_built_up import KeyBiodiversityAreaUndeveloped__Percent
-from .percent_key_biodiversity_area_protected import KeyBiodiversityAreaProtected__Percent
+from .key_biodiversity_area_protected import KeyBiodiversityAreaProtected__Percent
+from .key_biodiversity_area_undeveloped import KeyBiodiversityAreaUndeveloped__Percent
 from .number_species import *
 from .protected_area import ProtectedArea__Percent
 from .recreational_space_per_thousand import RecreationalSpacePerThousand__HectaresPerThousandPersons

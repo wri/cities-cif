@@ -3,7 +3,7 @@ import math
 import pytest
 
 from city_metrix.metrics import *
-from tests.conftest import EXECUTE_IGNORED_TESTS, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, BUENOS_AIRES_ZONES, ARG_BUENOS_AIRES_TILED_ZONES_TINY
+from tests.conftest import EXECUTE_IGNORED_TESTS, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES, ARG_BUENOS_AIRES_TILED_ZONES_TINY
 PORTLAND_DST_seasonal_utc_offset = -8
 
 # TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
@@ -172,16 +172,16 @@ def test_impervious_surface_on_urbanized_land__percent():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 78.512, 100, 100, 0)
 
-def test_kba_protected():
-    indicator = KeyBiodiversityAreaProtected__Percent(country_code_iso3='ARG').get_metric(BUENOS_AIRES_ZONES)
-    expected_zone_size = len(BUENOS_AIRES_ZONES.zones)
+def test_key_biodiversity_area_protected__percent():
+    indicator = KeyBiodiversityAreaProtected__Percent(country_code_iso3='ARG').get_metric(ARG_BUENOS_AIRES_TILED_ZONES)
+    expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 1.19, 100, 15, 84)
 
-def test_kba_undeveloped():
-    indicator = KeyBiodiversityAreaUndeveloped__Percent(country_code_iso3='ARG').get_metric(BUENOS_AIRES_ZONES)
-    expected_zone_size = len(BUENOS_AIRES_ZONES.zones)
+def test_key_biodiversity_area_undeveloped__percent():
+    indicator = KeyBiodiversityAreaUndeveloped__Percent(country_code_iso3='ARG').get_metric(ARG_BUENOS_AIRES_TILED_ZONES)
+    expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 40.22, 99.99, 12, 87)

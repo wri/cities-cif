@@ -1,14 +1,16 @@
+import numpy as np
 from geopandas import GeoDataFrame
 from geocube.api.core import make_geocube
+
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from city_metrix.layers.world_pop import WorldPop
 from ..constants import GTIFF_FILE_EXTENSION
-import numpy as np
 
 AWS_STEM = 'https://wri-cities-indicators.s3.us-east-1.amazonaws.com'
 COUNTRYBBOXES_PATH = 'devdata/inputdata/country_bboxes.geojson'
 COUNTRYBOUNDS_PATH = 'devdata/inputdata/country_boundaries.geojson'
 S3_KBA_PREFIX = 'devdata/inputdata/KBA'
+
 
 def _rasterize(gdf, snap_to):
     if gdf.empty:
@@ -22,6 +24,7 @@ def _rasterize(gdf, snap_to):
         ).is_kba
 
     return raster.rio.reproject_match(snap_to)
+
 
 class KeyBiodiversityAreas(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
@@ -58,8 +61,11 @@ class KeyBiodiversityAreas(Layer):
         if len(city_kba_data) > 0:
             dissolved_kba_data = city_kba_data.dissolve()
             data = GeoDataFrame({'id': [0], 'is_kba': 1, 'geometry': dissolved_kba_data.geometry}).to_crs(utm_crs)
-            result = _rasterize(data.reset_index(), worldpop_data).assign_attrs(worldpop_data.attrs)
+            result = _rasterize(data.reset_index(), worldpop_data).assign_attrs(
+                worldpop_data.attrs)
         else:  # No KBAs intersect with boundary -- return all-NAN array
             result = (worldpop_data * np.nan).assign_attrs(worldpop_data.attrs)
+
         result = result.rename('is_kba').assign_attrs({'id': 'is_kba'})
+        
         return result

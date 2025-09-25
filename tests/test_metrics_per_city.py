@@ -1,18 +1,8 @@
 from city_metrix.metrics import *
-from tests.resources.bbox_constants import GEOZONE_TERESINA, GEOZONE_BUENOS_AIRES
+from tests.resources.bbox_constants import GEOZONE_TERESINA
 
 # TODO - Consider adding other metrics
 
-
-def test_city_values_kba_protected__percent():
-    metric_obj = KeyBiodiversityAreaProtected__Percent(country_code_iso3='ARG')
-    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_BUENOS_AIRES)
-    _evaluate_metric_values(metric_values, 2, 0, 98.34, 53.52, 6, 2, True)
-
-def test_city_values_kba_undeveloped__percent():
-    metric_obj = KeyBiodiversityAreaUndeveloped__Percent(country_code_iso3='ARG')
-    metric_values = metric_obj.get_metric(geo_zone=GEOZONE_BUENOS_AIRES)
-    _evaluate_metric_values(metric_values, 2, 27.40, 100, 84.78, 6, 0, True)
 
 def test_city_values_built_land_with_high_lst__percent():
     metric_obj = BuiltLandWithHighLST__Percent()
