@@ -19,7 +19,7 @@ class GBIFTaxonClass(Enum):
     BIRDS = {"taxon": "Aves", "taxon_key": 212}
 
 
-class SpeciesRichness(Layer):
+class Observations(Layer):
     """
     Layer for estimating species richness using GBIF/iNaturalist data.
 
@@ -117,7 +117,7 @@ class SpeciesRichness(Layer):
         # Estimate species counts by estimating asymptote of species-accumulation curve created when observation order is randomized
         # Final estimate is average over NUM_CURVEFITS estimates
 
-        if len(observations) > 1:
+        if len(observations) > 10:
             taxon_observations = list(observations.species)
             asymptotes = []
             tries = 0
