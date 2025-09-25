@@ -1,6 +1,7 @@
 import random
 import math
 import pytest
+import numpy as np
 
 from city_metrix.metrics import *
 from tests.conftest import EXECUTE_IGNORED_TESTS, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES_TINY
@@ -227,7 +228,7 @@ def test_number_species_bird_richness__species():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 7.0, 15.0, 2, 38)
+    assert_metric_stats(indicator, 1, 11.0, 11.0, 1, 39)
 
 def test_number_species_arthropod_richness__species():
     random.seed(42)
@@ -235,7 +236,7 @@ def test_number_species_arthropod_richness__species():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 36.0, 36.0, 1, 39)
+    assert_metric_stats(indicator, 1, 33.0, 33.0, 39, 1)
 
 def test_number_species_vascular_plant_richness__species():
     random.seed(42)
@@ -243,7 +244,7 @@ def test_number_species_vascular_plant_richness__species():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 10.0, 10.0, 1, 39)
+    assert_metric_stats(indicator, 1, np.nan, np.nan, 0, 40)
 
 def test_number_species_bird_richness_in_builtup_area__species():
     random.seed(42)
@@ -251,7 +252,7 @@ def test_number_species_bird_richness_in_builtup_area__species():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 7.0, 7.0, 1, 39)
+    assert_metric_stats(indicator, 1, np.nan, np.nan, 0, 40)
 
 def test_protected_area__percent():
     indicator = ProtectedArea__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)

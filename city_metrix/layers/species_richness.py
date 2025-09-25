@@ -117,7 +117,7 @@ class SpeciesRichness(Layer):
         # Estimate species counts by estimating asymptote of species-accumulation curve created when observation order is randomized
         # Final estimate is average over NUM_CURVEFITS estimates
 
-        if len(observations) > 10:
+        if len(observations) >= 10:
             taxon_observations = list(observations.species)
             asymptotes = []
             tries = 0
