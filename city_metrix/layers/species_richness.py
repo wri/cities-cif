@@ -19,7 +19,7 @@ class GBIFTaxonClass(Enum):
     BIRDS = {"taxon": "Aves", "taxon_key": 212}
 
 
-class Observations(Layer):
+class SpeciesRichness(Layer):
     """
     Layer for estimating species richness using GBIF/iNaturalist data.
 
