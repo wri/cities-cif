@@ -21,7 +21,7 @@ class HospitalsPerTenThousandResidents__Hospitals(Metric):
                  spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
 
         hospitals = OpenStreetMap(osm_class=OpenStreetMapClass.HOSPITAL).get_data(GeoExtent(geo_zone))
-        hospital_counts_per_zone = [sum(d.intersects(geo_zone.zones.iloc[[i]].geometry[i])) for i in range(len(geo_zone.zones))]
+        hospital_counts_per_zone = [sum(hospitals.intersects(geo_zone.zones.iloc[[i]].geometry[i])) for i in range(len(geo_zone.zones))]
 
         world_pop = WorldPop()
         world_pop_sum = world_pop.groupby(geo_zone).sum()
