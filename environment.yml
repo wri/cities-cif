@@ -3,7 +3,6 @@ channels:
   - conda-forge
 dependencies:
   - python=3.10.16
-  - pyopenssl>=24.2.1
   - earthengine-api=1.5.9
   - geocube=0.7.1
   - geopandas=1.1.1
