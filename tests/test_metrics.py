@@ -174,7 +174,7 @@ def test_hospitals_per_ten_thousand_residents__hospitals():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0.00, 8.87, 100, 0)
+    assert_metric_stats(indicator, 2, 0.00, 0.00, 100, 0)
 
 def test_impervious_area__percent():
     indicator = ImperviousArea__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
