@@ -32,6 +32,7 @@ def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_b
 
     return file_uri, file_key, feature_id, is_custom_object
 
+
 def is_cache_usable(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m=None, city_aoi_subarea=None):
     # Function determines if the cache can be used based on some limited criteria
 
@@ -48,8 +49,9 @@ def is_cache_usable(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m=N
 
     return False
 
+
 def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m: int, s3_bucket: str, output_env: str,
-                        city_aoi_subarea: tuple[float, float, float, float]=None):
+                        city_aoi_subarea: tuple[float, float, float, float] = None):
     file_uri, file_key, feature_id, is_custom_layer = build_file_key(s3_bucket, output_env, class_obj, geo_extent,
                                                                      aoi_buffer_m)
 
@@ -74,6 +76,7 @@ def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m: int, s3_bucket: str
 
     return data, feature_id, file_uri
 
+
 # ============ Object naming ================================
 DATE_ATTRIBUTES = ['year', 'start_year', 'start_date', 'end_year', 'end_date']
 
@@ -88,7 +91,7 @@ def has_default_attribute_values(layer_obj):
             specified_value = getattr(layer_obj, key)
             is_matched = True if default_value == specified_value else False
             if not is_matched:
-                has_matched_cls_obj_atts =  False
+                has_matched_cls_obj_atts = False
                 unmatched_atts.append(key)
     return has_matched_cls_obj_atts, unmatched_atts
 
@@ -109,8 +112,8 @@ def build_cache_name(class_obj):
     # Determine if request it for a CIF-non-default layer
     if (
             (
-                    class_obj.MINOR_NAMING_ATTS is not None and unmatched_atts is not None
-                    and any(item in class_obj.MINOR_NAMING_ATTS for item in unmatched_atts)
+                class_obj.MINOR_NAMING_ATTS is not None and unmatched_atts is not None
+                and any(item in class_obj.MINOR_NAMING_ATTS for item in unmatched_atts)
             )
             or any(item in DATE_ATTRIBUTES for item in unmatched_atts)
     ):
@@ -175,6 +178,7 @@ def _build_naming_string_from_standard_parameters(feature_obj, is_custom_feature
 
     return date_kv_string
 
+
 def _has_paired_start_end_keys(att_dict):
     prefix_list = ['start', 'end']
     filtered_dict = {key: value for key, value in att_dict.items() if any(key.startswith(prefix) for prefix in prefix_list)}
@@ -182,7 +186,7 @@ def _has_paired_start_end_keys(att_dict):
     return has_paired_start_end_dates
 
 
-def _standardize_date_kv(date_key:str, date_value, is_custom_feature:bool):
+def _standardize_date_kv(date_key: str, date_value, is_custom_feature: bool):
     date_key = date_key.lower()
     year_value = date_value
     if not is_custom_feature:
@@ -228,7 +232,7 @@ def _flatten_attribute_value(value):
         flattened_value = value.name
     elif isinstance(value, str) or isinstance(value, numbers.Number):
         if isinstance(value, float):
-            flattened_value = str(value).replace('.','')
+            flattened_value = str(value).replace('.', '')
         else:
             flattened_value = value
     elif isinstance(value, list):
@@ -243,8 +247,10 @@ def _convert_snake_case_to_pascal_case(attribute_name):
     pascal_name = attribute_name.replace("_", " ").title().replace(" ", "")
     return pascal_name
 
+
 def _construct_kv_string(key, value, separator):
     return f"{separator}{key}_{value}"
+
 
 def check_if_cache_file_exists(file_uri):
     uri_scheme = get_uri_scheme(file_uri)
@@ -259,6 +265,7 @@ def check_if_cache_file_exists(file_uri):
     else:
         uri_path = os.path.normpath(get_file_path_from_uri(file_key))
         return os.path.exists(uri_path)
+
 
 def is_cache_object_available(file_uri):
     uri_scheme = get_uri_scheme(file_uri)
@@ -284,6 +291,7 @@ def is_cache_object_available(file_uri):
     else:
         uri_path = os.path.normpath(get_file_path_from_uri(file_key))
         return os.path.exists(uri_path)
+
 
 def get_cached_file_uri(s3_bucket, file_key, is_custom_layer):
     uri = LOCAL_CACHE_URI if is_custom_layer else s3_bucket

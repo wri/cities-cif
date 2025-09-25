@@ -1,6 +1,7 @@
 import pandas as pd
 from typing import Union
 import datetime
+
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import GeoZone, GeoExtent, Metric
 from city_metrix.layers import OpenStreetMap, OpenStreetMapClass, WorldPop
@@ -20,16 +21,19 @@ class HospitalsPerTenThousandResidents__Hospitals(Metric):
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
 
+        hospitals = OpenStreetMap(osm_class=OpenStreetMapClass.HOSPITAL).get_data(GeoExtent(geo_zone))
+        hospital_counts_per_zone = [
+                hospitals.geometry.intersects(zone).sum()
+                for zone in geo_zone.zones.geometry
+            ]
+
         world_pop = WorldPop()
         world_pop_sum = world_pop.groupby(geo_zone).sum()
 
-        hospitals = OpenStreetMap(osm_class=OpenStreetMapClass.HOSPITAL).get_data(GeoExtent(geo_zone))
-        hospital_counts_per_zone = [sum(hospitals.intersects(geo_zone.zones.iloc[[i]].geometry[i])) for i in range(len(geo_zone.zones))]
-
         if isinstance(world_pop_sum, pd.DataFrame):
-            hospital_counts_per_worldpopzone = [hospital_counts_per_zone[int(i)] for i in world_pop_sum.zone]
             result = world_pop_sum.copy()
-            result['value'] = 10000 * (hospital_counts_per_worldpopzone / world_pop_sum['value'])
+            result['value'] = 10000 * (hospital_counts_per_zone / world_pop_sum['value'])
+
         else:
             result = 10000 * hospital_counts_per_zone / world_pop_sum
 

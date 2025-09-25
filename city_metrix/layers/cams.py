@@ -1,26 +1,72 @@
 import cdsapi
 import os
+import datetime
+import numpy as np
 import xarray as xr
 import glob
+from enum import Enum
 
 from city_metrix.metrix_model import Layer, GeoExtent
 from ..constants import NETCDF_FILE_EXTENSION
+
+
+class CamsSpecies(Enum):
+    NO2 = {
+        'name': 'nitrogen dioxide',
+        'molar_mass': 46.0055,
+        'who_threshold': 25.0,
+        'cost_per_tonne': 67000,
+        'eac4_varname': 'no2'
+    }
+    SO2 = {
+        'name': 'sulfur dioxide',
+        'molar_mass': 64.066,
+        'who_threshold': 40.0,
+        'cost_per_tonne': 33000,
+        'eac4_varname': 'so2'
+    }
+    O3 = {    # Ozone thresholds are based on 8-hour average, not 24-hour.
+        'name': 'ozone',
+        'molar_mass': 48.0,
+        'who_threshold': 100.0,
+        'cost_per_tonne': np.nan,
+        'eac4_varname': 'go3'
+    }
+    PM25 = {
+        'name': 'fine particulate matter',
+        'who_threshold': 15.0,
+        'cost_per_tonne': np.nan,
+        'eac4_varname': 'pm2p5'
+    }
+    PM10 = {
+        'name': 'coarse particulate matter',
+        'who_threshold': 45.0,
+        'cost_per_tonne': np.nan,
+        'eac4_varname': 'pm10'
+    }
+    CO = {
+        'name': 'carbon monoxide',
+        'molar_mass': 28.01,
+        'who_threshold': 4000.0,
+        'cost_per_tonne': 250,
+        'eac4_varname': 'co'
+    }
 
 
 class Cams(Layer):
     OUTPUT_FILE_FORMAT = NETCDF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
-
     """
     Attributes:
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
     """
-    def __init__(self, start_date="2024-01-01", end_date="2024-12-31", **kwargs):
+    def __init__(self, start_date="2024-01-01", end_date="2024-12-31", species=None, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
+        self.species = species
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  force_data_refresh=False):
@@ -29,7 +75,8 @@ class Cams(Layer):
         min_lon, min_lat, max_lon, max_lat = bbox.as_geographic_bbox().bounds
 
         c = cdsapi.Client(url='https://ads.atmosphere.copernicus.eu/api')
-        target_file = 'cams_download.grib'
+        timestamp = str(datetime.datetime.now(datetime.timezone.utc).timestamp()).replace('.', '-')
+        target_file = f'cams_download_{timestamp}.grib'
         c.retrieve(
             'cams-global-reanalysis-eac4',
             {
@@ -45,7 +92,7 @@ class Cams(Layer):
                 ],
                 "model_level": ["60"],
                 "date": [f"{self.start_date}/{self.end_date}"],
-                'time': ['00:00', '03:00', '06:00', '09:00', 
+                'time': ['00:00', '03:00', '06:00', '09:00',
                          '12:00', '15:00', '18:00', '21:00'],
                 'area': [max_lat, min_lon, min_lat, max_lon],
                 'data_format': 'grib',
@@ -54,17 +101,19 @@ class Cams(Layer):
 
         # GRIB_edition: 1/2
         edition_1 = xr.open_dataset(
-            target_file, 
-            engine="cfgrib", 
-            backend_kwargs={"filter_by_keys": {"edition": 1}}).drop_vars(["number", "surface"], 
-            errors="ignore"
-            )
+            target_file,
+            engine="cfgrib",
+            decode_timedelta=False,
+            backend_kwargs={"filter_by_keys": {"edition": 1}}).drop_vars(["number", "surface"],
+                                                                         errors="ignore"
+                                                                         )
         edition_2 = xr.open_dataset(
-            target_file, 
-            engine="cfgrib", 
-            backend_kwargs={"filter_by_keys": {"edition": 2}}).drop_vars(["hybrid"], 
-            errors="ignore"
-            )
+            target_file,
+            engine="cfgrib",
+            decode_timedelta=False,
+            backend_kwargs={"filter_by_keys": {"edition": 2}}).drop_vars(["hybrid"],
+                                                                         errors="ignore"
+                                                                         )
 
         # assign coordinate with first dataarray to fix 1) use 360 degree system issue 2) slightly different lat lons
         edition_2 = edition_2.assign_coords(edition_1.coords)
@@ -79,22 +128,31 @@ class Cams(Layer):
         # other: concentration x pressure / (287.058 * temp) * 10^9
         # target unit is ug/m3
         for var in ['co', 'no2', 'go3', 'so2']:
-            data[var].values = data[var].values * data['msl'].values / (287.058 * data['t2m'].values) * (10 ** 9)
-
+            data[var].values = data[var].values * data['msl'].values / \
+                (287.058 * data['t2m'].values) * (10 ** 9)
         # drop pressure and temperature
         data = data.drop_vars(['msl', 't2m'])
         # xarray.Dataset to xarray.DataArray
         data = data.to_array()
 
         # Remove local files
-        for file in glob.glob(f'cams_download.grib*'):
+        for file in glob.glob(f'{target_file}*'):
             os.remove(file)
 
         # Select the nearest data point based on latitude and longitude
-        center_lon = (min_lon + max_lon) / 2
-        center_lat = (min_lat + max_lat) / 2
-        data = data.sel(latitude=center_lat,
-                        longitude=center_lon, 
-                        method="nearest")
+        # center_lon = (min_lon + max_lon) / 2
+        # center_lat = (min_lat + max_lat) / 2
+        # data = data.sel(latitude=center_lat,
+        #                 longitude=center_lon,
+        #                 method="nearest")
+
+        # Rename and set x, y as spatial dims
+        data = data.rename({'longitude': 'x', 'latitude': 'y'})
+        wgs_crs = bbox.as_geographic_bbox().crs
+        data = data.rio.write_crs(wgs_crs)
+        data.rio.set_spatial_dims(x_dim='x', y_dim='y', inplace=True)
+
+        if self.species:
+            data = data.sel(variable=[var.value['eac4_varname'] for var in self.species])
 
         return data
