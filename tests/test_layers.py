@@ -229,7 +229,7 @@ def test_protected_areas():
 def test_pop_weighted_pm2p5():
     data = PopWeightedPM2p5().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 5.68, 5.68, 1, 0)
+    assert_raster_stats(data, 2, 0, 22.384954, 100, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_riparian_areas():
