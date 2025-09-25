@@ -197,7 +197,7 @@ def test_write_key_biodiversity_area_protected__percent(target_folder):
 def test_write_key_biodiversity_area_undeveloped_percent(target_folder):
     zones = SAMPLE_TILED_ZONES
     file_path = prep_output_path(
-        target_folder, 'metric', 'key_biodiversity_area_undeveloped_percent.csv')
+        target_folder, 'metric', 'key_biodiversity_area_undeveloped__percent.csv')
 
     metric_obj = KeyBiodiversityAreaUndeveloped__Percent()
     _write_verify(metric_obj, zones, file_path)
