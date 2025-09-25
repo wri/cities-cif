@@ -30,6 +30,7 @@ from city_metrix.cache_manager import retrieve_city_cache, build_file_key, is_ca
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI, \
     MULTI_TILE_TILE_INDEX_FILE, PROCESSING_KNOWN_ISSUE_FLAG, USE_CACHED_LAYERS
+
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_boundaries, create_uri_target_folder, get_file_key_from_url,
                                     get_bucket_name_from_s3_uri,
@@ -910,7 +911,7 @@ class Layer():
         create_uri_target_folder(target_uri)
 
         # Add notice file to folder
-        processing_notice_file_uri = f"{target_uri}/___NOTICE_SYSTEM_IS_ACTIVELY_PROCESSING_TILES__.csv"
+        processing_notice_file_uri = f"{target_uri}/{CIF_ACTIVE_PROCESSING_FILE_NAME}"
         write_file_to_s3(pd.DataFrame(), processing_notice_file_uri, CSV_FILE_EXTENSION, keep_index=False)
 
         output_as = ProjectionType.UTM
