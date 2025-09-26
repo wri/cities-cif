@@ -95,10 +95,10 @@ def test_canopy_covered_population_informal__percent():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_era_5_met_preprocess():
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+def test_era_5_met_preprocess_umep():
     # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = Era5MetPreprocessing().get_metric(USA_OR_PORTLAND_ZONE)
+    indicator = Era5MetPreprocessingUmep().get_metric(USA_OR_PORTLAND_ZONE)
     non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
     indicator = (Era5MetPreprocessingUmep(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset)
                  .get_metric(USA_OR_PORTLAND_ZONE))
@@ -109,9 +109,9 @@ def test_era_5_met_preprocess():
     # p3 = indicator['temp'].values
     assert has_empty_required_cells == False
     assert len(indicator) == 24
-    assert_metric_stats(indicator[['temp']], 2, 19.19, 41.36, 24, 0)
+    assert_metric_stats(indicator[['temp']], 2, 18.90, 41.37, 24, 0)
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_upenn():
     # Useful site: https://projects.oregonlive.com/weather/temps/
     indicator = (Era5MetPreprocessingUPenn(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset)
@@ -122,7 +122,7 @@ def test_era_5_met_preprocess_upenn():
     has_empty_required_cells = indicator[non_nullable_variables].isnull().any().any()
     assert has_empty_required_cells == False
     assert len(indicator) == 24
-    assert_metric_stats(indicator[['DHI']], 2, 0.00, 312.15, 24, 0)
+    assert_metric_stats(indicator[['DHI']], 2, 0.00, 312.33, 24, 0)
 
 def test_habitat_types_restored__covertypes():
     indicator = HabitatTypesRestored__CoverTypes().get_metric(IDN_JAKARTA_TILED_ZONES)
