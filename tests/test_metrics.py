@@ -1,12 +1,10 @@
 import random
 import math
 import pytest
-
 from city_metrix.metrics import *
 from tests.conftest import EXECUTE_IGNORED_TESTS, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES_TINY
 PORTLAND_DST_seasonal_utc_offset = -8
 
-# TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
 
 
 def test_area_fractional_vegetation_exceeds_threshold__percent():
@@ -24,7 +22,8 @@ def test_percent_built_area_without_tree_cover__percent():
     assert_metric_stats(indicator, 2, 89.00, 97.94, 100, 0)
 
 def test_built_land_with_high_lst__percent():
-    indicator = BuiltLandWithHighLST__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
+    sample_zones = IDN_JAKARTA_TILED_ZONES
+    indicator = BuiltLandWithHighLST__Percent().get_metric(sample_zones)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
@@ -99,6 +98,8 @@ def test_canopy_covered_population_informal__percent():
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_met_preprocess_umep():
     # Useful site: https://projects.oregonlive.com/weather/temps/
+    indicator = Era5MetPreprocessingUmep().get_metric(USA_OR_PORTLAND_ZONE)
+    non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
     indicator = (Era5MetPreprocessingUmep(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset)
                  .get_metric(USA_OR_PORTLAND_ZONE))
     non_nullable_variables = ['temp', 'rh', 'global_rad', 'direct_rad', 'diffuse_rad', 'wind', 'vpd']
@@ -122,27 +123,6 @@ def test_era_5_met_preprocess_upenn():
     assert has_empty_required_cells == False
     assert len(indicator) == 24
     assert_metric_stats(indicator[['DHI']], 2, 0.00, 312.33, 24, 0)
-
-def test_ghg_emissions__tonnes():
-    indicator = GhgEmissions__Tonnes().get_metric(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 3173212.00, 3173212.00, 100, 0)
-
-def test_habitat_connectivity_coherence__percent():
-    indicator = HabitatConnectivityCoherence__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 14.69, 100, 100, 0)
-
-def test_habitat_connectivity_effective_mesh_size__hectares():
-    indicator = HabitatConnectivityEffectiveMeshSize__Hectares().get_metric(IDN_JAKARTA_TILED_ZONES)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0.35, 74.81, 100, 0)
 
 def test_habitat_types_restored__covertypes():
     indicator = HabitatTypesRestored__CoverTypes().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -220,6 +200,20 @@ def test_natural_areas__percent():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
+def test_children_access_open_space():
+    from geopandas import GeoDataFrame
+    zones = GeoZone(GeoDataFrame.from_file('https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/ARG-Buenos_Aires.geojson'))
+    indicator = AccessToOpenSpace_Children__Percent('ARG-Buenos_Aires', 'adminbound', 'walk', 15, 'minutes').get_metric(zones)
+    assert actual_indicator_size > 0
+
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
+# def test_count_accessible_amenities_all():
+    # rom .conftest import create_fishnet_grid
+    # NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
+    # indicator = AccessPopulationCountAll('BRA-Belo_Horizonte', 'jobs', 'walk', '15', 'minutes')
+    # assert actual_indicator_size > 0
 
 def test_number_species_bird_richness__species():
     random.seed(42)

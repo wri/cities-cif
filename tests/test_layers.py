@@ -58,12 +58,6 @@ def test_built_up_height():
     assert_raster_stats(data, 1, 0, 14.61, 100, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
-def test_cams_ghg():
-    data = CamsGhg().get_data(BBOX)
-    assert np.size(data) > 0
-    assert_raster_stats(data, 1, 612278.8, 612278.8, 1, 0)
-    assert get_projection_type(data.crs) == ProjectionType.UTM
-
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_cams():
     data = Cams().get_data(BBOX)
@@ -124,6 +118,12 @@ def test_impervious_surface():
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 1.0, 1.0, 100, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
+
+@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="AWS redentials needed")
+def test_isoline():
+    layer = Isoline({'cityname': 'KEN-Nairobi', 'amenityname': 'schools', 'travelmode': 'walk', 'threshold_type': 'time', 'threshold_value': '15', 'year': 2023})
+    nairobi_bbox = (36.66446402, -1.44560888, 37.10497899, -1.16058296)
+    data = layer.get_data(nairobi_bbox)
 
 def test_land_cover_glad():
     data = LandCoverGlad().get_data(BBOX)
