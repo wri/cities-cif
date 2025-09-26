@@ -1240,8 +1240,9 @@ def get_image_collection(
         raise ValueError(f"GEE download failed with exception: {ex_msg}")
 
     # get in rioxarray format
-    data = data.squeeze("time")
-    data = data.transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
+    if "time" in data.dims and data.sizes.get("time", 0) == 1:
+        data = data.squeeze("time")
+    data = data.transpose("Y", "X", ...).rename({'X': 'x', 'Y': 'y'})
 
     # remove scale_factor used for NetCDF, this confuses rioxarray GeoTiffs
     for data_var in list(data.data_vars.values()):
