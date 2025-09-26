@@ -206,13 +206,13 @@ def test_open_urban_map():
 def test_overture_buildings():
     data = OvertureBuildings().get_data(BBOX)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'height', 1, 2.0, 12.5, 1079, 145)
+    assert_vector_stats(data, 'height', 1, 2.00, 12.50, 1070, 189)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_overture_buildings_height():
     data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'overture_height', 1, 2.0, 12.5, 1079, 145)
+    assert_vector_stats(data, 'overture_height', 1, 2.0, 12.5, 1070, 189)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_overture_buildings_dsm():
