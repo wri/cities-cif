@@ -28,7 +28,7 @@ class Era5HottestDay(Layer):
         self.end_date = end_date
         self.seasonal_utc_offset = seasonal_utc_offset
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+    def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION, resampling_method=None,
                  force_data_refresh=False):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         if not is_date(self.start_date) or not is_date(self.end_date):
@@ -46,11 +46,10 @@ class Era5HottestDay(Layer):
 
         # Function to find the city mean temperature of each hour
         def hourly_mean_temperature(image):
-            point_crs = WGS_CRS
             hourly_mean = image.select('temperature_2m').reduceRegion(
                 reducer=ee.Reducer.mean(),
-                geometry=ee.Geometry.Point(
-                    [center_lon, center_lat], point_crs),
+                geometry=ee.Geometry.Point([center_lon, center_lat]),
+                crs=WGS_CRS,
                 scale=spatial_resolution,
                 bestEffort=True
             ).values().get(0)
