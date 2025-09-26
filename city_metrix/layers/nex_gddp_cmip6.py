@@ -1,11 +1,10 @@
-import datetime
 import calendar
 import math
 import ee
 import numpy as np
 from enum import Enum
 
-from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from city_metrix.metrix_model import Layer, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 27830

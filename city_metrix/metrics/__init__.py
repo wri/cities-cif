@@ -7,7 +7,7 @@ from .canopy_area_per_resident import *
 from .canopy_covered_population import *
 from .era_5_met_preprocessing_umep_gee import Era5MetPreprocessingUmep
 from .era_5_met_preprocessing_upenn_gee import Era5MetPreprocessingUPenn
-from .expected_climate_hazard import *
+from .future_climate_hazard import *
 from .ghg_emissions import GhgEmissions__Tonnes
 from .habitat_connectivity import HabitatConnectivityEffectiveMeshSize__Hectares, HabitatConnectivityCoherence__Percent
 from .habitat_types_restored import HabitatTypesRestored__CoverTypes
