@@ -75,10 +75,12 @@ def test_carbon_flux_from_trees():
     assert_raster_stats(data, 2, -1.173, 0, 1122, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
+# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era_5_hottest_day():
-    data = Era5HottestDay(seasonal_utc_offset=-8).get_data(BBOX)
+    data = Era5HottestDay(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=-8).get_data(BBOX)
     assert np.size(data) > 0
+    assert_raster_stats(data, 1, -3.6, 3115254.5, 288, 24)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_esa_world_cover():
     land_cover_class = EsaWorldCoverClass.BUILT_UP
