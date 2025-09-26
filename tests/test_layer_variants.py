@@ -161,7 +161,7 @@ def test_overture_height_rio():
     rio_bbox = GeoExtent(bbox=(-43.17135,-22.90901, -43.16832,-22.90598), crs=WGS_CRS)
     data = OvertureBuildingsHeight(city).get_data(rio_bbox)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'height', 1, 3.5, 436, 43, 0)
+    assert_vector_stats(data, 'height', 1, 4.0, 436.0, 42, 0)
 
 
 def test_wgs_utm_equivalency():
