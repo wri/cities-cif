@@ -33,7 +33,7 @@ class _HabitatConnectivity(Metric):
             connecteds = gdf.loc[[idx]].buffer(CONNECTIVITY_DISTANCE)[idx].intersects(gdf.geometry)
             return [i for i in list(connecteds.index[connecteds == True]) if not i == idx]
 
-        result_value = []
+        result_values = []
         # Reproject polygon if needed
         if zones.crs != worldcover_layer.rio.crs:
             zones = zones.to_crs(worldcover_layer.rio.crs)
@@ -66,15 +66,13 @@ class _HabitatConnectivity(Metric):
                 cluster_areas.append(sum([na_gdf.loc[[j]]['geometry'].area[j] for j in i]))
             if total_area > 0:
                 if self.indicator_name == 'EMS':
-                    result_value.append((sum([i**2 for i in cluster_areas]) / total_area) / 10000)
+                    result_values.append((sum([i**2 for i in cluster_areas]) / total_area) / 10000)
                 else:  # self.indicator_name == 'coherence'
-                    result_value.append((sum([i**2 for i in cluster_areas]) / (total_area**2)) * 100)
+                    result_values.append((sum([i**2 for i in cluster_areas]) / (total_area**2)) * 100)
             else:
-                result_value.append(0)
+                result_values.append(0)
 
-        result = pd.DataFrame(zones['index'].copy().rename('zone'))
-        result['value'] = result_value
-
+        result = pd.DataFrame({'zone': zones.index, 'value': result_values})
         return result
 
 

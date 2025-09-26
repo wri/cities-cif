@@ -1,15 +1,14 @@
 import os
-import uuid
 from datetime import datetime
 from enum import Enum
 
 from city_metrix import s3_client
 from city_metrix.constants import GeoType, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, NETCDF_FILE_EXTENSION, \
     CSV_FILE_EXTENSION, LOCAL_CACHE_URI, DEFAULT_PRODUCTION_ENV, CIF_CACHE_S3_BUCKET_URI, CTCM_CACHE_S3_BUCKET_URI, \
-    CIF_TESTING_S3_BUCKET_URI
+    CIF_TESTING_S3_BUCKET_URI, FILE_KEY_ADMINBOUND_MARKER, FILE_KEY_URBEXTBOUND_MARKER, CUSTOM_CACHED_DIFFERENTLY
+
 from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_cache, \
-    read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_bucket_name_from_s3_uri, read_csv_from_s3, \
-    read_geotiff_subarea_from_cache
+    read_netcdf_from_cache, get_uri_scheme, get_file_path_from_uri, get_bucket_name_from_s3_uri, read_csv_from_s3
 from city_metrix.metrix_tools import get_class_from_instance
 
 
@@ -18,16 +17,15 @@ def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_b
     admin_level = geo_extent.admin_level
 
     # Construct layer filename and s3 key
-    cache_folder_name, feature_id, file_format, is_custom_object = build_cache_name(class_obj, aoi_buffer_m)
+    cache_folder_name, feature_id, file_format, is_custom_object = build_cache_name(class_obj)
 
     # Determine if object is a layer or metric
     feature_base_class_name = class_obj.__class__.__bases__[0].__name__
-
     if s3_bucket is not None:
         file_key = get_cached_file_key(feature_base_class_name, s3_bucket, output_env, cache_folder_name, city_id,
                                        admin_level, feature_id, file_format)
+        file_uri = get_cached_file_uri(s3_bucket, file_key, (CUSTOM_CACHED_DIFFERENTLY and is_custom_object))  # False-and so all objs treated as non-custom
 
-        file_uri = get_cached_file_uri(s3_bucket, file_key, is_custom_object)
     else:
         file_key = None
         file_uri = None
@@ -53,7 +51,7 @@ def is_cache_usable(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m=N
 
 
 def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m: int, s3_bucket: str, output_env: str,
-                        city_aoi_subarea: tuple[float, float, float, float]=None):
+                        city_aoi_subarea: tuple[float, float, float, float] = None):
     file_uri, file_key, feature_id, is_custom_layer = build_file_key(s3_bucket, output_env, class_obj, geo_extent,
                                                                      aoi_buffer_m)
 
@@ -98,7 +96,7 @@ def has_default_attribute_values(layer_obj):
     return has_matched_cls_obj_atts, unmatched_atts
 
 
-def build_cache_name(class_obj, aoi_buffer_m):
+def build_cache_name(class_obj):
     """
     Function uses the sequence of class parameters specified in two class constants, plus standard date
     parameters in many of the classes to construct names for cache folders and cached layer files.
@@ -114,8 +112,8 @@ def build_cache_name(class_obj, aoi_buffer_m):
     # Determine if request it for a CIF-non-default layer
     if (
             (
-                    class_obj.MINOR_NAMING_ATTS is not None and unmatched_atts is not None
-                    and any(item in class_obj.MINOR_NAMING_ATTS for item in unmatched_atts)
+                class_obj.MINOR_NAMING_ATTS is not None and unmatched_atts is not None
+                and any(item in class_obj.MINOR_NAMING_ATTS for item in unmatched_atts)
             )
             or any(item in DATE_ATTRIBUTES for item in unmatched_atts)
     ):
@@ -124,11 +122,10 @@ def build_cache_name(class_obj, aoi_buffer_m):
         is_custom_object = False
 
     date_kv_string = _build_naming_string_from_standard_parameters(class_obj, is_custom_object)
-    buffer_string = '' if aoi_buffer_m is None else f"__bufferm_{aoi_buffer_m}"
 
     class_name = class_obj.__class__.__name__
     layer_folder_name = f"{class_name}{primary_qualifiers}"
-    feature_id = f"{layer_folder_name}{secondary_qualifiers}{date_kv_string}{buffer_string}"
+    feature_id = f"{layer_folder_name}{secondary_qualifiers}{date_kv_string}"
 
     file_format = class_obj.OUTPUT_FILE_FORMAT
 
@@ -184,8 +181,7 @@ def _build_naming_string_from_standard_parameters(feature_obj, is_custom_feature
 
 def _has_paired_start_end_keys(att_dict):
     prefix_list = ['start', 'end']
-    filtered_dict = {key: value for key, value in att_dict.items() if
-                     any(key.startswith(prefix) for prefix in prefix_list)}
+    filtered_dict = {key: value for key, value in att_dict.items() if any(key.startswith(prefix) for prefix in prefix_list)}
     has_paired_start_end_dates = True if len(filtered_dict) == 2 else False
     return has_paired_start_end_dates
 
@@ -256,6 +252,21 @@ def _construct_kv_string(key, value, separator):
     return f"{separator}{key}_{value}"
 
 
+def check_if_cache_file_exists(file_uri):
+    uri_scheme = get_uri_scheme(file_uri)
+    file_key = get_file_path_from_uri(file_uri)
+    if uri_scheme == "s3":
+        s3_bucket = get_bucket_name_from_s3_uri(file_uri)
+        response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=file_key)
+        for obj in response.get('Contents', []):
+            if obj['Key'] == file_key:
+                return True
+        return False
+    else:
+        uri_path = os.path.normpath(get_file_path_from_uri(file_key))
+        return os.path.exists(uri_path)
+
+
 def is_cache_object_available(file_uri):
     uri_scheme = get_uri_scheme(file_uri)
     file_key = get_file_path_from_uri(file_uri)
@@ -283,13 +294,7 @@ def is_cache_object_available(file_uri):
 
 
 def get_cached_file_uri(s3_bucket, file_key, is_custom_layer):
-    if is_custom_layer:
-        uri = LOCAL_CACHE_URI
-    else:
-        if s3_bucket in (CIF_CACHE_S3_BUCKET_URI, CTCM_CACHE_S3_BUCKET_URI, CIF_TESTING_S3_BUCKET_URI):
-            uri = s3_bucket
-        else:
-            raise ValueError(f"Invalid s3 bucket name {s3_bucket}")
+    uri = LOCAL_CACHE_URI if is_custom_layer else s3_bucket
 
     if get_uri_scheme(uri) in ('s3', 'file'):
         file_uri = f"{uri}/{file_key}"
@@ -300,10 +305,16 @@ def get_cached_file_uri(s3_bucket, file_key, is_custom_layer):
 
 def get_cached_file_key(feature_based_class_name, s3_bucket, output_env, feature_name, city_id, admin_level, feature_id,
                         file_format):
-    if feature_based_class_name.lower() == 'layer':
-        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}"
+    if admin_level == 'urban_extent' and FILE_KEY_URBEXTBOUND_MARKER:
+        bound_marker = '__urban_extent'
+    elif FILE_KEY_ADMINBOUND_MARKER:
+        bound_marker = f'__{admin_level}'
     else:
-        file_key = f"data/{output_env}/metrics/{city_id}/{city_id}__{feature_id}"
+        bound_marker = ''
+    if feature_based_class_name.lower() == 'layer':
+        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}{bound_marker}__{admin_level}__{feature_id}"
+    else:
+        file_key = f"data/{output_env}/metrics/{city_id}/{city_id}{bound_marker}__{feature_id}"
 
     # if city_aoi is not None:
     #     aoi_uuid = hashkey_from_tuple(city_aoi)
@@ -311,21 +322,3 @@ def get_cached_file_key(feature_based_class_name, s3_bucket, output_env, feature
 
     file_key = f"{file_key}.{file_format}"
     return file_key
-
-# def hashkey_from_tuple(numbers, length=12):
-#     import hashlib
-#     if len(numbers) != 4:
-#         raise ValueError("Tuple must contain exactly four numbers.")
-#
-#     # Convert each number to a string with consistent formatting
-#     formatted = [f"{n:.10f}" if isinstance(n, float) else str(n) for n in numbers]
-#
-#     # Join into a single string
-#     combined = "_".join(formatted)
-#
-#     # Hash the string
-#     hash_key = hashlib.sha256(combined.encode()).hexdigest()
-#
-#     # Return shortened hash
-#     return hash_key[:length]
-

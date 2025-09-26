@@ -40,6 +40,6 @@ class HabitatTypesRestored__CoverTypes(Metric):
 
         # Group by zone and count unique values
         unique_counts = df.groupby("zone")["value"].nunique()
-        result = pd.DataFrame(unique_counts)
+        result = pd.DataFrame(unique_counts.reset_index())
 
         return result

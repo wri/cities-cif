@@ -29,7 +29,8 @@ from city_metrix import s3_client
 from city_metrix.cache_manager import retrieve_city_cache, build_file_key, is_cache_usable
 from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI, \
-    MULTI_TILE_TILE_INDEX_FILE, PROCESSING_KNOWN_ISSUE_FLAG, CIF_ACTIVE_PROCESSING_FILE_NAME
+    MULTI_TILE_TILE_INDEX_FILE, PROCESSING_KNOWN_ISSUE_FLAG, CIF_ACTIVE_PROCESSING_FILE_NAME, USE_CACHED_LAYERS
+
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_boundaries, create_uri_target_folder, get_file_key_from_url,
                                     get_bucket_name_from_s3_uri,
@@ -72,7 +73,6 @@ class GeoZone():
                 self.admin_level = city_data.get(self.aoi_id, None)
             elif self.aoi_id == 'urban_extent':
                 self.admin_level = self.aoi_id
-
             # bbox is always projected to UTM
             self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
 
@@ -103,12 +103,11 @@ def _build_aoi_from_city_boundaries(city_id, geo_feature):
     # Round coordinates to whole units
     bbox = (math.floor(reproj_west), math.floor(reproj_south), math.ceil(reproj_east), math.ceil(reproj_north))
 
-    if geo_feature.lower() == 'adm4union':
-        # reproject geodataframe to UTM
-        zones = boundaries_gdf.to_crs(utm_crs)
-    else:
-        zones = None
-
+    #if geo_feature.lower() == 'city_admin_level':
+    #    # reproject geodataframe to UTM
+    zones = boundaries_gdf.to_crs(utm_crs)
+    #else:
+    #    zones = None
     return bbox, utm_crs, zones
 
 
@@ -850,7 +849,7 @@ class Layer():
             standard_env = standardize_s3_env(s3_env)
             has_usable_cache = is_cache_usable(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m, None)
 
-        if has_usable_cache:
+        if USE_CACHED_LAYERS and has_usable_cache:
             result_data, _, _ = retrieve_city_cache(self.aggregate, bbox, aoi_buffer_m, s3_bucket=s3_bucket, output_env=standard_env,
                                                     city_aoi_subarea=city_aoi_subarea)
         else:
