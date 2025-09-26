@@ -63,15 +63,17 @@ class SpeciesRichness(Layer):
                 "offset": offset,
                 "hasCoordinate": "true",
             }
-            resp = requests.get(self.API_URL, params=params, headers={"Accept": "application/json"})
-            results_json = resp.json()
-            if isinstance(results_json, dict):
-                print(f"Collected {results_json['offset']} of {results_json['count']} observations")
-            else:
-                time.sleep(5)  # Rate limiting
+            
+            remaining_tries = 6
+            while remaining_tries > 0:
                 resp = requests.get(self.API_URL, params=params, headers={"Accept": "application/json"})
                 results_json = resp.json()
-                print(f"Collected {results_json['offset']} of {results_json['count']} observations")
+                if isinstance(results_json, dict):
+                    print(f"Collected {results_json['offset']} of {results_json['count']} observations")
+                    break
+                else:
+                    time.sleep(5)  # Rate limiting
+                    remaining_tries -= 1
 
             has_species = [
                 (
