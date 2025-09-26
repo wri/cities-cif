@@ -11,7 +11,7 @@ INUNDATION_THRESHOLD = 1
 class RiverineOrCoastalFloodRiskArea__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["year"]
+    MINOR_NAMING_ATTS = None
 
     def __init__(self,  year=2050, **kwargs):
         super().__init__(**kwargs)
