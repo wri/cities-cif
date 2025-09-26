@@ -28,7 +28,7 @@ class Era5HottestDay(Layer):
         self.end_date = end_date
         self.seasonal_utc_offset = seasonal_utc_offset
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+    def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION, resampling_method=None,
                  force_data_refresh=False):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         if not is_date(self.start_date) or not is_date(self.end_date):
@@ -46,11 +46,10 @@ class Era5HottestDay(Layer):
 
         # Function to find the city mean temperature of each hour
         def hourly_mean_temperature(image):
-            point_crs = WGS_CRS
             hourly_mean = image.select('temperature_2m').reduceRegion(
                 reducer=ee.Reducer.mean(),
-                geometry=ee.Geometry.Point(
-                    [center_lon, center_lat], point_crs),
+                geometry=ee.Geometry.Point([center_lon, center_lat]),
+                crs=WGS_CRS,
                 scale=spatial_resolution,
                 bestEffort=True
             ).values().get(0)
@@ -116,10 +115,10 @@ class Era5HottestDay(Layer):
         ]
 
         # ERA5-Land hourly data at 0.1 degree lat/lon resolution
-        center_ee_rectangle = GeoExtent(bbox=(center_lon-0.05, center_lat-0.05, center_lon +
-                                              0.05, center_lat+0.05), crs=WGS_CRS).to_ee_rectangle()
+        center_ee_rectangle = GeoExtent(bbox=(
+            center_lon-0.1, center_lat-0.1, center_lon+0.1, center_lat+0.1), crs=WGS_CRS).to_ee_rectangle()
+        
         era5_land = ee.ImageCollection(dataset_land
-                                       .filterBounds(ee_rectangle['ee_geometry'])
                                        .filterDate(utc_times_list[0], utc_times_list[-1])
                                        .select(variable_land)
                                        )
@@ -131,7 +130,6 @@ class Era5HottestDay(Layer):
         )
 
         era5_general = ee.ImageCollection(dataset_general
-                                          .filterBounds(ee_rectangle['ee_geometry'])
                                           .filterDate(utc_times_list[0], utc_times_list[-1])
                                           .select(variable_general)
                                           )
@@ -143,9 +141,16 @@ class Era5HottestDay(Layer):
         )
 
         data = xr.merge([data_land, data_general])
-        # add wgs84 lat lon coords
-        data = data.assign_coords(lat=[center_lat], lon=[center_lon])
 
+        # Find the exact (y, x, time) where temperature_2m is globally max
+        flat = data['temperature_2m'].stack(points=('y', 'x', 'time'))          # shape (points,)
+        imax = flat.argmax('points').item()
+        y0, x0, t0 = flat['points'].to_index()[imax]      # coordinate values
+        # Keep the whole time series at max temperature_2m pixel
+        data = data.sel(y=y0, x=x0)
+
+        # Add WGS84 lat/lon coords
+        data = data.assign_coords(lat=[center_lat], lon=[center_lon])
         data = data.to_array()
 
         return data
