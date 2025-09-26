@@ -827,7 +827,7 @@ class Layer():
             print(f">>>Layer {self.aggregate.__class__.__name__} is already cached ..")
 
 
-    def retrieve_data(self, bbox: GeoExtent, s3_bucket: str=None, s3_env: str=None, aoi_buffer_m:int=None,
+    def retrieve_data(self, bbox: GeoExtent, s3_bucket: str=CIF_CACHE_S3_BUCKET_URI, s3_env: str=DEFAULT_PRODUCTION_ENV, aoi_buffer_m:int=None,
                       city_aoi_subarea: (float, float, float, float)=None, spatial_resolution: int = None) -> Union[
         xr.DataArray, gpd.GeoDataFrame]:
         """
