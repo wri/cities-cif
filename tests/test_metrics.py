@@ -96,7 +96,7 @@ def test_canopy_covered_population_informal__percent():
     assert expected_zone_size == actual_indicator_size
 
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_era_5_met_preprocess_umep():
+def test_era5_met_preprocess_umep():
     # Useful site: https://projects.oregonlive.com/weather/temps/
     indicator = Era5MetPreprocessingUmep().get_metric(USA_OR_PORTLAND_ZONE)
     non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
@@ -112,7 +112,7 @@ def test_era_5_met_preprocess_umep():
     assert_metric_stats(indicator[['temp']], 2, 18.90, 41.37, 24, 0)
 
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
-def test_era_5_met_preprocess_upenn():
+def test_era5_met_preprocess_upenn():
     # Useful site: https://projects.oregonlive.com/weather/temps/
     indicator = (Era5MetPreprocessingUPenn(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset)
                  .get_metric(USA_OR_PORTLAND_ZONE))
