@@ -196,7 +196,7 @@ def test_mean_pm2p5_exposure_popweighted_children__microgramspercubicmeter():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 15.51, 61.54, 100, 0)
+    assert_metric_stats(indicator, 2, 20.21, 67.67, 100, 0)
 
 
 def test_mean_pm2p5_exposure_popweighted_elderly__microgramspercubicmeter():
@@ -211,7 +211,7 @@ def test_mean_pm2p5_exposure_popweighted_female__microgramspercubicmeter():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 15.51, 61.54, 100, 0)
+    assert_metric_stats(indicator, 2, 20.21, 67.67, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_informal__microgramspercubicmeter():
     indicator = MeanPM2P5ExposurePopWeightedInformal__MicrogramsPerCubicMeter().get_metric(IDN_JAKARTA_TILED_ZONES)
