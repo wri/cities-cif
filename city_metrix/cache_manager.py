@@ -319,6 +319,8 @@ def get_cached_file_key(feature_based_class_name, s3_bucket, output_env, feature
         bound_marker = '__urban_extent'
     elif FILE_KEY_ADMINBOUND_MARKER:
         bound_marker = f'__{admin_level}'
+    else:
+        bound_marker = ''
     if feature_based_class_name.lower() == 'layer':
         file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}{bound_marker}__{admin_level}__{feature_id}"
     else:
