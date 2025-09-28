@@ -75,7 +75,7 @@ class _CountAccessiblePopWeightedInformal(_CountAccessiblePopWeighted):
 
 
 # ************************************************
-class CountPotentialEmployers__TotalPopulationPopWeightedCount(_CountAccessiblePopWeightedAll):
+class CountPotentialEmployersTotalPopulationPopWeighted__Count(_CountAccessiblePopWeightedAll):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
@@ -85,7 +85,7 @@ class CountPotentialEmployers__TotalPopulationPopWeightedCount(_CountAccessibleP
                          threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
-class CountPotentialEmployers__AdultsPopWeightedCount(_CountAccessiblePopWeightedAdults):
+class CountPotentialEmployersAdultsPopWeighted__Count(_CountAccessiblePopWeightedAdults):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
@@ -95,7 +95,7 @@ class CountPotentialEmployers__AdultsPopWeightedCount(_CountAccessiblePopWeighte
                          threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
-class CountPotentialEmployers__ChildrenPopWeightedCount(_CountAccessiblePopWeightedChildren):
+class CountPotentialEmployersChildrenPopWeighted__Count(_CountAccessiblePopWeightedChildren):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
@@ -105,7 +105,7 @@ class CountPotentialEmployers__ChildrenPopWeightedCount(_CountAccessiblePopWeigh
                          threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
-class CountPotentialEmployers__ElderlyPopWeightedCount(_CountAccessiblePopWeightedElderly):
+class CountPotentialEmployersElderlyPopWeighted__Count(_CountAccessiblePopWeightedElderly):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
@@ -115,7 +115,7 @@ class CountPotentialEmployers__ElderlyPopWeightedCount(_CountAccessiblePopWeight
                          threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
-class CountPotentialEmployers__FemalePopWeightedCount(_CountAccessiblePopWeightedFemale):
+class CountPotentialEmployersFemalePopWeighted__Count(_CountAccessiblePopWeightedFemale):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
@@ -125,7 +125,7 @@ class CountPotentialEmployers__FemalePopWeightedCount(_CountAccessiblePopWeighte
                          threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
-class CountPotentialEmployers__InformalPopWeightedCount(_CountAccessiblePopWeightedInformal):
+class CountPotentialEmployersInformalPopWeighted__Count(_CountAccessiblePopWeightedInformal):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
