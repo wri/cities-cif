@@ -88,8 +88,6 @@ class WorldPop(Layer):
                 ee_rectangle,
                 spatial_resolution,
                 "world pop age sex"
-            )
-            print(data)
-            data = data.sum_age_sex_group
+            ).sum_age_sex_group
 
         return data

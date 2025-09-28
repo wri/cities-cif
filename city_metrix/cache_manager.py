@@ -13,8 +13,6 @@ from city_metrix.metrix_dao import read_geojson_from_cache, read_geotiff_from_ca
 from city_metrix.metrix_tools import get_class_from_instance
 
 
-
-
 def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_buffer_m: int = None):
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level

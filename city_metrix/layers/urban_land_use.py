@@ -17,7 +17,6 @@ class UrbanLandUse(Layer):
         ulu_class: urban land use class value used to filter the land use type
                    0 (open space), 1 (non-res), 2 (Atomistic), 3 (Informal), 4 (Formal), 5 (Housing project)
     """
-
     def __init__(self, band='lulc', ulu_class=None, **kwargs):
         super().__init__(**kwargs)
         self.band = band

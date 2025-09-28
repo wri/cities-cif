@@ -1,10 +1,12 @@
 import random
 import math
 import pytest
+
 from city_metrix.metrics import *
 from tests.conftest import EXECUTE_IGNORED_TESTS, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES_TINY
 PORTLAND_DST_seasonal_utc_offset = -8
 
+# TODO Why do results all match for test_mean_pm2p5_exposure_popweighted
 
 
 def test_area_fractional_vegetation_exceeds_threshold__percent():
@@ -22,8 +24,7 @@ def test_percent_built_area_without_tree_cover__percent():
     assert_metric_stats(indicator, 2, 89.00, 97.94, 100, 0)
 
 def test_built_land_with_high_lst__percent():
-    sample_zones = IDN_JAKARTA_TILED_ZONES
-    indicator = BuiltLandWithHighLST__Percent().get_metric(sample_zones)
+    indicator = BuiltLandWithHighLST__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
@@ -98,8 +99,6 @@ def test_canopy_covered_population_informal__percent():
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era5_met_preprocess_umep():
     # Useful site: https://projects.oregonlive.com/weather/temps/
-    indicator = Era5MetPreprocessingUmep().get_metric(USA_OR_PORTLAND_ZONE)
-    non_nullable_variables = ['temp','rh','global_rad','direct_rad','diffuse_rad','wind','vpd']
     indicator = (Era5MetPreprocessingUmep(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=PORTLAND_DST_seasonal_utc_offset)
                  .get_metric(USA_OR_PORTLAND_ZONE))
     non_nullable_variables = ['temp', 'rh', 'global_rad', 'direct_rad', 'diffuse_rad', 'wind', 'vpd']
@@ -205,8 +204,8 @@ def test_natural_areas__percent():
 def test_children_access_open_space():
     from geopandas import GeoDataFrame
     zones = GeoZone(GeoDataFrame.from_file('https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/ARG-Buenos_Aires.geojson'))
-    indicator = AccessToOpenSpace_Children__Percent('ARG-Buenos_Aires', 'adminbound', 'walk', 15, 'minutes').get_metric(zones)
-    assert actual_indicator_size > 0
+    indicator = AccessToOpenSpaceChildren__Percent('ARG-Buenos_Aires', 'adminbound', 'walk', 15, 'minutes').get_metric(zones)
+    assert len(indicator) > 0
 
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
 # def test_count_accessible_amenities_all():
