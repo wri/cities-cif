@@ -30,7 +30,7 @@ setup(
         "cfgrib",
         "scipy",
         "numpy",
-        "overturemaps",
+        "overturemaps>=0.17",
         "ipython",
         "pvlib"
     ],
