@@ -95,6 +95,26 @@ class CountPotentialEmployers__AdultsPopWeightedCount(_CountAccessiblePopWeighte
                          threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
+class CountPotentialEmployers__ChildrenPopWeightedCount(_CountAccessiblePopWeightedChildren):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
+
+    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode,
+                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+
+
+class CountPotentialEmployers__ElderlyPopWeightedCount(_CountAccessiblePopWeightedElderly):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
+
+    def __init__(self, city_id=None, level=None, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='economic', city_id=city_id, level=level, travel_mode=travel_mode,
+                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+
+
 class CountPotentialEmployers__FemalePopWeightedCount(_CountAccessiblePopWeightedFemale):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
