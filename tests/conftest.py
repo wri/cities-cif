@@ -43,6 +43,10 @@ def create_single_bbox_gdf_for_testing(coords):
 
 IDN_JAKARTA_TILED_BBOXES = (
     create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA.coords, 0.01).reset_index())
+ARG_BUENOS_AIRES_TILED_BBOXES = (
+    create_fishnet_gdf_for_testing(BBOX_ARG_BUENOS_AIRES.coords, 0.1).reset_index())
+ARG_BUENOS_AIRES_TILED_BBOXES_TINY = (
+    create_fishnet_gdf_for_testing(BBOX_ARG_BUENOS_AIRES.coords, 0.02).reset_index().iloc[[1,2,3]])
 IDN_JAKARTA_TILED_LARGE_BBOXES = (
     create_fishnet_gdf_for_testing(BBOX_IDN_JAKARTA_LARGE.coords, 0.1).reset_index())
 USA_OR_PORTLAND_TILED_LARGE_BBOX = (
@@ -60,7 +64,8 @@ USA_OR_PORTLAND_TILED_LARGE_ZONE = GeoZone(USA_OR_PORTLAND_TILED_LARGE_BBOX)
 USA_OR_PORTLAND_ZONE = GeoZone(USA_OR_PORTLAND_BBOX)
 NLD_AMSTERDAM_ZONE = GeoZone(NLD_AMSTERDAM_BBOX)
 
-ARG_BUENOS_AIRES_TILED_BBOXES_TINY = create_fishnet_gdf_for_testing(BBOX_ARG_BUENOS_AIRES.coords, 0.02).reset_index().iloc[[1,2,3]]
+# Test zones for KBA
+ARG_BUENOS_AIRES_TILED_ZONES = GeoZone(ARG_BUENOS_AIRES_TILED_BBOXES)
 ARG_BUENOS_AIRES_TILED_ZONES_TINY = GeoZone(ARG_BUENOS_AIRES_TILED_BBOXES_TINY)
 
 

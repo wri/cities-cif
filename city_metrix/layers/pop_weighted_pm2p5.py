@@ -3,7 +3,8 @@ from .world_pop import WorldPop, WorldPopClass
 from .acag_pm2p5 import AcagPM2p5
 from ..constants import GTIFF_FILE_EXTENSION
 
-DEFAULT_SPATIAL_RESOLUTION = 1113.1949
+DEFAULT_SPATIAL_RESOLUTION = 100
+
 
 class PopWeightedPM2p5(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
@@ -15,11 +16,12 @@ class PopWeightedPM2p5(Layer):
         worldpop_agesex_classes:Enum value from WorldPopClass OR
                                 list of age-sex classes to retrieve (see https://airtable.com/appDWCVIQlVnLLaW2/tblYpXsxxuaOk3PaZ/viwExxAgTQKZnRfWU/recFjH7WngjltFMGi?blocks=hide)
         worldpop_year: year used for data retrieval
-        acag_year: only available year is 2022
+        acag_year: 2010-2023
         acag_return_above:
     """
     # get_data() for this class returns DataArray with pm2.5 concentration multiplied by (pixelpop/meanpop)
-    def __init__(self, worldpop_agesex_classes:WorldPopClass=[], worldpop_year=2020, acag_year=2022, acag_return_above=0, **kwargs):
+
+    def __init__(self, worldpop_agesex_classes:WorldPopClass=[], worldpop_year=2020, acag_year=2023, acag_return_above=0, **kwargs):
         super().__init__(**kwargs)
         self.worldpop_agesex_classes = worldpop_agesex_classes
         self.worldpop_year = worldpop_year
@@ -37,8 +39,6 @@ class PopWeightedPM2p5(Layer):
         pm2p5 = (AcagPM2p5(year=self.acag_year, return_above=self.acag_return_above)
                  .get_data(bbox, spatial_resolution=spatial_resolution))
 
-        utm_crs = bbox.as_utm_bbox().crs
-
-        data = pm2p5 * (world_pop / world_pop.mean()).rio.write_crs(utm_crs)
+        data = pm2p5 * (world_pop / world_pop.mean()).rio.write_crs(bbox.as_utm_bbox().crs)
 
         return data

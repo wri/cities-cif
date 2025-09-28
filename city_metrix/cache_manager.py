@@ -53,7 +53,7 @@ def is_cache_usable(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m=N
 
 
 def retrieve_city_cache(class_obj, geo_extent, aoi_buffer_m: int, s3_bucket: str, output_env: str,
-                        city_aoi_subarea: tuple[float, float, float, float]=None):
+                        city_aoi_subarea: tuple[float, float, float, float] = None):
     file_uri, file_key, feature_id, is_custom_layer = build_file_key(s3_bucket, output_env, class_obj, geo_extent,
                                                                      aoi_buffer_m)
 
@@ -114,8 +114,8 @@ def build_cache_name(class_obj, aoi_buffer_m):
     # Determine if request it for a CIF-non-default layer
     if (
             (
-                    class_obj.MINOR_NAMING_ATTS is not None and unmatched_atts is not None
-                    and any(item in class_obj.MINOR_NAMING_ATTS for item in unmatched_atts)
+                class_obj.MINOR_NAMING_ATTS is not None and unmatched_atts is not None
+                and any(item in class_obj.MINOR_NAMING_ATTS for item in unmatched_atts)
             )
             or any(item in DATE_ATTRIBUTES for item in unmatched_atts)
     ):
@@ -254,6 +254,21 @@ def _convert_snake_case_to_pascal_case(attribute_name):
 
 def _construct_kv_string(key, value, separator):
     return f"{separator}{key}_{value}"
+
+
+def check_if_cache_file_exists(file_uri):
+    uri_scheme = get_uri_scheme(file_uri)
+    file_key = get_file_path_from_uri(file_uri)
+    if uri_scheme == "s3":
+        s3_bucket = get_bucket_name_from_s3_uri(file_uri)
+        response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix=file_key)
+        for obj in response.get('Contents', []):
+            if obj['Key'] == file_key:
+                return True
+        return False
+    else:
+        uri_path = os.path.normpath(get_file_path_from_uri(file_key))
+        return os.path.exists(uri_path)
 
 
 def is_cache_object_available(file_uri):
