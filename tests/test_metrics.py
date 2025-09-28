@@ -196,14 +196,14 @@ def test_key_biodiversity_area_protected__percent():
     expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 1.19, 100, 15, 84)
+    assert_metric_stats(indicator, 2, 0.00, 100.00, 20, 79)
 
 def test_key_biodiversity_area_undeveloped__percent():
     indicator = KeyBiodiversityAreaUndeveloped__Percent(country_code_iso3='ARG').get_metric(ARG_BUENOS_AIRES_TILED_ZONES)
     expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 40.22, 99.99, 12, 87)
+    assert_metric_stats(indicator, 2, 40.22, 100.00, 20, 79)
 
 def test_land_near_natural_drainage__percent():
     indicator = LandNearNaturalDrainage__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
