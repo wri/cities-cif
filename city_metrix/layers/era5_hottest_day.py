@@ -46,10 +46,10 @@ class Era5HottestDay(Layer):
 
         # Function to find the city mean temperature of each hour
         def hourly_mean_temperature(image):
-            point_crs = WGS_CRS
             hourly_mean = image.select('temperature_2m').reduceRegion(
                 reducer=ee.Reducer.mean(),
-                geometry=ee.Geometry.Point([center_lon, center_lat], point_crs),
+                geometry=ee.Geometry.Point([center_lon, center_lat]),
+                crs=WGS_CRS,
                 scale=11132,
                 bestEffort=True
             ).values().get(0)

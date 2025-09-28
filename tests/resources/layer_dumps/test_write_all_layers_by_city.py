@@ -78,7 +78,7 @@ def test_CarbonFluxFromTrees_write_by_city(target_folder):
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_Era5HottestDay_write_by_city(target_folder):
-    layer_obj = Era5HottestDay()
+    layer_obj = Era5HottestDay(start_date='2023-01-01', end_date='2023-12-31', seasonal_utc_offset=-3)
     _run_write_layers_by_city_test(layer_obj, target_folder)
 
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
