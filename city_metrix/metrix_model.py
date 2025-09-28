@@ -860,7 +860,6 @@ class Layer():
 
             result_data = self.aggregate.get_data(bbox=query_geoextent, spatial_resolution=spatial_resolution)
 
-            print(s3_bucket is not None, bbox.geo_type, city_aoi_subarea is None)
             # Opportunistically cache city data
             if s3_bucket is not None and bbox.geo_type == GeoType.CITY and city_aoi_subarea is None:
                 target_uri, _, _, _ = build_file_key(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m)
