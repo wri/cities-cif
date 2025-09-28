@@ -28,7 +28,7 @@ class AirPollutantWhoExceedance__Days(Metric):
 
     def __init__(self,
                  species=None,
-                 year=2023,
+                 year=2024,
                  **kwargs):
         super().__init__(**kwargs)
         self.species = species
@@ -60,7 +60,7 @@ class AirPollutantWhoExceedance__Days(Metric):
                 excdays.append([conc > s.value['who_threshold'] for conc in maxconc_by_day])
             else:
                 ds = np.mean(np.mean(cams_data.sel(variable=s.value['eac4_varname']), axis=1), axis=1)
-                maxconc_by_day = ds.resample({'time': '1D'}).mean().data
+                maxconc_by_day = ds.resample({'time': '1D'}).mean().data[:365]
                 excdays.append([conc > s.value['who_threshold']
                                for conc in maxconc_by_day])
         excdays_np = np.vstack(excdays)
