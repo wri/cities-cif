@@ -50,7 +50,6 @@ class KeyBiodiversityAreaProtected__Percent(Metric):
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame, pd.Series]:
         country_code_iso3 = _resolve_country_iso3(geo_zone, self.country_code_iso3)
-
         worldpop_layer = WorldPop()
         kba_layer = KeyBiodiversityAreas(country_code_iso3)
         protected_layer = ProtectedAreas()
@@ -63,8 +62,6 @@ class KeyBiodiversityAreaProtected__Percent(Metric):
             result['value'] = 100 * (protected_kba_area['value'] / kba_area['value'])
         else:
             result = 100 * protected_kba_area / kba_area
-
-        result = 100 * protected_kba_area / kba_area
 
         return result
 
