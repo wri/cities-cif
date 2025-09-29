@@ -20,7 +20,7 @@ class _CamsAnnual__Tonnes():
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> xr.DataArray:
         bbox = GeoExtent(geo_zone).as_geographic_bbox()
-        cams = Cams(start_date=f'{self.year}-01-01', end_date=f'{self.year}-12-31', species=self.species).get_data(bbox)
+        cams = Cams(start_date=f'{self.year}-01-01', end_date=f'{self.year}-12-31', species=self.species).retrieve_data(bbox)
         cams_daily = cams.resample({'valid_time': '1D'}).mean()
 
         if self.statistic == 'mean':

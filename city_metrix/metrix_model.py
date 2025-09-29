@@ -828,7 +828,7 @@ class Layer():
             print(f">>>Layer {self.aggregate.__class__.__name__} is already cached ..")
 
 
-    def retrieve_data(self, bbox: GeoExtent, s3_bucket: str=None, s3_env: str=None, aoi_buffer_m:int=None,
+    def retrieve_data(self, bbox: GeoExtent, s3_bucket: str=CIF_CACHE_S3_BUCKET_URI, s3_env: str=DEFAULT_PRODUCTION_ENV, aoi_buffer_m:int=None,
                       city_aoi_subarea: (float, float, float, float)=None, spatial_resolution: int = None) -> Union[
         xr.DataArray, gpd.GeoDataFrame]:
         """
@@ -1239,8 +1239,9 @@ def get_image_collection(
         raise ValueError(f"GEE download failed with exception: {ex_msg}")
 
     # get in rioxarray format
-    data = data.squeeze("time")
-    data = data.transpose("Y", "X").rename({'X': 'x', 'Y': 'y'})
+    if "time" in data.dims and data.sizes.get("time", 0) == 1:
+        data = data.squeeze("time")
+    data = data.transpose("Y", "X", ...).rename({'X': 'x', 'Y': 'y'})
 
     # remove scale_factor used for NetCDF, this confuses rioxarray GeoTiffs
     for data_var in list(data.data_vars.values()):
@@ -1373,7 +1374,6 @@ class Metric():
         :param spatial_resolution: resolution of continuous raster data in meters
         :param force_data_refresh: whether to force data refresh from source
         """
-
         if geo_zone.geo_type != GeoType.CITY:
             raise ValueError("Non-city data cannot be cached.")
 

@@ -27,7 +27,7 @@ class _HabitatConnectivity(Metric):
         MIN_PATCHSIZE = 1000  # Min patch size to be included in analysis (sq meter)
         
         zones = geo_zone.zones
-        worldcover_layer = NaturalAreas().get_data(GeoExtent(geo_zone))
+        worldcover_layer = NaturalAreas().retrieve_data(GeoExtent(geo_zone))
         
         def within_distance(idx, gdf):
             connecteds = gdf.loc[[idx]].buffer(CONNECTIVITY_DISTANCE)[idx].intersects(gdf.geometry)

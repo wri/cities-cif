@@ -22,7 +22,7 @@ class HabitatTypesRestored__CoverTypes(Metric):
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
-        cover_array = LandCoverSimplifiedGlad(year=self.end_year).get_data(GeoExtent(geo_zone))
+        cover_array = LandCoverSimplifiedGlad(year=self.end_year).retrieve_data(GeoExtent(geo_zone))
         restored_array = LandCoverHabitatChangeGlad(start_year=self.start_year, end_year=self.end_year).get_data(GeoExtent(geo_zone))
         # Count unique cover types in each zone, only within pixels classed 01 in change raster
         cover_array_masked = cover_array.where(restored_array == 1)
