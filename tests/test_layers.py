@@ -191,6 +191,10 @@ def test_ndwi_sentinel2():
     assert_raster_stats(data, 2, -0.0178, 0.578, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
+def test_nex_gddp_cmip6():
+    data = NexGddpCmip6().get_data(BBOX)
+    assert np.size(data) > 0
+
 def test_openbuildings():
     data = OpenBuildings(COUNTRY_CODE_FOR_BBOX).get_data(BBOX)
     assert np.size(data) > 0

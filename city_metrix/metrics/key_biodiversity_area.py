@@ -57,6 +57,9 @@ class KeyBiodiversityAreaProtected__Percent(Metric):
         kba_area = worldpop_layer.mask(kba_layer).groupby(geo_zone).count()
         protected_kba_area = worldpop_layer.mask(kba_layer).mask(protected_layer).groupby(geo_zone).count().fillna(0)
 
+        if not isinstance(protected_kba_area, (int, float)):
+            protected_kba_area = protected_kba_area.fillna(0)
+
         if isinstance(kba_area, pd.DataFrame):
             result = kba_area.copy()
             result['value'] = 100 * (protected_kba_area['value'] / kba_area['value'])
@@ -86,6 +89,9 @@ class KeyBiodiversityAreaUndeveloped__Percent(Metric):
 
         kba_area = worldpop_layer.mask(kba_layer).groupby(geo_zone).count()
         builtup_kba_area = worldpop_layer.mask(kba_layer).mask(builtup_layer).groupby(geo_zone).count().fillna(0)
+
+        if not isinstance(builtup_kba_area, (int, float)):
+            builtup_kba_area = builtup_kba_area.fillna(0)
 
         if isinstance(kba_area, pd.DataFrame):
             result = kba_area.copy()
