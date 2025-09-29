@@ -1,6 +1,7 @@
 import random
 import math
 import pytest
+import numpy as np
 
 from city_metrix.metrics import *
 from tests.conftest import EXECUTE_IGNORED_TESTS, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES, ARG_BUENOS_AIRES_TILED_ZONES_TINY
