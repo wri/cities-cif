@@ -32,7 +32,7 @@ class _AccessPopulationPercent(Metric):
         access_layer = AccessibleRegion(amenity=self.amenity, city_id=city_id, level=level,
                                         travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project)
         accesspop_layer = WorldPop(
-            agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year, masks=[access_layer,])
+            agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year).mask(access_layer)
         totalpop_layer = WorldPop(
             agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year)
         if self.informal_only:
@@ -45,10 +45,10 @@ class _AccessPopulationPercent(Metric):
         if isinstance(accesspop, pd.DataFrame):
             totalpop.loc[totalpop['value']==0, 'value'] = np.nan
             accesspop_result = accesspop.copy()
-            accesspop_result['value'] = accesspop['value'] / totalpop['value'] * 100
+            accesspop_result['value'] = 100 * accesspop['value'] / totalpop['value']
         else:
             totalpop.loc[totalpop==0] = np.nan
-            accesspop_result = accesspop / totalpop * 100
+            accesspop_result = 100 * accesspop / totalpop
         return accesspop_result
 
 

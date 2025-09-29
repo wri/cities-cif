@@ -4,9 +4,66 @@ import pytest
 import numpy as np
 
 from city_metrix.metrics import *
-from tests.conftest import EXECUTE_IGNORED_TESTS, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES, ARG_BUENOS_AIRES_TILED_ZONES_TINY
+from tests.conftest import EXECUTE_IGNORED_TESTS, GEOZONE_TERESINA, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES, ARG_BUENOS_AIRES_TILED_ZONES_TINY
 PORTLAND_DST_seasonal_utc_offset = -8
 
+
+def test_access_to_openspace_female__percent():
+    indicator = AccessToOpenSpaceFemale__Percent().get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 28.537361096287057, 67, 72)
+
+def test_access_to_openspace_informal__percent():
+    indicator = AccessToOpenSpaceInformal__Percent().get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 28.537360907512625, 67, 72)
+
+def test_access_to_schools_children__percent():
+    indicator = AccessToSchoolsChildren__Percent().get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 71.97229979366347, 67, 72)
+
+def test_access_to_goodsandservices_female__percent():
+    indicator = AccessToGoodsAndServicesFemale__Percent().get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 25.326068167411968, 67, 72)
+
+def test_access_to_goodsandservices_informal__percent():
+    indicator = AccessToGoodsAndServicesInformal__Percent().get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 25.326064146273673, 67, 72)
+
+def test_access_to_potentialemployment_female__percent():
+    indicator = AccessToPotentialEmploymentFemale__Percent().get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 25.326068167411968, 67, 72)
+
+def test_access_to_publictransportation_children__percent():
+    indicator = AccessToPublicTransportationChildren__Percent().get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 29.363878163274165, 67, 72)
+
+AccessToHealthcareElderly__Percent
+def test_access_to_healthcare_elderly__percent():
+    indicator = AccessToHealthcareElderly__Percent().get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 2.9866815956816017, 67, 72)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_air_pollutant_annual_daily_max__tonnes():
@@ -114,6 +171,20 @@ def test_canopy_covered_population_informal__percent():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
+
+def test_count_potential_employers_elderly_popweighted__count():
+    indicator = CountPotentialEmployersElderlyPopWeighted__Count(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 50308.607206042594, 139, 0)
+
+def test_count_potential_employers_informal_popweighted__count():
+    indicator = CountPotentialEmployersInformalPopWeighted__Count(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 91.58131369764683, 139, 0)
 
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era5_met_preprocess_umep():
