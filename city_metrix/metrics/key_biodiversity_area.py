@@ -50,12 +50,13 @@ class KeyBiodiversityAreaProtected__Percent(Metric):
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame, pd.Series]:
         country_code_iso3 = _resolve_country_iso3(geo_zone, self.country_code_iso3)
+
         worldpop_layer = WorldPop()
         kba_layer = KeyBiodiversityAreas(country_code_iso3)
         protected_layer = ProtectedAreas()
 
         kba_area = worldpop_layer.mask(kba_layer).groupby(geo_zone).count()
-        protected_kba_area = worldpop_layer.mask(kba_layer).mask(protected_layer).groupby(geo_zone).count().fillna(0)
+        protected_kba_area = worldpop_layer.mask(kba_layer).mask(protected_layer).groupby(geo_zone).count()
 
         if not isinstance(protected_kba_area, (int, float)):
             protected_kba_area = protected_kba_area.fillna(0)
@@ -88,7 +89,7 @@ class KeyBiodiversityAreaUndeveloped__Percent(Metric):
         builtup_layer = EsaWorldCover(EsaWorldCoverClass.BUILT_UP)
 
         kba_area = worldpop_layer.mask(kba_layer).groupby(geo_zone).count()
-        builtup_kba_area = worldpop_layer.mask(kba_layer).mask(builtup_layer).groupby(geo_zone).count().fillna(0)
+        builtup_kba_area = worldpop_layer.mask(kba_layer).mask(builtup_layer).groupby(geo_zone).count()
 
         if not isinstance(builtup_kba_area, (int, float)):
             builtup_kba_area = builtup_kba_area.fillna(0)

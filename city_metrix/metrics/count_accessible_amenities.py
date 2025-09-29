@@ -64,7 +64,7 @@ class _CountAccessiblePopWeightedElderly(_CountAccessiblePopWeighted):
 
 
 class _CountAccessiblePopWeightedFemale(_CountAccessiblePopWeighted):
-    def __init__(self, amenity, ltravel_mode, threshold, unit, project, worldpop_year=2020, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit,
                          project=project, worldpop_agesex_classes=WorldPopClass.FEMALE, worldpop_year=worldpop_year, informal_only=False, **kwargs)
 

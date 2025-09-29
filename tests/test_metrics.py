@@ -1,10 +1,10 @@
 import random
 import math
 import pytest
-import numpy as np
 
 from city_metrix.metrics import *
-from tests.conftest import EXECUTE_IGNORED_TESTS, GEOZONE_TERESINA, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES, ARG_BUENOS_AIRES_TILED_ZONES_TINY
+from tests.conftest import EXECUTE_IGNORED_TESTS, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES, ARG_BUENOS_AIRES_TILED_ZONES_TINY
+from tests.resources.bbox_constants import GEOZONE_TERESINA
 PORTLAND_DST_seasonal_utc_offset = -8
 
 
@@ -57,7 +57,6 @@ def test_access_to_publictransportation_children__percent():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.0, 29.363878163274165, 67, 72)
 
-AccessToHealthcareElderly__Percent
 def test_access_to_healthcare_elderly__percent():
     indicator = AccessToHealthcareElderly__Percent().get_metric(GEOZONE_TERESINA)
     expected_zone_size = len(GEOZONE_TERESINA.zones)
@@ -184,7 +183,7 @@ def test_count_potential_employers_informal_popweighted__count():
     expected_zone_size = len(GEOZONE_TERESINA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0.0, 91.58131369764683, 139, 0)
+    assert_metric_stats(indicator, 2, 0.0, 91.58, 139, 0)
 
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era5_met_preprocess_umep():
@@ -344,20 +343,6 @@ def test_natural_areas__percent():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
-
-@pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
-def test_children_access_open_space():
-    from geopandas import GeoDataFrame
-    zones = GeoZone(GeoDataFrame.from_file('https://wri-cities-data-api.s3.us-east-1.amazonaws.com/data/prd/boundaries/geojson/ARG-Buenos_Aires.geojson'))
-    indicator = AccessToOpenSpaceChildren__Percent('ARG-Buenos_Aires', 'adminbound', 'walk', 15, 'minutes').get_metric(zones)
-    assert len(indicator) > 0
-
-# @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="Specific files required")
-# def test_count_accessible_amenities_all():
-    # rom .conftest import create_fishnet_grid
-    # NAIROBI_BBOX = create_fishnet_grid(36.66446402, -1.44560888, 37.10497899, -1.16058296, 0.01).reset_index()
-    # indicator = AccessPopulationCountAll('BRA-Belo_Horizonte', 'jobs', 'walk', '15', 'minutes')
-    # assert actual_indicator_size > 0
 
 def test_number_species_bird_richness__species():
     random.seed(42)

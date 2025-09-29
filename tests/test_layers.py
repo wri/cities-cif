@@ -14,7 +14,6 @@ from tests.tools.spatial_tools import get_rounded_gdf_geometry
 COUNTRY_CODE_FOR_BBOX = 'USA'
 CITY_CODE_FOR_BBOX = 'portland'
 BBOX = BBOX_USA_OR_PORTLAND_1
-TERESINA_BBOX = GEOEXTENT_TERESINA
 
 
 def test_acag_pm2p5():
@@ -24,22 +23,22 @@ def test_acag_pm2p5():
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_accessible_count():
-    data = AccessibleCount(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(TERESINA_BBOX)
+    data = AccessibleCount(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(GEOEXTENT_TERESINA)
     assert np.size(data) > 0
     assert_raster_stats(data, 2, 0.0, 215.0, 54569, 0)
-    assert get_projection_type(data.crs) == ProjectionType.UTM
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_accessible_count_popweighted():
-    data = AccessibleCountPopWeighted(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(TERESINA_BBOX)
+    data = AccessibleCountPopWeighted(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(GEOEXTENT_TERESINA)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.0, 566.11389, 53725, 844)
-    assert get_projection_type(data.crs) == ProjectionType.UTM
+    assert_raster_stats(data, 2, 0.0, 566.11, 53725, 844)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_accessible_region():
-    data = AccessibleRegion(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(TERESINA_BBOX)
+    data = AccessibleRegion(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(GEOEXTENT_TERESINA)
     assert np.size(data) > 0
     assert_raster_stats(data, 2, 1.0, 1.0, 848, 53721)
-    assert get_projection_type(data.crs) == ProjectionType.UTM
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_albedo_cloud_masked():
     data = AlbedoCloudMasked().get_data(BBOX)
@@ -75,6 +74,12 @@ def test_built_up_height():
     data = BuiltUpHeight().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 0, 14.61, 100, 0)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+
+def test_cams_ghg():
+    data = CamsGhg().get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 1, 612278.8, 612278.8, 1, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
