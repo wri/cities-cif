@@ -63,8 +63,9 @@ class SpeciesRichness(Layer):
                 "offset": offset,
                 "hasCoordinate": "true",
             }
-            remaining_attempts = 6
-            while remaining_attempts > 0:
+            
+            remaining_tries = 6
+            while remaining_tries > 0:
                 resp = requests.get(self.API_URL, params=params, headers={"Accept": "application/json"})
                 results_json = resp.json()
                 if isinstance(results_json, dict):
@@ -72,7 +73,7 @@ class SpeciesRichness(Layer):
                     break
                 else:
                     time.sleep(5)  # Rate limiting
-                    remaining_attempts -= 1
+                    remaining_tries -= 1
 
             has_species = [
                 (
@@ -117,7 +118,7 @@ class SpeciesRichness(Layer):
         # Estimate species counts by estimating asymptote of species-accumulation curve created when observation order is randomized
         # Final estimate is average over NUM_CURVEFITS estimates
 
-        if len(observations) > 1:
+        if len(observations) >= 10:
             taxon_observations = list(observations.species)
             asymptotes = []
             tries = 0
