@@ -72,7 +72,6 @@ class GeoZone():
                 self.admin_level = city_data.get(self.aoi_id, None)
             elif self.aoi_id == 'urban_extent':
                 self.admin_level = self.aoi_id
-
             # bbox is always projected to UTM
             self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
 
@@ -103,12 +102,11 @@ def _build_aoi_from_city_boundaries(city_id, geo_feature):
     # Round coordinates to whole units
     bbox = (math.floor(reproj_west), math.floor(reproj_south), math.ceil(reproj_east), math.ceil(reproj_north))
 
-    if geo_feature.lower() == 'adm4union':
-        # reproject geodataframe to UTM
-        zones = boundaries_gdf.to_crs(utm_crs)
-    else:
-        zones = None
-
+    #if geo_feature.lower() == 'city_admin_level':
+    #    # reproject geodataframe to UTM
+    zones = boundaries_gdf.to_crs(utm_crs)
+    #else:
+    #    zones = None
     return bbox, utm_crs, zones
 
 
@@ -829,7 +827,7 @@ class Layer():
             print(f">>>Layer {self.aggregate.__class__.__name__} is already cached ..")
 
 
-    def retrieve_data(self, bbox: GeoExtent, s3_bucket: str=None, s3_env: str=None, aoi_buffer_m:int=None,
+    def retrieve_data(self, bbox: GeoExtent, s3_bucket: str=CIF_CACHE_S3_BUCKET_URI, s3_env: str=DEFAULT_PRODUCTION_ENV, aoi_buffer_m:int=None,
                       city_aoi_subarea: (float, float, float, float)=None, spatial_resolution: int = None) -> Union[
         xr.DataArray, gpd.GeoDataFrame]:
         """
@@ -1375,7 +1373,6 @@ class Metric():
         :param spatial_resolution: resolution of continuous raster data in meters
         :param force_data_refresh: whether to force data refresh from source
         """
-
         if geo_zone.geo_type != GeoType.CITY:
             raise ValueError("Non-city data cannot be cached.")
 
