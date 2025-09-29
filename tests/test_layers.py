@@ -26,19 +26,19 @@ def test_acag_pm2p5():
 def test_accessible_count():
     data = AccessibleCount(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(TERESINA_BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.0, 215.0, 0, 54569)
+    assert_raster_stats(data, 2, 0.0, 215.0, 54569, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_accessible_count_popweighted():
     data = AccessibleCountPopWeighted(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(TERESINA_BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.0, 566.11389, 844, 53725)
+    assert_raster_stats(data, 2, 0.0, 566.11389, 53725, 844)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_accessible_region():
     data = AccessibleRegion(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(TERESINA_BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 1.0, 1.0, 53721, 848)
+    assert_raster_stats(data, 2, 1.0, 1.0, 848, 53721)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_albedo_cloud_masked():
