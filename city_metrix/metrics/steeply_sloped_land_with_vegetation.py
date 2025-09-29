@@ -12,7 +12,7 @@ MIN_VEGETATION_PERCENT = 60
 class SteeplySlopedLandWithVegetation__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["year"]
+    MINOR_NAMING_ATTS = None
     CUSTOM_TILE_SIDE_M = 10000
 
 

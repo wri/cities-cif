@@ -52,6 +52,9 @@ class EsaWorldCover(Layer):
         else:
             raise ValueError(f'Specified year ({self.year}) is not currently supported')
 
+        if spatial_resolution > DEFAULT_SPATIAL_RESOLUTION:
+            esa_data_ic = esa_data_ic.map(lambda x: x.setDefaultProjection(crs=x.projection().crs(), scale=DEFAULT_SPATIAL_RESOLUTION).reduceResolution(ee.Reducer.mode(), bestEffort=False, maxPixels=2048).reproject(crs=x.projection().crs(), scale=spatial_resolution))
+
         ee_rectangle  = bbox.to_ee_rectangle()
         data = get_image_collection(
             esa_data_ic,
