@@ -14,12 +14,31 @@ from tests.tools.spatial_tools import get_rounded_gdf_geometry
 COUNTRY_CODE_FOR_BBOX = 'USA'
 CITY_CODE_FOR_BBOX = 'portland'
 BBOX = BBOX_USA_OR_PORTLAND_1
+TERESINA_BBOX = GeoExtent('{"city_id": "BRA-Teresina", "aoi_id": "city_admin_level"}')
 
 
 def test_acag_pm2p5():
     data = AcagPM2p5().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 2, 5.89, 6.53, 9797, 0)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+
+def test_accessible_count():
+    data = AccessibleCount(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(TERESINA_BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, 0.0, 215.0, 0, 54569)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+
+def test_accessible_count_popweighted():
+    data = AccessibleCountPopWeighted(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(TERESINA_BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, 0.0, 566.11389, 844, 53725)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+
+def test_accessible_region():
+    data = AccessibleRegion(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(TERESINA_BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, 1.0, 1.0, 53721, 848)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_albedo_cloud_masked():
