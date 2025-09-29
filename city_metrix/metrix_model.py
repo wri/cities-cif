@@ -31,7 +31,6 @@ from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE
     DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI, \
     MULTI_TILE_TILE_INDEX_FILE, PROCESSING_KNOWN_ISSUE_FLAG, CIF_ACTIVE_PROCESSING_FILE_NAME
 
-
 from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
                                     get_city, get_city_boundaries, create_uri_target_folder, get_file_key_from_url,
                                     get_bucket_name_from_s3_uri,
@@ -833,7 +832,7 @@ class Layer():
             print(f">>>Layer {self.aggregate.__class__.__name__} is already cached ..")
 
 
-    def retrieve_data(self, bbox: GeoExtent, s3_bucket: str=None, s3_env: str=None, aoi_buffer_m:int=None,
+    def retrieve_data(self, bbox: GeoExtent, s3_bucket: str=CIF_CACHE_S3_BUCKET_URI, s3_env: str=DEFAULT_PRODUCTION_ENV, aoi_buffer_m:int=None,
                       city_aoi_subarea: (float, float, float, float)=None, spatial_resolution: int = None) -> Union[
         xr.DataArray, gpd.GeoDataFrame]:
         """
@@ -1372,7 +1371,6 @@ class Metric():
         :param spatial_resolution: resolution of continuous raster data in meters
         :param force_data_refresh: whether to force data refresh from source
         """
-
         if geo_zone.geo_type != GeoType.CITY:
             raise ValueError("Non-city data cannot be cached.")
 
