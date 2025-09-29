@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
@@ -42,9 +43,11 @@ class _AccessPopulationPercent(Metric):
         totalpop = totalpop_layer.groupby(geo_zone).sum()
 
         if isinstance(accesspop, pd.DataFrame):
+            totalpop.loc[totalpop['value']==0, 'value'] = np.nan
             accesspop_result = accesspop.copy()
             accesspop_result['value'] = accesspop['value'] / totalpop['value'] * 100
         else:
+            totalpop.loc[totalpop==0] = np.nan
             accesspop_result = accesspop / totalpop * 100
         return accesspop_result
 
