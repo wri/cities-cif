@@ -11,6 +11,9 @@ from .canopy_covered_population import *
 from .count_accessible_amenities import *
 from .era5_met_preprocessing_umep_gee import Era5MetPreprocessingUmep
 from .era5_met_preprocessing_upenn_gee import Era5MetPreprocessingUPenn
+from .future_climate_hazard import *
+from .ghg_emissions import GhgEmissions__Tonnes
+from .habitat_connectivity import HabitatConnectivityEffectiveMeshSize__Hectares, HabitatConnectivityCoherence__Percent
 from .habitat_types_restored import HabitatTypesRestored__CoverTypes
 from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResidents__Hospitals
 from .impervious_area import ImperviousArea__Percent

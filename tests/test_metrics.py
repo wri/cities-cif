@@ -213,6 +213,47 @@ def test_era5_met_preprocess_upenn():
     assert len(indicator) == 24
     assert_metric_stats(indicator[['DHI']], 2, 0.00, 312.33, 24, 0)
 
+def test_future_annual_max_temp__degreescelsius():
+    indicator = FutureAnnualMaxTemp__DegreesCelsius(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
+    assert round(indicator.value[0]) == 35  # Returns just one number
+
+def test_future_days_above_35__days():
+    indicator = FutureDaysAbove35__Days(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
+    assert round(indicator.value[0]) == 2   # Returns just one number
+
+def test_future_extreme_precipitation__days():
+    indicator = FutureExtremePrecipitationDays__Days(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
+    assert round(indicator.value[0]) == 1   # Returns just one number
+
+def test_future_heatwave_frequency__heatwaves():
+    indicator = FutureHeatwaveFrequency__Heatwaves(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
+    assert round(indicator.value[0]) == 22   # Returns just one number
+
+def test_future_heatwave_max_duration__days():
+    indicator = FutureHeatwaveMaxDuration__Days(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
+    assert round(indicator.value[0]) == 81   # Returns just one number
+
+def test_ghg_emissions__tonnes():
+    indicator = GhgEmissions__Tonnes().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 3173212.00, 3173212.00, 100, 0)
+
+def test_habitat_connectivity_coherence__percent():
+    indicator = HabitatConnectivityCoherence__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 14.69, 100, 100, 0)
+
+def test_habitat_connectivity_effective_mesh_size__hectares():
+    indicator = HabitatConnectivityEffectiveMeshSize__Hectares().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.35, 74.81, 100, 0)
+
 def test_habitat_types_restored__covertypes():
     indicator = HabitatTypesRestored__CoverTypes().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
@@ -268,7 +309,6 @@ def test_mean_pm2p5_exposure_popweighted_children__microgramspercubicmeter():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 20.21, 67.67, 100, 0)
-
 
 def test_mean_pm2p5_exposure_popweighted_elderly__microgramspercubicmeter():
     indicator = MeanPM2P5ExposurePopWeightedElderly__MicrogramsPerCubicMeter().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -341,7 +381,7 @@ def test_number_species_vascular_plant_richness__species():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, np.nan, np.nan, 0, 40)
+    assert_metric_stats(indicator, None, None, None, 0, 40)
 
 def test_number_species_bird_richness_in_builtup_area__species():
     random.seed(42)
@@ -349,7 +389,7 @@ def test_number_species_bird_richness_in_builtup_area__species():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, np.nan, np.nan, 0, 40)
+    assert_metric_stats(indicator, None, None, None, 0, 40)
 
 def test_protected_area__percent():
     indicator = ProtectedArea__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
