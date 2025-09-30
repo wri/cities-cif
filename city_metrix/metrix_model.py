@@ -68,10 +68,11 @@ class GeoZone():
             self.city_id, self.aoi_id = parse_city_aoi_json(city_json)
             # Boundaries from city_id and aoi_id
             city_data = get_city(self.city_id)
-            if self.aoi_id == 'city_admin_level':
-                self.admin_level = city_data.get(self.aoi_id, None)
-            elif self.aoi_id == 'urban_extent':
+            if self.aoi_id == 'urban_extent':
                 self.admin_level = self.aoi_id
+            else:
+                self.admin_level = city_data.get(self.aoi_id, None)
+
             # bbox is always projected to UTM
             self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
 
@@ -721,8 +722,6 @@ class LayerGroupBy:
 
 
 class Layer():
-    OUTPUT_FILE_FORMAT = None
-
     def __init__(self, aggregate=None, masks=[]):
         self.aggregate = aggregate
         if aggregate is None:
@@ -762,7 +761,7 @@ class Layer():
             print("Can't write output to None path")
             return
 
-        file_format = self.OUTPUT_FILE_FORMAT
+        file_format = self.aggregate.OUTPUT_FILE_FORMAT
 
         if tile_side_length is None:
             utm_geo_extent = bbox.as_utm_bbox()  # currently only support output as utm
@@ -881,7 +880,7 @@ class Layer():
                 bbox = bbox.buffer_utm_bbox(aoi_buffer_m)
 
             bbox_area = bbox.as_utm_bbox().polygon.area
-            if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
+            if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.aggregate.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
                 self._cache_data_by_fishnet_tiles(bbox=bbox, tile_side_m=tile_side_m, spatial_resolution=spatial_resolution,
                                                   target_uri=target_uri)
             else:
@@ -889,7 +888,7 @@ class Layer():
                 delete_s3_file_if_exists(target_uri)
                 delete_s3_folder_if_exists(target_uri)
                 create_uri_target_folder(target_uri)
-                write_layer(result_data, target_uri, self.OUTPUT_FILE_FORMAT)
+                write_layer(result_data, target_uri, self.aggregate.OUTPUT_FILE_FORMAT)
         else:
             raise ValueError(f"Data not cached for {self.aggregate.__class__.__name__}.  Data can only be cached for CITY geo_extent.")
 
@@ -1391,7 +1390,7 @@ class Metric():
                     results_metric_df = results_metric_df.assign(metric_id=feature_id)
                 result_metric = _standardize_city_metrics_columns(results_metric_df, None)
 
-            write_metric(result_metric, target_uri, self.OUTPUT_FILE_FORMAT)
+            write_metric(result_metric, target_uri, self.metric.OUTPUT_FILE_FORMAT)
         else:
             print(f">>>Metric {self.metric.__class__.__name__} is already cached ..")
 
@@ -1432,7 +1431,7 @@ class Metric():
 
             # Opportunistically cache city metric
             if s3_bucket is not None and geo_zone.geo_type == GeoType.CITY:
-                write_metric(result_metric, target_uri, self.OUTPUT_FILE_FORMAT)
+                write_metric(result_metric, target_uri, self.metric.OUTPUT_FILE_FORMAT)
 
         return result_metric, feature_id
 
