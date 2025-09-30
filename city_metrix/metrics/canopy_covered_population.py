@@ -14,7 +14,7 @@ from city_metrix.layers import (
 class CanopyCoveredPopulation__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["worldpop_agesex_classes", "height", "informal_only"]
+    MINOR_NAMING_ATTS = ["worldpop_agesex_classes", "height", "informal_only", "year"]
 
     def __init__(
         self, worldpop_agesex_classes=[], height=3, percentage=30, informal_only=False, year=2025, **kwargs
@@ -57,7 +57,7 @@ class CanopyCoveredPopulation__Percent(Metric):
 class CanopyCoveredPopulationChildren__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "percentage"]
+    MINOR_NAMING_ATTS = ["height", "percentage", "year"]
 
     def __init__(self, height=3, percentage=30, year=2025, **kwargs):
         super().__init__(**kwargs)
@@ -80,7 +80,7 @@ class CanopyCoveredPopulationChildren__Percent(Metric):
 class CanopyCoveredPopulationElderly__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "percentage"]
+    MINOR_NAMING_ATTS = ["height", "percentage", "year"]
 
     def __init__(self, height=3, percentage=30, year=2025, **kwargs):
         super().__init__(**kwargs)
@@ -103,7 +103,7 @@ class CanopyCoveredPopulationElderly__Percent(Metric):
 class CanopyCoveredPopulationFemale__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "percentage"]
+    MINOR_NAMING_ATTS = ["height", "percentage", "year"]
 
     def __init__(self, height=3, percentage=30, year=2025, **kwargs):
         super().__init__(**kwargs)
@@ -126,7 +126,7 @@ class CanopyCoveredPopulationFemale__Percent(Metric):
 class CanopyCoveredPopulationInformal__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "percentage"]
+    MINOR_NAMING_ATTS = ["height", "percentage", "year"]
 
     def __init__(self, height=3, percentage=30, year=2025, **kwargs):
         super().__init__(**kwargs)

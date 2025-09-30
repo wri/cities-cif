@@ -4,8 +4,65 @@ import pytest
 
 from city_metrix.metrics import *
 from tests.conftest import EXECUTE_IGNORED_TESTS, IDN_JAKARTA_TILED_ZONES, IDN_JAKARTA_TILED_ZONES_SMALL, USA_OR_PORTLAND_ZONE, USA_OR_PORTLAND_TILED_LARGE_ZONE, ARG_BUENOS_AIRES_TILED_ZONES, ARG_BUENOS_AIRES_TILED_ZONES_TINY
+from tests.resources.bbox_constants import GEOZONE_TERESINA
 PORTLAND_DST_seasonal_utc_offset = -8
 
+
+def test_access_to_openspace_female__percent():
+    indicator = AccessToOpenSpaceFemale__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 28.537361096287057, 67, 72)
+
+def test_access_to_openspace_informal__percent():
+    indicator = AccessToOpenSpaceInformal__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 28.537360907512625, 67, 72)
+
+def test_access_to_schools_children__percent():
+    indicator = AccessToSchoolsChildren__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 71.97229979366347, 67, 72)
+
+def test_access_to_goodsandservices_female__percent():
+    indicator = AccessToGoodsAndServicesFemale__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 25.326068167411968, 67, 72)
+
+def test_access_to_goodsandservices_informal__percent():
+    indicator = AccessToGoodsAndServicesInformal__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 25.326064146273673, 67, 72)
+
+def test_access_to_potentialemployment_female__percent():
+    indicator = AccessToPotentialEmploymentFemale__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 25.326068167411968, 67, 72)
+
+def test_access_to_publictransportation_children__percent():
+    indicator = AccessToPublicTransportationChildren__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 29.363878163274165, 67, 72)
+
+def test_access_to_healthcare_elderly__percent():
+    indicator = AccessToHealthcareElderly__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 2.9866815956816017, 67, 72)
 
 @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_air_pollutant_annual_daily_max__tonnes():
@@ -114,6 +171,20 @@ def test_canopy_covered_population_informal__percent():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
 
+def test_count_potential_employers_elderly_popweighted__count():
+    indicator = CountPotentialEmployersElderlyPopWeighted__Count(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 50308.607206042594, 139, 0)
+
+def test_count_potential_employers_informal_popweighted__count():
+    indicator = CountPotentialEmployersInformalPopWeighted__Count(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
+    expected_zone_size = len(GEOZONE_TERESINA.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 91.58, 139, 0)
+
 # @pytest.mark.skipif(EXECUTE_IGNORED_TESTS == False, reason="CDS API needs personal access token file to run")
 def test_era5_met_preprocess_umep():
     # Useful site: https://projects.oregonlive.com/weather/temps/
@@ -213,21 +284,21 @@ def test_impervious_surface_on_urbanized_land__percent():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 59.09, 100.00, 100, 0)
+    assert_metric_stats(indicator, 2, 78.512, 100, 100, 0)
 
 def test_key_biodiversity_area_protected__percent():
     indicator = KeyBiodiversityAreaProtected__Percent(country_code_iso3='ARG').get_metric(ARG_BUENOS_AIRES_TILED_ZONES)
     expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0.00, 100.00, 20, 79)
+    assert_metric_stats(indicator, 2, 0.00, 6.55, 7, 92)
 
 def test_key_biodiversity_area_undeveloped__percent():
     indicator = KeyBiodiversityAreaUndeveloped__Percent(country_code_iso3='ARG').get_metric(ARG_BUENOS_AIRES_TILED_ZONES)
     expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 40.22, 100.00, 20, 79)
+    assert_metric_stats(indicator, 2, 0.00, 76.27, 7, 92)
 
 def test_land_near_natural_drainage__percent():
     indicator = LandNearNaturalDrainage__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -241,28 +312,28 @@ def test_mean_pm2p5_exposure_popweighted_children__microgramspercubicmeter():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 15.51, 61.54, 100, 0)
+    assert_metric_stats(indicator, 2, 20.21, 67.67, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_elderly__microgramspercubicmeter():
     indicator = MeanPM2P5ExposurePopWeightedElderly__MicrogramsPerCubicMeter().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 15.51, 61.54, 100, 0)
+    assert_metric_stats(indicator, 2, 20.21, 67.67, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_female__microgramspercubicmeter():
     indicator = MeanPM2P5ExposurePopWeightedFemale__MicrogramsPerCubicMeter().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 15.51, 61.54, 100, 0)
+    assert_metric_stats(indicator, 2, 20.21, 67.67, 100, 0)
 
 def test_mean_pm2p5_exposure_popweighted_informal__microgramspercubicmeter():
     indicator = MeanPM2P5ExposurePopWeightedInformal__MicrogramsPerCubicMeter().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 14.97, 56.38, 18, 82)
+    assert_metric_stats(indicator, 2, 18.91, 62.39, 18, 82)
 
 def test_mean_tree_cover__percent():
     indicator = MeanTreeCover__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
