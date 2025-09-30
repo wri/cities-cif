@@ -887,7 +887,6 @@ class Layer():
                 result_data = self.aggregate.get_data(bbox=bbox, spatial_resolution=spatial_resolution)
                 delete_s3_file_if_exists(target_uri)
                 delete_s3_folder_if_exists(target_uri)
-                create_uri_target_folder(target_uri)
                 write_layer(result_data, target_uri, self.aggregate.OUTPUT_FILE_FORMAT)
         else:
             raise ValueError(f"Data not cached for {self.aggregate.__class__.__name__}.  Data can only be cached for CITY geo_extent.")
