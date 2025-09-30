@@ -89,7 +89,7 @@ class AccessToOpenSpaceTotalPopulation__Percent(_AccessPopulationPercentAll):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='openspace', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -100,7 +100,7 @@ class AccessToOpenSpaceChildren__Percent(_AccessPopulationPercentChildren):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='openspace', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -111,7 +111,7 @@ class AccessToOpenSpaceElderly__Percent(_AccessPopulationPercentElderly):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='openspace', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -122,7 +122,7 @@ class AccessToOpenSpaceFemale__Percent(_AccessPopulationPercentFemale):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='openspace', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -133,7 +133,7 @@ class AccessToOpenSpaceInformal__Percent(_AccessPopulationPercentInformal):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='openspace', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -145,7 +145,7 @@ class AccessToSchoolsTotalPopulation__Percent(_AccessPopulationPercentAll):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='schools', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -156,7 +156,7 @@ class AccessToSchoolsChildren__Percent(_AccessPopulationPercentChildren):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='schools', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -167,7 +167,7 @@ class AccessToSchoolsElderly__Percent(_AccessPopulationPercentElderly):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='schools', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -178,7 +178,7 @@ class AccessToSchoolsFemale__Percent(_AccessPopulationPercentFemale):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='schools', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -189,7 +189,7 @@ class AccessToSchoolsInformal__Percent(_AccessPopulationPercentInformal):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='schools', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -201,7 +201,7 @@ class AccessToGoodsAndServicesTotalPopulation__Percent(_AccessPopulationPercentA
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='commerce', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -212,7 +212,7 @@ class AccessToGoodsAndServicesChildren__Percent(_AccessPopulationPercentChildren
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='commerce', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -223,7 +223,7 @@ class AccessToGoodsAndServicesElderly__Percent(_AccessPopulationPercentElderly):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='commerce', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -234,7 +234,7 @@ class AccessToGoodsAndServicesFemale__Percent(_AccessPopulationPercentFemale):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='commerce', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -245,7 +245,7 @@ class AccessToGoodsAndServicesInformal__Percent(_AccessPopulationPercentInformal
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='commerce', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -257,7 +257,7 @@ class AccessToPotentialEmploymentTotalPopulation__Percent(_AccessPopulationPerce
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -268,7 +268,7 @@ class AccessToPotentialEmploymentChildren__Percent(_AccessPopulationPercentChild
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -279,7 +279,7 @@ class AccessToPotentialEmploymentElderly__Percent(_AccessPopulationPercentElderl
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -290,7 +290,7 @@ class AccessToPotentialEmploymentFemale__Percent(_AccessPopulationPercentFemale)
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -301,7 +301,7 @@ class AccessToPotentialEmploymentInformal__Percent(_AccessPopulationPercentInfor
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -313,7 +313,7 @@ class AccessToPublicTransportationTotalPopulation__Percent(_AccessPopulationPerc
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='transit', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -324,7 +324,7 @@ class AccessToPublicTransportationChildren__Percent(_AccessPopulationPercentChil
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='transit', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -335,7 +335,7 @@ class AccessToPublicTransportationElderly__Percent(_AccessPopulationPercentElder
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='transit', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -346,7 +346,7 @@ class AccessToPublicTransportationFemale__Percent(_AccessPopulationPercentFemale
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='transit', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -357,7 +357,7 @@ class AccessToPublicTransportationInformal__Percent(_AccessPopulationPercentInfo
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='transit', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -369,7 +369,7 @@ class AccessToHealthcareTotalPopulation__Percent(_AccessPopulationPercentAll):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='healthcare', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -380,7 +380,7 @@ class AccessToHealthcareChildren__Percent(_AccessPopulationPercentChildren):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='healthcare', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -391,7 +391,7 @@ class AccessToHealthcareElderly__Percent(_AccessPopulationPercentElderly):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='healthcare', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -402,7 +402,7 @@ class AccessToHealthcareFemale__Percent(_AccessPopulationPercentFemale):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='healthcare', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
@@ -413,6 +413,6 @@ class AccessToHealthcareInformal__Percent(_AccessPopulationPercentInformal):
     MINOR_NAMING_ATTS = ["travel_mode",
                          "threshold", "unit", "osm_year", "project"]
 
-    def __init__(self, travel_mode=None, threshold=None, unit=None, project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='healthcare', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
