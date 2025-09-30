@@ -9,56 +9,56 @@ PORTLAND_DST_seasonal_utc_offset = -8
 
 
 def test_access_to_openspace_female__percent():
-    indicator = AccessToOpenSpaceFemale__Percent().get_metric(GEOZONE_TERESINA)
+    indicator = AccessToOpenSpaceFemale__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
     expected_zone_size = len(GEOZONE_TERESINA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.0, 28.537361096287057, 67, 72)
 
 def test_access_to_openspace_informal__percent():
-    indicator = AccessToOpenSpaceInformal__Percent().get_metric(GEOZONE_TERESINA)
+    indicator = AccessToOpenSpaceInformal__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
     expected_zone_size = len(GEOZONE_TERESINA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.0, 28.537360907512625, 67, 72)
 
 def test_access_to_schools_children__percent():
-    indicator = AccessToSchoolsChildren__Percent().get_metric(GEOZONE_TERESINA)
+    indicator = AccessToSchoolsChildren__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
     expected_zone_size = len(GEOZONE_TERESINA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.0, 71.97229979366347, 67, 72)
 
 def test_access_to_goodsandservices_female__percent():
-    indicator = AccessToGoodsAndServicesFemale__Percent().get_metric(GEOZONE_TERESINA)
+    indicator = AccessToGoodsAndServicesFemale__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
     expected_zone_size = len(GEOZONE_TERESINA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.0, 25.326068167411968, 67, 72)
 
 def test_access_to_goodsandservices_informal__percent():
-    indicator = AccessToGoodsAndServicesInformal__Percent().get_metric(GEOZONE_TERESINA)
+    indicator = AccessToGoodsAndServicesInformal__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
     expected_zone_size = len(GEOZONE_TERESINA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.0, 25.326064146273673, 67, 72)
 
 def test_access_to_potentialemployment_female__percent():
-    indicator = AccessToPotentialEmploymentFemale__Percent().get_metric(GEOZONE_TERESINA)
+    indicator = AccessToPotentialEmploymentFemale__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
     expected_zone_size = len(GEOZONE_TERESINA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.0, 25.326068167411968, 67, 72)
 
 def test_access_to_publictransportation_children__percent():
-    indicator = AccessToPublicTransportationChildren__Percent().get_metric(GEOZONE_TERESINA)
+    indicator = AccessToPublicTransportationChildren__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
     expected_zone_size = len(GEOZONE_TERESINA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.0, 29.363878163274165, 67, 72)
 
 def test_access_to_healthcare_elderly__percent():
-    indicator = AccessToHealthcareElderly__Percent().get_metric(GEOZONE_TERESINA)
+    indicator = AccessToHealthcareElderly__Percent(travel_mode='walk', threshold=15, unit='minutes').get_metric(GEOZONE_TERESINA)
     expected_zone_size = len(GEOZONE_TERESINA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
