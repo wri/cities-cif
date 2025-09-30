@@ -473,11 +473,6 @@ def get_city_boundaries(city_id: str, admin_level: str):
         query_uri = f"{CITIES_DATA_API_URL}/cities/{city_id}/"
         is_cache_file_usable, cache_uri, _ = _verify_api_cache_file(query_uri, 'admin_boundaries',
                                                                     GEOJSON_FILE_EXTENSION)
-    elif admin_level.lower() == 'urban_extent':
-        query_uri = f'{CIF_DASHBOARD_LAYER_S3_BUCKET_URI}/data/dev/boundaries/geojson/{city_id}__urban_extent.geojson'
-        is_cache_file_usable, cache_uri, _ = _verify_api_cache_file(query_uri, None, GEOJSON_FILE_EXTENSION)
-    else:
-        raise ValueError('Invalid admin_level')
 
     if is_cache_file_usable:
         boundaries_geojson = read_geojson_from_cache(cache_uri)
