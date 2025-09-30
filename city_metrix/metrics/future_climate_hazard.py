@@ -239,15 +239,9 @@ class FutureHeatwaveFrequency__Heatwaves(Metric):
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
             latlon, data[model], self.start_year, self.end_year)
-<<<<<<< Updated upstream
 
-        result_output = geo_zone.zones.iloc[[0]].copy()
-        result_output['value'] = [float(round(result, 1))]
-        return result_output
-=======
-        
         return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
->>>>>>> Stashed changes
+
 
 
 class FutureHeatwaveMaxDuration__Days(Metric):
