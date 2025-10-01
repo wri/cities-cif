@@ -26,6 +26,7 @@ class _AccessPopulationPercent(Metric):
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION) -> Union[pd.DataFrame | pd.Series]:
+        print('HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         city_id = geo_zone.city_id
         level = {'city_admin_level': 'adminbound',
                  'urban_extent': 'urbextbound'}[geo_zone.aoi_id]
