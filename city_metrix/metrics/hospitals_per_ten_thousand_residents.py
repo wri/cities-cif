@@ -10,7 +10,7 @@ from city_metrix.layers import OpenStreetMap, OpenStreetMapClass, WorldPop
 class HospitalsPerTenThousandResidents__Hospitals(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["year"]
 
     def __init__(self, year=datetime.datetime.now().year, **kwargs):
         super().__init__(**kwargs)
@@ -33,6 +33,7 @@ class HospitalsPerTenThousandResidents__Hospitals(Metric):
         if isinstance(world_pop_sum, pd.DataFrame):
             result = world_pop_sum.copy()
             result['value'] = 10000 * (hospital_counts_per_zone / world_pop_sum['value'])
+
         else:
             result = 10000 * hospital_counts_per_zone / world_pop_sum
 

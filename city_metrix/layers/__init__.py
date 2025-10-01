@@ -32,6 +32,7 @@ from .overture_buildings_dsm import OvertureBuildingsDSM
 from .overture_buildings_w_height import OvertureBuildingsHeight
 from .overture_buildings import OvertureBuildings
 from .pop_weighted_pm2p5 import PopWeightedPM2p5
+from .population_access import AccessibleRegion, AccessibleCount, AccessibleCountPopWeighted
 from .protected_areas import ProtectedAreas
 from .riparian_areas import RiparianAreas
 from .sentinel_2_level_2 import Sentinel2Level2

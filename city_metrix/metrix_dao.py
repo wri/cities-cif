@@ -488,7 +488,6 @@ def get_city_boundaries(city_id: str, admin_level: str):
         geom_columns = ['geometry']
     else:
         geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
-
     boundaries = boundaries_geojson[geom_columns]
     boundaries_with_index = boundaries.reset_index()
 
