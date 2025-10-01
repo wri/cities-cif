@@ -1,6 +1,8 @@
 import ee
 import numpy as np
 import pandas as pd
+import pyproj
+from shapely.ops import transform
 from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
@@ -230,7 +232,11 @@ class FutureHeatwaveFrequency__Heatwaves(Metric):
         data_layer = NexGddpCmip6(
             varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
-        centroid_geogr = geo_zone.zones.to_crs('EPSG:4326').dissolve().centroid.geometry[0]
+        centroid_utm = geo_zone.centroid
+        utm_crs = pyproj.CRS(geo_zone.crs)
+        wgs84_crs = pyproj.CRS('EPSG:4326')
+        project = pyproj.Transformer.from_crs(utm_crs, wgs84_crs, always_xy=True).transform
+        centroid_geogr = transform(project, centroid_utm)
         latlon = (centroid_geogr.y, centroid_geogr.x)
         threshold = percentile(latlon,
                                'tasmax', HEATWAVE_INTENSITY_PERCENTILE, True)
@@ -263,7 +269,11 @@ class FutureHeatwaveMaxDuration__Days(Metric):
         data_layer = NexGddpCmip6(
             varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
-        centroid_geogr = geo_zone.zones.to_crs('EPSG:4326').dissolve().centroid.geometry[0]
+        centroid_utm = geo_zone.centroid
+        utm_crs = pyproj.CRS(geo_zone.crs)
+        wgs84_crs = pyproj.CRS('EPSG:4326')
+        project = pyproj.Transformer.from_crs(utm_crs, wgs84_crs, always_xy=True).transform
+        centroid_geogr = transform(project, centroid_utm)
         latlon = (centroid_geogr.y, centroid_geogr.x)
         threshold = percentile(latlon,
                                'tasmax', HEATWAVE_INTENSITY_PERCENTILE, True)
@@ -295,7 +305,11 @@ class FutureDaysAbove35__Days(Metric):
         data_layer = NexGddpCmip6(
             varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
-        centroid_geogr = geo_zone.zones.to_crs('EPSG:4326').dissolve().centroid.geometry[0]
+        centroid_utm = geo_zone.centroid
+        utm_crs = pyproj.CRS(geo_zone.crs)
+        wgs84_crs = pyproj.CRS('EPSG:4326')
+        project = pyproj.Transformer.from_crs(utm_crs, wgs84_crs, always_xy=True).transform
+        centroid_geogr = transform(project, centroid_utm)
         latlon = (centroid_geogr.y, centroid_geogr.x)
         haz = ThresholdDays(35)
         data = data_layer.get_data(bbox)
@@ -325,7 +339,11 @@ class FutureAnnualMaxTemp__DegreesCelsius(Metric):
         data_layer = NexGddpCmip6(
             varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
-        centroid_geogr = geo_zone.zones.to_crs('EPSG:4326').dissolve().centroid.geometry[0]
+        centroid_utm = geo_zone.centroid
+        utm_crs = pyproj.CRS(geo_zone.crs)
+        wgs84_crs = pyproj.CRS('EPSG:4326')
+        project = pyproj.Transformer.from_crs(utm_crs, wgs84_crs, always_xy=True).transform
+        centroid_geogr = transform(project, centroid_utm)
         latlon = (centroid_geogr.y, centroid_geogr.x)
         haz = AnnualVal('max')
         data = data_layer.get_data(bbox)
@@ -355,7 +373,11 @@ class FutureExtremePrecipitationDays__Days(Metric):
         data_layer = NexGddpCmip6(
             varname='pr', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
-        centroid_geogr = geo_zone.zones.to_crs('EPSG:4326').dissolve().centroid.geometry[0]
+        centroid_utm = geo_zone.centroid
+        utm_crs = pyproj.CRS(geo_zone.crs)
+        wgs84_crs = pyproj.CRS('EPSG:4326')
+        project = pyproj.Transformer.from_crs(utm_crs, wgs84_crs, always_xy=True).transform
+        centroid_geogr = transform(project, centroid_utm)
         latlon = (centroid_geogr.y, centroid_geogr.x)
         pctl_90 = percentile(
             latlon, 'pr', 90, False)
