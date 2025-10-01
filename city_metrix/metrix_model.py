@@ -105,7 +105,7 @@ def _build_aoi_from_city_boundaries(city_id, geo_feature):
     # Round coordinates to whole units
     bbox = (math.floor(reproj_west), math.floor(reproj_south), math.ceil(reproj_east), math.ceil(reproj_north))
 
-    if geo_feature.lower() == 'adm4union':
+    if True or geo_feature.lower() == 'adm4union':  # HACK. When would we ever want zones to be None?
         # reproject geodataframe to UTM
         zones = boundaries_gdf.to_crs(utm_crs)
     else:
