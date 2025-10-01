@@ -42,9 +42,9 @@ class _AccessPopulationPercent(Metric):
         accesspop = accesspop_layer.groupby(geo_zone).sum()
         totalpop = totalpop_layer.groupby(geo_zone).sum()
 
-        if isinstance(accesspop, pd.DataFrame):
+        if isinstance(totalpop, pd.DataFrame):
+            accesspop_result = totalpop.copy()
             totalpop.loc[totalpop['value']==0, 'value'] = np.nan
-            accesspop_result = accesspop.copy()
             accesspop_result['value'] = 100 * accesspop['value'] / totalpop['value']
         else:
             totalpop.loc[totalpop==0] = np.nan
