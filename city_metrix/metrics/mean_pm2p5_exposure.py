@@ -12,11 +12,9 @@ class MeanPM2P5Exposure__MicrogramsPerCubicMeter(Metric):
     MINOR_NAMING_ATTS = None
 
     def __init__(self,
-                 year=2022,
                  informal_only=False,
                  **kwargs):
         super().__init__(**kwargs)
-        self.year = year
         self.informal_only = informal_only
         self.unit = 'micrograms per cubic meter'
 
@@ -24,7 +22,7 @@ class MeanPM2P5Exposure__MicrogramsPerCubicMeter(Metric):
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
-        pm2p5_layer = AcagPM2p5(year=self.year)
+        pm2p5_layer = AcagPM2p5()
 
         if self.informal_only:
             informal_layer = UrbanLandUse(ulu_class=3)
@@ -41,12 +39,10 @@ class MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(Metric):
     MINOR_NAMING_ATTS = None
 
     def __init__(self,
-                 year=2022,
                  worldpop_agesex_classes=[],
                  informal_only=False,
                  **kwargs):
         super().__init__(**kwargs)
-        self.year = year
         self.worldpop_agesex_classes = worldpop_agesex_classes
         self.informal_only = informal_only
         self.unit = 'micrograms per cubic meter'
@@ -54,7 +50,7 @@ class MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(Metric):
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        pop_weighted_pm2p5 = PopWeightedPM2p5(acag_year=self.year, worldpop_agesex_classes=self.worldpop_agesex_classes)
+        pop_weighted_pm2p5 = PopWeightedPM2p5(worldpop_agesex_classes=self.worldpop_agesex_classes)
 
         if self.informal_only:
             informal_layer = UrbanLandUse(ulu_class=3)
@@ -70,15 +66,14 @@ class MeanPM2P5ExposurePopWeightedChildren__MicrogramsPerCubicMeter(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, year=2022, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.year = year
         self.unit = 'micrograms per cubic meter'
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        pop_weighted_pm2p5_children = (MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(year=self.year, worldpop_agesex_classes=WorldPopClass.CHILDREN,
+        pop_weighted_pm2p5_children = (MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(worldpop_agesex_classes=WorldPopClass.CHILDREN,
                                                                                              informal_only=False))
 
         return pop_weighted_pm2p5_children.get_metric(geo_zone=geo_zone)
@@ -89,15 +84,14 @@ class MeanPM2P5ExposurePopWeightedElderly__MicrogramsPerCubicMeter(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, year=2022, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.year = year
         self.unit = 'micrograms per cubic meter'
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        pop_weighted_pm2p5_elderly = (MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(year=self.year, worldpop_agesex_classes=WorldPopClass.ELDERLY,
+        pop_weighted_pm2p5_elderly = (MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(worldpop_agesex_classes=WorldPopClass.ELDERLY,
                                                                                             informal_only=False))
 
         return pop_weighted_pm2p5_elderly.get_metric(geo_zone=geo_zone)
@@ -108,15 +102,14 @@ class MeanPM2P5ExposurePopWeightedFemale__MicrogramsPerCubicMeter(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, year=2022, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.year = year
         self.unit = 'micrograms per cubic meter'
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        pop_weighted_pm2p5_female = (MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(year=self.year, worldpop_agesex_classes=WorldPopClass.FEMALE,
+        pop_weighted_pm2p5_female = (MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(worldpop_agesex_classes=WorldPopClass.FEMALE,
                                                                                            informal_only=False))
 
         return pop_weighted_pm2p5_female.get_metric(geo_zone=geo_zone)
@@ -127,15 +120,14 @@ class MeanPM2P5ExposurePopWeightedInformal__MicrogramsPerCubicMeter(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, year=2022, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.year = year
         self.unit = 'micrograms per cubic meter'
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-        pop_weighted_pm2p5_informal = (MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(year=self.year, worldpop_agesex_classes=[],
+        pop_weighted_pm2p5_informal = (MeanPM2P5ExposurePopWeighted__MicrogramsPerCubicMeter(worldpop_agesex_classes=[],
                                                                                              informal_only=True))
 
         return pop_weighted_pm2p5_informal.get_metric(geo_zone=geo_zone)

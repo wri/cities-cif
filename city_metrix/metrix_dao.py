@@ -11,7 +11,9 @@ from pathlib import Path
 from rioxarray import rioxarray
 from urllib.parse import urlparse
 
-from city_metrix import s3_client
+from rasterio.session import AWSSession
+
+from city_metrix import s3_client, session as aws_session
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
     NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, CIF_DASHBOARD_LAYER_S3_BUCKET_URI, LOCAL_CACHE_URI, JSON_FILE_EXTENSION, \
     MULTI_TILE_TILE_INDEX_FILE
@@ -97,12 +99,22 @@ def read_geojson_from_cache(uri):
 
 
 def read_geotiff_from_cache(file_uri):
-    if get_uri_scheme(file_uri) == 'file':
+    uri_scheme = get_uri_scheme(file_uri)
+    if uri_scheme == 'file':
         file_path = os.path.normpath(get_file_path_from_uri(file_uri))
     else:
         file_path = file_uri
-    with rioxarray.open_rasterio(file_path, driver="GTiff") as src:
-        data = src.load()
+
+    if uri_scheme == 's3':
+        with rioxarray.open_rasterio(
+            file_path,
+            driver="GTiff",
+            session=AWSSession(session=aws_session),
+        ) as src:
+            data = src.load()
+    else:
+        with rioxarray.open_rasterio(file_path, driver="GTiff") as src:
+            data = src.load()
 
     result_data = data.squeeze('band', drop=True)
 
@@ -488,7 +500,6 @@ def get_city_boundaries(city_id: str, admin_level: str):
         geom_columns = ['geometry']
     else:
         geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
-
     boundaries = boundaries_geojson[geom_columns]
     boundaries_with_index = boundaries.reset_index()
 

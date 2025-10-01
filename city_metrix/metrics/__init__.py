@@ -1,3 +1,4 @@
+from .access_to_amenities import *
 from .air_pollutant_annual_daily_statistic import AirPollutantAnnualDailyMean__Tonnes, AirPollutantAnnualDailyMax__Tonnes, AirPollutantAnnualTotalSocialCost__USD
 from .air_pollutant_who_exceedance_days import AirPollutantWhoExceedance__Days
 from .area_fracveg_exceeds_threshold import AreaFractionalVegetationExceedsThreshold__Percent
@@ -7,6 +8,7 @@ from .built_land_with_low_surface_reflectivity import BuiltLandWithLowSurfaceRef
 from .built_land_with_vegetation import BuiltLandWithVegetation__Percent
 from .canopy_area_per_resident import *
 from .canopy_covered_population import *
+from .count_accessible_amenities import *
 from .era5_met_preprocessing_umep_gee import Era5MetPreprocessingUmep
 from .era5_met_preprocessing_upenn_gee import Era5MetPreprocessingUPenn
 from .future_climate_hazard import *
