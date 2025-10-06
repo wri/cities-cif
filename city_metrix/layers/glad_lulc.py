@@ -1,4 +1,5 @@
 import xarray as xr
+import numpy as np
 import ee
 
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
@@ -53,7 +54,7 @@ class LandCoverSimplifiedGlad(Layer):
 
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        glad = LandCoverGlad(year=self.year).get_data(bbox, spatial_resolution=spatial_resolution)
+        glad = LandCoverGlad(year=self.year).get_data(bbox, spatial_resolution=spatial_resolution).astype(np.uint8)
         # Copy the original data
         data = glad.copy(deep=True)
 
