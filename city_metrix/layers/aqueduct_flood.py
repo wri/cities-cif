@@ -11,8 +11,7 @@ DEFAULT_SPATIAL_RESOLUTION = 100
 class AqueductFlood(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["return_period_c", "return_period_r",
-                         "climate", "subsidence", "sea_level_rise_scenario"]
+    MINOR_NAMING_ATTS = ["report_threshold", "year", "return_period_c", "return_period_r", "climate", "subsidence", "sea_level_rise_scenario"]
 
     """
     Attributes:
