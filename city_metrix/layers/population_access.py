@@ -37,8 +37,10 @@ class AccessibleCount(Layer):
     MINOR_NAMING_ATTS = ["amenity", "city_id",
                          "level", "travel_mode", "threshold", "unit"]
 
-    def __init__(self, amenity='economic', travel_mode='walk', threshold=15, unit='minutes', project=None, **kwargs):
+    def __init__(self, amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', project=None, **kwargs):
         super().__init__(**kwargs)
+        self.city_id = city_id
+        self.level = level
         self.amenity = amenity
         self.travel_mode = travel_mode
         self.threshold = threshold
@@ -47,9 +49,6 @@ class AccessibleCount(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_cache_retrieval=False):
-        city_id = bbox.city_id
-        level = {'city_admin_level': 'adminbound',
-                 'urban_extent': 'urbextbound'}[bbox.aoi_id]
         if self.project is not None:
             project_tag = '__' + self.project
         else:
@@ -75,8 +74,10 @@ class AccessibleRegion(Layer):
                          "level", "travel_mode", "threshold", "unit"]
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, amenity='economic', travel_mode='walk', threshold=15, unit='minutes', project=None, **kwargs):
+    def __init__(self, amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes', project=None, **kwargs):
         super().__init__(**kwargs)
+        self.city_id = city_id
+        self.level = level
         self.amenity = amenity
         self.travel_mode = travel_mode
         self.threshold = threshold
@@ -85,7 +86,8 @@ class AccessibleRegion(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_cache_retrieval=False):
-        accessible_count = AccessibleCount(amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project).get_data(bbox)
+        accessible_count = AccessibleCount(amenity=self.amenity, city_id=self.city_id, level=self.level,
+                                           travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project).get_data(bbox)
         ds = xr.where(accessible_count > 0, 1, np.nan, True)
         ds.rio.write_crs(bbox.as_utm_bbox().crs, inplace=True).squeeze()
 
