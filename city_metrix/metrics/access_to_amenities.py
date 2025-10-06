@@ -26,11 +26,7 @@ class _AccessPopulationPercent(Metric):
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION) -> Union[pd.DataFrame | pd.Series]:
-        city_id = geo_zone.city_id
-        level = {'city_admin_level': 'adminbound',
-                 'urban_extent': 'urbextbound'}[geo_zone.aoi_id]
-        access_layer = AccessibleRegion(amenity=self.amenity, city_id=city_id, level=level,
-                                        travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project)
+        access_layer = AccessibleRegion(amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project)
         accesspop_layer = WorldPop(
             agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year).mask(access_layer)
         totalpop_layer = WorldPop(
