@@ -878,7 +878,6 @@ class Layer():
 
             if aoi_buffer_m is not None:
                 bbox = bbox.buffer_utm_bbox(aoi_buffer_m)
-
             bbox_area = bbox.as_utm_bbox().polygon.area
             if tile_side_m is not None and bbox_area > tile_side_m ** 2 and self.aggregate.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION:
                 self._cache_data_by_fishnet_tiles(bbox=bbox, tile_side_m=tile_side_m, spatial_resolution=spatial_resolution,
@@ -905,7 +904,6 @@ class Layer():
 
     def _cache_data_by_fishnet_tiles(self, bbox, tile_side_m, spatial_resolution, target_uri):
         # TODO: Code currently only handles raster data
-
         # Write individual tiles to cache
         delete_s3_file_if_exists(target_uri)
         delete_s3_folder_if_exists(target_uri)
