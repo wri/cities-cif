@@ -30,7 +30,7 @@ class MeanTreeCover__Percent(Metric):
         total_area = trees_greaterthan_0m.groupby(geo_zone).count()
         
         trees_greaterthan_3m = TreeCanopyHeight(height=MIN_TREE_HEIGHT)
-        tree_area = anything.mask(trees_greaterthan_3m).groupby(geo_zone).count()
+        tree_area = trees_greaterthan_0m.mask(trees_greaterthan_3m).groupby(geo_zone).count()
 
         if isinstance(total_area, pd.DataFrame):
             result = total_area.copy()
