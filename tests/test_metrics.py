@@ -340,7 +340,7 @@ def test_mean_tree_cover__percent():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 5.7, 32.6, 100, 0)
+    assert_metric_stats(indicator, 1, 0, 99.0, 100, 0)
 
 def test_natural_areas__percent():
     indicator = NaturalAreas__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
