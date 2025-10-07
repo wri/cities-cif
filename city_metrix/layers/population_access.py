@@ -63,7 +63,7 @@ class AccessibleCount(Layer):
         ds0 = gdal.Open(url)
         crs = CRS.from_string(ds0.GetProjection())
         ds.rio.write_crs(crs.to_string(), inplace=True)
-        ds_clipped = ds.rio.clip_box(*bbox.as_utm_bbox().coords, allow_one_dimensional_raster=True).squeeze()
+        ds_clipped = ds.rio.clip_box(*bbox.buffer_utm_bbox(200).as_utm_bbox().coords).squeeze()
 
         return ds_clipped
 
