@@ -27,19 +27,24 @@ class HabitatTypesRestored__CoverTypes(Metric):
         # Count unique cover types in each zone, only within pixels classed 01 in change raster
         cover_array_masked = cover_array.where(restored_array == 1)
 
-        zone_raster = make_geocube(
-            vector_data=geo_zone.zones,
-            measurements=["index"],
-            like=cover_array,
-        ).index
+        results = []
+        for rownum in geo_zone.zones.index:  # Must loop over rows because cannot assume zones do not overlap. Overlaps cause overwrites when making geocube.
+            geo_zone.zones['is_focal'] = geo_zone.zones.index==rownum
+            
+            zone_raster = make_geocube(
+                vector_data=geo_zone.zones.iloc[[rownum]],
+                measurements=["index"],
+                like=cover_array,
+            ).index
 
-        df = pd.DataFrame({
-            "zone": zone_raster.values.ravel(),
-            "value": cover_array_masked.values.ravel()
-        })
+            df = pd.DataFrame({
+                "zone": zone_raster.values.ravel(),
+                "value": cover_array_masked.values.ravel()
+            })
 
-        # Group by zone and count unique values
-        unique_counts = df.groupby("zone")["value"].nunique()
-        result = pd.DataFrame(unique_counts.reset_index())
+            # Group by zone and count unique values
+            unique_counts = df.groupby("zone")["value"].nunique()
+            results.append(int(unique_counts[rownum]))
+        result = pd.DataFrame({'zone': range(len(geo_zone.zones)), 'value': results})
 
         return result
