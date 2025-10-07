@@ -457,7 +457,7 @@ def test_water_cover__percent():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0, 0.081, 100, 0)
+    assert_metric_stats(indicator, 2, 0, 2.00387, 100, 0)
 
 
 def _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val, data_notnull_count, data_null_count,

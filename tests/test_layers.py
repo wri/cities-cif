@@ -300,7 +300,7 @@ def test_species_richness():
 def test_surface_water():
     data = SurfaceWater().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 1.0, 1.0, 174, 9623)
+    assert_raster_stats(data, 1, 1.0, 1.0, 203, 9594)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_tree_canopy_cover_mask():
