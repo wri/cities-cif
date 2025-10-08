@@ -53,7 +53,7 @@ class _CountAccessiblePerCapita(Metric):
                    spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION) -> Union[pd.DataFrame | pd.Series]:
         count_layer = AccessibleCount(amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold,
                                                  unit=self.unit, project=self.project)
-        population_layer = WorldPop(agesex_classes=self.agesex_classes, year=self.worldpop_year)
+        population_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year)
         if self.informal_only:
             informal_layer = UrbanLandUse(ulu_class=INFORMAL_CLASS)
             count_layer = count_layer.mask(informal_layer)
