@@ -3,7 +3,7 @@ from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrics import Metric
-from city_metrix.layers import AccessibleCountPopWeighted, UrbanLandUse, WorldPop, WorldPopClass
+from city_metrix.layers import AccessibleCount, AccessibleCountPopWeighted, UrbanLandUse, WorldPop, WorldPopClass
 from city_metrix.metrix_model import GeoZone
 
 DEFAULT_SPATIAL_RESOLUTION = 100
