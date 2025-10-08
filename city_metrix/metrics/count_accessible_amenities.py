@@ -58,7 +58,7 @@ class _CountAccessiblePerCapita(Metric):
             informal_layer = UrbanLandUse(ulu_class=INFORMAL_CLASS)
             count_layer = count_layer.mask(informal_layer)
             population_layer = population_layer.mask(informal_layer)
-            
+
         count = count_layer.groupby(geo_zone).sum()
         population = population_layer.groupby(geo_zone).sum()
 
@@ -203,7 +203,7 @@ class CountPotentialEmployersPerCapitaTotalPopulation__CountPerPerson(_CountAcce
                          threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
-class CountPotentialEmployersPerCapitaAdults__CountPerPerson(_CountAccessiblePerCapitaAdults):
+class CountPotentialEmployersPerCapitaAdult__CountPerPerson(_CountAccessiblePerCapitaAdults):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
