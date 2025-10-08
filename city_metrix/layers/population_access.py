@@ -66,7 +66,7 @@ class AccessibleCount(Layer):
         # #ds.rio.write_crs(crs.to_string(), inplace=True)
         # ds.rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
         # print(crs.to_string(), bbox.as_utm_bbox().crs)
-        ds_clipped = ds.rio.clip_box(*bbox.as_utm_bbox().coords).squeeze()
+        ds_clipped = ds.rio.clip_box(*bbox.buffer_utm_bbox(100).as_utm_bbox().coords).squeeze()
 
         return ds_clipped
 
