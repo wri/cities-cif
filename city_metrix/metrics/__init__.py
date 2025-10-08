@@ -29,7 +29,7 @@ from .recreational_space_per_thousand import RecreationalSpacePerThousand__Hecta
 from .riparian_land_with_vegetation_or_water import RiparianLandWithVegetationOrWater__Percent
 from .riverine_or_coastal_flood_risk_area import RiverineOrCoastalFloodRiskArea__Percent
 from .steeply_sloped_land_with_vegetation import SteeplySlopedLandWithVegetation__Percent
-from .tree_carbon_flux import TreeCarbonFlux__Tonnes
+from .tree_carbon_flux import TreeCarbonFlux__Tonnes, TreeCarbonFlux__TonnesPerHectare
 from .urban_open_space import UrbanOpenSpace__Percent
 from .vegetation_water_change import *
 from .water_cover import WaterCover__Percent
