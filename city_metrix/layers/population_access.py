@@ -53,6 +53,7 @@ class AccessibleCount(Layer):
             project_tag = '__' + self.project
         else:
             project_tag = ''
+
         url = f'https://{BUCKET_NAME}.s3.us-east-1.amazonaws.com/{PREFIX}/{self.amenity}__{self.city_id}__{self.level}__{self.travel_mode}__{self.threshold}__{self.unit}{project_tag}.tif'
         print(f'Attempting to retrieve accessibility file from {url}', end=' ')
         try:
@@ -60,10 +61,12 @@ class AccessibleCount(Layer):
             print('(Succeeded)')
         except:
             raise Exception(f"Accessibility file {url} does not exist.")
-        ds0 = gdal.Open(url)
-        crs = CRS.from_string(ds0.GetProjection())
-        ds.rio.write_crs(crs.to_string(), inplace=True)
-        ds_clipped = ds.rio.clip_box(*bbox.buffer_utm_bbox(200).as_utm_bbox().coords).squeeze()
+        # ds0 = gdal.Open(url)
+        # crs = CRS.from_string(ds0.GetProjection())
+        # #ds.rio.write_crs(crs.to_string(), inplace=True)
+        # ds.rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
+        # print(crs.to_string(), bbox.as_utm_bbox().crs)
+        ds_clipped = ds.rio.clip_box(*bbox.as_utm_bbox().coords).squeeze()
 
         return ds_clipped
 

@@ -23,10 +23,10 @@ class CarbonFluxFromTrees(Layer):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-
-        netflux_total_ic = ee.ImageCollection('projects/wri-datalab/gfw-data-lake/net-flux-forest-extent-per-ha-v1-2-2-2001-2021/net-flux-global-forest-extent-per-ha-2001-2021')
-        netflux_total_img = netflux_total_ic.mosaic()
-        netflux_annual_img = netflux_total_img.divide(21).divide(10000).multiply(spatial_resolution**2)  # Divide by 21 years, convert from per-hectare to per pixel-area
+        # netflux_total_ic = ee.ImageCollection('projects/wri-datalab/gfw-data-lake/net-flux-forest-extent-per-ha-v1-2-2-2001-2021/net-flux-global-forest-extent-per-ha-2001-2021')
+        # netflux_total_img = netflux_total_ic.mosaic()
+        netflux_total_img = ee.Image('projects/sat-io/open-datasets/forest_carbon_fluxes/net_flux')
+        netflux_annual_img = netflux_total_img.divide(24).divide(10000).multiply(spatial_resolution**2)  # Divide by 21 years, convert from per-hectare to per-pixel
 
         ee_rectangle  = bbox.to_ee_rectangle()
         data = get_image_collection(

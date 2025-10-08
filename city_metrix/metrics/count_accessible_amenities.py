@@ -26,7 +26,12 @@ class _CountAccessiblePopWeighted(Metric):
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION) -> Union[pd.DataFrame | pd.Series]:
-        count_layer = AccessibleCountPopWeighted(amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold,
+    
+        city_id = geo_zone.city_id
+        level = {'city_admin_level': 'adminbound',
+                 'urban_extent': 'urbextbound'}[geo_zone.aoi_id]
+
+        count_layer = AccessibleCountPopWeighted(city_id=city_id, level=level, amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold,
                                                  unit=self.unit, project=self.project, worldpop_agesex_classes=self.worldpop_agesex_classes, worldpop_year=self.worldpop_year)
         if self.informal_only:
             informal_layer = UrbanLandUse(ulu_class=INFORMAL_CLASS)
@@ -51,7 +56,8 @@ class _CountAccessiblePerCapita(Metric):
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION) -> Union[pd.DataFrame | pd.Series]:
-        count_layer = AccessibleCount(amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold,
+
+        count_layer = AccessibleCount(city_id=city_id, level=level, amenity=self.amenity, travel_mode=self.travel_mode, threshold=self.threshold,
                                                  unit=self.unit, project=self.project)
         population_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year)
         if self.informal_only:
