@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from typing import Union
 from geocube.api.core import make_geocube
 
@@ -44,7 +45,10 @@ class HabitatTypesRestored__CoverTypes(Metric):
 
             # Group by zone and count unique values
             unique_counts = df.groupby("zone")["value"].nunique()
-            results.append(int(unique_counts[rownum]))
+            if len(unique_counts) > 0:
+                results.append(int(unique_counts[rownum]))
+            else:
+                results.append(np.nan)
         result = pd.DataFrame({'zone': range(len(geo_zone.zones)), 'value': results})
 
         return result
