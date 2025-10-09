@@ -34,7 +34,6 @@ class _NumberSpecies(Metric):
             result_values.append(speciesrichness_layer.get_data(GeoExtent(zone)).species_count[0])
 
         result = pd.DataFrame({'zone': zones.index, 'value': result_values})
-
         return result
 
 
