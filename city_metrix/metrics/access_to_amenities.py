@@ -266,7 +266,7 @@ class AccessToPotentialEmploymentTotalPopulation__Percent(_AccessPopulationPerce
         super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
-class AccessToPotentialEmploymentChildren__Percent(_AccessPopulationPercentAdult):
+class AccessToPotentialEmploymentAdult__Percent(_AccessPopulationPercentAdult):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode",
