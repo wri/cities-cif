@@ -29,8 +29,8 @@ class _AccessPopulationPercent(Metric):
         city_id = geo_zone.city_id
         level = {'city_admin_level': 'adminbound',
                  'urban_extent': 'urbextbound'}[geo_zone.aoi_id]
-                 
-        access_layer = AccessibleRegion(amenity=self.amenity, city_id=city_id, level=level,
+
+        access_layer = AccessibleRegion(city_id=city_id, level=level, amenity=self.amenity, city_id=city_id, level=level,
                                         travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project)
         accesspop_layer = WorldPop(
             agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year).mask(access_layer)
@@ -58,6 +58,10 @@ class _AccessPopulationPercentAll(_AccessPopulationPercent):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit,
                          project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=False, **kwargs)
 
+class _AccessPopulationPercentAdult(_AccessPopulationPercent):
+    def __init__(self, amenity, travel_mode, threshold, unit, project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit, project=project,
+                         worldpop_agesex_classes=WorldPopClass.ADULT, worldpop_year=worldpop_year, informal_only=False, **kwargs)
 
 class _AccessPopulationPercentChildren(_AccessPopulationPercent):
     def __init__(self, amenity, travel_mode, threshold, unit, project=None, worldpop_year=2020, **kwargs):
@@ -262,6 +266,15 @@ class AccessToPotentialEmploymentTotalPopulation__Percent(_AccessPopulationPerce
         super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold,
                          unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
+class AccessToPotentialEmploymentChildren__Percent(_AccessPopulationPercentAdult):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["travel_mode",
+                         "threshold", "unit", "osm_year", "project"]
+
+    def __init__(self, travel_mode='walk', threshold=15, unit='minutes', project=None, worldpop_year=2020, **kwargs):
+        super().__init__(amenity='economic', travel_mode=travel_mode, threshold=threshold,
+                         unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
 
 class AccessToPotentialEmploymentChildren__Percent(_AccessPopulationPercentChildren):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
