@@ -30,7 +30,7 @@ class _AccessPopulationPercent(Metric):
         level = {'city_admin_level': 'adminbound',
                  'urban_extent': 'urbextbound'}[geo_zone.aoi_id]
 
-        access_layer = AccessibleRegion(city_id=city_id, level=level, amenity=self.amenity, city_id=city_id, level=level,
+        access_layer = AccessibleRegion(amenity=self.amenity, city_id=city_id, level=level,
                                         travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project)
         accesspop_layer = WorldPop(
             agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year).mask(access_layer)
