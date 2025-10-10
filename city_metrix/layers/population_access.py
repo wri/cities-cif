@@ -1,4 +1,5 @@
 import shapely
+import math
 import xarray as xr
 import rioxarray
 import numpy as np
@@ -19,8 +20,11 @@ SUPPORTED_AMENITIES = ('commerce', 'economic', 'healthcare',
 
 def _get_aligned_dataarray(ref_array, data_array):
     # returns DataArray with data from data_array, but with shape and coords from ref_array
+    # ref_array, data_array will be count_data, population_data
     # ref_array must fit geographically within data_array
+    # ref_array and data_array must have same resolution
     # dims must be y, x
+
 
     first_corner = data_array.sel(
         x=ref_array.x[0], y=ref_array.y[0], method='nearest')
@@ -66,10 +70,22 @@ class AccessibleCount(Layer):
         # crs = CRS.from_string(ds0.GetProjection())
         # #ds.rio.write_crs(crs.to_string(), inplace=True)
         # ds.rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
-        # print(crs.to_string(), bbox.as_utm_bbox().crs)
-        ds_clipped = ds.rio.clip([shapely.box(*bbox.as_utm_bbox().coords)], all_touched=True, drop=False).squeeze()
+        
+        # ds_clipped = ds.rio.clip([shapely.box(*bbox.as_utm_bbox().coords)], all_touched=True, drop=False).squeeze()
 
-        return ds_clipped
+        bbox_box = shapely.box(*bbox.as_utm_bbox().coords)
+        ds_box = shapely.box(float(min(ds.x)), float(min(ds.y)), float(max(ds.x)), float(max(ds.y)))
+        if shapely.intersects(bbox_box, ds_box):
+            result = ds.rio.clip_box(*bbox.as_utm_bbox().coords).squeeze()
+        else:
+            coords= {
+                'y': np.arange(bbox.bbox[1], bbox.bbox[3] + spatial_resolution, spatial_resolution),
+                'x': np.arange(bbox.bbox[0], bbox.bbox[2] + spatial_resolution, spatial_resolution)
+            }
+            values = np.zeros(shape=(len(coords['y']), len(coords['x'])), dtype=np.uint8)
+
+            result = xr.DataArray(values, coords).rio.write_crs(bbox.as_utm_bbox().crs)
+        return result
 
 
 class AccessibleRegion(Layer):
@@ -125,8 +141,8 @@ class AccessibleCountPopWeighted(Layer):
         if self.informal_only:
             informal_layer = UrbanLandUse(return_value=INFORMAL_CLASS)
             population_layer.masks.append(informal_layer)
-        population_data = population_layer.get_data(bbox.buffer_utm_bbox(
-            500), spatial_resolution=DEFAULT_SPATIAL_RESOLUTION)
+
+        population_data = population_layer.get_data(bbox.buffer_utm_bbox(500), spatial_resolution=DEFAULT_SPATIAL_RESOLUTION)
         count_layer = AccessibleCount(amenity=self.amenity, city_id=self.city_id, level=self.level,
                                       travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project)
         count_data = count_layer.get_data(
