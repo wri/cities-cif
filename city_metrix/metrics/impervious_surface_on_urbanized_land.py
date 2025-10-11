@@ -11,16 +11,17 @@ class ImperviousSurfaceOnUrbanizedLand__Percent(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, year=2015, **kwargs):
         super().__init__(**kwargs)
+        self.year = year
         self.unit = 'percent'
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution=None) -> Union[pd.DataFrame | pd.Series]:
 
-        impervious_layer = ImperviousSurface()
-        urban_layer = UrbanExtents()
+        impervious_layer = ImperviousSurface(year=self.year)
+        urban_layer = UrbanExtents(year=self.year)
         area_layer = WorldPop()
 
         impervious_area = area_layer.mask(urban_layer).mask(impervious_layer).groupby(geo_zone).count()
