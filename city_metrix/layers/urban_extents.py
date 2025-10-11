@@ -27,7 +27,10 @@ class UrbanExtents(Layer):
         ue_fc = ee.FeatureCollection(f'projects/wri-datalab/cities/urban_land_use/data/global_cities_Aug2024/urbanextents_unions_{self.year}')
 
         bbox_utm = bbox.as_utm_bbox()
-        ee_centroid = ee.Geometry.Point([bbox.centroid.x, bbox.centroid.y])
+        if hasattr(bbox, "latitude") and hasattr(bbox, "longitude"):
+            ee_centroid = ee.Geometry.Point([bbox.longitude, bbox.latitude])
+        else:
+            ee_centroid = ee.Geometry.Point([bbox.centroid.x, bbox.centroid.y])
         urbexts = ue_fc.filterBounds(ee_centroid)
 
         columns_to_join = ['city_id_large', 'city_ids', 'city_name_large',
