@@ -88,7 +88,11 @@ class GeoZone():
 
         self.coords = (self.min_x, self.min_y, self.max_x, self.max_y)
         self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
-        self.centroid = self.polygon.centroid
+        
+        if self.geo_type == GeoType.GEOMETRY:
+            self.centroid = self.polygon.centroid
+        else:
+            self.centroid = geometry.Point(city_data.get('longitude'), city_data.get('latitude'))
 
 
 def _build_aoi_from_city_boundaries(city_id, geo_feature):
