@@ -12,6 +12,8 @@ class ImperviousSurfaceOnUrbanizedLand__Percent(Metric):
     MINOR_NAMING_ATTS = None
 
     def __init__(self, year=2015, **kwargs):
+        if not year in [1990, 2000, 2005, 2010, 2015]:
+            raise Exception('Only supported years are 1990, 2000, 2005, 2010, 2015.')
         super().__init__(**kwargs)
         self.year = year
         self.unit = 'percent'
