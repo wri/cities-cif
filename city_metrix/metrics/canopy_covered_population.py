@@ -34,10 +34,10 @@ class CanopyCoveredPopulation__Percent(Metric):
         if self.informal_only:
             # urban land use class 3 for Informal
             urban_land_use = UrbanLandUse(ulu_class=3)
-            pop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, masks=[urban_land_use, coverage_mask])
+            pop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes).mask(urban_land_use).mask(coverage_mask)
 
         else:
-            pop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, masks=[coverage_mask])
+            pop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes).mask(coverage_mask)
 
         access_pop = pop_layer.groupby(geo_zone).sum()
         total_pop = WorldPop(agesex_classes=self.worldpop_agesex_classes).groupby(geo_zone).sum()
