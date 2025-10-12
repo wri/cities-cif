@@ -60,12 +60,12 @@ class SpeciesObservations(Layer):
                 "taxon_key": self.taxon.value["taxon_key"],
                 "year": f"{self.start_year},{self.end_year}",
                 "geometry": str(poly),
-                "limit": self.LIMIT,
+                "limit": [self.LIMIT, 99999 - offset][int(offset + self.LIMIT >= 100000)],
                 "offset": offset,
                 "hasCoordinate": "true",
             }
             
-            remaining_tries = 6
+            remaining_tries = 10
             while remaining_tries > 0:
                 resp = requests.get(self.API_URL, params=params, headers={"Accept": "application/json"})
                 results_json = resp.json()
@@ -73,7 +73,7 @@ class SpeciesObservations(Layer):
                     print(f"Collected {results_json['offset']} of {results_json['count']} observations")
                     break
                 else:
-                    time.sleep(5)  # Rate limiting
+                    time.sleep(10)  # Rate limiting
                     remaining_tries -= 1
 
             has_species = [
