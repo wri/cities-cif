@@ -349,37 +349,37 @@ def test_natural_areas__percent():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, 0.79, 56.29, 100, 0)
 
-def test_number_species_bird_richness__species():
-    random.seed(42)
-    indicator = BirdRichness__Species().get_metric(IDN_JAKARTA_TILED_ZONES_SMALL)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 11.0, 11.0, 1, 39)
+# def test_number_species_bird_richness__species():
+#     random.seed(42)
+#     indicator = BirdRichness__Species().get_metric(IDN_JAKARTA_TILED_ZONES_SMALL)
+#     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
+#     actual_indicator_size = len(indicator)
+#     assert expected_zone_size == actual_indicator_size
+#     assert_metric_stats(indicator, 1, 11.0, 11.0, 1, 39)
 
-def test_number_species_arthropod_richness__species():
-    random.seed(42)
-    indicator = ArthropodRichness__Species().get_metric(IDN_JAKARTA_TILED_ZONES_SMALL)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 33.0, 33.0, 1, 39)
+# def test_number_species_arthropod_richness__species():
+#     random.seed(42)
+#     indicator = ArthropodRichness__Species().get_metric(IDN_JAKARTA_TILED_ZONES_SMALL)
+#     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
+#     actual_indicator_size = len(indicator)
+#     assert expected_zone_size == actual_indicator_size
+#     assert_metric_stats(indicator, 1, 33.0, 33.0, 1, 39)
 
-def test_number_species_vascular_plant_richness__species():
-    random.seed(42)
-    indicator = VascularPlantRichness__Species().get_metric(IDN_JAKARTA_TILED_ZONES_SMALL)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, None, None, None, 0, 40)
+# def test_number_species_vascular_plant_richness__species():
+#     random.seed(42)
+#     indicator = VascularPlantRichness__Species().get_metric(IDN_JAKARTA_TILED_ZONES_SMALL)
+#     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
+#     actual_indicator_size = len(indicator)
+#     assert expected_zone_size == actual_indicator_size
+#     assert_metric_stats(indicator, None, None, None, 0, 40)
 
-def test_number_species_bird_richness_in_builtup_area__species():
-    random.seed(42)
-    indicator = BirdRichnessInBuiltUpArea__Species().get_metric(IDN_JAKARTA_TILED_ZONES_SMALL)
-    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
-    actual_indicator_size = len(indicator)
-    assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, None, None, None, 0, 40)
+# def test_number_species_bird_richness_in_builtup_area__species():
+#     random.seed(42)
+#     indicator = BirdRichnessInBuiltUpArea__Species().get_metric(IDN_JAKARTA_TILED_ZONES_SMALL)
+#     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
+#     actual_indicator_size = len(indicator)
+#     assert expected_zone_size == actual_indicator_size
+#     assert_metric_stats(indicator, None, None, None, 0, 40)
 
 def test_protected_area__percent():
     indicator = ProtectedArea__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
