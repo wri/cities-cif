@@ -54,7 +54,7 @@ class SpeciesObservations(Layer):
         offset = -self.LIMIT
         observations = gpd.GeoDataFrame({"species": [], "geometry": []})
         at_limit = False
-        while offset == -self.LIMIT or (not results_json["endOfRecords"]) or (not at_limit):
+        while offset == (-self.LIMIT or (not results_json["endOfRecords"])) and (not at_limit):
             offset += self.LIMIT
             if offset + self.LIMIT < MAX_DOWNLOADS:
                 limit = self.LIMIT
@@ -79,7 +79,7 @@ class SpeciesObservations(Layer):
                     print(f"Collected {results_json['offset']} of {results_json['count']} observations")
                     break
                 else:
-                    time.sleep(10)  # Rate limiting
+                    time.sleep(15)  # Rate limiting
                     remaining_tries -= 1
 
             has_species = [
