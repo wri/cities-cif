@@ -53,14 +53,20 @@ class SpeciesObservations(Layer):
         print(f"Retrieving {self.taxon.value['taxon']} observations for bbox {bbox.as_geographic_bbox().coords}")
         offset = -self.LIMIT
         observations = gpd.GeoDataFrame({"species": [], "geometry": []})
-        while offset == -self.LIMIT or not results_json["endOfRecords"]:
+        at_limit = False
+        while offset == -self.LIMIT or (not results_json["endOfRecords"]) or (not at_limit):
             offset += self.LIMIT
+            if offset + self.LIMIT < MAX_DOWNLOADS:
+                limit = self.LIMIT
+            else:
+                limit = 99999 - offset
+                at_limit = True
             params = {
                 "dataset_key": self.DATASETKEY,
                 "taxon_key": self.taxon.value["taxon_key"],
                 "year": f"{self.start_year},{self.end_year}",
                 "geometry": str(poly),
-                "limit": [self.LIMIT, 99999 - offset][int(offset + self.LIMIT >= 100000)],
+                "limit": limit,
                 "offset": offset,
                 "hasCoordinate": "true",
             }
