@@ -78,7 +78,9 @@ class _NumberSpecies(Metric):
 
         bbox = GeoExtent(geo_zone)
         utm_crs = bbox.as_utm_bbox().crs
-        speciesobservations_obj = SpeciesObservations(taxon=self.taxon, start_year=self.start_year, end_year=self.end_year, mask_layer=self.mask_layer)
+        city_id = geo_zone.city_id
+        geo_level = ['adminbound', 'urbextbound'][int(geo_zone.aoi_id=='urban_extent')]
+        speciesobservations_obj = SpeciesObservations(city_id=city_id, geo_level=geo_level, taxon=self.taxon, start_year=self.start_year, end_year=self.end_year, mask_layer=self.mask_layer)
         species_observations = speciesobservations_obj.get_data(bbox=bbox)
 
         zones_utm = geo_zone.zones.to_crs(utm_crs)
