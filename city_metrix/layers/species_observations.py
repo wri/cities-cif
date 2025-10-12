@@ -11,7 +11,7 @@ import time
 from city_metrix.metrix_model import Layer, GeoExtent
 from ..constants import GEOJSON_FILE_EXTENSION, WGS_CRS
 
-
+MAX_DOWNLOADS = 100000
 
 class GBIFTaxonClass(Enum):
     VASCULAR_PLANTS = {"taxon": "Tracheophyta", "taxon_key": 7707728}
@@ -59,7 +59,7 @@ class SpeciesObservations(Layer):
             if offset + self.LIMIT < MAX_DOWNLOADS:
                 limit = self.LIMIT
             else:
-                limit = 99999 - offset
+                limit = MAX_DOWNLOADS - offset - 1
                 at_limit = True
             params = {
                 "dataset_key": self.DATASETKEY,
