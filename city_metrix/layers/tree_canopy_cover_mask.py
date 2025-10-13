@@ -1,4 +1,5 @@
 import xarray as xr
+import numpy as np
 
 from city_metrix.metrix_model import Layer, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
@@ -34,7 +35,7 @@ class TreeCanopyCoverMask(Layer):
         canopy_ht = canopy_ht.notnull().astype(int)
 
         canopy_ht_repojected = canopy_ht.coarsen(x=100, y=100, boundary="pad").mean() # 256 * 256 = 65536
-        data = xr.where(canopy_ht_repojected >= self.percentage/100, 1, 0)
+        data = xr.where(canopy_ht_repojected >= self.percentage/100, 1, np.nan)
 
         utm_crs = bbox.as_utm_bbox().crs
         data = data.rio.write_crs(utm_crs)
