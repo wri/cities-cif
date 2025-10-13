@@ -45,6 +45,7 @@ def _species_count_estimate(all_observations, zone):
                     pass
             else:
                 asymptotes.append(-1)
+                break
         if -1 in asymptotes:
             count_estimate = np.nan
         else:
@@ -86,6 +87,7 @@ class _NumberSpecies(Metric):
         zones_utm = geo_zone.zones.to_crs(utm_crs)
         results = []
         for rownum in range(len(zones_utm)):
+            print(f'{city_id} {self.taxon.value['taxon']} {rownum}/{len(zones_utm)}')
             results.append(_species_count_estimate(species_observations, zones_utm.iloc[[rownum]]))
 
 
