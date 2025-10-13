@@ -87,7 +87,7 @@ class _NumberSpecies(Metric):
         zones_utm = geo_zone.zones.to_crs(utm_crs)
         results = []
         for rownum in range(len(zones_utm)):
-            print(f'{city_id} {self.taxon.value['taxon']} {rownum}/{len(zones_utm)}')
+            print(f'{city_id} {self.taxon.value["taxon"]} {rownum}/{len(zones_utm)}')
             results.append(_species_count_estimate(species_observations, zones_utm.iloc[[rownum]]))
 
 
