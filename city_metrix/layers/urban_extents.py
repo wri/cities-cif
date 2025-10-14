@@ -48,5 +48,14 @@ class UrbanExtents(Layer):
             urbexts_dissolved = urbexts_dissolved.to_crs(bbox_utm.crs)
 
         data = urbexts_dissolved
+        data['geo_level'] = 'urban_extent'
+        if bbox.city_id:
+            data['geo_id'] = f'{bbox.city_id}_urban_extent'
+            data['geo_name'] = f"{bbox.city_id} - Urban Extent"
+            data['geo_parent_name'] = bbox.city_id
+        else:
+            data['geo_id'] = None
+            data['geo_name'] = None
+            data['geo_parent_name'] = None
 
         return data
