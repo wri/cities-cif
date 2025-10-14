@@ -22,7 +22,7 @@ def _species_count_estimate(all_observations, zone):
         asymptotes = []
         tries = 0
         # Different observation-orders give different results, so average over many
-        while (len(asymptotes) < NUM_CURVEFITS):
+        while (len(asymptotes) < [NUM_CURVEFITS, 5][int(len(observations) > 50000)]):
             tries += 1
             # Randomize order of observations
             random.shuffle(taxon_observations)

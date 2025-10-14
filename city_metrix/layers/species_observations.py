@@ -144,9 +144,7 @@ class SpeciesObservations(Layer):
                                          shapely.Polygon(j['coordinates'][0]) for j in valid_geoms]})
             valid_gdf_wgs = valid_gdf.dissolve().set_crs(
                 bbox.as_utm_bbox().crs).to_crs(WGS_CRS)
-            observations = [
-                observations.loc[observations.intersects(valid_gdf_wgs.geometry.iloc[0])]
-            ]
+            observations = observations.loc[observations.intersects(valid_gdf_wgs.geometry.iloc[0])]
 
 
         return observations.to_crs(bbox.as_utm_bbox().crs)
