@@ -1,5 +1,5 @@
 
-from city_metrix.constants import WGS_EPSG_CODE, ProjectionType
+from city_metrix.constants import WGS_EPSG_CODE, ProjectionType, GTIFF_FILE_EXTENSION
 from city_metrix.metrix_model import create_fishnet_grid, WGS_CRS, GeoExtent, GeoZone, Layer
 from geocube.api.core import make_geocube
 
@@ -70,6 +70,7 @@ ARG_BUENOS_AIRES_TILED_ZONES_TINY = GeoZone(ARG_BUENOS_AIRES_TILED_BBOXES_TINY)
 
 
 class MockLayer(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
     """
@@ -86,6 +87,7 @@ class MockLayer(Layer):
 
 
 class MockMaskLayer(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
     """
@@ -107,6 +109,7 @@ class MockMaskLayer(Layer):
 
 
 class MockGroupByLayer(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
     """
@@ -127,6 +130,7 @@ class MockGroupByLayer(Layer):
 
 
 class MockLargeLayer(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
     """
@@ -143,6 +147,7 @@ class MockLargeLayer(Layer):
 
 
 class MockLargeGroupByLayer(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
     """

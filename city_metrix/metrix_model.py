@@ -75,6 +75,8 @@ class GeoZone():
 
             # bbox is always projected to UTM
             self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
+            self.latitude = city_data.get('latitude')
+            self.longitude = city_data.get('longitude')
 
         self.bounds = self.bbox
         self.epsg_code = int(self.crs.split(':')[1])
@@ -89,7 +91,6 @@ class GeoZone():
         self.coords = (self.min_x, self.min_y, self.max_x, self.max_y)
         self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
         self.centroid = self.polygon.centroid
-
 
 def _build_aoi_from_city_boundaries(city_id, geo_feature):
     boundaries_gdf = get_city_boundaries(city_id, geo_feature)
@@ -169,6 +170,8 @@ class GeoExtent():
             self.coords = geo_zone.coords
             self.centroid = geo_zone.centroid
             self.polygon = geo_zone.polygon
+            self.latitude = geo_zone.latitude
+            self.longitude = geo_zone.longitude
 
 
     def to_ee_rectangle(self):
