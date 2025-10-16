@@ -46,14 +46,11 @@ class EsaWorldCover(Layer):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
         if self.year == 2020:
-            esa_data_ic = ee.ImageCollection("ESA/WorldCover/v100")
+            esa_data_ic = ee.ImageCollection("ESA/WorldCover/v100").map(lambda img: img.int8())
         elif self.year == 2021:
-            esa_data_ic = ee.ImageCollection("ESA/WorldCover/v200")
+            esa_data_ic = ee.ImageCollection("ESA/WorldCover/v200").map(lambda img: img.int8())
         else:
             raise ValueError(f'Specified year ({self.year}) is not currently supported')
-
-        if spatial_resolution > DEFAULT_SPATIAL_RESOLUTION:
-            esa_data_ic = esa_data_ic.map(lambda x: x.setDefaultProjection(crs=x.projection().crs(), scale=DEFAULT_SPATIAL_RESOLUTION).reduceResolution(ee.Reducer.mode(), bestEffort=False, maxPixels=2048).reproject(crs=x.projection().crs(), scale=spatial_resolution))
 
         ee_rectangle  = bbox.to_ee_rectangle()
         data = get_image_collection(

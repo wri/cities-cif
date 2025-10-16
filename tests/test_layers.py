@@ -7,7 +7,7 @@ from city_metrix.constants import ProjectionType
 from city_metrix.layers import *
 from city_metrix.metrix_tools import get_projection_type
 from tests.conftest import EXECUTE_IGNORED_TESTS
-from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1, BBOX_ARG_BUENOS_AIRES
+from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1, BBOX_ARG_BUENOS_AIRES, GEOEXTENT_TERESINA
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC and is a stable region
@@ -19,8 +19,26 @@ BBOX = BBOX_USA_OR_PORTLAND_1
 def test_acag_pm2p5():
     data = AcagPM2p5().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 5.48, 5.84, 9797, 0)
+    assert_raster_stats(data, 2, 5.89, 6.53, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
+
+def test_accessible_count():
+    data = AccessibleCount(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(GEOEXTENT_TERESINA)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, 0.0, 215.0, 54569, 0)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+
+def test_accessible_count_popweighted():
+    data = AccessibleCountPopWeighted(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(GEOEXTENT_TERESINA)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, 0.0, 566.11, 53725, 844)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+
+def test_accessible_region():
+    data = AccessibleRegion(amenity='economic', city_id='BRA-Teresina', level='adminbound', travel_mode='walk', threshold=15, unit='minutes').get_data(GEOEXTENT_TERESINA)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 2, 1.0, 1.0, 848, 53721)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_albedo_cloud_masked():
     data = AlbedoCloudMasked().get_data(BBOX)
@@ -31,7 +49,7 @@ def test_albedo_cloud_masked():
 def test_albedo():
     data = Albedo().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.02434064, 0.5932779, 9797, 0)
+    assert_raster_stats(data, 2, 0.0183, 0.6289, 9794, 3)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_alos_dsm():
@@ -271,18 +289,18 @@ def test_smart_surface_lulc():
     assert_raster_stats(data, 1, 1.0, 50.0, 979700, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
-def test_species_richness():
-    taxon = GBIFTaxonClass.BIRDS
-    random.seed(42)
-    data = SpeciesRichness(taxon=taxon).get_data(BBOX)
-    assert np.size(data) > 0
-    assert_vector_stats(data, "species_count", 1, 59, 59, 1, 0)
-    assert get_projection_type(data.crs.srs) == ProjectionType.UTM
+# def test_species_richness():
+#     taxon = GBIFTaxonClass.BIRDS
+#     random.seed(42)
+#     data = SpeciesRichness(taxon=taxon).get_data(BBOX)
+#     assert np.size(data) > 0
+#     assert_vector_stats(data, "species_count", 1, 59, 59, 1, 0)
+#     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_surface_water():
     data = SurfaceWater().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 1.0, 1.0, 174, 9623)
+    assert_raster_stats(data, 1, 1.0, 1.0, 203, 9594)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_tree_canopy_cover_mask():

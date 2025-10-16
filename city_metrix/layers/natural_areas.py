@@ -11,9 +11,8 @@ class NaturalAreas(Layer):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, year=2020, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -21,7 +20,7 @@ class NaturalAreas(Layer):
             raise Exception('resampling_method can not be specified.')
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        esa_world_cover = EsaWorldCover(year=self.year).get_data(bbox=bbox, spatial_resolution=spatial_resolution)
+        esa_world_cover = EsaWorldCover().get_data(bbox=bbox, spatial_resolution=spatial_resolution)
         reclass_map = {
             EsaWorldCoverClass.TREE_COVER.value: 1,
             EsaWorldCoverClass.SHRUBLAND.value: 1,

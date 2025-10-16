@@ -8,6 +8,7 @@ from city_metrix.layers import NdwiSentinel2
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
+DEFAULT_NDWI_THRESHOLD = 0.3
 
 class SurfaceWater(Layer):
     """"
@@ -19,6 +20,7 @@ class SurfaceWater(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
+    PROCESSING_TILE_SIDE_M = 5000
 
     """
     Attributes:
@@ -36,28 +38,30 @@ class SurfaceWater(Layer):
 
         ndwi_data = NdwiSentinel2(year=self.year).get_data(bbox)
 
-        counts, edges = np.histogram(ndwi_data, bins=1000, range=None, density=None, weights=None)
-        data_y = counts.astype(float)
-        data_x = (edges[:-1] + edges[1:]) / 2
+        # counts, edges = np.histogram(ndwi_data, bins=1000, range=None, density=None, weights=None)
+        # data_y = counts.astype(float)
+        # data_x = (edges[:-1] + edges[1:]) / 2
 
-        # Repeatedly smooth using 3-kernel averaging until there are two local minima
-        # See Minimum Value Threshold https://doi.org/10.1117/1.JRS.13.044507
-        KERNEL_SIZE = 3
-        def smooth(data):
-            kernel = np.ones(KERNEL_SIZE) / KERNEL_SIZE
-            convolved = np.convolve(data, kernel, mode='same')
+        # # Repeatedly smooth using 3-kernel averaging until there are two local minima
+        # # See Minimum Value Threshold https://doi.org/10.1117/1.JRS.13.044507
+        # KERNEL_SIZE = 3
+        # def smooth(data):
+        #     kernel = np.ones(KERNEL_SIZE) / KERNEL_SIZE
+        #     convolved = np.convolve(data, kernel, mode='same')
 
-            return convolved[1:-1]
+        #     return convolved[1:-1]
         
-        while len(find_peaks(data_y)[0]) > 2:
-            data_y = smooth(data_y)
-            data_x = smooth(data_x)
+        # while len(find_peaks(data_y)[0]) > 2:
+        #     data_y = smooth(data_y)
+        #     data_x = smooth(data_x)
 
-        peaks = find_peaks(data_y)[0]
-        interval = data_y[peaks[0]:peaks[1]+1]
-        thresh_density = np.argwhere(data_y == np.min(interval))
-        threshold = float(data_x[thresh_density[0][0]])
+        # peaks = find_peaks(data_y)[0]
+        # print(peaks)
+        # interval = data_y[peaks[0]:peaks[1]+1]
+        # thresh_density = np.argwhere(data_y == np.min(interval))
+        # threshold = float(data_x[thresh_density[0][0]])
 
-        data = xr.where(ndwi_data >= threshold, 1, np.nan).assign_attrs(ndwi_data.attrs)
+        # 
+        data = xr.where(ndwi_data >= DEFAULT_NDWI_THRESHOLD, 1, np.nan).assign_attrs(ndwi_data.attrs).rio.write_crs(bbox.as_utm_bbox().crs)
 
         return data

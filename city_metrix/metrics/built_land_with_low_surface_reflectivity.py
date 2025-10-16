@@ -9,7 +9,7 @@ from city_metrix.layers import Albedo, EsaWorldCoverClass, EsaWorldCover
 class BuiltLandWithLowSurfaceReflectivity__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["albedo_threshold"]
+    MINOR_NAMING_ATTS = ["albedo_threshold", "start_date", "end_date"]
 
     def __init__(self,
                  start_date="2021-01-01",

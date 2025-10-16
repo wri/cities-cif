@@ -11,8 +11,7 @@ DEFAULT_SPATIAL_RESOLUTION = 100
 class AqueductFlood(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["return_period_c", "return_period_r",
-                         "climate", "subsidence", "sea_level_rise_scenario"]
+    MINOR_NAMING_ATTS = ["report_threshold", "year", "return_period_c", "return_period_r", "climate", "subsidence", "sea_level_rise_scenario"]
 
     """
     Attributes:
@@ -71,16 +70,17 @@ class AqueductFlood(Layer):
         coastal_end = (flood_image.filterMetadata("floodtype", "equals", "inuncoast")
                        .filterMetadata("returnperiod", "equals", self.return_period_c)
                        .filterMetadata("year", "equals", self.year)
-                       .filterMetadata("climate", "equals", self.climate)
+                       .filterMetadata("climate", "equals", [self.climate, 'historical'][int(self.year==1980)])
                        .filterMetadata("subsidence", "equals", self.subsidence)
-                       .filterMetadata("sea_level_rise_scenario", "equals", self.sea_level_rise_scenario)
-                       .first()
                        )
+        if self.year > 1980:
+            coastal_end = coastal_end.filterMetadata("sea_level_rise_scenario", "equals", self.sea_level_rise_scenario)
+        coastal_end = coastal_end.first()
 
         riverine_end = (flood_image.filterMetadata("floodtype", "equals", "inunriver")
                         .filterMetadata("returnperiod", "equals", self.return_period_r)
                         .filterMetadata("year", "equals", self.year)
-                        .filterMetadata("climate", "equals", self.climate)
+                        .filterMetadata("climate", "equals", [self.climate, 'historical'][int(self.year==1980)])
                         ).reduce(ee.Reducer.mean()).rename('b1')  # average of all 5 models
 
         combflood_end = coastal_end.max(riverine_end)
