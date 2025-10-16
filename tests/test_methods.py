@@ -90,9 +90,9 @@ def test_group_by_large_layer():
     )
     assert all([count == {1: 50.0, 2: 50.0} for count in counts])
 
+
 def convert_to_series(data):
     if 'zone' in data.columns:
         data = data.drop(columns=['zone'])
 
     return data.squeeze()
-
