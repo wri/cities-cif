@@ -230,15 +230,18 @@ class FutureHeatwaveFrequency__Heatwaves(Metric):
         data_layer = NexGddpCmip6(
             varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
-        threshold = percentile((geo_zone.centroid.y, geo_zone.centroid.x),
+        centroid_geogr = geo_zone.zones.to_crs('EPSG:4326').dissolve().centroid.geometry[0]
+        latlon = (centroid_geogr.y, centroid_geogr.x)
+        threshold = percentile(latlon,
                                'tasmax', HEATWAVE_INTENSITY_PERCENTILE, True)
         haz = TempwaveCount(MIN_HEATWAVE_DURATION, threshold)
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
-            (geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+            latlon, data[model], self.start_year, self.end_year)
 
         return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
+
 
 
 class FutureHeatwaveMaxDuration__Days(Metric):
@@ -260,13 +263,15 @@ class FutureHeatwaveMaxDuration__Days(Metric):
         data_layer = NexGddpCmip6(
             varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
-        threshold = percentile((geo_zone.centroid.y, geo_zone.centroid.x),
+        centroid_geogr = geo_zone.zones.to_crs('EPSG:4326').dissolve().centroid.geometry[0]
+        latlon = (centroid_geogr.y, centroid_geogr.x)
+        threshold = percentile(latlon,
                                'tasmax', HEATWAVE_INTENSITY_PERCENTILE, True)
         haz = TempwaveDuration(threshold)
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
-            (geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+            latlon, data[model], self.start_year, self.end_year)
 
         return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
 
@@ -290,11 +295,13 @@ class FutureDaysAbove35__Days(Metric):
         data_layer = NexGddpCmip6(
             varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
+        centroid_geogr = geo_zone.zones.to_crs('EPSG:4326').dissolve().centroid.geometry[0]
+        latlon = (centroid_geogr.y, centroid_geogr.x)
         haz = ThresholdDays(35)
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
-            (geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+            latlon, data[model], self.start_year, self.end_year)
 
         return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
 
@@ -318,11 +325,13 @@ class FutureAnnualMaxTemp__DegreesCelsius(Metric):
         data_layer = NexGddpCmip6(
             varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
+        centroid_geogr = geo_zone.zones.to_crs('EPSG:4326').dissolve().centroid.geometry[0]
+        latlon = (centroid_geogr.y, centroid_geogr.x)
         haz = AnnualVal('max')
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
-            (geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+            latlon, data[model], self.start_year, self.end_year)
 
         return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
 
@@ -346,12 +355,14 @@ class FutureExtremePrecipitationDays__Days(Metric):
         data_layer = NexGddpCmip6(
             varname='pr', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
+        centroid_geogr = geo_zone.zones.to_crs('EPSG:4326').dissolve().centroid.geometry[0]
+        latlon = (centroid_geogr.y, centroid_geogr.x)
         pctl_90 = percentile(
-            (geo_zone.centroid.y, geo_zone.centroid.x), 'pr', 90, False)
+            latlon, 'pr', 90, False)
         haz = ThresholdDays(pctl_90)
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
-            (geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+            latlon, data[model], self.start_year, self.end_year)
 
         return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
