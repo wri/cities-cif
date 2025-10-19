@@ -74,7 +74,7 @@ class MeanPM2P5ExposurePercentOfWHOGuideline__Percent(Metric):
                  **kwargs):
         super().__init__(**kwargs)
         self.informal_only = informal_only
-        self.unit = 'micrograms per cubic meter'
+        self.unit = 'percent'
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -111,7 +111,7 @@ class MeanPM2P5ExposurePopWeightedPercentOfWHOGuideline__Percent(Metric):
         self.worldpop_agesex_classes = worldpop_agesex_classes
         self.informal_only = informal_only
         self.year = year
-        self.unit = 'micrograms per cubic meter'
+        self.unit = 'percent'
 
     def get_metric(self,
                    geo_zone: GeoZone,

@@ -18,6 +18,19 @@ INFORMAL_CLASS = 3
 SUPPORTED_AMENITIES = ('commerce', 'economic', 'healthcare',
                        'openspace', 'schools', 'transit')
 
+
+def _no_overlap(ref_array, data_array):
+    if min(ref_array.x) > max(data_array.x):
+        return True
+    if max(ref_array.x) < min(data_array.x):
+        return True
+    if min(ref_array.y) > max(data_array.y):
+        return True
+    if max(ref_array.y) < min(data_array.y):
+        return True
+    return False
+
+
 def _get_aligned_dataarray(ref_array, data_array):
     # returns DataArray with data from data_array, but with shape and coords from ref_array
     # ref_array, data_array will be count_data, population_data
@@ -25,6 +38,14 @@ def _get_aligned_dataarray(ref_array, data_array):
     # ref_array and data_array must have same resolution
     # dims must be y, x
 
+    if ref_array.y[0] > ref_array.y[-1]:
+        if data_array.y[0] < data_array.y[-1]:
+            data_array = data_array.reindex(y=data_array.y[::-1])
+
+    if _no_overlap(ref_array, data_array):
+        res = ref_array.where(True, np.nan)
+        return res
+    
 
     first_corner = data_array.sel(
         x=ref_array.x[0], y=ref_array.y[0], method='nearest')
@@ -151,13 +172,12 @@ class AccessibleCountPopWeighted(Layer):
         aligned_population_data = _get_aligned_dataarray(
             count_data, population_data)
 
-        aligned = xr.align(count_data, population_data, join='left')
         count_array = count_data.to_numpy()
         population_array = aligned_population_data.to_numpy()
 
         numerator = xr.DataArray(count_array * population_array,
                                  dims=['y', 'x'], coords={'y': count_data.y, 'x': count_data.x})
-        result = numerator / aligned_population_data.mean()
+        result = numerator / np.nanmean(population_array)
         result.rio.write_crs(utm_crs, inplace=True)
 
         return result
