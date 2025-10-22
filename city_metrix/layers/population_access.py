@@ -20,6 +20,8 @@ SUPPORTED_AMENITIES = ('commerce', 'economic', 'healthcare',
 
 
 def _no_overlap(ref_array, data_array):
+    if (not 'y' in ref_array.dims) or (not 'x' in ref_array.dims):
+        return True
     if min(ref_array.x) > max(data_array.x):
         return True
     if max(ref_array.x) < min(data_array.x):
@@ -38,14 +40,13 @@ def _get_aligned_dataarray(ref_array, data_array):
     # ref_array and data_array must have same resolution
     # dims must be y, x
 
-    if ref_array.y[0] > ref_array.y[-1]:
-        if data_array.y[0] < data_array.y[-1]:
-            data_array = data_array.reindex(y=data_array.y[::-1])
-
     if _no_overlap(ref_array, data_array):
         res = ref_array.where(True, np.nan)
         return res
-    
+
+    if ref_array.y[0] > ref_array.y[-1]:
+        if data_array.y[0] < data_array.y[-1]:
+            data_array = data_array.reindex(y=data_array.y[::-1])    
 
     first_corner = data_array.sel(
         x=ref_array.x[0], y=ref_array.y[0], method='nearest')
@@ -97,7 +98,9 @@ class AccessibleCount(Layer):
         bbox_box = shapely.box(*bbox.as_utm_bbox().coords)
         ds_box = shapely.box(float(min(ds.x)), float(min(ds.y)), float(max(ds.x)), float(max(ds.y)))
         if shapely.intersects(bbox_box, ds_box):
-            result = ds.rio.clip_box(*bbox.as_utm_bbox().coords).squeeze()
+            print(ds)
+            print(ds.dims)
+            result = ds.rio.clip_box(*bbox.as_utm_bbox().coords, allow_one_dimensional_raster=True).squeeze(['band'])
         else:
             coords= {
                 'y': np.arange(bbox.bbox[1], bbox.bbox[3] + spatial_resolution, spatial_resolution),
