@@ -98,8 +98,6 @@ class AccessibleCount(Layer):
         bbox_box = shapely.box(*bbox.as_utm_bbox().coords)
         ds_box = shapely.box(float(min(ds.x)), float(min(ds.y)), float(max(ds.x)), float(max(ds.y)))
         if shapely.intersects(bbox_box, ds_box):
-            print(ds)
-            print(ds.dims)
             result = ds.rio.clip_box(*bbox.as_utm_bbox().coords, allow_one_dimensional_raster=True).squeeze(['band'])
         else:
             coords= {
