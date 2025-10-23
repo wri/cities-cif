@@ -120,10 +120,31 @@ class VascularPlantRichness__Species(_NumberSpecies):
         self.end_year = end_year
 
 
-class BirdRichnessInBuiltUpArea__Species(_NumberSpecies):
+class _BirdRichnessInBuiltUpArea__Species(_NumberSpecies):
     def __init__(self, start_year=2019, end_year=2024, **kwargs):
         super().__init__(**kwargs)
         self.mask_layer = EsaWorldCover(land_cover_class=EsaWorldCoverClass.BUILT_UP)
         self.taxon = GBIFTaxonClass.BIRDS
         self.start_year = start_year
         self.end_year = end_year
+
+class _BirdRichnessInBuiltUpArea__Percent(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["start_year", "end_year"]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.start_year = None
+        self.end_year = None
+        self.unit = 'percent'
+
+    def get_metric(self,
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
+        builtup_species = _BirdRichnessInBuiltUpArea__Species(start_year=self.start_year, end_year=self.end_year).get_metric(geo_zone)
+        allcity_species = _BirdRichness__Species(start_year=self.start_year, end_year=self.end_year).get_metric(geo_zone)
+        res = allcity_species.copy()
+        res['value'] = 100 * builtup_species['value'] / allcity_species['value']
+
+        return res
