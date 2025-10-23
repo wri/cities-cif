@@ -143,7 +143,7 @@ class _BirdRichnessInBuiltUpArea__Percent(Metric):
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         builtup_species = _BirdRichnessInBuiltUpArea__Species(start_year=self.start_year, end_year=self.end_year).get_metric(geo_zone)
-        allcity_species = _BirdRichness__Species(start_year=self.start_year, end_year=self.end_year).get_metric(geo_zone)
+        allcity_species = BirdRichness__Species(start_year=self.start_year, end_year=self.end_year).get_metric(geo_zone)
         res = allcity_species.copy()
         res['value'] = 100 * builtup_species['value'] / allcity_species['value']
 
