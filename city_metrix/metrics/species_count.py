@@ -62,21 +62,18 @@ class _NumberSpecies(Metric):
     MINOR_NAMING_ATTS = ["taxon", "start_year", "end_year"]
 
 
-    def __init__(
-        self, **kwargs
-    ):
+    def __init__(self, taxon=GBIFTaxonClass.BIRDS, start_year=2019, end_year=2024, mask_layer=None, **kwargs):
         super().__init__(**kwargs)
-        self.taxon = None
-        self.start_year = None
-        self.end_year = None
-        self.mask_layer = None
+        self.taxon = taxon
+        self.start_year = start_year
+        self.end_year = end_year
+        self.mask_layer = mask_layer
         self.unit = 'species'
 
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
-
         bbox = GeoExtent(geo_zone)
         utm_crs = bbox.as_utm_bbox().crs
         city_id = geo_zone.city_id
@@ -128,15 +125,15 @@ class _BirdRichnessInBuiltUpArea__Species(_NumberSpecies):
         self.start_year = start_year
         self.end_year = end_year
 
-class _BirdRichnessInBuiltUpArea__Percent(Metric):
+class BirdRichnessInBuiltUpArea__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["start_year", "end_year"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, start_year=2019, end_year=2024, **kwargs):
         super().__init__(**kwargs)
-        self.start_year = None
-        self.end_year = None
+        self.start_year = start_year
+        self.end_year = end_year
         self.unit = 'percent'
 
     def get_metric(self,
@@ -146,5 +143,6 @@ class _BirdRichnessInBuiltUpArea__Percent(Metric):
         allcity_species = BirdRichness__Species(start_year=self.start_year, end_year=self.end_year).get_metric(geo_zone)
         res = allcity_species.copy()
         res['value'] = 100 * builtup_species['value'] / allcity_species['value']
+        res.loc[res.value > 100, "value"] = 100  # Because numerator and denominator are estimated independently, result can be gt 100%
 
         return res
