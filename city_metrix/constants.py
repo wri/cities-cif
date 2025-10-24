@@ -30,7 +30,7 @@ CUSTOM_CACHED_DIFFERENTLY = False
 USE_CACHED_DATA = False
 
 
-CITIES_DATA_API_URL = "https://cities-data-api.wri.org" # at later date, consider switching to "cities-data-api.wri.org". Ask Saif
+CITIES_DATA_API_URL = "https://dev.cities-data-api.wri.org" # at later date, consider switching to "cities-data-api.wri.org". Ask Saif
 
 # CTCM features
 CTCM_CACHE_S3_BUCKET_URI = 's3://wri-cities-tcm'
