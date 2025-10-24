@@ -472,9 +472,11 @@ class LayerGroupBy:
 
         # if area of zone is within tolerance, then query as a single tile, otherwise sub-tile
         if box_area <= tile_size_meters**2:
+            print('one')
             stats = LayerGroupBy._zonal_stats_tile([stats_func], geo_zone, zones, aggregate,
                                                    layer, masks, spatial_resolution)
         else:
+            print('two')
             stats = LayerGroupBy._zonal_stats_fishnet(stats_func, geo_zone, zones, aggregate, layer,
                                                       masks, tile_size_meters, spatial_resolution)
 

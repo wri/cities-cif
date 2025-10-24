@@ -120,9 +120,9 @@ class MeanPM2P5ExposurePopWeightedPercentOfWHOGuideline__Percent(Metric):
 
         if self.informal_only:
             informal_layer = UrbanLandUse(ulu_class=3)
-            mean_pm2p5 = pop_weighted_pm2p5.mask(informal_layer).groupby(geo_zone).sum()
+            mean_pm2p5 = pop_weighted_pm2p5.mask(informal_layer).groupby(geo_zone).mean()
         else:
-            mean_pm2p5 = pop_weighted_pm2p5.groupby(geo_zone).sum()
+            mean_pm2p5 = pop_weighted_pm2p5.groupby(geo_zone).mean()
 
         if isinstance(mean_pm2p5, pd.DataFrame):
             result = mean_pm2p5.copy()
