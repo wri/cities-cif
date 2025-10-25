@@ -22,7 +22,8 @@ class HospitalsPerTenThousandResidents__Hospitals(Metric):
                  spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
 
         hospitals = OpenStreetMap(osm_class=OpenStreetMapClass.HOSPITAL).get_data(GeoExtent(geo_zone))
-        hospital_counts_per_zone = [
+        hospital_counts_per_zone = geo_zone.zones.copy()
+        hospital_counts_per_zone['value'] = [
                 hospitals.geometry.intersects(zone).sum()
                 for zone in geo_zone.zones.geometry
             ]
@@ -32,7 +33,7 @@ class HospitalsPerTenThousandResidents__Hospitals(Metric):
 
         if isinstance(world_pop_sum, pd.DataFrame):
             result = world_pop_sum.copy()
-            result['value'] = 10000 * (hospital_counts_per_zone / world_pop_sum['value'])
+            result['value'] = 10000 * hospital_counts_per_zone['value'] / world_pop_sum['value']
 
         else:
             result = 10000 * hospital_counts_per_zone / world_pop_sum
