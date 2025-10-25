@@ -4,6 +4,8 @@ from typing import Union
 import rasterio
 import shapely
 import networkx as nx
+import numpy as np
+from rioxarray.exceptions import NoDataInBounds
 
 from city_metrix.constants import CSV_FILE_EXTENSION
 from city_metrix.metrix_model import Metric, GeoZone, GeoExtent, WGS_CRS
@@ -39,38 +41,41 @@ class _HabitatConnectivity(Metric):
             zones = zones.to_crs(worldcover_layer.rio.crs)
         for rownum in range(len(zones)):
             zone = zones.iloc[[rownum]]
-            natarea_dataarray = worldcover_layer.rio.clip(zone.geometry, zone.crs)
-            natarea_shapes = rasterio.features.shapes(natarea_dataarray, connectivity=8, transform=natarea_dataarray.rio.transform())  # Polygonize the natural-areas raster
-            natarea_shapes = list(natarea_shapes)
-            na_geoms = [i[0] for i in natarea_shapes if i[1] == 1]  # Only want the natural areas
-            na_gdf = gpd.GeoDataFrame({'id': range(len(na_geoms)), 'geometry': [shapely.Polygon(j['coordinates'][0]) for j in na_geoms]})
-            na_gdf = na_gdf.loc[na_gdf.area > MIN_PATCHSIZE]
+            try:
+                natarea_dataarray = worldcover_layer.rio.clip(zone.geometry, zone.crs)
+                natarea_shapes = rasterio.features.shapes(natarea_dataarray, connectivity=8, transform=natarea_dataarray.rio.transform())  # Polygonize the natural-areas raster
+                natarea_shapes = list(natarea_shapes)
+                na_geoms = [i[0] for i in natarea_shapes if i[1] == 1]  # Only want the natural areas
+                na_gdf = gpd.GeoDataFrame({'id': range(len(na_geoms)), 'geometry': [shapely.Polygon(j['coordinates'][0]) for j in na_geoms]})
+                na_gdf = na_gdf.loc[na_gdf.area > MIN_PATCHSIZE]
 
-            connected = {
-                i: within_distance(i, na_gdf) for i in na_gdf.index
-            }
+                connected = {
+                    i: within_distance(i, na_gdf) for i in na_gdf.index
+                }
 
-            # Find clusters from connected pairs
-            edges = []
-            for k in connected:
-                for i in connected[k]:
-                    edges.append((k, i))
-            G = nx.Graph()
-            G.add_nodes_from(list(na_gdf.index))
-            G.add_edges_from(edges)
-            clusters = nx.connected_components(G)
-            # Calculate indicator
-            total_area = na_gdf.area.sum()
-            cluster_areas = []
-            for i in clusters:
-                cluster_areas.append(sum([na_gdf.loc[[j]]['geometry'].area[j] for j in i]))
-            if total_area > 0:
-                if self.indicator_name == 'EMS':
-                    result_values.append((sum([i**2 for i in cluster_areas]) / total_area) / 10000)
-                else:  # self.indicator_name == 'coherence'
-                    result_values.append((sum([i**2 for i in cluster_areas]) / (total_area**2)) * 100)
-            else:
-                result_values.append(0)
+                # Find clusters from connected pairs
+                edges = []
+                for k in connected:
+                    for i in connected[k]:
+                        edges.append((k, i))
+                G = nx.Graph()
+                G.add_nodes_from(list(na_gdf.index))
+                G.add_edges_from(edges)
+                clusters = nx.connected_components(G)
+                # Calculate indicator
+                total_area = na_gdf.area.sum()
+                cluster_areas = []
+                for i in clusters:
+                    cluster_areas.append(sum([na_gdf.loc[[j]]['geometry'].area[j] for j in i]))
+                if total_area > 0:
+                    if self.indicator_name == 'EMS':
+                        result_values.append((sum([i**2 for i in cluster_areas]) / total_area) / 10000)
+                    else:  # self.indicator_name == 'coherence'
+                        result_values.append((sum([i**2 for i in cluster_areas]) / (total_area**2)) * 100)
+                else:
+                    result_values.append(0)
+            except NoDataInBounds:
+                result_values.append(np.nan)
 
         result = pd.DataFrame({'zone': zones.index, 'value': result_values})
         return result
