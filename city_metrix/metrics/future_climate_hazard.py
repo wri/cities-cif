@@ -246,7 +246,7 @@ class FutureHeatwaveFrequency__Heatwaves(Metric):
         result = haz.get_expectedval(
             latlon, data[model], self.start_year, self.end_year)
 
-        return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
+        return pd.Series([float(round(result, 1))])
 
 
 
@@ -283,7 +283,7 @@ class FutureHeatwaveMaxDuration__Days(Metric):
         result = haz.get_expectedval(
             latlon, data[model], self.start_year, self.end_year)
 
-        return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
+        return pd.Series([float(round(result, 1))])
 
 
 class FutureDaysAbove35__Days(Metric):
@@ -317,7 +317,7 @@ class FutureDaysAbove35__Days(Metric):
         result = haz.get_expectedval(
             latlon, data[model], self.start_year, self.end_year)
 
-        return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
+        return pd.Series([float(round(result, 1))])
 
 
 class FutureAnnualMaxTemp__DegreesCelsius(Metric):
@@ -351,7 +351,7 @@ class FutureAnnualMaxTemp__DegreesCelsius(Metric):
         result = haz.get_expectedval(
             latlon, data[model], self.start_year, self.end_year)
 
-        return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
+        return pd.Series([float(round(result, 1))])
 
 
 class FutureExtremePrecipitationDays__Days(Metric):
@@ -387,4 +387,4 @@ class FutureExtremePrecipitationDays__Days(Metric):
         result = haz.get_expectedval(
             latlon, data[model], self.start_year, self.end_year)
 
-        return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
+        return pd.Series([float(round(result, 1))])

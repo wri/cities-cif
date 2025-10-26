@@ -87,8 +87,10 @@ class _NumberSpecies(Metric):
             print(f'{city_id} {self.taxon.value["taxon"]} {rownum}/{len(zones_utm)}')
             results.append(_species_count_estimate(species_observations, zones_utm.iloc[[rownum]]))
 
-
-        result = pd.DataFrame({'zone': zones_utm.index, 'value': results})
+        if geo_zone.aoi_id == 'urban_extent':
+            result = pd.Series(results)
+        else:
+            result = pd.DataFrame({'zone': zones_utm.index, 'value': results})
 
         return result
 

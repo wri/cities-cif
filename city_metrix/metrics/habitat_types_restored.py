@@ -49,8 +49,11 @@ class HabitatTypesRestored__CoverTypes(Metric):
                 results.append(int(unique_counts[rownum]))
             else:
                 results.append(np.nan)
-        result = pd.DataFrame({'zone': range(len(geo_zone.zones)), 'value': results})
 
+        if geo_zone.aoi_id == 'urban_extent':
+            result = pd.Series(results)
+        else:
+            result = pd.DataFrame({'zone': range(len(geo_zone.zones)), 'value': results})
         return result
 
 class HabitatTypesRestored__Percent(Metric):
@@ -100,6 +103,10 @@ class HabitatTypesRestored__Percent(Metric):
                 results.append(100 * unique_counts_restored[rownum] / unique_counts_all[rownum])
             else:
                 results.append(np.nan)
-        result = pd.DataFrame({'zone': range(len(geo_zone.zones)), 'value': results})
+    
+        if geo_zone.aoi_id == 'urban_extent':
+            result = pd.Series(results)
+        else:
+            result = pd.DataFrame({'zone': range(len(geo_zone.zones)), 'value': results})
 
         return result

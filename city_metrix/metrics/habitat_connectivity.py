@@ -77,7 +77,11 @@ class _HabitatConnectivity(Metric):
             except NoDataInBounds:
                 result_values.append(np.nan)
 
-        result = pd.DataFrame({'zone': zones.index, 'value': result_values})
+        if geo_zone.aoi_id == 'urban_extent':
+            print('here')
+            result = pd.Series(result_values)
+        else:
+            result = pd.DataFrame({'zone': zones.index, 'value': result_values})
         return result
 
 
