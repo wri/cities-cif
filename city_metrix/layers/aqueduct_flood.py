@@ -92,9 +92,72 @@ class AqueductFlood(Layer):
             ee_rectangle,
             spatial_resolution,
             "aqueduct flood"
-        ).b1
+        ).b1.fillna(0)
 
         if self.report_threshold is not None:
-            data = xr.where(data >= self.report_threshold, 1, np.nan).assign_attrs(data.attrs)
+            data = xr.where(data > self.report_threshold, 1, np.nan).assign_attrs(data.attrs)
 
         return data
+
+
+'''
+def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        if resampling_method is not None:
+            raise Exception('resampling_method can not be specified.')
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        # read Aqueduct Floods data
+        flood_image = ee.ImageCollection(
+            "projects/WRI-Aquaduct/floods/Y2018M08D16_RH_Floods_Inundation_EE_V01/output_V06/inundation")
+
+        def constYear(img):
+            return ee.Image(
+                ee.Algorithms.If(
+                    img.get('year_string'),
+                    img.set('year', 1980),
+                    img
+                )
+            )
+
+        # flood_image = flood_image.map(constYear)
+
+        # Shared flooding variables
+        min_innundation = 0
+
+        # coastal_end = (flood_image.filterMetadata("floodtype", "equals", "inuncoast")
+        #                # .filterMetadata("returnperiod", "equals", self.return_period_c)
+        #                .filterMetadata("year", "equals", self.year)
+        #                # .filterMetadata("climate", "equals", [self.climate, 'historical'][int(self.year==1980)])
+        #                # .filterMetadata("subsidence", "equals", self.subsidence)
+        #                ).mosaic()
+        # # if self.year > 1980:
+        # #     coastal_end = coastal_end.filterMetadata("sea_level_rise_scenario", "equals", self.sea_level_rise_scenario)
+        # # coastal_end = coastal_end.first()
+
+        # riverine_end = (flood_image.filterMetadata("floodtype", "equals", "inunriver")
+        #                 # .filterMetadata("returnperiod", "equals", self.return_period_r)
+        #                 .filterMetadata("year", "equals", self.year)
+        #                 # .filterMetadata("climate", "equals", [self.climate, 'historical'][int(self.year==1980)])
+        #                 # ).reduce(ee.Reducer.mean()).rename('b1')  # average of all 5 models
+        #                 ).mosaic()
+
+
+        # combflood_end = coastal_end.max(riverine_end)
+
+        # combflood_end = combflood_end.updateMask(combflood_end.gt(min_innundation))
+        combflood_end = flood_image.filterMetadata("year", "equals", self.year).mosaic()
+
+        ee_rectangle = bbox.to_ee_rectangle()
+        data = get_image_collection(
+            ee.ImageCollection([combflood_end]),
+            ee_rectangle,
+            spatial_resolution,
+            "aqueduct flood"
+        ).b1.fillna(0)
+
+        if self.report_threshold is not None:
+            data = xr.where(data > self.report_threshold, 1, np.nan).assign_attrs(data.attrs)
+
+        return data
+'''
