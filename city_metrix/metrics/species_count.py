@@ -143,8 +143,13 @@ class BirdRichnessInBuiltUpArea__Percent(Metric):
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         builtup_species = _BirdRichnessInBuiltUpArea__Species(start_year=self.start_year, end_year=self.end_year).get_metric(geo_zone)
         allcity_species = BirdRichness__Species(start_year=self.start_year, end_year=self.end_year).get_metric(geo_zone)
-        res = allcity_species.copy()
-        res['value'] = 100 * builtup_species['value'] / allcity_species['value']
-        res.loc[res.value > 100, "value"] = 100  # Because numerator and denominator are estimated independently, result can be gt 100%
 
+        if isinstance(builtup_species, pd.DataFrame):
+            res = allcity_species.copy()
+            res['value'] = 100 * builtup_species['value'] / allcity_species['value']
+            res.loc[res.value > 100, "value"] = 100  # Because numerator and denominator are estimated independently, result can be gt 100%
+        else:
+            res = 100 * builtup_species / allcity_species
+            res.loc[res > 100] = 100
+        
         return res
