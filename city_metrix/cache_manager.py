@@ -322,7 +322,7 @@ def get_cached_file_key(feature_based_class_name, s3_bucket, output_env, feature
     else:
         bound_marker = ''
     if feature_based_class_name.lower() == 'layer':
-        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}{bound_marker}__{admin_level}__{feature_id}"
+        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}__{admin_level}__{feature_id}"
     else:
         file_key = f"data/{output_env}/metrics/{city_id}/{city_id}{bound_marker}__{feature_id}"
 
