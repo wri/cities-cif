@@ -22,18 +22,16 @@ class HabitatAreaRestored__Percent(Metric):
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
-        orig_habitat = LandCoverHabitatGlad(year=self.start_year, return_value=1)
         orig_nonhabitat = LandCoverHabitatGlad(year=self.start_year, return_value=0)
-        new_habitat = LandCoverHabitatGlad(year=self.end_year, return_value=1)
+        new_habitat = LandCoverHabitatChangeGlad(start_year=self.start_year, end_year=self.end_year, return_value=1)
 
-        orig_habitat_area = orig_habitat.groupby(geo_zone).count()
         orig_nonhabitat_area = orig_nonhabitat.groupby(geo_zone).count()
         new_habitat_area = new_habitat.groupby(geo_zone).count()
 
-        if isinstance(orig_habitat_area, pd.DataFrame):
-            result = orig_habitat_area.copy()
-            result['value'] = round(100 * (new_habitat_area['value'] - orig_habitat_area['value']) / orig_nonhabitat_area['value'], 2)
+        if isinstance(orig_nonhabitat_area, pd.DataFrame):
+            result = orig_nonhabitat_area.copy()
+            result['value'] = round(100 * new_habitat_area['value'] / orig_nonhabitat_area['value'], 2)
         else:
-            result = round(100 * (new_habitat_area - orig_habitat_area) / orig_nonhabitat_area, 2)
+            result = round(100 * new_habitat_area  / orig_nonhabitat_area, 2)
 
         return result
