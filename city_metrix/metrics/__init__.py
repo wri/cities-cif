@@ -14,6 +14,7 @@ from .era5_met_preprocessing_upenn_gee import Era5MetPreprocessingUPenn
 from .future_climate_hazard import *
 from .ghg_emissions import GhgEmissions__Tonnes
 from .habitat_connectivity import HabitatConnectivityEffectiveMeshSize__Hectares, HabitatConnectivityCoherence__Percent
+from .habitat_area_restored import HabitatAreaRestored__Percent
 from .habitat_types_restored import HabitatTypesRestored__CoverTypes, HabitatTypesRestored__Percent
 from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResidents__Hospitals
 from .impervious_area import ImperviousArea__Percent, PermeableArea__Percent
