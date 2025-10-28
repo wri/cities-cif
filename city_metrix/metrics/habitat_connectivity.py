@@ -25,7 +25,7 @@ class _HabitatConnectivity(Metric):
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
-        CONNECTIVITY_DISTANCE = 100  # Max distance two patches can be apart and be considered connected (meter)
+        CONNECTIVITY_DISTANCE = 50  # Max distance two patches can be apart and be considered connected (meter)
         MIN_PATCHSIZE = 1000  # Min patch size to be included in analysis (sq meter)
         
         zones = geo_zone.zones
