@@ -120,15 +120,27 @@ class MeanPM2P5ExposurePopWeightedPercentOfWHOGuideline__Percent(Metric):
 
         if self.informal_only:
             informal_layer = UrbanLandUse(ulu_class=3)
-            mean_pm2p5 = pop_weighted_pm2p5.mask(informal_layer).groupby(geo_zone).mean()
+            mean_pm2p5_list = []
+            for rownum in range(len(geo_zone.zones)):
+                zone = geo_zone.zones.iloc[[rownum]]
+                mean_pm2p5_result = pop_weighted_pm2p5.mask(informal_layer).groupby(GeoZone(zone, crs=geo_zone.crs), custom_tile_size_m=1000000000).sum()
+                if isinstance(mean_pm2p5_result, pd.DataFrame):
+                    mean_pm2p5_list.append(float(mean_pm2p5_result.value[0]))
+                else:
+                    mean_pm2p5_list.append(float(mean_pm2p5_result[0]))
         else:
-            mean_pm2p5 = pop_weighted_pm2p5.groupby(geo_zone).mean()
+            mean_pm2p5_list = []
+            for rownum in range(len(geo_zone.zones)):
+                zone = geo_zone.zones.iloc[[rownum]]
+                mean_pm2p5_result = pop_weighted_pm2p5.groupby(GeoZone(zone, crs=geo_zone.crs), custom_tile_size_m=1000000000).sum()
+                if isinstance(mean_pm2p5_result, pd.DataFrame):
+                    mean_pm2p5_list.append(float(mean_pm2p5_result.value[0]))
+                else:
+                    mean_pm2p5_list.append(float(mean_pm2p5_result[0]))
 
-        if isinstance(mean_pm2p5, pd.DataFrame):
-            result = mean_pm2p5.copy()
-            result['value'] = 100 * mean_pm2p5['value'] / WHO_AQG
-        else:
-            result = 100 * mean_pm2p5 / WHO_AQG
+        result = geo_zone.zones.copy().drop(['geometry'], axis=1)
+        result['value'] = mean_pm2p5_list
+        result['value'] = 100 * result['value'] / WHO_AQG
 
         return result
 
