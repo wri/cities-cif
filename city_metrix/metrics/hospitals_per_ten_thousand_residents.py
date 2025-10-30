@@ -22,6 +22,8 @@ class HospitalsPerTenThousandResidents__Hospitals(Metric):
                  spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
 
         hospitals = OpenStreetMap(osm_class=OpenStreetMapClass.HOSPITAL).get_data(GeoExtent(geo_zone))
+        hospitals = hospitals.dissolve().explode()
+
         hospital_counts_per_zone = geo_zone.zones.copy()
         hospital_counts_per_zone['value'] = [
                 hospitals.geometry.intersects(zone).sum()
