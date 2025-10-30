@@ -9,7 +9,8 @@ DEFAULT_SPATIAL_RESOLUTION = 10
 class VegetationWaterMap(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["greenwater_layer"]
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["start_date", "end_date"]
+    PROCESSING_TILE_SIDE_M = 10000
 
     """
     Attributes:

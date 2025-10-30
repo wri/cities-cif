@@ -1,6 +1,8 @@
 import ee
 import numpy as np
 import pandas as pd
+import pyproj
+from shapely.ops import transform
 from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
@@ -230,15 +232,22 @@ class FutureHeatwaveFrequency__Heatwaves(Metric):
         data_layer = NexGddpCmip6(
             varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
-        threshold = percentile((geo_zone.centroid.y, geo_zone.centroid.x),
+        centroid_utm = geo_zone.centroid
+        utm_crs = pyproj.CRS(geo_zone.crs)
+        wgs84_crs = pyproj.CRS('EPSG:4326')
+        project = pyproj.Transformer.from_crs(utm_crs, wgs84_crs, always_xy=True).transform
+        centroid_geogr = transform(project, centroid_utm)
+        latlon = (centroid_geogr.y, centroid_geogr.x)
+        threshold = percentile(latlon,
                                'tasmax', HEATWAVE_INTENSITY_PERCENTILE, True)
         haz = TempwaveCount(MIN_HEATWAVE_DURATION, threshold)
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
-            (geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+            latlon, data[model], self.start_year, self.end_year)
 
-        return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
+        return pd.Series([float(round(result, 1))])
+
 
 
 class FutureHeatwaveMaxDuration__Days(Metric):
@@ -260,15 +269,21 @@ class FutureHeatwaveMaxDuration__Days(Metric):
         data_layer = NexGddpCmip6(
             varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
-        threshold = percentile((geo_zone.centroid.y, geo_zone.centroid.x),
+        centroid_utm = geo_zone.centroid
+        utm_crs = pyproj.CRS(geo_zone.crs)
+        wgs84_crs = pyproj.CRS('EPSG:4326')
+        project = pyproj.Transformer.from_crs(utm_crs, wgs84_crs, always_xy=True).transform
+        centroid_geogr = transform(project, centroid_utm)
+        latlon = (centroid_geogr.y, centroid_geogr.x)
+        threshold = percentile(latlon,
                                'tasmax', HEATWAVE_INTENSITY_PERCENTILE, True)
         haz = TempwaveDuration(threshold)
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
-            (geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+            latlon, data[model], self.start_year, self.end_year)
 
-        return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
+        return pd.Series([float(round(result, 1))])
 
 
 class FutureDaysAbove35__Days(Metric):
@@ -290,13 +305,19 @@ class FutureDaysAbove35__Days(Metric):
         data_layer = NexGddpCmip6(
             varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
+        centroid_utm = geo_zone.centroid
+        utm_crs = pyproj.CRS(geo_zone.crs)
+        wgs84_crs = pyproj.CRS('EPSG:4326')
+        project = pyproj.Transformer.from_crs(utm_crs, wgs84_crs, always_xy=True).transform
+        centroid_geogr = transform(project, centroid_utm)
+        latlon = (centroid_geogr.y, centroid_geogr.x)
         haz = ThresholdDays(35)
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
-            (geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+            latlon, data[model], self.start_year, self.end_year)
 
-        return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
+        return pd.Series([float(round(result, 1))])
 
 
 class FutureAnnualMaxTemp__DegreesCelsius(Metric):
@@ -318,13 +339,19 @@ class FutureAnnualMaxTemp__DegreesCelsius(Metric):
         data_layer = NexGddpCmip6(
             varname='tasmax', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
+        centroid_utm = geo_zone.centroid
+        utm_crs = pyproj.CRS(geo_zone.crs)
+        wgs84_crs = pyproj.CRS('EPSG:4326')
+        project = pyproj.Transformer.from_crs(utm_crs, wgs84_crs, always_xy=True).transform
+        centroid_geogr = transform(project, centroid_utm)
+        latlon = (centroid_geogr.y, centroid_geogr.x)
         haz = AnnualVal('max')
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
-            (geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+            latlon, data[model], self.start_year, self.end_year)
 
-        return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
+        return pd.Series([float(round(result, 1))])
 
 
 class FutureExtremePrecipitationDays__Days(Metric):
@@ -346,12 +373,18 @@ class FutureExtremePrecipitationDays__Days(Metric):
         data_layer = NexGddpCmip6(
             varname='pr', start_year=self.start_year, end_year=self.end_year)
         bbox = GeoExtent(geo_zone)
+        centroid_utm = geo_zone.centroid
+        utm_crs = pyproj.CRS(geo_zone.crs)
+        wgs84_crs = pyproj.CRS('EPSG:4326')
+        project = pyproj.Transformer.from_crs(utm_crs, wgs84_crs, always_xy=True).transform
+        centroid_geogr = transform(project, centroid_utm)
+        latlon = (centroid_geogr.y, centroid_geogr.x)
         pctl_90 = percentile(
-            (geo_zone.centroid.y, geo_zone.centroid.x), 'pr', 90, False)
+            latlon, 'pr', 90, False)
         haz = ThresholdDays(pctl_90)
         data = data_layer.get_data(bbox)
         model = list(data.keys())[self.model_rank - 1]
         result = haz.get_expectedval(
-            (geo_zone.centroid.y, geo_zone.centroid.x), data[model], self.start_year, self.end_year)
+            latlon, data[model], self.start_year, self.end_year)
 
-        return pd.DataFrame({'zone': [0], 'value': [float(round(result, 1))]})
+        return pd.Series([float(round(result, 1))])

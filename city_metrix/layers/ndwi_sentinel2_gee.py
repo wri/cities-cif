@@ -18,6 +18,7 @@ class NdwiSentinel2(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
+    PROCESSING_TILE_SIDE_M = 5000
 
     """
     Attributes:

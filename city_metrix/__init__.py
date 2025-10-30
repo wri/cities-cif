@@ -23,7 +23,7 @@ if (
         )
     ee.Initialize(auth, opt_url="https://earthengine-highvolume.googleapis.com")
 else:
-    print("Authenticating GEE by prompting authentication through Google API.")
+    print("Could not find GEE credentials file, so prompting authentication.")
     ee.Authenticate()
     ee.Initialize(opt_url="https://earthengine-highvolume.googleapis.com")
 

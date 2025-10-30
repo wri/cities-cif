@@ -9,6 +9,7 @@ class HeightAboveNearestDrainage(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["river_head"]
     MINOR_NAMING_ATTS = ["thresh"]
+    PROCESSING_TILE_SIDE_M = 5000
 
     """
     Attributes:

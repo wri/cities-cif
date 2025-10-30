@@ -11,7 +11,7 @@ MIN_TREE_HEIGHT = 3
 class BuiltAreaWithoutTreeCover__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height"]
+    MINOR_NAMING_ATTS = ["height", "year"]
 
     def __init__(self, height=MIN_TREE_HEIGHT, year=2025, **kwargs):
         super().__init__(**kwargs)

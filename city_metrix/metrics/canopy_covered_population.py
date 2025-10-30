@@ -14,7 +14,7 @@ from city_metrix.layers import (
 class CanopyCoveredPopulation__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["worldpop_agesex_classes", "height", "informal_only"]
+    MINOR_NAMING_ATTS = ["worldpop_agesex_classes", "height", "informal_only", "year"]
 
     def __init__(
         self, worldpop_agesex_classes=[], height=3, percentage=30, informal_only=False, year=2025, **kwargs
@@ -34,10 +34,10 @@ class CanopyCoveredPopulation__Percent(Metric):
         if self.informal_only:
             # urban land use class 3 for Informal
             urban_land_use = UrbanLandUse(ulu_class=3)
-            pop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, masks=[urban_land_use, coverage_mask])
+            pop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes).mask(urban_land_use).mask(coverage_mask)
 
         else:
-            pop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, masks=[coverage_mask])
+            pop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes).mask(coverage_mask)
 
         access_pop = pop_layer.groupby(geo_zone).sum()
         total_pop = WorldPop(agesex_classes=self.worldpop_agesex_classes).groupby(geo_zone).sum()
@@ -57,7 +57,7 @@ class CanopyCoveredPopulation__Percent(Metric):
 class CanopyCoveredPopulationChildren__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "percentage"]
+    MINOR_NAMING_ATTS = ["height", "percentage", "year"]
 
     def __init__(self, height=3, percentage=30, year=2025, **kwargs):
         super().__init__(**kwargs)
@@ -80,7 +80,7 @@ class CanopyCoveredPopulationChildren__Percent(Metric):
 class CanopyCoveredPopulationElderly__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "percentage"]
+    MINOR_NAMING_ATTS = ["height", "percentage", "year"]
 
     def __init__(self, height=3, percentage=30, year=2025, **kwargs):
         super().__init__(**kwargs)
@@ -103,7 +103,7 @@ class CanopyCoveredPopulationElderly__Percent(Metric):
 class CanopyCoveredPopulationFemale__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "percentage"]
+    MINOR_NAMING_ATTS = ["height", "percentage", "year"]
 
     def __init__(self, height=3, percentage=30, year=2025, **kwargs):
         super().__init__(**kwargs)
@@ -126,7 +126,7 @@ class CanopyCoveredPopulationFemale__Percent(Metric):
 class CanopyCoveredPopulationInformal__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "percentage"]
+    MINOR_NAMING_ATTS = ["height", "percentage", "year"]
 
     def __init__(self, height=3, percentage=30, year=2025, **kwargs):
         super().__init__(**kwargs)

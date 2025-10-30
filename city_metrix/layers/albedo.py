@@ -12,16 +12,17 @@ class Albedo(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["threshold"]
+    PROCESSING_TILE_SIDE_M = 10000
     MAX_CLOUD_PROB = 30
     S2_ALBEDO_EQN = '((B*Bw)+(G*Gw)+(R*Rw)+(NIR*NIRw)+(SWIR1*SWIR1w)+(SWIR2*SWIR2w))'
 
     """
     Attributes:
-        start_date: starting date for data retrieval; set to None for auto-selected previous year's summer
-        end_date: ending date for data retrieval; set to None for auto-selected previous year's summer
+        start_date: starting date for data retrieval
+        end_date: ending date for data retrieval
         threshold: threshold value for filtering the retrieval
     """
-    def __init__(self, start_date:str='2024-01-01', end_date:str='2025-01-01', threshold=None, **kwargs):
+    def __init__(self, start_date:str=None, end_date:str=None, threshold=None, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date

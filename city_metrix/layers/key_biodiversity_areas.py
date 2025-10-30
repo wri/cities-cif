@@ -13,15 +13,19 @@ S3_KBA_PREFIX = 'devdata/inputdata/KBA'
 
 
 def _rasterize(gdf, snap_to):
-    if gdf.empty:
+    if gdf is None or (len(snap_to.x)<2 and len(snap_to.y)<2) or gdf.empty:
         nan_array = np.full(snap_to.shape, np.nan, dtype=float)
         raster = snap_to.copy(data=nan_array)
     else:
-        raster = make_geocube(
-            vector_data=gdf,
-            measurements=["is_kba"],
-            like=snap_to,
-        ).is_kba
+        try:
+            raster = make_geocube(
+                vector_data=gdf,
+                measurements=["is_kba"],
+                like=snap_to,
+            ).is_kba
+        except:
+            nan_array = np.full(snap_to.shape, np.nan, dtype=float)
+            raster = snap_to.copy(data=nan_array)
 
     return raster.rio.reproject_match(snap_to)
 

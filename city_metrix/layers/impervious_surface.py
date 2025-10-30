@@ -1,6 +1,7 @@
 import ee
-import xarray as xr
 import numpy as np
+import xarray as xr
+
 from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from ..constants import GTIFF_FILE_EXTENSION
 
@@ -12,8 +13,10 @@ class ImperviousSurface(Layer):
     MINOR_NAMING_ATTS = None
 
     def __init__(self, year=2018, **kwargs):
-        self.year = year
         super().__init__(**kwargs)
+        if year is not None and (year > 2018 or year < 1985):
+            raise Exception('Dataset covers only 1985 through 2018')
+        self.year = year
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -29,7 +32,7 @@ class ImperviousSurface(Layer):
         imperv_surf_ic = ee.ImageCollection(impervious_surface
                                             .filterBounds(ee_rectangle['ee_geometry'])
                                             .select('change_year_index')
-                                            .min()
+                                            .sum()
                                             )
 
         data = get_image_collection(
@@ -39,11 +42,10 @@ class ImperviousSurface(Layer):
             "imperv surf"
         ).change_year_index
 
-        # 34 is 1985 impervious
-        # 0 is still pervious as of 2018
-        year_index = 1 + 2018 - self.year
+        if self.year is None:
+            result = data.fillna(1)
+        else:
+            year_code = (2019 - self.year)
+            result = xr.where(data >= year_code, 1, np.nan).rio.write_crs(bbox.as_utm_bbox().crs)
 
-        res = xr.where(data >= year_index, 1, np.nan)
-        res = res.rio.write_crs(data.crs).assign_attrs(data.attrs)
-
-        return res
+        return result

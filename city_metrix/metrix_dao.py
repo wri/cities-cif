@@ -10,13 +10,54 @@ import json
 from pathlib import Path
 from rioxarray import rioxarray
 from urllib.parse import urlparse
+import boto3
 
-from city_metrix import s3_client
+from rasterio.session import AWSSession
+
+from city_metrix import s3_client#, session as aws_session
 from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
     NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, CIF_DASHBOARD_LAYER_S3_BUCKET_URI, LOCAL_CACHE_URI, JSON_FILE_EXTENSION, \
     MULTI_TILE_TILE_INDEX_FILE
 from city_metrix.metrix_tools import get_crs_from_data, standardize_y_dimension_direction
 
+
+#********************************************
+
+# initialize aws
+credentials_file_path = Path(os.path.join(Path.home(),'.aws', 'credentials'))
+config_file_path = Path(os.path.join(Path.home(),'.aws', 'config'))
+
+if "AWS_PROFILE" in os.environ:
+    print(f"Using AWS profile from environment: {os.environ['AWS_PROFILE']}")
+    aws_profile = os.environ["AWS_PROFILE"]
+else:
+    print("Using default AWS profile: cities-data-dev")
+    aws_profile = "cities-data-dev"
+
+if (
+    "AWS_ACCESS_KEY_ID" in os.environ
+    and "AWS_SECRET_ACCESS_KEY" in os.environ
+):
+    print("Using AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables.")
+    session = boto3.Session(region_name='us-east-1')
+    s3_client = boto3.client('s3', region_name='us-east-1')
+elif credentials_file_path.exists() or config_file_path.exists():
+    try:
+        print(f"Trying AWS profile")
+        session = boto3.Session(profile_name=aws_profile, region_name='us-east-1')
+        s3_client = session.client('s3')
+    except Exception as e:
+        raise Exception(f"Could not initialize S3 client with profile: {e}")
+else:
+    try:
+        print("No AWS credentials found, trying to initialize S3 client without a profile.")
+        session = boto3.Session(region_name='us-east-1')
+        s3_client = session.client('s3')
+    except Exception as e:
+        raise Exception(f"Could not initialize S3 client without a profile: {e}")
+ 
+
+#********************************************
 
 def _read_geojson_from_s3(s3_bucket, file_key):
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -97,12 +138,22 @@ def read_geojson_from_cache(uri):
 
 
 def read_geotiff_from_cache(file_uri):
-    if get_uri_scheme(file_uri) == 'file':
+    uri_scheme = get_uri_scheme(file_uri)
+    if uri_scheme == 'file':
         file_path = os.path.normpath(get_file_path_from_uri(file_uri))
     else:
         file_path = file_uri
-    with rioxarray.open_rasterio(file_path, driver="GTiff") as src:
-        data = src.load()
+
+    if uri_scheme == 's3':
+        with rioxarray.open_rasterio(
+            file_path,
+            driver="GTiff",
+            session=AWSSession(session=session), #HERE
+        ) as src:
+            data = src.load()
+    else:
+        with rioxarray.open_rasterio(file_path, driver="GTiff") as src:
+            data = src.load()
 
     result_data = data.squeeze('band', drop=True)
 
@@ -483,12 +534,11 @@ def get_city_boundaries(city_id: str, admin_level: str):
             response = query_api(query_uri)
             boundaries_uri = response['layers_url']['geojson']
             boundaries_geojson = read_geojson_from_cache(boundaries_uri)
-        
+
     if admin_level.lower() == 'urban_extent':
         geom_columns = ['geometry']
     else:
         geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
-
     boundaries = boundaries_geojson[geom_columns]
     boundaries_with_index = boundaries.reset_index()
 
