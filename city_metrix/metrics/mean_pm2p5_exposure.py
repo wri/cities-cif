@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from typing import Union
 
 from city_metrix.constants import CSV_FILE_EXTENSION
@@ -122,21 +123,27 @@ class MeanPM2P5ExposurePopWeightedPercentOfWHOGuideline__Percent(Metric):
             informal_layer = UrbanLandUse(ulu_class=3)
             mean_pm2p5_list = []
             for rownum in range(len(geo_zone.zones)):
-                zone = geo_zone.zones.iloc[[rownum]]
-                mean_pm2p5_result = pop_weighted_pm2p5.mask(informal_layer).groupby(GeoZone(zone, crs=geo_zone.crs), custom_tile_size_m=1000000000).sum()
-                if isinstance(mean_pm2p5_result, pd.DataFrame):
-                    mean_pm2p5_list.append(float(mean_pm2p5_result.value[0]))
-                else:
-                    mean_pm2p5_list.append(float(mean_pm2p5_result[0]))
+                try:
+                    zone = geo_zone.zones.iloc[[rownum]]
+                    mean_pm2p5_result = pop_weighted_pm2p5.mask(informal_layer).groupby(GeoZone(zone, crs=geo_zone.crs), custom_tile_size_m=1000000000).sum()
+                    if isinstance(mean_pm2p5_result, pd.DataFrame):
+                        mean_pm2p5_list.append(float(mean_pm2p5_result.value[0]))
+                    else:
+                        mean_pm2p5_list.append(float(mean_pm2p5_result[0]))
+                except:
+                    mean_pm2p5_list.append(np.nan)
         else:
             mean_pm2p5_list = []
             for rownum in range(len(geo_zone.zones)):
-                zone = geo_zone.zones.iloc[[rownum]]
-                mean_pm2p5_result = pop_weighted_pm2p5.groupby(GeoZone(zone, crs=geo_zone.crs), custom_tile_size_m=1000000000).sum()
-                if isinstance(mean_pm2p5_result, pd.DataFrame):
-                    mean_pm2p5_list.append(float(mean_pm2p5_result.value[0]))
-                else:
-                    mean_pm2p5_list.append(float(mean_pm2p5_result[0]))
+                try:
+                    zone = geo_zone.zones.iloc[[rownum]]
+                    mean_pm2p5_result = pop_weighted_pm2p5.groupby(GeoZone(zone, crs=geo_zone.crs), custom_tile_size_m=1000000000).sum()
+                    if isinstance(mean_pm2p5_result, pd.DataFrame):
+                        mean_pm2p5_list.append(float(mean_pm2p5_result.value[0]))
+                    else:
+                        mean_pm2p5_list.append(float(mean_pm2p5_result[0]))
+                except:
+                    mean_pm2p5_list.append(np.nan)
 
         result = geo_zone.zones.copy().drop(['geometry'], axis=1)
         result['value'] = mean_pm2p5_list
