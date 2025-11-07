@@ -28,7 +28,7 @@ def test_OvertureBuildingsDSM_write_small_bbox(target_folder):
     _write_verify(layer_obj, bbox, file_path)
 
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-def test_open_urban_write_small_bbox(target_folder):
+def test_OpenUrban_write_small_bbox(target_folder):
     file_path = prep_output_path(target_folder, 'layer','OpenUrban_small_bbox.tif')
     bbox = get_test_bbox(BBOX)
     layer_obj = OpenUrban()
