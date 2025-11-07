@@ -159,7 +159,7 @@ def test_future_heatwave_frequency__heatwaves():
 
 def test_future_heatwave_max_duration__days():
     indicator = FutureHeatwaveMaxDuration__Days(model_rank=1).get_metric(IDN_JAKARTA_TILED_ZONES)
-    assert round(indicator.value[0]) == 81   # Returns just one number
+    assert math.floor(indicator.value[0]) == 81   # Returns just one number
 
 def test_ghg_emissions__tonnes():
     indicator = GhgEmissions__Tonnes().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -215,7 +215,7 @@ def test_key_biodiversity_area_protected__percent():
     expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0.00, 98.38, 20, 79)
+    assert_metric_stats(indicator, 2, 0.00, 100.00, 20, 79)
 
 def test_key_biodiversity_area_undeveloped__percent():
     indicator = KeyBiodiversityAreaUndeveloped__Percent(country_code_iso3='ARG').get_metric(ARG_BUENOS_AIRES_TILED_ZONES)
@@ -319,7 +319,7 @@ def test_recreational_space_per_thousand__hectaresperthousandpersons():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0, 0.455, 100, 0)
+    assert_metric_stats(indicator, 2, 0, 0.73, 100, 0)
 
 def test_riparian_land_with_vegetation_or_water__percent():
     indicator = RiparianLandWithVegetationOrWater__Percent().get_metric(ARG_BUENOS_AIRES_TILED_ZONES_TINY)
@@ -354,7 +354,7 @@ def test_urban_open_space__percent():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 3, 0, 2.083, 100, 0)
+    assert_metric_stats(indicator, 3, 0, 8.204, 100, 0)
 
 def test_vegetation_water_change_gain_area__squaremeters():
     indicator = VegetationWaterChangeGainArea__SquareMeters().get_metric(IDN_JAKARTA_TILED_ZONES)

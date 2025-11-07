@@ -245,14 +245,6 @@ def test_Slope_write_by_city(target_folder):
 #     layer_obj = Sentinel2Level2(bands=['blue'], start_date='2022-01-01', end_date='2022-12-31')
 #     _run_write_layers_by_city_test(layer_obj, target_folder)
 
-# # TODO Very slow processing
-# # TODO Run fails. Appears to be a memory issue
-# @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
-# @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_SLOW_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
-# def test_SmartSurfaceLULC_write_by_city(target_folder):
-#     layer_obj = SmartSurfaceLULC()
-#     _run_write_layers_by_city_test(layer_obj, target_folder)
-
 @timeout_decorator.timeout(SLOW_TEST_TIMEOUT_SECONDS)
 @pytest.mark.skipif(DUMP_RUN_LEVEL != DumpRunLevel.RUN_FAST_ONLY, reason=f"Skipping since DUMP_RUN_LEVEL set to {DUMP_RUN_LEVEL}")
 def test_SpeciesRichness_write_by_city(target_folder):
