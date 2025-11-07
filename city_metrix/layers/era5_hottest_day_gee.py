@@ -44,57 +44,8 @@ class Era5HottestDay(Layer):
         dataset_land = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY")
         dataset_general = ee.ImageCollection("ECMWF/ERA5/HOURLY")
 
-        # Function to find the city mean temperature of each hour
-        def hourly_mean_temperature(image):
-            hourly_mean = image.select('temperature_2m').reduceRegion(
-                reducer=ee.Reducer.mean(),
-                geometry=ee.Geometry.Point([center_lon, center_lat]),
-                crs=WGS_CRS,
-                scale=spatial_resolution,
-                bestEffort=True
-            ).values().get(0)
-
-            return image.set('hourly_mean_temperature', hourly_mean)
-
-        ee_rectangle = geographic_bbox.to_ee_rectangle()
-        era5 = ee.ImageCollection(dataset_land
-                                  .filterBounds(ee_rectangle['ee_geometry'])
-                                  .filterDate(self.start_date, self.end_date)
-                                  .select('temperature_2m')
-                                  )
-
-        era5_hourly_mean = era5.map(hourly_mean_temperature)
-
-        # Sort the collection based on the highest temperature and get the first image
-        highest_temperature_day = era5_hourly_mean.sort(
-            'hourly_mean_temperature', False).first()
-        highest_temperature_day = highest_temperature_day.get(
-            'system:index').getInfo()
-
-        # system:index in format 20230101T00
-        # Define the UTC time
-        utc_time = datetime.strptime(highest_temperature_day, "%Y%m%dT%H")
-        # apply utc offset to utc time to get local date
-        local_date = (
-            utc_time + timedelta(hours=self.seasonal_utc_offset)).date()
-
-        utc_times = []
-        start_local = datetime.combine(local_date, time(0, 0))
-        for i in range(0, 25):
-            local_time_hour = start_local + timedelta(hours=i)
-            # Convert local hour back to UTC and cast as UTC time
-            inverse_seasonal_utc_offset = -self.seasonal_utc_offset
-            utc_time_hourly = pytz.utc.localize(
-                local_time_hour + timedelta(hours=inverse_seasonal_utc_offset))
-            # Rounded due to half hour offset in some cities
-            # See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for the range of possible values
-            # ERA5 only accepts whole hour UTC times
-            # if > 30 minutes, bump up an hour
-            if utc_time_hourly.minute > 30:
-                utc_time_hourly = utc_time_hourly + timedelta(hours=1)
-            utc_times.append(utc_time_hourly.replace(minute=0))
-
-        utc_times_list = [dt.strftime("%Y-%m-%dT%H:%M:%S") for dt in utc_times]
+        utc_times_list = find_hottest_day(center_lon, center_lat, spatial_resolution, geographic_bbox, dataset_land, 
+                                          self.start_date, self.end_date, self.seasonal_utc_offset)
 
         variable_land = [
             'u_component_of_wind_10m',
@@ -117,7 +68,7 @@ class Era5HottestDay(Layer):
         # ERA5-Land hourly data at 0.1 degree lat/lon resolution
         center_ee_rectangle = GeoExtent(bbox=(
             center_lon-0.1, center_lat-0.1, center_lon+0.1, center_lat+0.1), crs=WGS_CRS).to_ee_rectangle()
-        
+
         era5_land = ee.ImageCollection(dataset_land
                                        .filterDate(utc_times_list[0], utc_times_list[-1])
                                        .select(variable_land)
@@ -154,3 +105,66 @@ class Era5HottestDay(Layer):
         data = data.to_array()
 
         return data
+
+
+def local_date_to_utc_datetime(local_date, seasonal_utc_offset):
+    utc_times = []
+    start_local = datetime.combine(local_date, time(0, 0))
+    for i in range(0, 25):
+        local_time_hour = start_local + timedelta(hours=i)
+        # Convert local hour back to UTC and cast as UTC time
+        inverse_seasonal_utc_offset = -seasonal_utc_offset
+        utc_time_hourly = pytz.utc.localize(
+            local_time_hour + timedelta(hours=inverse_seasonal_utc_offset))
+        # Rounded due to half hour offset in some cities
+        # See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for the range of possible values
+        # ERA5 only accepts whole hour UTC times
+        # if > 30 minutes, bump up an hour
+        if utc_time_hourly.minute > 30:
+            utc_time_hourly = utc_time_hourly + timedelta(hours=1)
+        utc_times.append(utc_time_hourly.replace(minute=0))
+
+    utc_times_list = [dt.strftime("%Y-%m-%dT%H:%M:%S") for dt in utc_times]
+
+    return utc_times_list
+
+
+def find_hottest_day(center_lon, center_lat, spatial_resolution, geographic_bbox, dataset_land, start_date, end_date, seasonal_utc_offset):
+    # Function to find the city mean temperature of each hour
+    def _hourly_mean_temperature(image):
+        hourly_mean = image.select('temperature_2m').reduceRegion(
+            reducer=ee.Reducer.mean(),
+            geometry=ee.Geometry.Point([center_lon, center_lat]),
+            crs=WGS_CRS,
+            scale=spatial_resolution,
+            bestEffort=True
+        ).values().get(0)
+
+        return image.set('hourly_mean_temperature', hourly_mean)
+
+    ee_rectangle = geographic_bbox.to_ee_rectangle()
+    era5 = ee.ImageCollection(dataset_land
+                              .filterBounds(ee_rectangle['ee_geometry'])
+                              .filterDate(start_date, end_date)
+                              .select('temperature_2m')
+                              )
+
+    era5_hourly_mean = era5.map(_hourly_mean_temperature)
+
+    # Sort the collection based on the highest temperature and get the first image
+    highest_temperature_day = era5_hourly_mean.sort(
+        'hourly_mean_temperature', False).first()
+    highest_temperature_day = highest_temperature_day.get(
+        'system:index').getInfo()
+
+    # system:index in format 20230101T00
+    # Define the UTC time
+    utc_time = datetime.strptime(highest_temperature_day, "%Y%m%dT%H")
+    # apply utc offset to utc time to get local date
+    local_date = (
+        utc_time + timedelta(hours=seasonal_utc_offset)).date()
+
+    utc_times_list = local_date_to_utc_datetime(
+        local_date, seasonal_utc_offset)
+
+    return utc_times_list
