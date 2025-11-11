@@ -489,7 +489,13 @@ def get_city_boundaries(city_id: str, admin_level: str):
     else:
         geom_columns = ['geometry', 'geo_id', 'geo_name', 'geo_level', 'geo_parent_name', 'geo_version']
 
-    boundaries = boundaries_geojson[geom_columns]
+    # Only include columns that actually exist
+    available_columns = [col for col in geom_columns if col in boundaries_geojson.columns]
+    # Ensure 'geometry' exists
+    if 'geometry' not in available_columns:
+        raise ValueError(f"'geometry' is missing in the boundaries GeoJSON for {city_id}")
+
+    boundaries = boundaries_geojson[available_columns].copy()
     boundaries_with_index = boundaries.reset_index()
 
     return boundaries_with_index
