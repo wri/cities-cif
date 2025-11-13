@@ -23,7 +23,7 @@ def build_file_key(s3_bucket: str, output_env: str, class_obj, geo_extent, aoi_b
     feature_base_class_name = class_obj.__class__.__bases__[0].__name__
     if s3_bucket is not None:
         file_key = get_cached_file_key(feature_base_class_name, s3_bucket, output_env, cache_folder_name, city_id,
-                                       admin_level, feature_id, file_format)
+                                       admin_level, feature_id, file_format, aoi_buffer_m)
         file_uri = get_cached_file_uri(s3_bucket, file_key, (CUSTOM_CACHED_DIFFERENTLY and is_custom_object))  # False-and so all objs treated as non-custom
 
     else:
@@ -304,17 +304,23 @@ def get_cached_file_uri(s3_bucket, file_key, is_custom_layer):
 
 
 def get_cached_file_key(feature_based_class_name, s3_bucket, output_env, feature_name, city_id, admin_level, feature_id,
-                        file_format):
+                        file_format, aoi_buffer_m):
     if admin_level == 'urban_extent' and FILE_KEY_URBEXTBOUND_MARKER:
         bound_marker = '__urban_extent'
     elif FILE_KEY_ADMINBOUND_MARKER:
         bound_marker = f'__{admin_level}'
     else:
         bound_marker = ''
-    if feature_based_class_name.lower() == 'layer':
-        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}{bound_marker}__{admin_level}__{feature_id}"
+
+    if aoi_buffer_m:
+        bufferm_marker = f'__bufferm_{str(aoi_buffer_m)}'
     else:
-        file_key = f"data/{output_env}/metrics/{city_id}/{city_id}{bound_marker}__{feature_id}"
+        bufferm_marker = ''
+
+    if feature_based_class_name.lower() == 'layer':
+        file_key = f"data/{output_env}/layers/{feature_name}/{file_format}/{city_id}{bound_marker}__{feature_id}{bufferm_marker}"
+    else:
+        file_key = f"data/{output_env}/metrics/{city_id}/{city_id}{bound_marker}__{feature_id}{bufferm_marker}"
 
     # if city_aoi is not None:
     #     aoi_uuid = hashkey_from_tuple(city_aoi)
