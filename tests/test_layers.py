@@ -7,7 +7,7 @@ from city_metrix.constants import ProjectionType
 from city_metrix.layers import *
 from city_metrix.metrix_tools import get_projection_type
 from tests.conftest import EXECUTE_IGNORED_TESTS
-from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1, BBOX_ARG_BUENOS_AIRES
+from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1, BBOX_ARG_BUENOS_AIRES, GEOEXTENT_DURBAN
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC and is a stable region
@@ -306,6 +306,12 @@ def test_urban_extents():
     data = UrbanExtents().get_data(BBOX)
     assert np.size(data) > 0
     assert_vector_stats(data, 'city_names', None, 'Portland', 'Portland', 1, 0)
+    assert get_projection_type(data.crs.srs) == ProjectionType.UTM
+
+def test_urban_extents():
+    data = UrbanExtents().get_data(GEOEXTENT_DURBAN)
+    assert np.size(data) > 0
+    assert_vector_stats(data, 'city_names', None, 'Durban', 'Durban', 1, 0)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_urban_land_use():

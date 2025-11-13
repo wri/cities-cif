@@ -47,7 +47,10 @@ dask.config.set({'logging.distributed': 'warning'})
 class GeoZone():
     def __init__(self, geo_zone: Union[GeoDataFrame | str], crs=WGS_CRS):
         if isinstance(geo_zone, str):
-            self.geo_type = GeoType.CITY
+            if 'city_centroid' in geo_zone.lower():
+                self.geo_type = GeoType.CITY_CENTROID
+            else:
+                self.geo_type = GeoType.CITY
         else:
             self.geo_type = GeoType.GEOMETRY
 
@@ -68,29 +71,35 @@ class GeoZone():
             self.city_id, self.aoi_id = parse_city_aoi_json(city_json)
             # Boundaries from city_id and aoi_id
             city_data = get_city(self.city_id)
-            if self.aoi_id == 'urban_extent':
-                self.admin_level = self.aoi_id
-            else:
-                self.admin_level = city_data.get(self.aoi_id, None)
-
-            # bbox is always projected to UTM
-            self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
             self.latitude = city_data.get('latitude')
             self.longitude = city_data.get('longitude')
+            if self.geo_type == GeoType.CITY:
+                if self.aoi_id == 'urban_extent':
+                    self.admin_level = self.aoi_id
+                else:
+                    self.admin_level = city_data.get(self.aoi_id, None)
 
-        self.bounds = self.bbox
-        self.epsg_code = int(self.crs.split(':')[1])
-        self.projection_type = get_projection_type(self.crs)
-        self.units = "degrees" if self.projection_type == ProjectionType.GEOGRAPHIC else "meters"
+                # bbox is always projected to UTM
+                self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
+        
+        if self.geo_type == GeoType.CITY_CENTROID:
+            self.crs = WGS_CRS
+            self.projection_type = get_projection_type(self.crs)
+            self.centroid = shapely.Point(self.longitude, self.latitude)
+        else:
+            self.bounds = self.bbox
+            self.epsg_code = int(self.crs.split(':')[1])
+            self.projection_type = get_projection_type(self.crs)
+            self.units = "degrees" if self.projection_type == ProjectionType.GEOGRAPHIC else "meters"
 
-        self.min_x = self.bbox[0]
-        self.min_y = self.bbox[1]
-        self.max_x = self.bbox[2]
-        self.max_y = self.bbox[3]
+            self.min_x = self.bbox[0]
+            self.min_y = self.bbox[1]
+            self.max_x = self.bbox[2]
+            self.max_y = self.bbox[3]
 
-        self.coords = (self.min_x, self.min_y, self.max_x, self.max_y)
-        self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
-        self.centroid = self.polygon.centroid
+            self.coords = (self.min_x, self.min_y, self.max_x, self.max_y)
+            self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
+            self.centroid = self.polygon.centroid
 
 def _build_aoi_from_city_boundaries(city_id, geo_feature):
     boundaries_gdf = get_city_boundaries(city_id, geo_feature)
@@ -114,8 +123,13 @@ def _build_aoi_from_city_boundaries(city_id, geo_feature):
 
 class GeoExtent():
     def __init__(self, bbox: Union[tuple[float, float, float, float] | GeoZone | str], crs=WGS_CRS):
-        if isinstance(bbox, str) or (isinstance(bbox, GeoZone) and bbox.geo_type == GeoType.CITY):
-            self.geo_type = GeoType.CITY
+        if isinstance(bbox, GeoZone):
+            self.geo_type = bbox.geo_type
+        elif isinstance(bbox, str):
+            if 'city_centroid' in geo_zone.lower():
+                self.geo_type = GeoType.CITY_CENTROID
+            else:
+                self.geo_type = GeoType.CITY
         else:
             self.geo_type = GeoType.GEOMETRY
 
@@ -154,21 +168,23 @@ class GeoExtent():
 
         else:
             geo_zone = bbox if isinstance(bbox, GeoZone) else GeoZone(geo_zone=bbox)
-            self.city_id = geo_zone.city_id
-            self.aoi_id = geo_zone.aoi_id
-            self.admin_level = geo_zone.admin_level
-            self.bbox = geo_zone.bbox
-            self.crs = geo_zone.crs
-            self.epsg_code = geo_zone.epsg_code
-            self.projection_type = geo_zone.projection_type
-            self.units = geo_zone.units
-            self.bounds = geo_zone.bounds
-            self.min_x, self.min_y, self.max_x, self.max_y = geo_zone.bounds
-            self.coords = geo_zone.coords
-            self.centroid = geo_zone.centroid
-            self.polygon = geo_zone.polygon
-            self.latitude = geo_zone.latitude
-            self.longitude = geo_zone.longitude
+            for name, value in geo_zone.__dict__.items():
+                setattr(self, name, value)
+            # self.city_id = geo_zone.city_id
+            # self.aoi_id = geo_zone.aoi_id
+            # self.admin_level = geo_zone.admin_level
+            # self.bbox = geo_zone.bbox
+            # self.crs = geo_zone.crs
+            # self.epsg_code = geo_zone.epsg_code
+            # self.projection_type = geo_zone.projection_type
+            # self.units = geo_zone.units
+            # self.bounds = geo_zone.bounds
+            # self.min_x, self.min_y, self.max_x, self.max_y = geo_zone.bounds
+            # self.coords = geo_zone.coords
+            # self.centroid = geo_zone.centroid
+            # self.polygon = geo_zone.polygon
+            # self.latitude = geo_zone.latitude
+            # self.longitude = geo_zone.longitude
 
 
     def to_ee_rectangle(self):
