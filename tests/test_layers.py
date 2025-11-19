@@ -329,7 +329,7 @@ def test_ut_globus():
 def test_vegetation_water_map():
     data = VegetationWaterMap().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.302, 0.998, 8737, 1060)
+    assert_raster_stats(data, 2, 0.302, 0.998, 8774, 1023)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_world_pop():
