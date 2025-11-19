@@ -49,8 +49,10 @@ class GeoZone():
         if isinstance(geo_zone, str):
             if 'city_centroid' in geo_zone.lower():
                 self.geo_type = GeoType.CITY_CENTROID
+            elif ('city_admin_level' in geo_zone.lower()) or ('urban_extent' in geo_zone.lower()):
+                self.geo_type = GeoType.CITY_AREA
             else:
-                self.geo_type = GeoType.CITY
+                raise Exception("Invalid aoi_id, should be 'city_centroid', 'urban_extent' or 'city_admin_level'")
         else:
             self.geo_type = GeoType.GEOMETRY
 
@@ -73,11 +75,13 @@ class GeoZone():
             city_data = get_city(self.city_id)
             self.latitude = city_data.get('latitude')
             self.longitude = city_data.get('longitude')
-            if self.geo_type == GeoType.CITY:
+            if self.geo_type == GeoType.CITY_AREA:
                 if self.aoi_id == 'urban_extent':
                     self.admin_level = self.aoi_id
-                else:
+                elif self.aoi_id == 'city_admin_level':
                     self.admin_level = city_data.get(self.aoi_id, None)
+                else:
+                    raise Exception("Invalid aoi_id, should be 'city_centroid', 'urban_extent' or 'city_admin_level'")
 
                 # bbox is always projected to UTM
                 self.bbox, self.crs, self.zones = _build_aoi_from_city_boundaries(self.city_id, self.admin_level)
@@ -126,10 +130,10 @@ class GeoExtent():
         if isinstance(bbox, GeoZone):
             self.geo_type = bbox.geo_type
         elif isinstance(bbox, str):
-            if 'city_centroid' in geo_zone.lower():
+            if 'city_centroid' in bbox.lower():
                 self.geo_type = GeoType.CITY_CENTROID
             else:
-                self.geo_type = GeoType.CITY
+                self.geo_type = GeoType.CITY_AREA
         else:
             self.geo_type = GeoType.GEOMETRY
 
@@ -170,21 +174,6 @@ class GeoExtent():
             geo_zone = bbox if isinstance(bbox, GeoZone) else GeoZone(geo_zone=bbox)
             for name, value in geo_zone.__dict__.items():
                 setattr(self, name, value)
-            # self.city_id = geo_zone.city_id
-            # self.aoi_id = geo_zone.aoi_id
-            # self.admin_level = geo_zone.admin_level
-            # self.bbox = geo_zone.bbox
-            # self.crs = geo_zone.crs
-            # self.epsg_code = geo_zone.epsg_code
-            # self.projection_type = geo_zone.projection_type
-            # self.units = geo_zone.units
-            # self.bounds = geo_zone.bounds
-            # self.min_x, self.min_y, self.max_x, self.max_y = geo_zone.bounds
-            # self.coords = geo_zone.coords
-            # self.centroid = geo_zone.centroid
-            # self.polygon = geo_zone.polygon
-            # self.latitude = geo_zone.latitude
-            # self.longitude = geo_zone.longitude
 
 
     def to_ee_rectangle(self):
@@ -244,7 +233,7 @@ class GeoExtent():
         """
         if self.projection_type == ProjectionType.GEOGRAPHIC:
             utm_crs = get_utm_zone_from_latlon_point(self.centroid)
-            if self.geo_type == GeoType.CITY:
+            if self.geo_type == GeoType.CITY_AREA:
                 geo_extent = construct_city_aoi_json(self.city_id, self.aoi_id)
                 bbox = GeoExtent(bbox=geo_extent, crs=utm_crs)
             else:
@@ -829,7 +818,7 @@ class Layer():
         :param force_data_refresh: whether to force data refresh from source
         """
 
-        if bbox.geo_type != GeoType.CITY:
+        if bbox.geo_type != GeoType.CITY_AREA:
             raise ValueError("Non-city data cannot be cached.")
 
         standard_env = standardize_s3_env(s3_env)
@@ -878,7 +867,7 @@ class Layer():
             result_data = self.aggregate.get_data(bbox=query_geoextent, spatial_resolution=spatial_resolution)
 
             # Opportunistically cache city data
-            if s3_bucket is not None and bbox.geo_type == GeoType.CITY and city_aoi_subarea is None:
+            if s3_bucket is not None and bbox.geo_type == GeoType.CITY_AREA and city_aoi_subarea is None:
                 target_uri, _, _, _ = build_file_key(s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m)
                 self._build_city_cache(bbox, spatial_resolution, target_uri, aoi_buffer_m)
 
@@ -886,7 +875,7 @@ class Layer():
 
 
     def _build_city_cache(self, bbox, spatial_resolution, target_uri, aoi_buffer_m:int=None):
-        if bbox.geo_type == GeoType.CITY:
+        if bbox.geo_type == GeoType.CITY_AREA:
             if hasattr(self.aggregate, 'PROCESSING_TILE_SIDE_M'):
                 tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
             else:
@@ -905,7 +894,7 @@ class Layer():
                 delete_s3_folder_if_exists(target_uri)
                 write_layer(result_data, target_uri, self.aggregate.OUTPUT_FILE_FORMAT)
         else:
-            raise ValueError(f"Data not cached for {self.aggregate.__class__.__name__}.  Data can only be cached for CITY geo_extent.")
+            raise ValueError(f"Data not cached for {self.aggregate.__class__.__name__}. Data can only be cached for CITY_AREA geo_extent.")
 
 
     def _get_completed_tile_ids(self, file_paths):
@@ -1391,7 +1380,7 @@ class Metric():
         :param spatial_resolution: resolution of continuous raster data in meters
         :param force_data_refresh: whether to force data refresh from source
         """
-        if geo_zone.geo_type != GeoType.CITY:
+        if geo_zone.geo_type != GeoType.CITY_AREA:
             raise ValueError("Non-city data cannot be cached.")
 
         standard_env = standardize_s3_env(s3_env)
@@ -1400,7 +1389,7 @@ class Metric():
         else:
             has_usable_cache = is_cache_usable(s3_bucket, standard_env, self.metric, geo_zone, None, None)
 
-        if not has_usable_cache and geo_zone.geo_type == GeoType.CITY:
+        if not has_usable_cache and geo_zone.geo_type == GeoType.CITY_AREA:
             target_uri, _, feature_id, _ = build_file_key(s3_bucket, standard_env, self.metric, geo_zone, None)
             result_metric = self.metric.get_metric(geo_zone=geo_zone, spatial_resolution=spatial_resolution)
 
@@ -1453,14 +1442,14 @@ class Metric():
                 result_metric = _standardize_city_metrics_columns(results_metric_df, None)
 
             # Opportunistically cache city metric
-            if s3_bucket is not None and geo_zone.geo_type == GeoType.CITY:
+            if s3_bucket is not None and geo_zone.geo_type == GeoType.CITY_AREA:
                 write_metric(result_metric, target_uri, self.metric.OUTPUT_FILE_FORMAT)
 
         return result_metric, feature_id
 
 
     def _expand_empty_results_to_results_with_null_value(self, geo_zone: GeoZone) -> Union[pd.DataFrame, pd.Series]:
-        if geo_zone.geo_type == GeoType.CITY:
+        if geo_zone.geo_type == GeoType.CITY_AREA:
             admin_count = len(geo_zone.zones)
             padded_rows = pd.Series([''] * admin_count)
         else:
@@ -1490,7 +1479,7 @@ def _standardize_city_metrics_columns(metrics_df, supplemental_column):
 def _decide_if_write_can_be_skipped(feature, selection_object, output_path, s3_env):  # Determine if write can be skipped
     if output_path is None or len(output_path.strip()) == 0:
         skip_write = True
-    elif selection_object.geo_type == GeoType.CITY:
+    elif selection_object.geo_type == GeoType.CITY_AREA:
         default_s3_uri, _, _, _ = build_file_key(s3_env, feature, selection_object, None)
         skip_write = True if default_s3_uri == output_path else False
     else:

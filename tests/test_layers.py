@@ -302,13 +302,13 @@ def test_tree_cover():
     assert_raster_stats(data, 1, 0.0, 100.0, 976626, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
-def test_urban_extents():
+def test_urban_extents_aoi_bbox():
     data = UrbanExtents().get_data(BBOX)
     assert np.size(data) > 0
     assert_vector_stats(data, 'city_names', None, 'Portland', 'Portland', 1, 0)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
-def test_urban_extents():
+def test_urban_extents_city_centroid():
     data = UrbanExtents().get_data(GEOEXTENT_DURBAN)
     assert np.size(data) > 0
     assert_vector_stats(data, 'city_names', None, 'Durban', 'Durban', 1, 0)
