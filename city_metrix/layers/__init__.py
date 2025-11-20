@@ -7,7 +7,7 @@ from .average_net_building_height import AverageNetBuildingHeight
 from .built_up_height import BuiltUpHeight
 from .cams_ghg import CamsGhg
 from .cams import Cams, CamsSpecies
-from .carbon_flux_from_trees import CarbonFluxFromTrees
+from .carbon_flux_from_trees import CarbonFluxFromTrees, CarbonFluxFromTreesPerHectare
 from .era5_hottest_day_gee import Era5HottestDay
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
 from .fab_dem import FabDEM
