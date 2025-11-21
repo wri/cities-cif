@@ -3,7 +3,8 @@ import geemap
 import geopandas as gpd
 
 from city_metrix.metrix_model import Layer, GeoExtent
-from ..constants import GEOJSON_FILE_EXTENSION
+from city_metrix.metrix_tools import get_utm_zone_from_latlon_point
+from city_metrix.constants import GEOJSON_FILE_EXTENSION, GeoType
 
 
 class UrbanExtents(Layer):
@@ -26,7 +27,12 @@ class UrbanExtents(Layer):
 
         ue_fc = ee.FeatureCollection(f'projects/wri-datalab/cities/urban_land_use/data/global_cities_Aug2024/urbanextents_unions_{self.year}')
 
-        bbox_utm = bbox.as_utm_bbox()
+        if bbox.geo_type == GeoType.CITY_CENTROID:
+            utm_crs = get_utm_zone_from_latlon_point(bbox.centroid)
+        else: 
+            bbox_utm = bbox.as_utm_bbox()
+            utm_crs = bbox_utm.crs
+
         if hasattr(bbox, "latitude") and hasattr(bbox, "longitude"):
             ee_centroid = ee.Geometry.Point([bbox.longitude, bbox.latitude])
         else:
@@ -38,14 +44,14 @@ class UrbanExtents(Layer):
 
         if urbexts.size().getInfo() == 0:
             urbexts_dissolved = gpd.GeoDataFrame(columns=columns_to_join+['geometry'], geometry='geometry')
-            urbexts_dissolved.set_crs(bbox_utm.crs, inplace=True)
+            urbexts_dissolved.set_crs(utm_crs, inplace=True)
         else:
             urbexts_gdf = geemap.ee_to_gdf(urbexts)
             urbexts_dissolved = urbexts_gdf.dissolve()
             for col in columns_to_join:
                 urbexts_dissolved[col] = ['+'.join(map(str, urbexts_gdf[col]))]
 
-            urbexts_dissolved = urbexts_dissolved.to_crs(bbox_utm.crs)
+            urbexts_dissolved = urbexts_dissolved.to_crs(utm_crs)
 
         data = urbexts_dissolved
         data['geo_level'] = 'urban_extent'

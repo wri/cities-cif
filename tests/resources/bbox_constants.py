@@ -41,6 +41,11 @@ city_admin = construct_city_aoi_json("BRA-Florianopolis", "city_admin_level")
 GEOZONE_FLORIANOPOLIS = GeoZone(geo_zone=city_admin)
 GEOEXTENT_FLORIANOPOLIS = GeoExtent(GEOZONE_FLORIANOPOLIS)
 
+# A city with lat/lon and without geojson file
+city_admin = construct_city_aoi_json("ZAF-Durban", "city_centroid")
+GEOZONE_DURBAN = GeoZone(geo_zone=city_admin)
+GEOEXTENT_DURBAN = GeoExtent(GEOZONE_DURBAN)
+
 # Buenos Aires includes some KBA.
 # city_admin = construct_city_aoi_json("ARG-Buenos_Aires", "city_admin_level")
 # GEOZONE_BUENOS_AIRES = GeoZone(geo_zone=city_admin)

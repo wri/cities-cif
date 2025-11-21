@@ -3,7 +3,7 @@ import osmnx as ox
 import geopandas as gpd
 import pandas as pd
 
-from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GeoType
+from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION
 from city_metrix.metrix_model import Layer, GeoExtent
 
 
@@ -97,7 +97,7 @@ class OpenStreetMap(Layer):
             osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['id', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
             osm_feature.crs = WGS_CRS
 
-        # Filter by geo_type
+        # Filter by geom_type
         if self.osm_class == OpenStreetMapClass.ROAD:
             # Filter out Point
             osm_feature = osm_feature[osm_feature.geom_type != 'Point']
