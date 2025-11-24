@@ -33,6 +33,7 @@ class HospitalsPerTenThousandResidents__Hospitals(Metric):
         if isinstance(world_pop_sum, pd.DataFrame):
             result = world_pop_sum.copy()
             result['value'] = 10000 * (hospital_counts_per_zone / world_pop_sum['value'])
+
         else:
             result = 10000 * hospital_counts_per_zone / world_pop_sum
 
