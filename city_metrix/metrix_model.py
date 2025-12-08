@@ -5,18 +5,17 @@ import random
 import shutil
 import tempfile
 import time
-
-import dask
-import geopandas as gpd
-import xarray as xr
-import numpy as np
-import pandas as pd
-import ee
-import shapely
-
 from abc import abstractmethod
 from pathlib import Path
 from typing import Union
+
+import dask
+import ee
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+import shapely
+import xarray as xr
 from dask.diagnostics import ProgressBar
 from ee import ImageCollection
 from geopandas import GeoDataFrame
@@ -26,19 +25,51 @@ from shapely.geometry import box
 from xrspatial import zonal_stats
 
 from city_metrix import s3_client
-from city_metrix.cache_manager import retrieve_city_cache, build_file_key, is_cache_usable
-from city_metrix.constants import WGS_CRS, ProjectionType, GeoType, GEOJSON_FILE_EXTENSION, CSV_FILE_EXTENSION, \
-    DEFAULT_PRODUCTION_ENV, DEFAULT_DEVELOPMENT_ENV, GTIFF_FILE_EXTENSION, CIF_CACHE_S3_BUCKET_URI, \
-    MULTI_TILE_TILE_INDEX_FILE, PROCESSING_KNOWN_ISSUE_FLAG, CIF_ACTIVE_PROCESSING_FILE_NAME
-from city_metrix.metrix_dao import (write_tile_grid, write_layer, write_metric,
-                                    get_city, get_city_boundaries, create_uri_target_folder, get_file_key_from_url,
-                                    get_bucket_name_from_s3_uri,
-                                    delete_s3_folder_if_exists, delete_s3_file_if_exists, get_file_path_from_uri,
-                                    extract_bbox_aoi, write_json, write_file_to_s3
-                                    )
-from city_metrix.metrix_tools import (get_projection_type, get_haversine_distance, get_utm_zone_from_latlon_point,
-                                      parse_city_aoi_json, reproject_units, construct_city_aoi_json,
-                                      standardize_y_dimension_direction)
+from city_metrix.cache_manager import (
+    build_file_key,
+    get_file_name,
+    is_cache_usable,
+    retrieve_city_cache,
+)
+from city_metrix.constants import (
+    CIF_ACTIVE_PROCESSING_FILE_NAME,
+    CIF_CACHE_S3_BUCKET_URI,
+    CSV_FILE_EXTENSION,
+    DEFAULT_DEVELOPMENT_ENV,
+    DEFAULT_PRODUCTION_ENV,
+    GEOJSON_FILE_EXTENSION,
+    GTIFF_FILE_EXTENSION,
+    MULTI_TILE_TILE_INDEX_FILE,
+    PROCESSING_KNOWN_ISSUE_FLAG,
+    WGS_CRS,
+    GeoType,
+    ProjectionType,
+)
+from city_metrix.metrix_dao import (
+    create_uri_target_folder,
+    delete_s3_file_if_exists,
+    delete_s3_folder_if_exists,
+    extract_bbox_aoi,
+    get_bucket_name_from_s3_uri,
+    get_city,
+    get_city_boundaries,
+    get_file_key_from_url,
+    get_file_path_from_uri,
+    write_file_to_s3,
+    write_json,
+    write_layer,
+    write_metric,
+    write_tile_grid,
+)
+from city_metrix.metrix_tools import (
+    construct_city_aoi_json,
+    get_haversine_distance,
+    get_projection_type,
+    get_utm_zone_from_latlon_point,
+    parse_city_aoi_json,
+    reproject_units,
+    standardize_y_dimension_direction,
+)
 
 TILE_NUMBER_PADCOUNT = 5
 MAX_RASTER_BYTES_FOR_SINGLE_FILE_OUTPUT = 500 # 500000000 # (Note: Teresina FabDem 544997973)
@@ -686,8 +717,8 @@ class LayerGroupBy:
 
     @staticmethod
     def _rasterize(gdf, snap_to: xr.DataArray):
-        from shapely.validation import make_valid
         from rasterio.features import rasterize
+        from shapely.validation import make_valid
 
         gdf['geometry'] = gdf['geometry'].apply(make_valid)
         if gdf.empty:
@@ -747,6 +778,9 @@ class Layer():
         """
         ...
 
+    def filename(self, bbox: GeoExtent) -> str:
+        return get_file_name(geo_extent=bbox, class_obj=self.aggregate)
+    
     def write(self, bbox: GeoExtent, target_file_path: str,
               tile_side_length: int = None, buffer_size: int = None, length_units: str = None,
               spatial_resolution: int = None, resampling_method: str = None, **kwargs):
@@ -1018,6 +1052,7 @@ class Layer():
 
     def _run_tasks(self, tasks, target_gb: int):
         import multiprocessing as mp
+
         import psutil
         from dask import compute
 
