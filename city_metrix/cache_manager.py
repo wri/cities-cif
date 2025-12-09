@@ -421,4 +421,4 @@ def get_file_name(geo_extent, class_obj):
             f"{city_id}{bound_marker}__{admin_level}__{feature_id}.{file_format}",
         )
     else:
-        return cached_folder, f"{city_id}{bound_marker}__{feature_id}.{file_format}"
+        return (cached_folder, f"{city_id}{bound_marker}__{feature_id}.{file_format}")
