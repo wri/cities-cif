@@ -407,7 +407,7 @@ def get_cached_file_key(
 def get_file_name(geo_extent, class_obj):
     city_id = geo_extent.city_id
     admin_level = geo_extent.admin_level
-    _, feature_id, file_format, _ = build_cache_name(class_obj)
+    cached_folder, feature_id, file_format, _ = build_cache_name(class_obj)
     feature_base_class_name = class_obj.__class__.__bases__[0].__name__
     if admin_level == "urban_extent" and FILE_KEY_URBEXTBOUND_MARKER:
         bound_marker = "__urban_extent"
@@ -416,6 +416,9 @@ def get_file_name(geo_extent, class_obj):
     else:
         bound_marker = ""
     if feature_base_class_name.lower() == "layer":
-        return f"{city_id}{bound_marker}__{admin_level}__{feature_id}.{file_format}"
+        return (
+            cached_folder,
+            f"{city_id}{bound_marker}__{admin_level}__{feature_id}.{file_format}",
+        )
     else:
-        return f"{city_id}{bound_marker}__{feature_id}.{file_format}"
+        return cached_folder, f"{city_id}{bound_marker}__{feature_id}.{file_format}"
