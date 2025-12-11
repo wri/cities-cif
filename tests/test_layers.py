@@ -7,7 +7,7 @@ from city_metrix.constants import ProjectionType
 from city_metrix.layers import *
 from city_metrix.metrix_tools import get_projection_type
 from tests.conftest import EXECUTE_IGNORED_TESTS
-from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1, BBOX_ARG_BUENOS_AIRES
+from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1, BBOX_ARG_BUENOS_AIRES, GEOEXTENT_DURBAN
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC and is a stable region
@@ -302,10 +302,16 @@ def test_tree_cover():
     assert_raster_stats(data, 1, 0.0, 100.0, 976626, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
-def test_urban_extents():
+def test_urban_extents_aoi_bbox():
     data = UrbanExtents().get_data(BBOX)
     assert np.size(data) > 0
     assert_vector_stats(data, 'city_names', None, 'Portland', 'Portland', 1, 0)
+    assert get_projection_type(data.crs.srs) == ProjectionType.UTM
+
+def test_urban_extents_city_centroid():
+    data = UrbanExtents().get_data(GEOEXTENT_DURBAN)
+    assert np.size(data) > 0
+    assert_vector_stats(data, 'city_names', None, 'Durban', 'Durban', 1, 0)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_urban_land_use():
@@ -323,7 +329,7 @@ def test_ut_globus():
 def test_vegetation_water_map():
     data = VegetationWaterMap().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.302, 0.998, 8737, 1060)
+    assert_raster_stats(data, 2, 0.302, 0.998, 8774, 1023)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_world_pop():

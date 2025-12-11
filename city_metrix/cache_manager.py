@@ -39,7 +39,7 @@ def is_cache_usable(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m=N
     file_uri, _, _, _ = build_file_key(s3_bucket, output_env, class_obj, geo_extent, aoi_buffer_m)
 
     # If the GeoExtent is for a full city and the cache data are available, then the cache is usable
-    if geo_extent.geo_type == GeoType.CITY and is_cache_object_available(file_uri):
+    if geo_extent.geo_type == GeoType.CITY_AREA and is_cache_object_available(file_uri):
         return True
 
     # For a city sub_area, cache is available for GeoTiff files only
