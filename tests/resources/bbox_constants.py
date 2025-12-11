@@ -31,6 +31,8 @@ BBOX_IND_BHOPAL = GeoExtent(bbox=(77.41791, 23.20914, 77.42856, 23.21651), crs=W
 
 BBOX_ARG_BUENOS_AIRES = GeoExtent(bbox=(-58.89079284843553, -35.009468078762055, -58.01673109153538, -34.001892090572426), crs=WGS_CRS)
 
+BBOX_ZAF_CAPE_TOWN = GeoExtent(bbox=(18.41294, -33.92100, 18.41401, -33.91999), crs=WGS_CRS)
+
 # A smaller city. Saif recommended Teresina since it's small and has all layers available
 city_admin = construct_city_aoi_json("BRA-Teresina", "city_admin_level")
 GEOZONE_TERESINA = GeoZone(geo_zone=city_admin)
