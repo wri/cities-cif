@@ -3,8 +3,8 @@ import geopandas as gpd
 import numpy as np
 
 from city_metrix.metrix_model import Layer, GeoExtent, get_class_default_spatial_resolution
-from . import AverageNetBuildingHeight
 from ..constants import GEOJSON_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
+from .average_net_building_height import AverageNetBuildingHeight
 from .overture_buildings import OvertureBuildings
 from .ut_globus import UtGlobus
 
