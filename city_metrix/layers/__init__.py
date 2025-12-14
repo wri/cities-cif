@@ -26,17 +26,19 @@ from .ndvi_sentinel2_gee import NdviSentinel2
 from .ndwi_sentinel2_gee import NdwiSentinel2
 from .nex_gddp_cmip6 import NexGddpCmip6, NexGddpCmip6Variables
 from .open_buildings import OpenBuildings
-from .open_street_map import OpenStreetMap, OpenStreetMapClass
+from .open_street_map import OpenStreetMap, OpenStreetMapClass, OsmHospitals
 from .open_urban import OpenUrban
 from .overture_buildings_dsm import OvertureBuildingsDSM
 from .overture_buildings_w_height import OvertureBuildingsHeight
 from .overture_buildings import OvertureBuildings
 from .pop_weighted_pm2p5 import PopWeightedPM2p5
+from .population_access import AccessibleRegion, AccessibleCount, AccessibleCountPopWeighted
 from .protected_areas import ProtectedAreas
 from .riparian_areas import RiparianAreas
 from .sentinel_2_level_2 import Sentinel2Level2
 from .slope import Slope
-from .species_richness import SpeciesRichness, GBIFTaxonClass
+from .species_observations import SpeciesObservations, GBIFTaxonClass
+# from .species_richness import SpeciesRichness, GBIFTaxonClass
 from .surface_water import SurfaceWater
 from .tree_canopy_cover_mask import TreeCanopyCoverMask
 from .tree_canopy_height import TreeCanopyHeight
