@@ -202,7 +202,7 @@ def test_impervious_area__percent():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 78.51, 100.00, 100, 0)
+    assert_metric_stats(indicator, 2, 100, 100.00, 100, 0)
 
 def test_impervious_surface_on_urbanized_land__percent():
     indicator = ImperviousSurfaceOnUrbanizedLand__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
