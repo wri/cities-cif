@@ -145,11 +145,11 @@ class MeanPM2P5ExposurePopWeightedPercentOfWHOGuideline__Percent(Metric):
                 except:
                     mean_pm2p5_list.append(np.nan)
 
-        result = geo_zone.zones.copy().drop(['geometry'], axis=1)
+        result = geo_zone.zones.rename({'id': 'zone'}, axis=1)
         result['value'] = mean_pm2p5_list
         result['value'] = 100 * result['value'] / WHO_AQG
 
-        return result
+        return result[["zone", "value"]]
 
 
 class MeanPM2P5ExposurePopWeightedChildren__MicrogramsPerCubicMeter(Metric):

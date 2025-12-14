@@ -39,8 +39,10 @@ class HighLandSurfaceTemperature(Layer):
         lst = (LandSurfaceTemperature(start_date, end_date)
                .get_data(bbox=geographic_bbox, spatial_resolution=spatial_resolution))
 
-        lst_mean = lst.mean(dim=['x', 'y'])
-        high_lst = lst.where(lst >= (lst_mean + self.THRESHOLD_ADD))
+        lst_mean = float(lst.mean(dim=['x', 'y']).median())
+
+        lst_timemean = lst.mean(["time"])
+        high_lst = lst_timemean.where(lst_timemean >= (lst_mean + self.THRESHOLD_ADD)).rio.write_crs(bbox.crs)
 
         return high_lst
 
