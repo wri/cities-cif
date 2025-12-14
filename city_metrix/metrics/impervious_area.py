@@ -20,7 +20,7 @@ class ImperviousArea__Percent(Metric):
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         imperv_layer = ImperviousSurface(year=self.year)
-        total_layer = ImperviousSurface(year=None)
+        total_layer = ImperviousSurface(year=self.year)
 
         # # monkey‐patch impervious get_data to fill na
         # imperv_fillna = ImperviousSurface(year=self.year)

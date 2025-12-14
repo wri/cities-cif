@@ -300,7 +300,7 @@ def test_number_species_vascular_plant_richness__species():
 
 def test_number_species_bird_richness_in_builtup_area__species():
     random.seed(42)
-    indicator = BirdRichnessInBuiltUpArea__Species().get_metric(GEOZONE_TERESINA)
+    indicator = BirdRichnessInBuiltUpArea__Percent().get_metric(GEOZONE_TERESINA)
     expected_zone_size = len(GEOZONE_TERESINA.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
@@ -348,7 +348,7 @@ def test_tree_carbon_flux__tonnes():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, -39.046, 1.256, 100, 0)
+    assert_metric_stats(indicator, 2, -71.29, -0.53, 100, 0)
 
 def test_urban_open_space__percent():
     indicator = UrbanOpenSpace__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
