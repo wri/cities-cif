@@ -1120,7 +1120,7 @@ class Layer:
         :param force_data_refresh: whether to force data refresh from source
         """
 
-        if bbox.geo_type != GeoType.CITY_AREA:
+        if bbox.geo_type != GeoType.CITY_AREA and bbox.geo_type != GeoType.CITY_CENTROID:
             raise ValueError("Non-city data cannot be cached.")
 
         standard_env = standardize_s3_env(s3_env)
