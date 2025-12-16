@@ -132,6 +132,7 @@ class GeoZone:
             self.crs = WGS_CRS
             self.projection_type = get_projection_type(self.crs)
             self.centroid = shapely.Point(self.longitude, self.latitude)
+            self.admin_level = "city_centroid"
         else:
             self.bounds = self.bbox
             self.epsg_code = int(self.crs.split(":")[1])
@@ -1210,7 +1211,7 @@ class Layer:
     def _build_city_cache(
         self, bbox, spatial_resolution, target_uri, aoi_buffer_m: int = None
     ):
-        if bbox.geo_type == GeoType.CITY_AREA:
+        if bbox.geo_type == GeoType.CITY_AREA or bbox.geo_type == GeoType.CITY_CENTROID:
             if hasattr(self.aggregate, "PROCESSING_TILE_SIDE_M"):
                 tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
             else:
@@ -1219,28 +1220,36 @@ class Layer:
             if aoi_buffer_m is not None:
                 bbox = bbox.buffer_utm_bbox(aoi_buffer_m)
 
-            bbox_area = bbox.as_utm_bbox().polygon.area
-            if (
-                tile_side_m is not None
-                and bbox_area > tile_side_m**2
-                and self.aggregate.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION
-            ):
-                self._cache_data_by_fishnet_tiles(
-                    bbox=bbox,
-                    tile_side_m=tile_side_m,
-                    spatial_resolution=spatial_resolution,
-                    target_uri=target_uri,
-                )
-            else:
+            if bbox.geo_type == GeoType.CITY_CENTROID:
                 result_data = self.aggregate.get_data(
                     bbox=bbox, spatial_resolution=spatial_resolution
                 )
                 delete_s3_file_if_exists(target_uri)
                 delete_s3_folder_if_exists(target_uri)
                 write_layer(result_data, target_uri, self.aggregate.OUTPUT_FILE_FORMAT)
+            else:
+                bbox_area = bbox.as_utm_bbox().polygon.area
+                if (
+                    tile_side_m is not None
+                    and bbox_area > tile_side_m**2
+                    and self.aggregate.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION
+                ):
+                    self._cache_data_by_fishnet_tiles(
+                        bbox=bbox,
+                        tile_side_m=tile_side_m,
+                        spatial_resolution=spatial_resolution,
+                        target_uri=target_uri,
+                    )
+                else:
+                    result_data = self.aggregate.get_data(
+                        bbox=bbox, spatial_resolution=spatial_resolution
+                    )
+                    delete_s3_file_if_exists(target_uri)
+                    delete_s3_folder_if_exists(target_uri)
+                    write_layer(result_data, target_uri, self.aggregate.OUTPUT_FILE_FORMAT)
         else:
             raise ValueError(
-                f"Data not cached for {self.aggregate.__class__.__name__}. Data can only be cached for CITY_AREA geo_extent."
+                f"Data not cached for {self.aggregate.__class__.__name__}. Data can only be cached for CITY_AREA or CITY_CENTROID geo_extent."
             )
 
     def _get_completed_tile_ids(self, file_paths):
