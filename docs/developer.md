@@ -63,6 +63,8 @@ We also have and API for storing city polygons and calculated metrics in a stand
 
 3. [Optional] If you want to add new cities or indicator values to the API, you will need access to our Carto account but the framework does not depend on this.
 
+Use `uv sync --dev` to create the local development environment defined in `pyproject.toml` before running tests or adding new code.
+
 
 ## Adding a Data layer
 Hopefully we already have the layers you need in `city_metrix/layers/` and you can skip this step. If not here is the process of creating a new one.
@@ -85,7 +87,7 @@ Hopefully we already have the layers you need in `city_metrix/layers/` and you c
 
 5. Add a test to [tests/layers.py](../tests/layers.py) to ensure the new layer is working as expected.
 
-6. Add new dependencies to [setup.py](../setup.py) and [environment.yml](../environment.yml).
+6. Add new dependencies to `pyproject.toml` and run `uv sync --dev` to refresh the lockfile and local environment.
 
 7. Add a section to the get layers.ipynb notebook to demonstrate how to use the new layer.
 
@@ -109,7 +111,7 @@ Once you have all the data layers you need as inputs, here is the process to cre
 
 3. Add a test to [tests/metrics.py](../tests/metrics.py) to ensure the new indicator is working as expected.
 
-4. Add new dependencies to [setup.py](../setup.py) and [environment.yml](../environment.yml).
+4. Add new dependencies to `pyproject.toml` and run `uv sync --dev` to refresh the lockfile and local environment.
 
 5. Create a PR to merge the new indicator into the main branch with these in the PR description:
     - Link to Jira ticket (if any)
