@@ -1,6 +1,7 @@
 import os
 import re
 import geopandas as gpd
+from ..constants import WGS_CRS
 
 
 def search_for_ut_globus_city_by_contained_polygon(query_polygon, utm_crs):
@@ -9,7 +10,7 @@ def search_for_ut_globus_city_by_contained_polygon(query_polygon, utm_crs):
 
     gdf = gpd.read_file(gpkg_path, layer='ut_globus_cities')
     gdf = gdf.to_crs(utm_crs)
-    query_polygon = gpd.GeoSeries([query_polygon], crs=gdf.crs).to_crs(utm_crs).iloc[0]
+    query_polygon = gpd.GeoSeries([query_polygon], crs=WGS_CRS).to_crs(utm_crs).iloc[0]
 
     # Find the record with the greatest overlap
     gdf['overlap_area'] = gdf['geometry'].intersection(query_polygon).area
