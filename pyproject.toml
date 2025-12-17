@@ -29,7 +29,8 @@ dependencies = [
     "numpy",
     "overturemaps>=0.18",
     "ipython",
-    "pvlib"
+    "pvlib",
+    "timeout-decorator"
 ]
 
 [dependency-groups]
