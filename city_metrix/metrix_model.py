@@ -1295,7 +1295,7 @@ class Layer:
         )
         fishnet["index"] = fishnet.index
         fishnet["download_failed"] = "unknow"
-        fishnet = fishnet[["index", "geometry"]]
+        fishnet = fishnet[["index", "geometry"]].copy()
 
         # Temporary hack for testing
         # fishnet = fishnet.iloc[:6]
@@ -1305,7 +1305,7 @@ class Layer:
             TILE_NUMBER_PADCOUNT
         )
         fishnet["success"] = "unknown"
-        fishnet = fishnet[["index", "tile_name", "success", "geometry"]]
+        fishnet = fishnet[["index", "tile_name", "success", "geometry"]].copy()
         grid_file_uri = f"{target_uri}/fishnet_grid.json"
         write_file_to_s3(fishnet, grid_file_uri, GEOJSON_FILE_EXTENSION)
 
