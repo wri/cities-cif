@@ -136,11 +136,14 @@ def _join_overture_and_utglobus(overture_buildings, ut_globus):
     merged_gdf = filtered_data.merge(mode_or_median_df.rename(columns={'utglobus_height': 'mode_or_med_utglobus_height'}), on='id')
     thinned_gdf = merged_gdf.drop(columns=['utglobus_height', 'height'])
 
-    # flatten multi-valued columns
+    # Drop duplicates
+    # First flatten multi-valued columns since drop_duplicates() function fails for multi-valued lists and dictionaries
+    # Note: We may be able to simply drop the multi-valued columns, but retaining the content is useful for testing
     thinned_gdf['sources'] = thinned_gdf['sources'].apply(_list_to_string)
     thinned_gdf['names'] = thinned_gdf['names'].apply(_list_to_string)
-
     overture_with_globus_height = thinned_gdf.drop_duplicates()
+
+    # Initializing the height column
     overture_with_globus_height['height'] = overture_with_globus_height['mode_or_med_utglobus_height']
     # Assign source as UTGlobus
     overture_with_globus_height['height_source'] = 'UTGlobus'
