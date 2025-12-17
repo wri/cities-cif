@@ -27,9 +27,10 @@ class UtGlobus(Layer):
                  force_data_refresh=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
 
+        utm_crs = bbox.as_utm_bbox().crs
         if self.city == '' or self.city is None:
             bbox_polygon = bbox.as_geographic_bbox().polygon
-            self.city = search_for_ut_globus_city_by_contained_polygon(bbox_polygon)
+            self.city = search_for_ut_globus_city_by_contained_polygon(bbox_polygon, utm_crs)
 
         dataset = ee.FeatureCollection(f"projects/sat-io/open-datasets/UT-GLOBUS/{self.city}")
         ee_rectangle = bbox.to_ee_rectangle()
@@ -60,14 +61,13 @@ class UtGlobus(Layer):
                         gc_building_polygon.append(new_row)
             if len(gc_building_polygon) > 0:
                 # convert list to geodataframe
-                gc_building_polygon = gpd.GeoDataFrame(gc_building_polygon, geometry="geometry")
+                gc_building_polygon = gpd.GeoDataFrame(gc_building_polygon, geometry="geometry", crs=gc_building.crs)
                 # replace GeometryCollection with Polygon, merge back to building
                 building = building[building.geom_type != "GeometryCollection"]
                 building = pd.concat([building, gc_building_polygon], ignore_index=True).reset_index()
             else:
                 building = building[building.geom_type != "GeometryCollection"].reset_index()
 
-        utm_crs = ee_rectangle["crs"]
         if building.crs.srs == WGS_CRS:
             building = building.to_crs(utm_crs)
 
