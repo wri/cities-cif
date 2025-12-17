@@ -3,8 +3,8 @@ import geopandas as gpd
 import numpy as np
 
 from city_metrix.metrix_model import Layer, GeoExtent, get_class_default_spatial_resolution
+from . import AverageNetBuildingHeight
 from ..constants import GEOJSON_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
-from .average_net_building_height import AverageNetBuildingHeight
 from .overture_buildings import OvertureBuildings
 from .ut_globus import UtGlobus
 
@@ -98,6 +98,12 @@ class OvertureBuildingsHeight(Layer):
 
         return result_building_heights
 
+def _list_to_string(val, delimiter=", "):
+    if isinstance(val, list):
+        # Convert all elements to string, skip None
+        return delimiter.join(str(x) for x in val if x is not None)
+    return "" if pd.isna(val) else str(val)
+
 def _join_overture_and_utglobus(overture_buildings, ut_globus):
     # Perform spatial join - transferring height values directly during the join
     # Give preference to UTGlobus heights
@@ -128,7 +134,13 @@ def _join_overture_and_utglobus(overture_buildings, ut_globus):
     filtered_data = joined_data.dropna(subset=['utglobus_height'])
     mode_or_median_df  = filtered_data.groupby('id')['utglobus_height'].apply(mode_or_median).reset_index()
     merged_gdf = filtered_data.merge(mode_or_median_df.rename(columns={'utglobus_height': 'mode_or_med_utglobus_height'}), on='id')
-    overture_with_globus_height = merged_gdf.drop(columns=['utglobus_height', 'height']).drop_duplicates()
+    thinned_gdf = merged_gdf.drop(columns=['utglobus_height', 'height'])
+
+    # flatten multi-valued columns
+    thinned_gdf['sources'] = thinned_gdf['sources'].apply(_list_to_string)
+    thinned_gdf['names'] = thinned_gdf['names'].apply(_list_to_string)
+
+    overture_with_globus_height = thinned_gdf.drop_duplicates()
     overture_with_globus_height['height'] = overture_with_globus_height['mode_or_med_utglobus_height']
     # Assign source as UTGlobus
     overture_with_globus_height['height_source'] = 'UTGlobus'
@@ -143,6 +155,8 @@ def _join_overture_and_utglobus(overture_buildings, ut_globus):
     df_combined = gpd.GeoDataFrame(pd.concat([overture_with_globus_height, overture_without_globus_height], ignore_index=True)).reset_index(drop=True)
 
     return df_combined
+
+
 
 def mode_or_median(series):
     mode_values = series.mode()
