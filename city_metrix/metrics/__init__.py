@@ -1,3 +1,4 @@
+from .access_to_amenities import *
 from .air_pollutant_annual_daily_statistic import AirPollutantAnnualDailyMean__Tonnes, AirPollutantAnnualDailyMax__Tonnes, AirPollutantAnnualTotalSocialCost__USD
 from .air_pollutant_who_exceedance_days import AirPollutantWhoExceedance__Days
 from .area_fracveg_exceeds_threshold import AreaFractionalVegetationExceedsThreshold__Percent
@@ -7,27 +8,30 @@ from .built_land_with_low_surface_reflectivity import BuiltLandWithLowSurfaceRef
 from .built_land_with_vegetation import BuiltLandWithVegetation__Percent
 from .canopy_area_per_resident import *
 from .canopy_covered_population import *
+from .count_accessible_amenities import *
 from .era5_met_preprocessing_umep_gee import Era5MetPreprocessingUmep
 from .era5_met_preprocessing_upenn_gee import Era5MetPreprocessingUPenn
 from .future_climate_hazard import *
 from .ghg_emissions import GhgEmissions__Tonnes
 from .habitat_connectivity import HabitatConnectivityEffectiveMeshSize__Hectares, HabitatConnectivityCoherence__Percent
-from .habitat_types_restored import HabitatTypesRestored__CoverTypes
+from .habitat_area_restored import HabitatAreaRestored__Percent
+from .habitat_types_restored import HabitatTypesRestored__CoverTypes, HabitatTypesRestored__Percent
 from .hospitals_per_ten_thousand_residents import HospitalsPerTenThousandResidents__Hospitals
-from .impervious_area import ImperviousArea__Percent
-from .impervious_surface_on_urbanized_land import ImperviousSurfaceOnUrbanizedLand__Percent
+from .impervious_area import ImperviousArea__Percent, PermeableArea__Percent
+from .impervious_surface_on_urbanized_land import ImperviousSurfaceOnUrbanizedLand__Percent, PermeableSurfaceOnUrbanizedLand__Percent
 from .key_biodiversity_area import KeyBiodiversityAreaProtected__Percent, KeyBiodiversityAreaUndeveloped__Percent
 from .land_near_natural_drainage import LandNearNaturalDrainage__Percent
 from .mean_pm2p5_exposure import *
 from .mean_tree_cover import MeanTreeCover__Percent
 from .natural_areas import NaturalAreas__Percent
-from .number_species import *
+# from .number_species import *
+from .species_count import *
 from .protected_area import ProtectedArea__Percent
 from .recreational_space_per_thousand import RecreationalSpacePerThousand__HectaresPerThousandPersons
 from .riparian_land_with_vegetation_or_water import RiparianLandWithVegetationOrWater__Percent
 from .riverine_or_coastal_flood_risk_area import RiverineOrCoastalFloodRiskArea__Percent
 from .steeply_sloped_land_with_vegetation import SteeplySlopedLandWithVegetation__Percent
-from .tree_carbon_flux import TreeCarbonFlux__Tonnes
+from .tree_carbon_flux import TreeCarbonFlux__Tonnes, TreeCarbonFlux__TonnesPerHectare
 from .urban_open_space import UrbanOpenSpace__Percent
 from .vegetation_water_change import *
 from .water_cover import WaterCover__Percent
