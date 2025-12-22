@@ -132,7 +132,7 @@ class GeoZone:
             self.crs = WGS_CRS
             self.projection_type = get_projection_type(self.crs)
             self.centroid = shapely.Point(self.longitude, self.latitude)
-            self.admin_level = "city_centroid"
+            self.admin_level = "urban_extent"
         else:
             self.bounds = self.bbox
             self.epsg_code = int(self.crs.split(":")[1])
