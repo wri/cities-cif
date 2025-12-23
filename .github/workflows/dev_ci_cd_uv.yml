@@ -1,4 +1,4 @@
-name: Dev CIF API CI/CD Conda
+name: Dev CIF API CI/CD (uv)
 
 on:
   pull_request:
@@ -9,34 +9,26 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -l {0}
     strategy:
       max-parallel: 4
       matrix:
         python-version: ["3.10"]
     steps:
     - uses: actions/checkout@v4
-    - uses: conda-incubator/setup-miniconda@v2
+    - uses: astral-sh/setup-uv@v3
       with:
-        activate-environment: cities-cif
-        environment-file: environment.yml
         python-version: ${{ matrix.python-version }}
-        auto-update-conda: true
-    - name: Install Linux dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y gdal-bin libgdal-dev
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
+    - name: Install dependencies
+      run: uv sync --dev
     - name: Run Tests
       env:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
-          pytest --durations=10
+          uv run pytest --durations=10
