@@ -398,9 +398,9 @@ def get_file_name(geo_extent, class_obj):
     admin_level = geo_extent.admin_level
     cached_folder, feature_id, file_format, _ = build_cache_name(class_obj)
     feature_base_class_name = class_obj.__class__.__bases__[0].__name__
-    if admin_level == "urban_extent" and FILE_KEY_URBEXTBOUND_MARKER:
-        bound_marker = "__urban_extent"
-    elif admin_level == "city_centroid" and FILE_KEY_CENTROIDBOUND_MARKER:
+    # if admin_level == "urban_extent" and FILE_KEY_URBEXTBOUND_MARKER:
+    #     bound_marker = "__urban_extent"
+    if admin_level == "city_centroid" and FILE_KEY_CENTROIDBOUND_MARKER:
         bound_marker = "__city_centroid"
     elif FILE_KEY_ADMINBOUND_MARKER:
         bound_marker = f"__{admin_level}"
