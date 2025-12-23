@@ -2,18 +2,18 @@ import ee
 import numpy as np
 import pytest
 
-from city_metrix import AcagPM2p5
 from city_metrix.constants import ProjectionType, WGS_CRS
-from city_metrix.layers import NdviSentinel2, TreeCover, Albedo, AlosDSM, Era5HottestDay, UtGlobus, \
-    OvertureBuildingsHeight, AlbedoCloudMasked
 from city_metrix.metrix_tools import get_projection_type
-from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_1, BBOX_IDN_JAKARTA
 from city_metrix.metrix_model import get_image_collection, GeoExtent
-from tests.test_layers import assert_vector_stats, assert_raster_stats
+from city_metrix.layers import AcagPM2p5, NdviSentinel2, TreeCover, Albedo, AlosDSM, Era5HottestDay, UtGlobus, \
+    OvertureBuildingsHeight, AlbedoCloudMasked
+from tests.resources.bbox_constants import BBOX_BRA_LAURO_DE_FREITAS_1, BBOX_USA_OR_PORTLAND_1, BBOX_IDN_JAKARTA
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 from tests.conftest import EXECUTE_IGNORED_TESTS
+from tests.test_layers import assert_vector_stats, assert_raster_stats
 
-EE_IMAGE_DIMENSION_TOLERANCE = 1  # Tolerance compensates for variable results from GEE service
+# Tolerance compensates for variable results from GEE service
+EE_IMAGE_DIMENSION_TOLERANCE = 1
 COUNTRY_CODE_FOR_BBOX = 'BRA'
 BBOX = BBOX_BRA_LAURO_DE_FREITAS_1
 
@@ -29,7 +29,7 @@ def test_read_image_collection():
     expected_crs = 32724
     expected_x_size = 186
     expected_y_size = 199
-    
+
     actual_crs = data.rio.crs
     actual_x_size = data['x'].size
     actual_y_size = data['y'].size
@@ -39,6 +39,7 @@ def test_read_image_collection():
         pytest.approx(expected_x_size, rel=EE_IMAGE_DIMENSION_TOLERANCE) == actual_x_size,
         pytest.approx(expected_y_size, rel=EE_IMAGE_DIMENSION_TOLERANCE) == actual_y_size
     )
+
 
 def test_read_image_collection_scale():
     ic = ee.ImageCollection("ESA/WorldCover/v100")
@@ -55,6 +56,7 @@ def test_read_image_collection_scale():
         pytest.approx(expected_y_size, rel=EE_IMAGE_DIMENSION_TOLERANCE) == actual_y_size
     )
 
+
 def test_albedo_metrics_default_resampling():
     # Default resampling_method is bilinear
     data = Albedo(start_date="2021-01-01", end_date="2022-01-01").get_data(BBOX, spatial_resolution=10)
@@ -69,15 +71,18 @@ def test_albedo_metrics_default_resampling():
     assert actual_min_value == expected_min_value
     assert actual_max_value == expected_max_value
 
+
 def test_albedo_cloud_masked_southern_hemisphere():
     data = AlbedoCloudMasked().get_data(BBOX_IDN_JAKARTA)
     assert np.size(data) > 0
     assert_raster_stats(data, 2, 0.00288, 1.0000, 1223220, 0)
 
+
 def test_albedo_southern_hemisphere():
     data = Albedo().get_data(BBOX_IDN_JAKARTA)
     assert np.size(data) > 0
     assert_raster_stats(data, 2, 0.0057, 0.72, 1219518, 3702)
+
 
 def test_albedo_metrics_no_resampling():
     data = Albedo(start_date="2021-01-01", end_date="2022-01-01").get_data(BBOX, spatial_resolution=10, resampling_method= None)
@@ -146,8 +151,9 @@ def test_tree_cover_values():
     actual_mean_value = TreeCover().get_data(BBOX).mean()
     tolerance = 0.1
     assert (
-            pytest.approx(expected_mean_value, rel=tolerance) == actual_mean_value
+        pytest.approx(expected_mean_value, rel=tolerance) == actual_mean_value
     )
+
 
 def test_ut_globus_blank_city():
     data = UtGlobus().get_data(BBOX_USA_OR_PORTLAND_1)
@@ -161,7 +167,7 @@ def test_overture_height_rio():
     rio_bbox = GeoExtent(bbox=(-43.17135,-22.90901, -43.16832,-22.90598), crs=WGS_CRS)
     data = OvertureBuildingsHeight(city).get_data(rio_bbox)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'height', 1, 4.0, 436.0, 42, 0)
+    assert_vector_stats(data, 'height', 1, 4.0, 436.0, 43, 0)
 
 
 def test_wgs_utm_equivalency():
@@ -176,9 +182,8 @@ def test_wgs_utm_equivalency():
 
 
 def _convert_fraction_to_rounded_percent(fraction):
-        return _convert_to_rounded_integer(fraction * 100)
+    return _convert_to_rounded_integer(fraction * 100)
 
 
 def _convert_to_rounded_integer(value):
     return int(round(value))
-

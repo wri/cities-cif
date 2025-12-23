@@ -3,13 +3,14 @@ import geopandas as gpd
 import numpy as np
 
 from city_metrix.metrix_model import Layer, GeoExtent, get_class_default_spatial_resolution
-from . import AverageNetBuildingHeight
 from ..constants import GEOJSON_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
+from .average_net_building_height import AverageNetBuildingHeight
 from .overture_buildings import OvertureBuildings
 from .ut_globus import UtGlobus
 
 STANDARD_BUILDING_FLOOR_HEIGHT_M = 3.5
 STANDARD_SINGLE_STORY_BUILDING_SQM = 50
+
 
 class OvertureBuildingsHeight(Layer):
     OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
@@ -62,8 +63,7 @@ class OvertureBuildingsHeight(Layer):
                 storied_bldgs = empty_height_blgs[empty_height_blgs['num_floors'].notna()].copy()
                 storied_bldgs['height'] = storied_bldgs['num_floors'] * STANDARD_BUILDING_FLOOR_HEIGHT_M
                 storied_bldgs['height_source'] = 'Overture_floors'
-                result_building_heights.loc[storied_bldgs.index, ['height', 'height_source']] = (
-                    storied_bldgs)[['height', 'height_source']]
+                result_building_heights.loc[storied_bldgs.index, ['height', 'height_source']] = (storied_bldgs)[['height', 'height_source']]
 
             # Set height base on assumption about size of small, one-storied buildings
             if 'num_floors' in empty_height_blgs.columns:
@@ -98,6 +98,14 @@ class OvertureBuildingsHeight(Layer):
 
         return result_building_heights
 
+
+def _list_to_string(val, delimiter=", "):
+    if isinstance(val, list):
+        # Convert all elements to string, skip None
+        return delimiter.join(str(x) for x in val if x is not None)
+    return "" if pd.isna(val) else str(val)
+
+
 def _join_overture_and_utglobus(overture_buildings, ut_globus):
     # Perform spatial join - transferring height values directly during the join
     # Give preference to UTGlobus heights
@@ -128,7 +136,16 @@ def _join_overture_and_utglobus(overture_buildings, ut_globus):
     filtered_data = joined_data.dropna(subset=['utglobus_height'])
     mode_or_median_df  = filtered_data.groupby('id')['utglobus_height'].apply(mode_or_median).reset_index()
     merged_gdf = filtered_data.merge(mode_or_median_df.rename(columns={'utglobus_height': 'mode_or_med_utglobus_height'}), on='id')
-    overture_with_globus_height = merged_gdf.drop(columns=['utglobus_height', 'height']).drop_duplicates()
+    thinned_gdf = merged_gdf.drop(columns=['utglobus_height', 'height'])
+
+    # Drop duplicates
+    # First flatten multi-valued columns since drop_duplicates() function fails for multi-valued lists and dictionaries
+    # Note: We may be able to simply drop the multi-valued columns, but retaining the content is useful for testing
+    thinned_gdf['sources'] = thinned_gdf['sources'].apply(_list_to_string)
+    thinned_gdf['names'] = thinned_gdf['names'].apply(_list_to_string)
+    overture_with_globus_height = thinned_gdf.drop_duplicates()
+
+    # Initializing the height column
     overture_with_globus_height['height'] = overture_with_globus_height['mode_or_med_utglobus_height']
     # Assign source as UTGlobus
     overture_with_globus_height['height_source'] = 'UTGlobus'
@@ -144,12 +161,13 @@ def _join_overture_and_utglobus(overture_buildings, ut_globus):
 
     return df_combined
 
+
 def mode_or_median(series):
     mode_values = series.mode()
     if mode_values.size == 1:
         return mode_values.iloc[0]
     else:
-        y =  custom_median(series)
+        y = custom_median(series)
         return y
 
 

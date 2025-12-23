@@ -3,11 +3,12 @@
 import xarray as xr
 import numpy as np
 from rasterio.features import rasterize
+
 from city_metrix.metrix_model import Layer, GeoExtent, validate_raster_resampling_method
-from . import FabDEM
+from city_metrix.metrix_dao import extract_bbox_aoi
 from ..constants import GTIFF_FILE_EXTENSION
+from .fab_dem import FabDEM
 from .overture_buildings_w_height import OvertureBuildingsHeight
-from ..metrix_dao import extract_bbox_aoi
 from ..ut_globus_city_handler.ut_globus_city_handler import search_for_ut_globus_city_by_contained_polygon
 
 DEFAULT_SPATIAL_RESOLUTION = 1
@@ -46,10 +47,11 @@ class OvertureBuildingsDSM(Layer):
         # Population of the unbuffered DEM ensures that AOI is correct.
         building_buffer = BUILDING_INCLUSION_BUFFER_METERS
         buffered_utm_bbox = bbox.buffer_utm_bbox(building_buffer)
+        utm_crs = buffered_utm_bbox.crs
 
         if self.city == '' or self.city is None:
             bbox_polygon = bbox.as_geographic_bbox().polygon
-            self.city = search_for_ut_globus_city_by_contained_polygon(bbox_polygon)
+            self.city = search_for_ut_globus_city_by_contained_polygon(bbox_polygon, utm_crs)
 
         # Load buildings and sub-select to ones fully contained in buffered area
         buffered_buildings_gdf = OvertureBuildingsHeight(self.city).get_data(bbox=buffered_utm_bbox)
@@ -115,4 +117,3 @@ class OvertureBuildingsDSM(Layer):
         result_dsm = extract_bbox_aoi(result_dsm, bbox)
 
         return result_dsm
-

@@ -35,4 +35,4 @@ dependencies:
   - pvlib=0.13.0
   - pyopenssl>=23.2.0
   - pip:
-      - overturemaps>=0.17.0
+      - overturemaps>=0.18.0
