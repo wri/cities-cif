@@ -7,8 +7,8 @@ from city_metrix.constants import (
     CSV_FILE_EXTENSION,
     CUSTOM_CACHED_DIFFERENTLY,
     FILE_KEY_ADMINBOUND_MARKER,
-    FILE_KEY_URBEXTBOUND_MARKER,
     FILE_KEY_CENTROIDBOUND_MARKER,
+    FILE_KEY_URBEXTBOUND_MARKER,
     GEOJSON_FILE_EXTENSION,
     GTIFF_FILE_EXTENSION,
     LOCAL_CACHE_URI,
@@ -400,9 +400,9 @@ def get_file_name(geo_extent, class_obj):
     feature_base_class_name = class_obj.__class__.__bases__[0].__name__
     # if admin_level == "urban_extent" and FILE_KEY_URBEXTBOUND_MARKER:
     #     bound_marker = "__urban_extent"
-    if admin_level == "city_centroid" and FILE_KEY_CENTROIDBOUND_MARKER:
-        bound_marker = "__city_centroid"
-    elif FILE_KEY_ADMINBOUND_MARKER:
+    # if admin_level == "city_centroid" and FILE_KEY_CENTROIDBOUND_MARKER:
+    #     bound_marker = "__city_centroid"
+    if FILE_KEY_ADMINBOUND_MARKER:
         bound_marker = f"__{admin_level}"
     else:
         bound_marker = ""
