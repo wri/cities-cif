@@ -21,6 +21,7 @@ from city_metrix.metrix_dao import (
     read_csv_from_s3,
     read_geojson_from_cache,
     read_geotiff_from_cache,
+    read_geotiff_subarea_from_cache,
     read_netcdf_from_cache,
 )
 from city_metrix.metrix_tools import get_class_from_instance
