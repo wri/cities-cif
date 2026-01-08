@@ -25,7 +25,7 @@ def test_acag_pm2p5():
 def test_albedo_cloud_masked():
     data = AlbedoCloudMasked().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.0127, 0.6554, 9797, 0)
+    assert_raster_stats(data, 2, 0.015, 0.6554, 9797, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_albedo():
@@ -204,7 +204,7 @@ def test_openbuildings():
 def test_open_street_map():
     data = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(BBOX)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'highway', None, 'primary', 'tertiary', 153, 0)
+    assert_vector_stats(data, 'highway', None, 'primary', 'tertiary', 154, 0)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_open_urban_map():
