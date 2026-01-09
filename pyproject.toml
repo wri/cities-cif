@@ -1,0 +1,68 @@
+[project]
+name = "city_metrix"
+version = "0.3.0"
+description = "Module to calculate various metrics on cities."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "earthengine-api",
+    "geocube",
+    "gdal",
+    "odc-stac",
+    "geemap>=0.35.2",
+    "pystac-client",
+    "xarray",
+    "xarray-spatial",
+    "xee",
+    "rioxarray",
+    "utm",
+    "osmnx>=2.0.1",
+    "geopandas",
+    "xarray",
+    "s3fs",
+    "dask[complete]",
+    "boto3",
+    "cdsapi",
+    "scikit-image>=0.25.2",
+    "cfgrib",
+    "scipy",
+    "numpy",
+    "overturemaps>=0.18",
+    "ipython",
+    "pvlib",
+    "timeout-decorator"
+]
+
+[dependency-groups]
+dev = [
+    "jupyter",
+    "pytest==8.3.5",
+    "pytest-xdist",
+    "pytest-timeout"
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["city_metrix", "city_metrix.*"]
+
+[tool.setuptools.package-data]
+city_metrix = ["ut_globus_city_handler/global_ut_globus_cities.gpkg"]
+
+[tool.uv.sources]
+gdal = [
+  { index = "gdal-wheels", marker = "sys_platform == 'linux'" },
+  { index = "geospatial_wheels", marker = "sys_platform == 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "geospatial_wheels"
+url = "https://nathanjmcdougall.github.io/geospatial-wheels-index/"
+explicit = true
+
+[[tool.uv.index]]
+name = "gdal-wheels"
+url = "https://gitlab.com/api/v4/projects/61637378/packages/pypi/simple"
+explicit = true

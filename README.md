@@ -7,11 +7,11 @@ The Cities Indicator Framework (CIF) is a set of Python tools to make it easier 
 * If all you want to do is use the CIF, the quickest way to get started is to use our [WRI Cities Indicator Framework Colab Notebook](https://colab.research.google.com/drive/1PV1H-godxJ6h42p74Ij9sdFh3T0RN-7j#scrollTo=eM14UgpmpZL-)
 
 ## Installation
-* `pip install git+https://github.com/wri/cities-cif@v0.1.2` to install a specific version.
-* `pip install git+https://github.com/wri/cities-cif/releases/latest` gives you the latest stable release.
-* `pip install git+https://github.com/wri/cities-cif` gives you the main branch with is not stable.
+We use [uv](https://docs.astral.sh/uv/) for dependency management and virtual environments.
 
-NOTE: If you have already installed the package and want to update to the latest code you may need to add the `--force-reinstall` flag
+1. Install uv using the method recommended for your platform.
+2. From the repository root run `uv sync --dev` to create a local environment and install all dependencies.
+3. Use `uv run <command>` (for example, `uv run pytest`) so commands run inside the managed environment.
 
 ## PR Review
 
@@ -21,21 +21,12 @@ NOTE: If you have already installed the package and want to update to the latest
 2. [https://cli.github.com/](https://cli.github.com/)
    * On MacOS I recommend the Homebrew option
    * If you don't have an ssh key, it will install one for you
-3. Conda (or Mamba) to install dependencies
-   * If you have Homebrew `brew install --cask miniconda`
+3. uv to install dependencies
+   * See installation options at [uv installation](https://docs.astral.sh/uv/getting-started/installation/).
 
 ## Dependencies
 
-There are 2 ways to install dependencies. Choose one...
-
-### Conda
-
-`conda env create -f environment.yml` or `conda env update -f environment.yml`
-
-### Setuptools
-
-`python setup.py`
-NOTE: If you are using this method you may want to use something like pyenv to manage Python environments
+Project metadata and dependencies are defined in `pyproject.toml`. Run `uv sync --dev` after updating dependencies to ensure the local lockfile stays current. The generated `.venv` directory is managed by uv and should not be checked into version control.
 
 ## Credentials
 
