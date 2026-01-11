@@ -213,6 +213,12 @@ def test_open_urban_map():
     assert_raster_stats(data, 0, 110, 622, 976626, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
+def test_osm_pointcount_raster():
+    data = OsmPointCountRaster(osm_class=OpenStreetMapClass.ECONOMIC).get_data(BBOX)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 0, 0, 3, 100, 0)
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
+
 def test_overture_buildings():
     data = OvertureBuildings().get_data(BBOX)
     assert np.size(data) > 0
