@@ -2,9 +2,36 @@ from enum import Enum
 import osmnx as ox
 import geopandas as gpd
 import pandas as pd
+import ee
+import geemap
 
-from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION
-from city_metrix.metrix_model import Layer, GeoExtent
+from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GTIFF_FILE_EXTENSION
+from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
+
+def merge_osm_classes(class_list):
+    result = {}
+
+    # Get merged list of keys
+    keys = []
+    for cl in class_list:
+        keys += list(cl.keys())
+    keys = list(set(keys))
+
+    # For each key, get merged list of values
+    for key in keys:
+        vals = []
+        for cl in class_list:
+            if key in cl:
+                if cl[key] != False:
+                    if cl[key] == True:
+                        vals.append(cl[key])
+                    else:
+                        vals += cl[key]
+        if True in vals:
+            result[key] = True
+        else:
+            result[key] = list(set(vals))
+    return result
 
 
 class OpenStreetMapClass(Enum):
@@ -66,6 +93,7 @@ class OpenStreetMapClass(Enum):
                     'public_transport': ['platform', 'stop_position', 'stop_area'],
                     'station': ['subway'],
                     'aerialway': ['station']}
+    ECONOMIC = merge_osm_classes([COMMERCE, HEALTHCARE_SOCIAL, AGRICULTURE, GOVERNMENT, INDUSTRY, TRANSPORTATION_LOGISTICS, EDUCATION])
 
 
 class OpenStreetMap(Layer):
@@ -121,3 +149,39 @@ class OpenStreetMap(Layer):
         osm_feature = osm_feature.to_crs(utm_crs)
 
         return osm_feature
+
+class OsmPointCountRaster(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["osm_class"]
+    MINOR_NAMING_ATTS = None
+
+    """
+    Attributes:
+        osm_class: OSM class
+    """
+    def __init__(self, osm_class:OpenStreetMapClass=OpenStreetMapClass.ALL, **kwargs):
+        super().__init__(**kwargs)
+        self.osm_class = osm_class
+
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 force_data_refresh=False):
+        # Note: spatial_resolution and resampling_method arguments are ignored.
+        osm_data = OpenStreetMap(osm_class=self.osm_class).get_data(bbox)
+        osm_point_data = osm_point_data = osm_data.copy()
+        osm_point_data.geometry = osm_data.centroid
+        osmpoints_ee = geemap.gdf_to_ee(osm_point_data)
+        osmcount_ras_ee = osmpoints_ee.reduceToImage(properties=['id'], reducer=ee.Reducer.count())
+
+        # Get Worldpop raster for grid template
+        extent = bbox.to_ee_rectangle()['ee_geometry']
+        worldpop_ic = ee.ImageCollection("WorldPop/GP/100m/pop").filterBounds(extent).filter(ee.Filter.eq('year', 2020))
+        worldpop = worldpop_ic.mosaic().clip(extent)
+        
+        count_raster = get_image_collection(
+            ee.ImageCollection(worldpop.gt(-1).multiply(osmcount_ras_ee)),
+            bbox.to_ee_rectangle(),
+            100,
+            "amenities"
+        ).population
+
+        return count_raster
