@@ -1,36 +1,30 @@
-from enum import Enum
+import ee
+import geemap
 import osmnx as ox
 import geopandas as gpd
 import pandas as pd
-import ee
-import geemap
+from enum import Enum
 
 from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GTIFF_FILE_EXTENSION
 from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
 
-def merge_osm_classes(class_list):
+DEFAULT_SPATIAL_RESOLUTION = 100
+
+
+def _merge_osm_classes(class_list):
     result = {}
+    keys = {key for class_item in class_list for key in class_item}
 
-    # Get merged list of keys
-    keys = []
-    for cl in class_list:
-        keys += list(cl.keys())
-    keys = list(set(keys))
-
-    # For each key, get merged list of values
     for key in keys:
-        vals = []
-        for cl in class_list:
-            if key in cl:
-                if cl[key] != False:
-                    if cl[key] == True:
-                        vals.append(cl[key])
-                    else:
-                        vals += cl[key]
-        if True in vals:
-            result[key] = True
-        else:
-            result[key] = list(set(vals))
+        values = []
+        for class_item in class_list:
+            value = class_item.get(key)
+            if value is True:
+                values.append(True)
+            elif value:
+                values.extend(value)
+        result[key] = True if True in values else list(set(values))
+
     return result
 
 
@@ -93,7 +87,8 @@ class OpenStreetMapClass(Enum):
                     'public_transport': ['platform', 'stop_position', 'stop_area'],
                     'station': ['subway'],
                     'aerialway': ['station']}
-    ECONOMIC = merge_osm_classes([COMMERCE, HEALTHCARE_SOCIAL, AGRICULTURE, GOVERNMENT, INDUSTRY, TRANSPORTATION_LOGISTICS, EDUCATION])
+    ECONOMIC = _merge_osm_classes(
+        [COMMERCE, HEALTHCARE_SOCIAL, AGRICULTURE, GOVERNMENT, INDUSTRY, TRANSPORTATION_LOGISTICS, EDUCATION])
 
 
 class OpenStreetMap(Layer):
@@ -105,7 +100,7 @@ class OpenStreetMap(Layer):
     Attributes:
         osm_class: OSM class
     """
-    def __init__(self, osm_class:OpenStreetMapClass=OpenStreetMapClass.ALL, **kwargs):
+    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 
@@ -150,7 +145,8 @@ class OpenStreetMap(Layer):
 
         return osm_feature
 
-class OsmAmenityCount(Layer):
+
+class OpenStreetMapAmenityCount(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["osm_class"]
     MINOR_NAMING_ATTS = None
@@ -159,13 +155,15 @@ class OsmAmenityCount(Layer):
     Attributes:
         osm_class: OSM class
     """
-    def __init__(self, osm_class:OpenStreetMapClass=OpenStreetMapClass.ALL, convert_to_centroids=False, **kwargs):
+    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, convert_to_centroids=False, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
         self.convert_to_centroids = convert_to_centroids
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
-                 force_data_refresh=False):
+    def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
         # Note: spatial_resolution and resampling_method arguments are ignored.
         osm_data = OpenStreetMap(osm_class=self.osm_class).get_data(bbox)
         if self.convert_to_centroids:
@@ -177,15 +175,20 @@ class OsmAmenityCount(Layer):
         osmcount_ras_ee = osmdata_ee.reduceToImage(properties=['amenitycount'], reducer=ee.Reducer.sum())
 
         # Get Worldpop raster for grid template
-        extent = bbox.to_ee_rectangle()['ee_geometry']
-        worldpop_ic = ee.ImageCollection("WorldPop/GP/100m/pop").filterBounds(extent).filter(ee.Filter.eq('year', 2020))
-        worldpop = worldpop_ic.mosaic().clip(extent)
-        
+        ee_rectangle = bbox.to_ee_rectangle()
+        worldpop = (
+            ee.ImageCollection("WorldPop/GP/100m/pop")
+            .filterBounds(ee_rectangle['ee_geometry'])
+            .filter(ee.Filter.eq("year", 2020))
+            .mosaic()
+            .clip(ee_rectangle['ee_geometry'])
+        )
+
         count_raster = get_image_collection(
             ee.ImageCollection(worldpop.gt(-1).multiply(osmcount_ras_ee)),
-            bbox.to_ee_rectangle(),
-            100,
-            "amenities"
+            ee_rectangle,
+            spatial_resolution,
+            "osm amenities"
         ).population
 
         if not self.convert_to_centroids:        # Add overlapping geoms back in
@@ -197,8 +200,8 @@ class OsmAmenityCount(Layer):
             intersection_raster = get_image_collection(
                 ee.ImageCollection(worldpop.gt(-1).multiply(intersections_ras_ee)),
                 bbox.to_ee_rectangle(),
-                100,
-                "intersections"
+                spatial_resolution,
+                "osm intersections"
             ).population
 
             count_raster += intersection_raster
