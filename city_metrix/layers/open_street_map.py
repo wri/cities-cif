@@ -100,6 +100,7 @@ class OpenStreetMap(Layer):
     Attributes:
         osm_class: OSM class
     """
+
     def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
@@ -155,6 +156,7 @@ class OpenStreetMapAmenityCount(Layer):
     Attributes:
         osm_class: OSM class
     """
+
     def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, convert_to_centroids=False, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
@@ -163,13 +165,14 @@ class OpenStreetMapAmenityCount(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # Note:resampling_method arguments are ignored.
 
-        # Note: spatial_resolution and resampling_method arguments are ignored.
         osm_data = OpenStreetMap(osm_class=self.osm_class).get_data(bbox)
         if self.convert_to_centroids:
             osm_data.geometry = osm_data.centroid
         else:
-            osm_data = osm_data.dissolve().explode()  # Removing overlapping geoms to prevent memory error
+            # Removing overlapping geoms to prevent memory error
+            osm_data = osm_data.dissolve().explode()
         osm_data['amenitycount'] = 1
         osmdata_ee = geemap.gdf_to_ee(osm_data)
         osmcount_ras_ee = osmdata_ee.reduceToImage(properties=['amenitycount'], reducer=ee.Reducer.sum())
@@ -188,20 +191,22 @@ class OpenStreetMapAmenityCount(Layer):
             ee.ImageCollection(worldpop.gt(-1).multiply(osmcount_ras_ee)),
             ee_rectangle,
             spatial_resolution,
-            "osm amenities"
+            "OSM amenities"
         ).population
 
-        if not self.convert_to_centroids:        # Add overlapping geoms back in
+        # Add overlapping geoms back in
+        if not self.convert_to_centroids:
             intersection_gdf = osm_data.sjoin(osm_data)
-            intersection_gdf = intersection_gdf.loc[intersection_gdf["id_left"] < intersection_gdf["id_right"]]  # Remove self-intersections and duplicates
+            # Remove self-intersections and duplicates
+            intersection_gdf = intersection_gdf.loc[intersection_gdf["id_left"] < intersection_gdf["id_right"]]
             intersection_gdf["amenitycount"] = 1
             intersections_ee = geemap.gdf_to_ee(intersection_gdf)
             intersections_ras_ee = intersections_ee.reduceToImage(properties=['amenitycount'], reducer=ee.Reducer.sum())
             intersection_raster = get_image_collection(
                 ee.ImageCollection(worldpop.gt(-1).multiply(intersections_ras_ee)),
-                bbox.to_ee_rectangle(),
+                ee_rectangle,
                 spatial_resolution,
-                "osm intersections"
+                "OSM intersections"
             ).population
 
             count_raster += intersection_raster
