@@ -1,3 +1,4 @@
+from enum import Enum
 import ee
 import geemap
 import osmnx as ox
@@ -95,27 +96,6 @@ class OpenStreetMapClass(Enum):
         [COMMERCE, HEALTHCARE_SOCIAL, AGRICULTURE, GOVERNMENT, INDUSTRY, TRANSPORTATION_LOGISTICS, EDUCATION])
 
 
-def rasterize_gdf(data_gdf, like_ras, measurement_name):
-    empty_ras = like_ras * 0
-
-    # Check for empty gdf
-    if len(data_gdf) == 0:
-        return empty_ras
-    data_ras = make_geocube(
-        vector_data=data_gdf,
-        like=like_ras,
-        fill=0,
-        measurements=[measurement_name],
-        rasterize_function=partial(rasterize_image, all_touched=True, merge_alg=MergeAlg.add)
-        ).to_dataarray()
-    
-    # Use NaNs in like_ras to mask out oceans, etc, in result
-    result_arr = data_ras[0].data + empty_ras.data
-    result_ras = empty_ras.copy()
-    result_ras.data = result_arr
-
-    return result_ras
-
 class OpenStreetMap(Layer):
     OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["osm_class"]
@@ -172,6 +152,27 @@ class OpenStreetMap(Layer):
         return osm_feature
 
 
+def _rasterize_gdf(data_gdf, like_ras, measurement_name):
+    empty_ras = like_ras * 0
+
+    # Check for empty gdf
+    if len(data_gdf) == 0:
+        return empty_ras
+    data_ras = make_geocube(
+        vector_data=data_gdf,
+        like=like_ras,
+        fill=0,
+        measurements=[measurement_name],
+        rasterize_function=partial(rasterize_image, all_touched=True, merge_alg=MergeAlg.add)
+        ).to_dataarray()
+    
+    # Use NaNs in like_ras to mask out oceans, etc, in result
+    result_arr = data_ras[0].data + empty_ras.data
+    result_ras = empty_ras.copy()
+    result_ras.data = result_arr
+
+    return result_ras
+
 class OpenStreetMapAmenityCount(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["osm_class"]
@@ -198,6 +199,6 @@ class OpenStreetMapAmenityCount(Layer):
         # Get Worldpop raster for grid template
         worldpop_ras = WorldPop().get_data(bbox)
 
-        amenities_ras = rasterize_gdf(amenities_gdf, worldpop_ras, "amenitycount")
+        amenities_ras = _rasterize_gdf(amenities_gdf, worldpop_ras, "amenitycount")
 
         return amenities_ras
