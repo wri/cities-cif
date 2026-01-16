@@ -171,6 +171,7 @@ def _rasterize_gdf(data_gdf, like_ras, measurement_name):
     result_ras = empty_ras.copy()
     result_ras.data = result_arr
 
+    result_ras = result_ras.rio.set_crs(like_ras.rio.crs)
     return result_ras
 
 class OpenStreetMapAmenityCount(Layer):
