@@ -1,9 +1,8 @@
-from enum import Enum
+import ee
+import geemap
 import osmnx as ox
 import geopandas as gpd
 import pandas as pd
-import ee
-import geemap
 from geocube.api.core import make_geocube
 from functools import partial
 from geocube.rasterize import rasterize_image
@@ -13,29 +12,23 @@ from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GTIFF_FILE_EX
 from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
 from .world_pop import WorldPop
 
-def merge_osm_classes(class_list):
+DEFAULT_SPATIAL_RESOLUTION = 100
+
+
+def _merge_osm_classes(class_list):
     result = {}
+    keys = {key for class_item in class_list for key in class_item}
 
-    # Get merged list of keys
-    keys = []
-    for cl in class_list:
-        keys += list(cl.keys())
-    keys = list(set(keys))
-
-    # For each key, get merged list of values
     for key in keys:
-        vals = []
-        for cl in class_list:
-            if key in cl:
-                if cl[key] != False:
-                    if cl[key] == True:
-                        vals.append(cl[key])
-                    else:
-                        vals += cl[key]
-        if True in vals:
-            result[key] = True
-        else:
-            result[key] = list(set(vals))
+        values = []
+        for class_item in class_list:
+            value = class_item.get(key)
+            if value is True:
+                values.append(True)
+            elif value:
+                values.extend(value)
+        result[key] = True if True in values else list(set(values))
+
     return result
 
 
@@ -98,7 +91,8 @@ class OpenStreetMapClass(Enum):
                     'public_transport': ['platform', 'stop_position', 'stop_area'],
                     'station': ['subway'],
                     'aerialway': ['station']}
-    ECONOMIC = merge_osm_classes([COMMERCE, HEALTHCARE_SOCIAL, AGRICULTURE, GOVERNMENT, INDUSTRY, TRANSPORTATION_LOGISTICS, EDUCATION])
+    ECONOMIC = _merge_osm_classes(
+        [COMMERCE, HEALTHCARE_SOCIAL, AGRICULTURE, GOVERNMENT, INDUSTRY, TRANSPORTATION_LOGISTICS, EDUCATION])
 
 
 def rasterize_gdf(data_gdf, like_ras, measurement_name):
@@ -131,7 +125,8 @@ class OpenStreetMap(Layer):
     Attributes:
         osm_class: OSM class
     """
-    def __init__(self, osm_class:OpenStreetMapClass=OpenStreetMapClass.ALL, **kwargs):
+
+    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 
@@ -176,7 +171,8 @@ class OpenStreetMap(Layer):
 
         return osm_feature
 
-class OsmAmenityCount(Layer):
+
+class OpenStreetMapAmenityCount(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["osm_class"]
     MINOR_NAMING_ATTS = None
@@ -185,7 +181,9 @@ class OsmAmenityCount(Layer):
     Attributes:
         osm_class: OSM class
     """
+
     def __init__(self, osm_class:OpenStreetMapClass=OpenStreetMapClass.ALL, **kwargs):
+
         super().__init__(**kwargs)
         self.osm_class = osm_class
 

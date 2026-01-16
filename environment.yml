@@ -34,5 +34,14 @@ dependencies:
   - timeout-decorator
   - pvlib=0.13.0
   - pyopenssl>=23.2.0
+  - pyarrow>=19.0.1
+  - r-base
+  - r-remotes
+  - r-devtools
+  - cmake
+  - r-s2
+  - r-units
+  - r-sf
+  - r-exactextractr
   - pip:
       - overturemaps>=0.18.0

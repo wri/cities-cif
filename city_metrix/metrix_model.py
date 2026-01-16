@@ -738,11 +738,11 @@ class LayerGroupBy:
         joined["geometry"] = joined.intersection(joined["immutable_fishnet_geometry"])
 
         # remove linestring artifacts due to float precision
-        gdf = joined[joined.geometry.type.isin(["Polygon", "MultiPolygon"])]
+        gdf = joined[joined.geometry.type.isin(["Polygon", "MultiPolygon"])].copy()
 
         # separate out zones intersecting to tiles in their own data frames
         tile_gdfs = [
-            tile[["index", "geometry"]] for _, tile in gdf.groupby("index_right")
+            tile[["index", "geometry"]].copy() for _, tile in gdf.groupby("index_right")
         ]
         tile_funcs = LayerGroupBy.get_stats_funcs(stats_func)
 
@@ -794,9 +794,9 @@ class LayerGroupBy:
 
     @staticmethod
     def _merge_tile_geometry_into_query_gdf(tile_gdf, zones):
-        query_gdf = zones
+        query_gdf = zones.copy()
         query_gdf.loc[tile_gdf.index, "geometry"] = tile_gdf["geometry"]
-        adjusted_gdf = query_gdf[query_gdf.index.isin(tile_gdf.index)]
+        adjusted_gdf = query_gdf[query_gdf.index.isin(tile_gdf.index)].copy()
         return adjusted_gdf
 
     @staticmethod
@@ -877,7 +877,7 @@ class LayerGroupBy:
             else:
                 geo_levels = zones["geo_level"].unique()
                 for index, level in enumerate(geo_levels):
-                    level_gdf = tile_gdf[tile_gdf["geo_level"] == level]
+                    level_gdf = tile_gdf[tile_gdf["geo_level"] == level].copy()
 
                     stats = LayerGroupBy._compute_zonal_stats(
                         stats_func,
