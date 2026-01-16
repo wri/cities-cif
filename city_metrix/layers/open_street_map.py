@@ -4,9 +4,14 @@ import geopandas as gpd
 import pandas as pd
 import ee
 import geemap
+from geocube.api.core import make_geocube
+from functools import partial
+from geocube.rasterize import rasterize_image
+from rasterio.enums import MergeAlg
 
 from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GTIFF_FILE_EXTENSION
 from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
+from .world_pop import WorldPop
 
 def merge_osm_classes(class_list):
     result = {}
@@ -96,6 +101,27 @@ class OpenStreetMapClass(Enum):
     ECONOMIC = merge_osm_classes([COMMERCE, HEALTHCARE_SOCIAL, AGRICULTURE, GOVERNMENT, INDUSTRY, TRANSPORTATION_LOGISTICS, EDUCATION])
 
 
+def rasterize_gdf(data_gdf, like_ras, measurement_name):
+    empty_ras = like_ras * 0
+
+    # Check for empty gdf
+    if len(data_gdf) == 0:
+        return empty_ras
+    data_ras = make_geocube(
+        vector_data=data_gdf,
+        like=like_ras,
+        fill=0,
+        measurements=[measurement_name],
+        rasterize_function=partial(rasterize_image, all_touched=True, merge_alg=MergeAlg.add)
+        ).to_dataarray()
+    
+    # Use NaNs in like_ras to mask out oceans, etc, in result
+    result_arr = data_ras[0].data + empty_ras.data
+    result_ras = empty_ras.copy()
+    result_ras.data = result_arr
+
+    return result_ras
+
 class OpenStreetMap(Layer):
     OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["osm_class"]
@@ -159,48 +185,21 @@ class OsmAmenityCount(Layer):
     Attributes:
         osm_class: OSM class
     """
-    def __init__(self, osm_class:OpenStreetMapClass=OpenStreetMapClass.ALL, convert_to_centroids=False, **kwargs):
+    def __init__(self, osm_class:OpenStreetMapClass=OpenStreetMapClass.ALL, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
-        self.convert_to_centroids = convert_to_centroids
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  force_data_refresh=False):
         # Note: spatial_resolution and resampling_method arguments are ignored.
-        osm_data = OpenStreetMap(osm_class=self.osm_class).get_data(bbox)
-        if self.convert_to_centroids:
-            osm_data.geometry = osm_data.centroid
-        else:
-            osm_data = osm_data.dissolve().explode()  # Removing overlapping geoms to prevent memory error
-        osm_data['amenitycount'] = 1
-        osmdata_ee = geemap.gdf_to_ee(osm_data)
-        osmcount_ras_ee = osmdata_ee.reduceToImage(properties=['amenitycount'], reducer=ee.Reducer.sum())
+
+        # Get OSM amenity data
+        download_data = OpenStreetMap(osm_class=self.osm_class).get_data(bbox)
+        amenities_gdf = gpd.GeoDataFrame({"id": list(range(len(download_data))), "amenitycount": [1] * len(download_data), "geometry": download_data.geometry})
 
         # Get Worldpop raster for grid template
-        extent = bbox.to_ee_rectangle()['ee_geometry']
-        worldpop_ic = ee.ImageCollection("WorldPop/GP/100m/pop").filterBounds(extent).filter(ee.Filter.eq('year', 2020))
-        worldpop = worldpop_ic.mosaic().clip(extent)
-        
-        count_raster = get_image_collection(
-            ee.ImageCollection(worldpop.gt(-1).multiply(osmcount_ras_ee)),
-            bbox.to_ee_rectangle(),
-            100,
-            "amenities"
-        ).population
+        worldpop_ras = WorldPop().get_data(bbox)
 
-        if not self.convert_to_centroids:        # Add overlapping geoms back in
-            intersection_gdf = osm_data.sjoin(osm_data)
-            intersection_gdf = intersection_gdf.loc[intersection_gdf["id_left"] < intersection_gdf["id_right"]]  # Remove self-intersections and duplicates
-            intersection_gdf["amenitycount"] = 1
-            intersections_ee = geemap.gdf_to_ee(intersection_gdf)
-            intersections_ras_ee = intersections_ee.reduceToImage(properties=['amenitycount'], reducer=ee.Reducer.sum())
-            intersection_raster = get_image_collection(
-                ee.ImageCollection(worldpop.gt(-1).multiply(intersections_ras_ee)),
-                bbox.to_ee_rectangle(),
-                100,
-                "intersections"
-            ).population
+        amenities_ras = rasterize_gdf(amenities_gdf, worldpop_ras, "amenitycount")
 
-            count_raster += intersection_raster
-
-        return count_raster
+        return amenities_ras

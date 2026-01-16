@@ -216,7 +216,7 @@ def test_open_urban_map():
 def test_osm_amenitycount_raster():
     data = OsmAmenityCount(osm_class=OpenStreetMapClass.COMMERCE).get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 0, 0, 3, 100, 0)
+    assert_raster_stats(data, 0, 0, 4, 100, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_overture_buildings():
