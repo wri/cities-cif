@@ -1,10 +1,31 @@
-from enum import Enum
+import ee
+import geemap
 import osmnx as ox
 import geopandas as gpd
 import pandas as pd
+from enum import Enum
 
-from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION
-from city_metrix.metrix_model import Layer, GeoExtent
+from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GTIFF_FILE_EXTENSION
+from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
+
+DEFAULT_SPATIAL_RESOLUTION = 100
+
+
+def _merge_osm_classes(class_list):
+    result = {}
+    keys = {key for class_item in class_list for key in class_item}
+
+    for key in keys:
+        values = []
+        for class_item in class_list:
+            value = class_item.get(key)
+            if value is True:
+                values.append(True)
+            elif value:
+                values.extend(value)
+        result[key] = True if True in values else list(set(values))
+
+    return result
 
 
 class OpenStreetMapClass(Enum):
@@ -66,6 +87,8 @@ class OpenStreetMapClass(Enum):
                     'public_transport': ['platform', 'stop_position', 'stop_area'],
                     'station': ['subway'],
                     'aerialway': ['station']}
+    ECONOMIC = _merge_osm_classes(
+        [COMMERCE, HEALTHCARE_SOCIAL, AGRICULTURE, GOVERNMENT, INDUSTRY, TRANSPORTATION_LOGISTICS, EDUCATION])
 
 
 class OpenStreetMap(Layer):
@@ -77,7 +100,8 @@ class OpenStreetMap(Layer):
     Attributes:
         osm_class: OSM class
     """
-    def __init__(self, osm_class:OpenStreetMapClass=OpenStreetMapClass.ALL, **kwargs):
+
+    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 
@@ -121,3 +145,70 @@ class OpenStreetMap(Layer):
         osm_feature = osm_feature.to_crs(utm_crs)
 
         return osm_feature
+
+
+class OpenStreetMapAmenityCount(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["osm_class"]
+    MINOR_NAMING_ATTS = None
+
+    """
+    Attributes:
+        osm_class: OSM class
+    """
+
+    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, convert_to_centroids=False, **kwargs):
+        super().__init__(**kwargs)
+        self.osm_class = osm_class
+        self.convert_to_centroids = convert_to_centroids
+
+    def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
+                 resampling_method=None):
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # Note:resampling_method arguments are ignored.
+
+        osm_data = OpenStreetMap(osm_class=self.osm_class).get_data(bbox)
+        if self.convert_to_centroids:
+            osm_data.geometry = osm_data.centroid
+        else:
+            # Removing overlapping geoms to prevent memory error
+            osm_data = osm_data.dissolve().explode()
+        osm_data['amenitycount'] = 1
+        osmdata_ee = geemap.gdf_to_ee(osm_data)
+        osmcount_ras_ee = osmdata_ee.reduceToImage(properties=['amenitycount'], reducer=ee.Reducer.sum())
+
+        # Get Worldpop raster for grid template
+        ee_rectangle = bbox.to_ee_rectangle()
+        worldpop = (
+            ee.ImageCollection("WorldPop/GP/100m/pop")
+            .filterBounds(ee_rectangle['ee_geometry'])
+            .filter(ee.Filter.eq("year", 2020))
+            .mosaic()
+            .clip(ee_rectangle['ee_geometry'])
+        )
+
+        count_raster = get_image_collection(
+            ee.ImageCollection(worldpop.gt(-1).multiply(osmcount_ras_ee)),
+            ee_rectangle,
+            spatial_resolution,
+            "OSM amenities"
+        ).population
+
+        # Add overlapping geoms back in
+        if not self.convert_to_centroids:
+            intersection_gdf = osm_data.sjoin(osm_data)
+            # Remove self-intersections and duplicates
+            intersection_gdf = intersection_gdf.loc[intersection_gdf["id_left"] < intersection_gdf["id_right"]]
+            intersection_gdf["amenitycount"] = 1
+            intersections_ee = geemap.gdf_to_ee(intersection_gdf)
+            intersections_ras_ee = intersections_ee.reduceToImage(properties=['amenitycount'], reducer=ee.Reducer.sum())
+            intersection_raster = get_image_collection(
+                ee.ImageCollection(worldpop.gt(-1).multiply(intersections_ras_ee)),
+                ee_rectangle,
+                spatial_resolution,
+                "OSM intersections"
+            ).population
+
+            count_raster += intersection_raster
+
+        return count_raster
