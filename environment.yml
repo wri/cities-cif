@@ -43,5 +43,7 @@ dependencies:
   - r-units
   - r-sf
   - r-exactextractr
+  - rpy2
+  - r-codetools
   - pip:
       - overturemaps>=0.18.0

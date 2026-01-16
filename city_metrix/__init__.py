@@ -25,7 +25,7 @@ if (
 else:
     print("Authenticating GEE by prompting authentication through Google API.")
     ee.Authenticate()
-    ee.Initialize(opt_url="https://earthengine-highvolume.googleapis.com")
+    ee.Initialize(project="citiesindicators", opt_url="https://earthengine-highvolume.googleapis.com")
 
 # initialize aws
 credentials_file_path = Path(os.path.join(Path.home(),'.aws', 'credentials'))
