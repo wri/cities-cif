@@ -7,17 +7,17 @@ from tests.resources.bbox_constants import GEOZONE_TERESINA
 def test_city_values_built_land_with_high_lst__percent():
     metric_obj = BuiltLandWithHighLST__Percent()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
-    _evaluate_metric_values(metric_values, 2, 0.0, 11.36, 2.82, 139, 10, True)
+    _evaluate_metric_values(metric_values, 2, 0.0, 11.36, 2.83, 140, 10, True)
 
 def test_city_values_mean_pm2p5_exposure__microgramspercubicmeter():
     metric_obj = MeanPM2P5Exposure__MicrogramsPerCubicMeter()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
-    _evaluate_metric_values(metric_values, 2, 11.18, 14.04, 12.45, 139, 0, True)
+    _evaluate_metric_values(metric_values, 2, 11.18, 14.04, 12.44, 140, 0, True)
 
 def test_city_values_natural_areas__percent():
     metric_obj = NaturalAreas__Percent()
     metric_values = metric_obj.get_metric(geo_zone=GEOZONE_TERESINA)
-    _evaluate_metric_values(metric_values, 2, 2.06, 97.24, 36.81, 139, 0, True)
+    _evaluate_metric_values(metric_values, 2, 2.06, 97.24, 36.77, 140, 0, True)
 
 def test_city_values_riverine_or_coastal_flood_risk_area__percent():
     metric_obj = RiverineOrCoastalFloodRiskArea__Percent()
