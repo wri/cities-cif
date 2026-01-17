@@ -158,6 +158,7 @@ def _rasterize_gdf(data_gdf, like_ras, measurement_name):
     # Check for empty gdf
     if len(data_gdf) == 0:
         return empty_ras
+    
     data_ras = make_geocube(
         vector_data=data_gdf,
         like=like_ras,
