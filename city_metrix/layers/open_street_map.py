@@ -1,14 +1,15 @@
-import ee
-import geemap
 import osmnx as ox
 import geopandas as gpd
 import pandas as pd
 from enum import Enum
+from functools import partial
+from geocube.api.core import make_geocube
+from geocube.rasterize import rasterize_image
+from rasterio.enums import MergeAlg
 
 from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GTIFF_FILE_EXTENSION
 from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
-
-DEFAULT_SPATIAL_RESOLUTION = 100
+from .world_pop import WorldPop
 
 
 def _merge_osm_classes(class_list):
@@ -115,10 +116,12 @@ class OpenStreetMap(Layer):
         # Set the OSMnx configuration to disable caching
         ox.settings.use_cache = False
         try:
-            osm_feature = ox.features_from_bbox(bbox=(min_lon, min_lat, max_lon, max_lat), tags=self.osm_class.value)
+            osm_feature = ox.features_from_bbox(
+                bbox=(min_lon, min_lat, max_lon, max_lat), tags=self.osm_class.value)
         # When no feature in bbox, return an empty gdf
         except ox._errors.InsufficientResponseError as e:
-            osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['id', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
+            osm_feature = gpd.GeoDataFrame(pd.DataFrame(
+                columns=['id', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
             osm_feature.crs = WGS_CRS
 
         # Filter by geom_type
@@ -130,7 +133,8 @@ class OpenStreetMap(Layer):
             osm_feature = osm_feature[osm_feature.geom_type == 'Point']
         else:
             # Filter out LineString
-            osm_feature = osm_feature[osm_feature.geom_type.isin(['Point', 'Polygon', 'MultiPolygon'])]
+            osm_feature = osm_feature[osm_feature.geom_type.isin(
+                ['Point', 'Polygon', 'MultiPolygon'])]
 
         # keep only columns desired to reduce file size
         keep_col = ['id', 'geometry']
@@ -147,6 +151,31 @@ class OpenStreetMap(Layer):
         return osm_feature
 
 
+def _rasterize_gdf(data_gdf, like_ras, measurement_name):
+    empty_ras = like_ras * 0
+
+    # Check for empty gdf
+    if len(data_gdf) == 0:
+        return empty_ras
+
+    data_ras = make_geocube(
+        vector_data=data_gdf,
+        like=like_ras,
+        fill=0,
+        measurements=[measurement_name],
+        rasterize_function=partial(
+            rasterize_image, all_touched=True, merge_alg=MergeAlg.add)
+    ).to_dataarray()
+
+    # Use NaNs in like_ras to mask out oceans, etc, in result
+    result_arr = data_ras[0].data + empty_ras.data
+    result_ras = empty_ras.copy()
+    result_ras.data = result_arr
+
+    result_ras = result_ras.rio.write_crs(like_ras.rio.crs)
+    return result_ras
+
+
 class OpenStreetMapAmenityCount(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["osm_class"]
@@ -157,58 +186,28 @@ class OpenStreetMapAmenityCount(Layer):
         osm_class: OSM class
     """
 
-    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, convert_to_centroids=False, **kwargs):
+    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
-        self.convert_to_centroids = convert_to_centroids
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-        # Note:resampling_method arguments are ignored.
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 force_data_refresh=False):
+        # Note: spatial_resolution and resampling_method arguments are ignored.
 
-        osm_data = OpenStreetMap(osm_class=self.osm_class).get_data(bbox)
-        if self.convert_to_centroids:
-            osm_data.geometry = osm_data.centroid
-        else:
-            # Removing overlapping geoms to prevent memory error
-            osm_data = osm_data.dissolve().explode()
-        osm_data['amenitycount'] = 1
-        osmdata_ee = geemap.gdf_to_ee(osm_data)
-        osmcount_ras_ee = osmdata_ee.reduceToImage(properties=['amenitycount'], reducer=ee.Reducer.sum())
-
-        # Get Worldpop raster for grid template
-        ee_rectangle = bbox.to_ee_rectangle()
-        worldpop = (
-            ee.ImageCollection("WorldPop/GP/100m/pop")
-            .filterBounds(ee_rectangle['ee_geometry'])
-            .filter(ee.Filter.eq("year", 2020))
-            .mosaic()
-            .clip(ee_rectangle['ee_geometry'])
+        # Get OSM amenity data
+        download_data = OpenStreetMap(osm_class=self.osm_class).get_data(bbox)
+        amenities_gdf = gpd.GeoDataFrame(
+            {
+                "id": list(range(len(download_data))),
+                "amenitycount": [1] * len(download_data),
+                "geometry": download_data.geometry
+            }
         )
 
-        count_raster = get_image_collection(
-            ee.ImageCollection(worldpop.gt(-1).multiply(osmcount_ras_ee)),
-            ee_rectangle,
-            spatial_resolution,
-            "OSM amenities"
-        ).population
+        # Get Worldpop raster for grid template
+        worldpop_ras = WorldPop().get_data(bbox)
 
-        # Add overlapping geoms back in
-        if not self.convert_to_centroids:
-            intersection_gdf = osm_data.sjoin(osm_data)
-            # Remove self-intersections and duplicates
-            intersection_gdf = intersection_gdf.loc[intersection_gdf["id_left"] < intersection_gdf["id_right"]]
-            intersection_gdf["amenitycount"] = 1
-            intersections_ee = geemap.gdf_to_ee(intersection_gdf)
-            intersections_ras_ee = intersections_ee.reduceToImage(properties=['amenitycount'], reducer=ee.Reducer.sum())
-            intersection_raster = get_image_collection(
-                ee.ImageCollection(worldpop.gt(-1).multiply(intersections_ras_ee)),
-                ee_rectangle,
-                spatial_resolution,
-                "OSM intersections"
-            ).population
+        amenities_ras = _rasterize_gdf(
+            amenities_gdf, worldpop_ras, "amenitycount")
 
-            count_raster += intersection_raster
-
-        return count_raster
+        return amenities_ras
