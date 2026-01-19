@@ -1,19 +1,15 @@
-from enum import Enum
-import ee
-import geemap
 import osmnx as ox
 import geopandas as gpd
 import pandas as pd
-from geocube.api.core import make_geocube
+from enum import Enum
 from functools import partial
+from geocube.api.core import make_geocube
 from geocube.rasterize import rasterize_image
 from rasterio.enums import MergeAlg
 
 from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GTIFF_FILE_EXTENSION
 from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
 from .world_pop import WorldPop
-
-DEFAULT_SPATIAL_RESOLUTION = 100
 
 
 def _merge_osm_classes(class_list):
@@ -120,10 +116,12 @@ class OpenStreetMap(Layer):
         # Set the OSMnx configuration to disable caching
         ox.settings.use_cache = False
         try:
-            osm_feature = ox.features_from_bbox(bbox=(min_lon, min_lat, max_lon, max_lat), tags=self.osm_class.value)
+            osm_feature = ox.features_from_bbox(
+                bbox=(min_lon, min_lat, max_lon, max_lat), tags=self.osm_class.value)
         # When no feature in bbox, return an empty gdf
         except ox._errors.InsufficientResponseError as e:
-            osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['id', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
+            osm_feature = gpd.GeoDataFrame(pd.DataFrame(
+                columns=['id', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
             osm_feature.crs = WGS_CRS
 
         # Filter by geom_type
@@ -135,7 +133,8 @@ class OpenStreetMap(Layer):
             osm_feature = osm_feature[osm_feature.geom_type == 'Point']
         else:
             # Filter out LineString
-            osm_feature = osm_feature[osm_feature.geom_type.isin(['Point', 'Polygon', 'MultiPolygon'])]
+            osm_feature = osm_feature[osm_feature.geom_type.isin(
+                ['Point', 'Polygon', 'MultiPolygon'])]
 
         # keep only columns desired to reduce file size
         keep_col = ['id', 'geometry']
@@ -158,15 +157,16 @@ def _rasterize_gdf(data_gdf, like_ras, measurement_name):
     # Check for empty gdf
     if len(data_gdf) == 0:
         return empty_ras
-    
+
     data_ras = make_geocube(
         vector_data=data_gdf,
         like=like_ras,
         fill=0,
         measurements=[measurement_name],
-        rasterize_function=partial(rasterize_image, all_touched=True, merge_alg=MergeAlg.add)
-        ).to_dataarray()
-    
+        rasterize_function=partial(
+            rasterize_image, all_touched=True, merge_alg=MergeAlg.add)
+    ).to_dataarray()
+
     # Use NaNs in like_ras to mask out oceans, etc, in result
     result_arr = data_ras[0].data + empty_ras.data
     result_ras = empty_ras.copy()
@@ -174,6 +174,7 @@ def _rasterize_gdf(data_gdf, like_ras, measurement_name):
 
     result_ras = result_ras.rio.write_crs(like_ras.rio.crs)
     return result_ras
+
 
 class OpenStreetMapAmenityCount(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
@@ -185,8 +186,7 @@ class OpenStreetMapAmenityCount(Layer):
         osm_class: OSM class
     """
 
-    def __init__(self, osm_class:OpenStreetMapClass=OpenStreetMapClass.ALL, **kwargs):
-
+    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 
@@ -196,11 +196,18 @@ class OpenStreetMapAmenityCount(Layer):
 
         # Get OSM amenity data
         download_data = OpenStreetMap(osm_class=self.osm_class).get_data(bbox)
-        amenities_gdf = gpd.GeoDataFrame({"id": list(range(len(download_data))), "amenitycount": [1] * len(download_data), "geometry": download_data.geometry})
+        amenities_gdf = gpd.GeoDataFrame(
+            {
+                "id": list(range(len(download_data))),
+                "amenitycount": [1] * len(download_data),
+                "geometry": download_data.geometry
+            }
+        )
 
         # Get Worldpop raster for grid template
         worldpop_ras = WorldPop().get_data(bbox)
 
-        amenities_ras = _rasterize_gdf(amenities_gdf, worldpop_ras, "amenitycount")
+        amenities_ras = _rasterize_gdf(
+            amenities_gdf, worldpop_ras, "amenitycount")
 
         return amenities_ras
