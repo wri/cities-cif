@@ -9,18 +9,20 @@ from city_metrix.constants import GEOJSON_FILE_EXTENSION, GeoType
 
 class UrbanExtents(Layer):
     OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ["buffer"]
     MINOR_NAMING_ATTS = None
 
     """
     Attributes:
         year:
+        buffer: int
     """
-    def __init__(self, year=2020, **kwargs):
+    def __init__(self, year=2020, buffer=0, **kwargs):
         super().__init__(**kwargs)
         if not year in [1980, 1990, 2000, 2005, 2010, 2015, 2020]:
             raise Exception(f'Year {year} not available.')
         self.year = year
+        self.buffer = buffer
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  force_data_refresh=False):
@@ -54,6 +56,7 @@ class UrbanExtents(Layer):
             urbexts_dissolved = urbexts_dissolved.to_crs(utm_crs)
 
         data = urbexts_dissolved
+        data.geometry = data.geometry.buffer(self.buffer)
         data['geo_level'] = 'urban_extent'
         if bbox.city_id:
             data['geo_id'] = f'{bbox.city_id}_urban_extent'
