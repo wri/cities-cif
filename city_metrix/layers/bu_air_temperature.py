@@ -7,7 +7,7 @@ from rasterio.features import rasterize
 from rasterio.transform import from_origin
 
 import rpy2.robjects as ro
-from rpy2.robjects import default_converter, pandas2ri, r
+from rpy2.robjects import default_converter, pandas2ri
 from rpy2.robjects.packages import importr
 from rpy2.robjects.conversion import localconverter
 
@@ -135,7 +135,7 @@ def _run_smithcee2025_model():
     if not bool(base.requireNamespace(bu_pkg, quietly=True)[0]):
         remotes = importr("remotes")
         remotes.install_github(
-            "https://github.com/cmilando/smithCEE2025.git", build_vignettes=True, force=True, auth_token=r("NULL"))
+            "https://github.com/cmilando/smithCEE2025.git", build_vignettes=True, force=True)
 
     smith = importr("smithCEE2025")
     terra = importr("terra")
