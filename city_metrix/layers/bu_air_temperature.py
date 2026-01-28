@@ -135,7 +135,7 @@ def _run_smithcee2025_model():
     if not bool(base.requireNamespace(bu_pkg, quietly=True)[0]):
         remotes = importr("remotes")
         remotes.install_github(
-            "cmilando/smithCEE2025", build_vignettes=True, force=True, auth_token="")
+            "https://github.com/cmilando/smithCEE2025.git", build_vignettes=True, force=True, auth_token="")
 
     smith = importr("smithCEE2025")
     terra = importr("terra")
