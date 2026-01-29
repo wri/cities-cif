@@ -1,9 +1,13 @@
 import datetime
+
 import ee
 
+from city_metrix.metrix_model import GeoExtent, Layer
+from city_metrix.metrix_tools import align_raster_array
+
+from ..constants import GTIFF_FILE_EXTENSION
 from .land_surface_temperature import LandSurfaceTemperature
-from city_metrix.metrix_model import Layer, GeoExtent
-from ..constants import GTIFF_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV, CIF_CACHE_S3_BUCKET_URI
+from .world_pop import WorldPop
 
 DEFAULT_SPATIAL_RESOLUTION = 30
 
@@ -18,10 +22,12 @@ class HighLandSurfaceTemperature(Layer):
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
     """
-    def __init__(self, start_date="2013-01-01", end_date="2023-01-01", **kwargs):
+    def __init__(self, start_date="2013-01-01", end_date="2026-01-01", index_aggregation=True, high_lst=False, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
+        self.index_aggregation = index_aggregation
+        self.high_lst = high_lst
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -35,14 +41,18 @@ class HighLandSurfaceTemperature(Layer):
         start_date = (hottest_date - datetime.timedelta(days=45)).strftime("%Y-%m-%d")
         end_date = (hottest_date + datetime.timedelta(days=45)).strftime("%Y-%m-%d")
 
-
         lst = (LandSurfaceTemperature(start_date, end_date)
                .get_data(bbox=geographic_bbox, spatial_resolution=spatial_resolution))
 
-        lst_mean = lst.mean(dim=['x', 'y'])
-        high_lst = lst.where(lst >= (lst_mean + self.THRESHOLD_ADD))
-
-        return high_lst
+        if self.high_lst:
+            lst_mean = lst.mean(dim=['x', 'y'])
+            lst_array = lst.where(lst >= (lst_mean + self.THRESHOLD_ADD))
+        else:
+            lst_array = lst
+        if self.index_aggregation:
+            wp_array =  WorldPop().get_data(bbox)
+            lst_array = align_raster_array(lst_array, wp_array)
+        return lst_array
 
     def get_hottest_date(self, wgs84_bbox):
         geographic_centroid = wgs84_bbox.centroid

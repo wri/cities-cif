@@ -1,8 +1,12 @@
 import math
-
-import utm
 from typing import Union
+
+import numpy as np
+import rasterio
+import rioxarray
+import utm
 from pyproj import CRS
+from rasterio.warp import Resampling, reproject
 from shapely.geometry import point
 
 from city_metrix.constants import WGS_EPSG_CODE, ProjectionType
@@ -184,6 +188,86 @@ def is_openurban_available_for_city(city_id):
 
 def _get_city_part_of_openurban_file_name(s):
     import re
+
     # This pattern matches an underscore followed by one or more digits
     return re.sub(r'_\d+', '', s)
 
+
+def align_raster_array(raster_array, ref_array):
+    """
+    1. Computes weighted average of raster for the ref grid.
+    2. Identifies 'gaps' (NoData) that occurred at the edges.
+    3. Fills those specific gaps using Nearest Neighbor (taking the pixel it falls under).
+    """
+    ref_path = "temp_ref_raster.tif"
+    ref_array.rio.to_raster(raster_path=ref_path, driver="GTiff")
+    
+    raster_path = "temp_raster.tif"
+    raster_array.rio.to_raster(raster_path=raster_path, driver="GTiff")
+
+    output_path = "temp_output_raster.tif"
+
+    with rasterio.open(ref_path) as ref_ds:
+        ref_data = ref_ds.read(1)
+        ref_meta = ref_ds.profile.copy()
+        ref_transform = ref_ds.transform
+        ref_crs = ref_ds.crs
+        ref_nodata = ref_ds.nodata if ref_ds.nodata is not None else -999
+        
+        target_valid_mask = (ref_data != ref_nodata)
+
+    with rasterio.open(raster_path) as src_ds:
+        src_nodata = src_ds.nodata if src_ds.nodata is not None else -999
+        
+        out_data = np.full(ref_data.shape, np.nan, dtype='float32')
+
+        print("Pass 1: Computing Average...")
+        reproject(
+            source=rasterio.band(src_ds, 1),
+            destination=out_data,
+            src_transform=src_ds.transform,
+            src_crs=src_ds.crs,
+            dst_transform=ref_transform,
+            dst_crs=ref_crs,
+            resampling=Resampling.average, # Strict averaging
+            src_nodata=src_nodata,
+            dst_nodata=np.nan # Use NaN temporarily for easier math
+        )
+
+        gaps_mask = target_valid_mask & np.isnan(out_data)
+        
+        if np.any(gaps_mask):
+            print(f"Pass 2: Filling {np.sum(gaps_mask)} gap pixels using Nearest Neighbor...")
+            
+            # Create a temporary array just for the nearest neighbor values
+            nearest_fill = np.full(ref_data.shape, np.nan, dtype='float32')
+            
+            reproject(
+                source=rasterio.band(src_ds, 1),
+                destination=nearest_fill,
+                src_transform=src_ds.transform,
+                src_crs=src_ds.crs,
+                dst_transform=ref_transform,
+                dst_crs=ref_crs,
+                resampling=Resampling.nearest, # FORCE value capture
+                src_nodata=src_nodata,
+                dst_nodata=np.nan
+            )
+            
+            out_data[gaps_mask] = nearest_fill[gaps_mask]
+
+        final_nodata_value = -999
+        out_data = np.where(np.isnan(out_data), final_nodata_value, out_data)
+
+        ref_meta.update({
+            'driver': 'GTiff',
+            'dtype': 'float32',
+            'nodata': final_nodata_value,
+            'count': 1
+        })
+
+        with rasterio.open(output_path, 'w', **ref_meta) as dst:
+            dst.write(out_data, 1)
+            print(f"Success. Saved gap-filled raster to: {output_path}")
+
+    return rioxarray.open_rasterio(output_path).squeeze()
