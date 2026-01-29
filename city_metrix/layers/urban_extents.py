@@ -15,7 +15,7 @@ class UrbanExtents(Layer):
     """
     Attributes:
         year:
-        buffer: int
+        buffer: int (meter)
     """
     def __init__(self, year=2020, buffer=None, **kwargs):
         super().__init__(**kwargs)
