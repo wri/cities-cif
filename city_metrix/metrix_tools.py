@@ -1,4 +1,5 @@
 import math
+import os
 from typing import Union
 
 import numpy as np
@@ -270,4 +271,11 @@ def align_raster_array(raster_array, ref_array):
             dst.write(out_data, 1)
             print(f"Success. Saved gap-filled raster to: {output_path}")
 
-    return rioxarray.open_rasterio(output_path).squeeze()
+    arr = rioxarray.open_rasterio(output_path).squeeze()
+    if os.path.exists(ref_path):
+        os.remove(ref_path)
+    if os.path.exists(raster_path):
+        os.remove(raster_path)
+    if os.path.exists(output_path):
+        os.remove(output_path)
+    return arr
