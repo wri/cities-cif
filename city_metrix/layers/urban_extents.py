@@ -17,7 +17,7 @@ class UrbanExtents(Layer):
         year:
         buffer: int
     """
-    def __init__(self, year=2020, buffer=0, **kwargs):
+    def __init__(self, year=2020, buffer=None, **kwargs):
         super().__init__(**kwargs)
         if not year in [1980, 1990, 2000, 2005, 2010, 2015, 2020]:
             raise Exception(f'Year {year} not available.')
@@ -27,11 +27,12 @@ class UrbanExtents(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  force_data_refresh=False):
 
-        ue_fc = ee.FeatureCollection(f'projects/wri-datalab/cities/urban_land_use/data/global_cities_Aug2024/urbanextents_unions_{self.year}')
+        ue_fc = ee.FeatureCollection(
+            f'projects/wri-datalab/cities/urban_land_use/data/global_cities_Aug2024/urbanextents_unions_{self.year}')
 
         if bbox.geo_type == GeoType.CITY_CENTROID:
             utm_crs = get_utm_zone_from_latlon_point(bbox.centroid)
-        else: 
+        else:
             bbox_utm = bbox.as_utm_bbox()
             utm_crs = bbox_utm.crs
 
@@ -56,7 +57,8 @@ class UrbanExtents(Layer):
             urbexts_dissolved = urbexts_dissolved.to_crs(utm_crs)
 
         data = urbexts_dissolved
-        data.geometry = data.geometry.buffer(self.buffer)
+        if self.buffer:
+            data.geometry = data.geometry.buffer(self.buffer)
         data['geo_level'] = 'urban_extent'
         if bbox.city_id:
             data['geo_id'] = f'{bbox.city_id}_urban_extent'
