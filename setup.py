@@ -31,8 +31,18 @@ setup(
         "numpy",
         "overturemaps>=0.18",
         "ipython",
-        "pyarrow>=19.0.1",
         "pvlib",
+        "pyarrow>=19.0.1",
+        "r-base",
+        "r-remotes",
+        "r-devtools",
+        "cmake",
+        "r-s2",
+        "r-units",
+        "r-sf",
+        "r-exactextractr",
+        "rpy2",
+        "r-codetools"
     ],
     package_data={
         'city_metrix': ['ut_globus_city_handler/global_ut_globus_cities.gpkg']
