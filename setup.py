@@ -33,14 +33,6 @@ setup(
         "ipython",
         "pyarrow>=19.0.1",
         "pvlib",
-        "r-base",
-        "r-remotes",
-        "r-devtools",
-        "cmake",
-        "r-s2",
-        "r-units",
-        "r-sf",
-        "r-exactextractr",
     ],
     package_data={
         'city_metrix': ['ut_globus_city_handler/global_ut_globus_cities.gpkg']
