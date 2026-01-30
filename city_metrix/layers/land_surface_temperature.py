@@ -82,7 +82,6 @@ class LandSurfaceTemperature(Layer):
             else:
                 start_date = f"{year}-{window_startdate.month}-{window_startdate.day}"
             end_date = f"{year}-{window_enddate.month}-{window_enddate.day}"
-            print(start_date, end_date)
             l8_st = (l8
                     .select('ST_B10', 'QA_PIXEL')
                     .filter(ee.Filter.date(start_date, end_date))
