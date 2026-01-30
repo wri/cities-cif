@@ -17,10 +17,11 @@ class LandSurfaceTemperature(Layer):
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
     """
-    def __init__(self, percentile=95, num_seasons=5, **kwargs):
+    def __init__(self, percentile=50, num_seasons=5, use_hot_window=False, **kwargs):
         super().__init__(**kwargs)
         self.percentile = percentile
         self.num_seasons = num_seasons
+        self.use_hot_window = use_hot_window
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -61,11 +62,18 @@ class LandSurfaceTemperature(Layer):
         
         # Define window of 90 days centered on hottest date
         now = datetime.now()
-        hottest_date_dict = get_hottest_date(bbox, now.year-self.num_seasons-1, now.year-1)
-        window_enddate = datetime.strptime(f"2002-{hottest_date_dict['month']}-{hottest_date_dict['day']}", "%Y-%m-%d") + timedelta(days=45)
-        window_startdate = datetime.strptime(f"2002-{hottest_date_dict['month']}-{hottest_date_dict['day']}", "%Y-%m-%d") - timedelta(days=45)
-        current_year_incomplete = datetime.strptime(f"{now.year}-{window_enddate.month}-{window_enddate.day}", "%Y-%m-%d") > now - timedelta(days=20)
-        start_year_is_previous_year = window_startdate.year < window_enddate.year
+
+        if self.use_hot_window:
+            hottest_date_dict = get_hottest_date(bbox, now.year-10, now.year-1)
+            window_enddate = datetime.strptime(f"2002-{hottest_date_dict['month']}-{hottest_date_dict['day']}", "%Y-%m-%d") + timedelta(days=45)
+            window_startdate = datetime.strptime(f"2002-{hottest_date_dict['month']}-{hottest_date_dict['day']}", "%Y-%m-%d") - timedelta(days=45)
+            start_year_is_previous_year = window_startdate.year < window_enddate.year
+            current_year_incomplete = datetime.strptime(f"{now.year}-{window_enddate.month}-{window_enddate.day}", "%Y-%m-%d") > now - timedelta(days=20)
+        else:
+            window_startdate = datetime.strptime(f"2002-01-01", "%Y-%m-%d")
+            window_enddate = datetime.strptime(f"2002-01-01", "%Y-%m-%d")
+            start_year_is_previous_year = True
+            current_year_incomplete = True
         
         # Iterate through years and collect images for percentile calc
         l8_st_list = ee.List([])
@@ -82,6 +90,7 @@ class LandSurfaceTemperature(Layer):
             else:
                 start_date = f"{year}-{window_startdate.month}-{window_startdate.day}"
             end_date = f"{year}-{window_enddate.month}-{window_enddate.day}"
+
             l8_st = (l8
                     .select('ST_B10', 'QA_PIXEL')
                     .filter(ee.Filter.date(start_date, end_date))
