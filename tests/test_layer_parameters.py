@@ -201,7 +201,7 @@ class TestOtherParameters:
 
     def test_land_surface_temperature_dates(self):
         with pytest.raises(Exception) as e_info:
-            LandSurfaceTemperature(start_date="2021-01-01", end_date="2021-01-02").get_data(BBOX)
+            LandSurfaceTemperature(percentile=95, num_seasons=5).get_data(BBOX)
         msg_correct = False if str(e_info.value).find("max() arg is an empty sequence") == -1 else True
         assert msg_correct
 
