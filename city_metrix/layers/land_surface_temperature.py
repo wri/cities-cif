@@ -9,7 +9,7 @@ DEFAULT_SPATIAL_RESOLUTION = 30
 
 class LandSurfaceTemperature(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = ["percentile", "num_seasons"]
+    MAJOR_NAMING_ATTS = ["percentile", "num_seasons", "use_hot_window"]
     MINOR_NAMING_ATTS = None
 
     """
@@ -17,7 +17,12 @@ class LandSurfaceTemperature(Layer):
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
     """
-    def __init__(self, percentile=50, num_seasons=5, use_hot_window=False, **kwargs):
+    def __init__(
+            self,
+            percentile=50,
+            num_seasons=5,
+            use_hot_window=False,
+            **kwargs):
         super().__init__(**kwargs)
         self.percentile = percentile
         self.num_seasons = num_seasons

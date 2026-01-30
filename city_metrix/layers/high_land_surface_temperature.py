@@ -11,7 +11,7 @@ DEFAULT_SPATIAL_RESOLUTION = 30
 
 class HighLandSurfaceTemperature(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = None
+    MAJOR_NAMING_ATTS = ["percentile", "num_seasons"]
     MINOR_NAMING_ATTS = None
     THRESHOLD_ADD = 3
 
