@@ -1,21 +1,33 @@
+import gc
+import json
 import os
 import shutil
 import tempfile
-import requests
-import xarray as xr
-import pandas as pd
-import geopandas as gpd
-import gc
-import json
 from pathlib import Path
-from rioxarray import rioxarray
 from urllib.parse import urlparse
 
+import geopandas as gpd
+import pandas as pd
+import requests
+import xarray as xr
+from rioxarray import rioxarray
+
 from city_metrix import s3_client
-from city_metrix.constants import CITIES_DATA_API_URL, GTIFF_FILE_EXTENSION, GEOJSON_FILE_EXTENSION, \
-    NETCDF_FILE_EXTENSION, CSV_FILE_EXTENSION, CIF_DASHBOARD_LAYER_S3_BUCKET_URI, LOCAL_CACHE_URI, JSON_FILE_EXTENSION, \
-    MULTI_TILE_TILE_INDEX_FILE
-from city_metrix.metrix_tools import get_crs_from_data, standardize_y_dimension_direction
+from city_metrix.constants import (
+    CIF_DASHBOARD_LAYER_S3_BUCKET_URI,
+    CITIES_DATA_API_URL,
+    CSV_FILE_EXTENSION,
+    GEOJSON_FILE_EXTENSION,
+    GTIFF_FILE_EXTENSION,
+    JSON_FILE_EXTENSION,
+    LOCAL_CACHE_URI,
+    MULTI_TILE_TILE_INDEX_FILE,
+    NETCDF_FILE_EXTENSION,
+)
+from city_metrix.metrix_tools import (
+    get_crs_from_data,
+    standardize_y_dimension_direction,
+)
 
 
 def _read_geojson_from_s3(s3_bucket, file_key):
@@ -26,6 +38,8 @@ def _read_geojson_from_s3(s3_bucket, file_key):
     return result_data
 
 from botocore.exceptions import ClientError
+
+
 def delete_s3_file_if_exists(uri):
     if get_uri_scheme(uri) == 's3':
         bucket_name = get_bucket_name_from_s3_uri(uri)
@@ -152,6 +166,7 @@ def read_geotiff_subarea_from_cache(file_uri, city_aoi_subarea, utm_crs):
     # This function either calls the sub-area processing code for a file object or loops over
     # all files in a folder, calling the sub-area proceing code
     import json
+
     import xarray as xr
     from shapely.geometry import box
 
@@ -201,10 +216,10 @@ def read_geotiff_subarea_from_cache(file_uri, city_aoi_subarea, utm_crs):
 
 def _process_geotiff_sub_area(s3_bucket, key, bbox, pad, utm_crs):
     # function uses rasterio.windows to get geotiff sub=area
-    from rasterio.io import MemoryFile
-    from rasterio.windows import from_bounds, Window
-    from rasterio.transform import xy
     import numpy as np
+    from rasterio.io import MemoryFile
+    from rasterio.transform import xy
+    from rasterio.windows import Window, from_bounds
 
     obj = s3_client.get_object(Bucket=s3_bucket, Key=key)
     with MemoryFile(obj['Body'].read()) as memfile:
@@ -377,7 +392,10 @@ def _write_geotiff(data, uri):
     else:
         uri_path = os.path.normpath(get_file_path_from_uri(uri))
         _create_local_target_folder(uri_path)
-        standardized_array.rio.to_raster(raster_path=uri_path, driver="GTiff")
+        standardized_array.rio.to_raster(raster_path=uri_path, driver="GTiff",        
+                                         tiled=True,
+        windowed=True,
+        compress="LZW")
 
 def _write_netcdf(data, uri):
     _verify_datatype('write_netcdf()', data, [xr.DataArray], is_spatial=False)
@@ -506,6 +524,7 @@ def get_city_boundaries(city_id: str, admin_level: str):
 
 def _is_file_less_than_one_day_old(file_path):
     from datetime import datetime, timedelta
+
     # Get the file's modification time
     file_mod_time = os.path.getmtime(file_path)
     # Convert it to a datetime object
@@ -582,6 +601,7 @@ def remove_scheme_from_uri(uri):
 
 def extract_bbox_aoi(tif_da, bbox):
     import os
+
     import rasterio
     from rasterio.windows import from_bounds
     with tempfile.TemporaryDirectory() as temp_dir:
