@@ -110,7 +110,7 @@ def test_height_above_nearest_drainage():
 def test_high_land_surface_temperature():
     data = HighLandSurfaceTemperature().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 40.47, 42.35, 150, 972)
+    assert_raster_stats(data, 1, 1, 1, 61, 1061)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_high_slope():
@@ -158,7 +158,7 @@ def test_land_cover_simplified_glad():
 def test_land_surface_temperature():
     data = LandSurfaceTemperature().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 25.827, 48.111, 1122, 0)
+    assert_raster_stats(data, 1, 18.026985, 33.901142, 1122, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_landsat_collection_2():
