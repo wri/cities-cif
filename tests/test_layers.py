@@ -56,7 +56,7 @@ def test_bu_air_temperature():
     data = BuAirTemperature(start_date='2021-01-01', end_date='2021-12-31',
                             seasonal_utc_offset=-4, sampling_local_hours='14,15,16').get_data(BBOX_USA_MA_BOSTON)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 35.2, 36.3, 207, 90)
+    assert_raster_stats(data, 1, 34.7, 36.3, 297, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_built_up_height():

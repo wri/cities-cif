@@ -2,7 +2,7 @@ import ee
 import geopandas as gpd
 import numpy as np
 import xarray as xr
-from datetime import datetime
+from datetime import datetime, timedelta
 from rasterio.features import rasterize
 from rasterio.transform import from_origin
 
@@ -15,7 +15,7 @@ from city_metrix.constants import GTIFF_FILE_EXTENSION
 from city_metrix.metrix_model import Layer, GeoExtent
 from city_metrix.metrix_dao import extract_bbox_aoi
 from city_metrix.metrix_tools import is_date
-from .era5_hottest_day_gee import find_hottest_date, DEFAULT_SPATIAL_RESOLUTION as ERA5_DEFAULT_SPATIAL_RESOLUTION
+from .era5_hottest_day_gee import Era5HottestDay, find_hottest_date, DEFAULT_SPATIAL_RESOLUTION as ERA5_DEFAULT_SPATIAL_RESOLUTION
 
 DEFAULT_SPATIAL_RESOLUTION = 200
 
@@ -50,16 +50,21 @@ class BuAirTemperature(Layer):
         geographic_bbox = buffered_utm_bbox.as_geographic_bbox()
         center_lon = geographic_bbox.centroid.x
         center_lat = geographic_bbox.centroid.y
+        dataset_land = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY")
 
         if self.start_date is not None and self.end_date is not None:
-            dataset_land = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY")
             local_date = find_hottest_date(center_lon, center_lat, ERA5_DEFAULT_SPATIAL_RESOLUTION,
                                            geographic_bbox, dataset_land,
                                            self.start_date, self.end_date, self.seasonal_utc_offset)
             doy = local_date.timetuple().tm_yday
+            era5_data = Era5HottestDay(self.start_date, self.end_date,
+                                       self.seasonal_utc_offset).get_data(buffered_utm_bbox)
         elif self.single_date is not None:
-            doy = datetime.strptime(
-                self.single_date, "%Y-%m-%d").timetuple().tm_yday
+            local_date = datetime.strptime(self.single_date, "%Y-%m-%d").date()
+            doy = local_date.timetuple().tm_yday
+            era5_data = Era5HottestDay((local_date - timedelta(days=1)).strftime("%Y-%m-%d"),
+                                       (local_date + timedelta(days=1)).strftime("%Y-%m-%d"),
+                                       self.seasonal_utc_offset).get_data(buffered_utm_bbox)
 
         # Filter DOY once (then per-hour)
         joined = _run_smithcee2025_model()
@@ -120,6 +125,12 @@ class BuAirTemperature(Layer):
 
             # Trim back to original AOI
             result_data = extract_bbox_aoi(da, bbox).expand_dims(time=[hod])
+
+            # Fill missing with ERA5 2m temperature at that hour
+            era5_temp = float(era5_data.isel(time=hod).sel(
+                variable="temperature_2m").values)
+            era5_temp = era5_temp - 273.15
+            result_data = result_data.fillna(era5_temp)
 
             array_list.append(result_data)
 
