@@ -1,12 +1,18 @@
 import math
-
-import utm
+import os
 from typing import Union
+
+import numpy as np
+import rasterio
+import rioxarray
+import utm
 from pyproj import CRS
+from rasterio.warp import Resampling, reproject
 from shapely.geometry import point
 
 from city_metrix.constants import WGS_EPSG_CODE, ProjectionType
 
+MIN_COVERAGE_THRESHOLD = 0.001
 
 def parse_city_aoi_json(json_str):
     import json
@@ -184,6 +190,118 @@ def is_openurban_available_for_city(city_id):
 
 def _get_city_part_of_openurban_file_name(s):
     import re
+
     # This pattern matches an underscore followed by one or more digits
     return re.sub(r'_\d+', '', s)
 
+
+def align_raster_array(raster_array, ref_array):
+    """
+    1. Computes weighted average of raster for the ref grid.
+    2. Identifies 'gaps' (NoData) that occurred at the edges.
+    3. Fills those specific gaps using Nearest Neighbor (taking the pixel it falls under).
+    """
+    ref_path = "temp_ref_raster.tif"
+    ref_array.rio.to_raster(raster_path=ref_path, driver="GTiff")
+    
+    raster_path = "temp_raster.tif"
+    raster_array.rio.to_raster(raster_path=raster_path, driver="GTiff")
+
+    output_path = "temp_output_raster.tif"
+
+    """
+    1. Area-Weighted Average of LST into WorldPop grid.
+    2. Filters out pixels where valid LST covers less than MIN_COVERAGE_THRESHOLD (e.g., 10%).
+    """
+    
+    # --- STEP 1: Get Target Grid (WorldPop) ---
+    with rasterio.open(ref_path) as ref_ds:
+        dst_transform = ref_ds.transform
+        dst_crs = ref_ds.crs
+        dst_height = ref_ds.height
+        dst_width = ref_ds.width
+        dst_profile = ref_ds.profile.copy()
+
+    # --- STEP 2: Prepare Source (LST) ---
+    with rasterio.open(raster_path) as src_ds:
+        src_nodata = src_ds.nodata if src_ds.nodata is not None else -999
+        lst_data = src_ds.read(1)
+
+        # A. Create Masks
+        # "Valid" means it is not the NoData value AND it is not NaN
+        is_valid = (lst_data != src_nodata) & (~np.isnan(lst_data))
+        
+        # B. Prepare Source Arrays
+        # 1. Temperature Values: (Temp where valid, 0.0 else)
+        src_values = np.where(is_valid, lst_data, 0.0).astype('float32')
+        
+        # 2. Valid Weights: (1.0 where valid, 0.0 else)
+        # This tracks how much VALID data we have.
+        src_valid_weight = np.where(is_valid, 1.0, 0.0).astype('float32')
+
+        # 3. Total Potential Weights: (Always 1.0)
+        # This tracks the TOTAL area of the pixel, valid or not.
+        src_total_weight = np.ones(lst_data.shape, dtype='float32')
+
+        # --- STEP 3: Initialize Output Arrays ---
+        dst_sum_values = np.zeros((dst_height, dst_width), dtype='float32')
+        dst_sum_valid_weight = np.zeros((dst_height, dst_width), dtype='float32')
+        dst_sum_total_weight = np.zeros((dst_height, dst_width), dtype='float32')
+
+        # --- STEP 4: Reproject (The 3-Pass Method) ---
+        reproject_kwargs = {
+            'src_transform': src_ds.transform,
+            'src_crs': src_ds.crs,
+            'dst_transform': dst_transform,
+            'dst_crs': dst_crs,
+            'resampling': Resampling.sum,
+            'src_nodata': None # Critical: Treat 0.0 as real number
+        }
+
+        # Pass 1: Accumulate Temperature Values
+        reproject(source=src_values, destination=dst_sum_values, **reproject_kwargs)
+
+        # Pass 2: Accumulate Valid Weights (The Numerator)
+        reproject(source=src_valid_weight, destination=dst_sum_valid_weight, **reproject_kwargs)
+
+        # Pass 3: Accumulate Total Potential Weights (The Denominator)
+        # This tells us what the weight WOULD be if the pixel was fully covered.
+        reproject(source=src_total_weight, destination=dst_sum_total_weight, **reproject_kwargs)
+
+    # --- STEP 5: Calculate & Filter ---
+    out_nodata = -999.0
+    final_output = np.full((dst_height, dst_width), out_nodata, dtype='float32')
+
+    # A. Calculate Coverage Ratio (Valid Area / Total Area)
+    # Handle division by zero for pixels completely outside the source bounds
+    with np.errstate(divide='ignore', invalid='ignore'):
+        coverage_ratio = dst_sum_valid_weight / dst_sum_total_weight
+        
+        # B. Identify Good Pixels
+        # 1. Must have some weight (avoid div/0 in temp calculation)
+        # 2. Coverage must meet the global threshold
+        good_pixels = (dst_sum_valid_weight > 0) & (coverage_ratio >= MIN_COVERAGE_THRESHOLD)
+
+    # C. Calculate Weighted Average for only Good Pixels
+    final_output[good_pixels] = dst_sum_values[good_pixels] / dst_sum_valid_weight[good_pixels]
+
+    # --- STEP 6: Save Result ---
+    dst_profile.update({
+        'dtype': 'float32',
+        'nodata': out_nodata,
+        'count': 1,
+        'compress': 'lzw'
+    })
+
+    with rasterio.open(output_path, 'w', **dst_profile) as dst:
+        dst.write(final_output, 1)
+        print(f"Saved filtered grid (Min Coverage: {MIN_COVERAGE_THRESHOLD*100}%) to: {output_path}")
+
+    arr = rioxarray.open_rasterio(output_path).squeeze()
+    if os.path.exists(ref_path):
+        os.remove(ref_path)
+    if os.path.exists(raster_path):
+        os.remove(raster_path)
+    if os.path.exists(output_path):
+        os.remove(output_path)
+    return arr
