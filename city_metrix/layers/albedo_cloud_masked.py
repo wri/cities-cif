@@ -1,10 +1,18 @@
 import ee
 
-from city_metrix.metrix_model import (Layer, get_image_collection, set_resampling_for_continuous_raster,
-                                      validate_raster_resampling_method, GeoExtent)
-from .albedo import get_albedo_default_date_range
+from city_metrix.metrix_model import (
+    GeoExtent,
+    Layer,
+    get_image_collection,
+    set_resampling_for_continuous_raster,
+    validate_raster_resampling_method,
+)
+from city_metrix.metrix_tools import align_raster_array
+
 from ..constants import GTIFF_FILE_EXTENSION
 from ..metrix_dao import extract_bbox_aoi
+from .albedo import get_albedo_default_date_range
+from .world_pop import WorldPop
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 DEFAULT_RESAMPLING_METHOD = "bilinear"
@@ -23,11 +31,12 @@ class AlbedoCloudMasked(Layer):
         zonal_stats: use 'mean' or 'median' for albedo zonal stats
     """
 
-    def __init__(self, start_date:str=None, end_date:str=None, zonal_stats='median', **kwargs):
+    def __init__(self, start_date:str=None, end_date:str=None, index_aggregation=True, zonal_stats='median', **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.zonal_stats = zonal_stats
+        self.index_aggregation = index_aggregation
 
     def get_masked_s2_collection(self, bbox_ee, start_date, end_date):
         CLEAR_THRESHOLD = 0.60
@@ -127,5 +136,7 @@ class AlbedoCloudMasked(Layer):
 
         # Trim back to original AOI
         result_data = extract_bbox_aoi(result_data, bbox)
-
+        if self.index_aggregation:
+            wp_array =  WorldPop().get_data(bbox)
+            return align_raster_array(data, wp_array)
         return result_data

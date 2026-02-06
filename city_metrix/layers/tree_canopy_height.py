@@ -1,8 +1,10 @@
 import ee
 
-from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
+from city_metrix.metrix_tools import align_raster_array
+
 from ..constants import GTIFF_FILE_EXTENSION
-from ..metrix_dao import extract_bbox_aoi
+from .world_pop import WorldPop
 
 DEFAULT_SPATIAL_RESOLUTION = 1
 
@@ -17,9 +19,10 @@ class TreeCanopyHeight(Layer):
     Attributes:
         height: minimum tree height used for filtering results
     """
-    def __init__(self, height=None, **kwargs):
+    def __init__(self, height=None, index_aggregation=True, **kwargs):
         super().__init__(**kwargs)
         self.height = height
+        self.index_aggregation = index_aggregation
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -53,5 +56,7 @@ class TreeCanopyHeight(Layer):
         utm_crs = ee_rectangle['crs']
         result_data = result_data.rio.write_crs(utm_crs)
         result_data['crs'] = utm_crs
-
+        if self.index_aggregation:
+            wp_array =  WorldPop().get_data(bbox)
+            return align_raster_array(data, wp_array)
         return result_data
