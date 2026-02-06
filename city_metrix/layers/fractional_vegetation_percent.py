@@ -1,9 +1,12 @@
-import xarray as xr
-import numpy as np
 import ee
+import numpy as np
+import xarray as xr
 
-from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
+from city_metrix.metrix_tools import align_raster_array
+
 from ..constants import GTIFF_FILE_EXTENSION
+from .world_pop import WorldPop
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
@@ -14,10 +17,12 @@ class FractionalVegetationPercent(Layer):
     MAJOR_NAMING_ATTS = ["min_threshold"]
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, min_threshold=None, year=2024, **kwargs):
+    def __init__(self, min_threshold=None, year=2024, index_aggregation=True, **kwargs):
         super().__init__(**kwargs)
         self.min_threshold = min_threshold
         self.year = year
+        self.index_aggregation = index_aggregation
+
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -158,5 +163,7 @@ class FractionalVegetationPercent(Layer):
 
             if self.min_threshold is not None:
                 data = xr.where(data >= self.min_threshold, 1, np.nan).rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
-
+        if self.index_aggregation:
+            wp_array =  WorldPop().get_data(bbox)
+            return align_raster_array(data, wp_array)
         return data
