@@ -7,7 +7,7 @@ from city_metrix.constants import ProjectionType
 from city_metrix.layers import *
 from city_metrix.metrix_tools import get_projection_type
 from tests.conftest import EXECUTE_IGNORED_TESTS
-from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1, BBOX_ARG_BUENOS_AIRES, GEOEXTENT_DURBAN
+from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1, BBOX_ARG_BUENOS_AIRES, BBOX_USA_MA_BOSTON, GEOEXTENT_DURBAN
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
 
 # Tests are implemented for an area where we have LULC and is a stable region
@@ -50,6 +50,13 @@ def test_average_net_building_height():
     data = AverageNetBuildingHeight().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 0, 14.61, 100, 0)
+    assert get_projection_type(data.crs) == ProjectionType.UTM
+
+def test_bu_air_temperature():
+    data = BuAirTemperature(start_date='2021-01-01', end_date='2021-12-31',
+                            seasonal_utc_offset=-4, sampling_local_hours='14,15,16').get_data(BBOX_USA_MA_BOSTON)
+    assert np.size(data) > 0
+    assert_raster_stats(data, 1, 34.7, 36.3, 297, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_built_up_height():

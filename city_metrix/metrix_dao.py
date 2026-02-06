@@ -118,7 +118,10 @@ def read_geotiff_from_cache(file_uri):
     with rioxarray.open_rasterio(file_path, driver="GTiff") as src:
         data = src.load()
 
-    result_data = data.squeeze('band', drop=True)
+    if "band" in data.dims and data.sizes.get("band", 0) == 1:
+        result_data = data.squeeze('band', drop=True)
+    else:
+        result_data = data
 
     # Rename band name to long name
     # See https://github.com/corteva/rioxarray/issues/736
@@ -609,28 +612,43 @@ def extract_bbox_aoi(tif_da, bbox):
         with rasterio.open(temp_file) as src:
             xmin, ymin, xmax, ymax = bbox.as_utm_bbox().bounds
             window = from_bounds(xmin, ymin, xmax, ymax, transform=src.transform)
-            subarea = src.read(1, window=window)
+            # Read all bands (returns array: (bands, height, width))
+            subarea = src.read(window=window)
             sub_transform = src.window_transform(window)
 
             utm_crs = tif_da.rio.crs.to_epsg()
 
             # Clean metadata
-            meta = {
+            meta = src.meta.copy()
+            meta.update({
                 "driver": "GTiff",
                 "dtype": subarea.dtype.name,
                 "nodata": None,
-                "width": subarea.shape[1],
-                "height": subarea.shape[0],
-                "count": 1,
+                "width": subarea.shape[2],
+                "height": subarea.shape[1],
+                "count": subarea.shape[0],
                 "crs": utm_crs,
-                "transform": sub_transform
-            }
+                "transform": sub_transform,
+            })
 
-            output_path = os.path.join(temp_dir, 'tempfile2.tif')
+            output_path = os.path.join(temp_dir, "tempfile2.tif")
             with rasterio.open(output_path, "w", **meta) as dst:
-                dst.write(subarea, 1)
+                dst.write(subarea)
 
+            # Read back into xarray
             file_uri = f"file://{output_path}"
             query_da = read_geotiff_from_cache(file_uri)
+
+            # Restore time dimension if applicable
+            if "time" in getattr(tif_da, "dims", []) and "band" in query_da.dims:
+                # Check if band count matches time length
+                if query_da.sizes.get("band") == tif_da.sizes.get("time"):
+                    query_da = query_da.rename(band="time")
+                    # Reattach original time coordinates
+                    query_da = query_da.assign_coords(time=tif_da["time"].values)
+
+            # If only 1 band and no time dimension, drop the band dim for 2D consistency
+            if "band" in query_da.dims and query_da.sizes["band"] == 1:
+                query_da = query_da.squeeze("band", drop=True)
 
         return query_da
