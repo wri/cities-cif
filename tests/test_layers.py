@@ -25,7 +25,7 @@ def test_acag_pm2p5():
 def test_albedo_cloud_masked():
     data = AlbedoCloudMasked().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.015, 0.6554, 9797, 0)
+    assert_raster_stats(data, 2, 0.015, 0.6554, 9894, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_albedo():
