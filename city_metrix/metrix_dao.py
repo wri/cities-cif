@@ -596,7 +596,7 @@ def remove_scheme_from_uri(uri):
     return uri_without_scheme
 
 
-def extract_bbox_aoi(tif_da, bbox):
+def extract_bbox_aoi(tif_da, bbox, x_resolution=None, y_resolution=None):
     import os
 
     import rasterio
@@ -608,6 +608,10 @@ def extract_bbox_aoi(tif_da, bbox):
 
         with rasterio.open(temp_file) as src:
             xmin, ymin, xmax, ymax = bbox.as_utm_bbox().bounds
+            if x_resolution is not None and (xmax - xmin) % x_resolution > 0:
+                xmax += x_resolution - ((xmax - xmin) % x_resolution)
+            if y_resolution is not None and (ymax - ymin) % y_resolution > 0:
+                ymax += y_resolution - ((ymax - ymin) % y_resolution)
             window = from_bounds(xmin, ymin, xmax, ymax, transform=src.transform)
             subarea = src.read(1, window=window)
             sub_transform = src.window_transform(window)

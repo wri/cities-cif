@@ -135,8 +135,9 @@ class AlbedoCloudMasked(Layer):
         result_data = data.where(data < 1, 1)
 
         # Trim back to original AOI
-        result_data = extract_bbox_aoi(result_data, bbox)
+        result_data = extract_bbox_aoi(result_data, bbox, spatial_resolution, spatial_resolution)
         if self.index_aggregation:
             wp_array =  WorldPop().get_data(bbox)
             return align_raster_array(data, wp_array)
+
         return result_data
