@@ -1,5 +1,6 @@
 import math
 import os
+import uuid
 from typing import Union
 
 import numpy as np
@@ -195,19 +196,24 @@ def _get_city_part_of_openurban_file_name(s):
     return re.sub(r'_\d+', '', s)
 
 
+
+
+
 def align_raster_array(raster_array, ref_array):
     """
     1. Computes weighted average of raster for the ref grid.
     2. Identifies 'gaps' (NoData) that occurred at the edges.
     3. Fills those specific gaps using Nearest Neighbor (taking the pixel it falls under).
     """
-    ref_path = "temp_ref_raster.tif"
+    unique_filename = str(uuid.uuid4())
+
+    ref_path = f"temp_ref_raster_{unique_filename}.tif"
     ref_array.rio.to_raster(raster_path=ref_path, driver="GTiff")
     
-    raster_path = "temp_raster.tif"
+    raster_path = f"temp_raster_{unique_filename}.tif"
     raster_array.rio.to_raster(raster_path=raster_path, driver="GTiff")
 
-    output_path = "temp_output_raster.tif"
+    output_path = f"temp_output_raster_{unique_filename}.tif"
 
     """
     1. Area-Weighted Average of LST into WorldPop grid.
