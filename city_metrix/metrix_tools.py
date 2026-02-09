@@ -5,8 +5,8 @@ from typing import Union
 
 import numpy as np
 import rasterio
-import rioxarray
 import utm
+import xarray as xr
 from pyproj import CRS
 from rasterio.warp import Resampling, reproject
 from shapely.geometry import point
@@ -303,7 +303,7 @@ def align_raster_array(raster_array, ref_array):
         dst.write(final_output, 1)
         print(f"Saved filtered grid (Min Coverage: {MIN_COVERAGE_THRESHOLD*100}%) to: {output_path}")
 
-    arr = rioxarray.open_rasterio(output_path).squeeze()
+    arr = xr.open_dataset(output_path, engine="rasterio").band_data
     if os.path.exists(ref_path):
         os.remove(ref_path)
     if os.path.exists(raster_path):
