@@ -595,46 +595,116 @@ def remove_scheme_from_uri(uri):
         uri_without_scheme = uri_without_scheme[2:]
     return uri_without_scheme
 
+def extract_bbox_aoi(tif_da, bbox, resampling="nearest"):
+    """
+    Reproject the input raster onto a new grid whose lower-left corner is exactly (xmin, ymin)
+    of the provided bbox. The output uses the source CRS and pixel size. The width/height are
+    chosen to fully cover the bbox by rounding up to whole pixels, so the right/top edges may
+    extend beyond (xmax, ymax), but the lower-left is exact.
 
-def extract_bbox_aoi(tif_da, bbox, x_resolution=None, y_resolution=None):
-    import os
+    Parameters
+    ----------
+    tif_da : xarray.DataArray
+        Input raster (single-band) with a .rio accessor (rioxarray).
+    bbox : object with .as_utm_bbox().bounds -> (xmin, ymin, xmax, ymax)
+        AOI bounds in same CRS as tif_da (UTM in your pattern).
+    resampling : str, optional
+        Resampling method: one of {"nearest","bilinear","cubic","average","mode",
+        "max","min","med","q1","q3"}. Default "nearest".
 
+    Returns
+    -------
+    xarray.DataArray
+        The reprojected tile as a DataArray with georeferencing, lower-left == (xmin, ymin).
+    """
+    import math
+    import numpy as np
     import rasterio
-    from rasterio.windows import from_bounds
+    from rasterio.transform import Affine
+    from rasterio.warp import reproject, Resampling
+
     with tempfile.TemporaryDirectory() as temp_dir:
-        temp_file = os.path.join(temp_dir, 'tempfile.tif')
-        file_uri = f"file://{temp_file}"
-        write_layer(tif_da, file_uri, GTIFF_FILE_EXTENSION)
+        # Persist tif_da to a temporary GeoTIFF that rasterio can open
+        src_path = os.path.join(temp_dir, "tempfile.tif")
+        write_layer(tif_da, f"file://{src_path}", GTIFF_FILE_EXTENSION)
 
-        with rasterio.open(temp_file) as src:
+        with rasterio.open(src_path) as src:
+            # Read bbox in source CRS (you used UTM)
             xmin, ymin, xmax, ymax = bbox.as_utm_bbox().bounds
-            if x_resolution is not None and (xmax - xmin) % x_resolution > 0:
-                xmax += x_resolution - ((xmax - xmin) % x_resolution)
-            if y_resolution is not None and (ymax - ymin) % y_resolution > 0:
-                ymax += y_resolution - ((ymax - ymin) % y_resolution)
-            window = from_bounds(xmin, ymin, xmax, ymax, transform=src.transform)
-            subarea = src.read(1, window=window)
-            sub_transform = src.window_transform(window)
 
-            utm_crs = tif_da.rio.crs.to_epsg()
+            # Pixel sizes (assumes north-up; i.e., no rotation/skew)
+            xres = abs(src.transform.a)
+            yres = abs(src.transform.e)
 
-            # Clean metadata
-            meta = {
-                "driver": "GTiff",
-                "dtype": subarea.dtype.name,
-                "nodata": None,
-                "width": subarea.shape[1],
-                "height": subarea.shape[0],
-                "count": 1,
-                "crs": utm_crs,
-                "transform": sub_transform
+            # Compute output pixel dimensions to cover the bbox
+            width = int(math.ceil((xmax - xmin) / xres))
+            height = int(math.ceil((ymax - ymin) / yres))
+
+            # Construct a transform whose lower-left is exactly (xmin, ymin).
+            # Rasterio transforms are defined at the *upper-left* of the top-left pixel:
+            # top-left Y must be ymin + height*yres to make the bottom-left equal to ymin.
+            dst_transform = Affine(xres, 0.0, xmin, 0.0, -yres, ymin + height * yres)
+
+            # Prepare destination array and NODATA
+            dtype = src.dtypes[0]
+            src_nodata = src.nodatavals[0]
+            if src_nodata is None:
+                # If nodata is missing, pick a safe default
+                if np.issubdtype(np.dtype(dtype), np.integer):
+                    src_nodata = np.iinfo(dtype).min
+                else:
+                    src_nodata = np.nan
+
+            # Single-band destination (match your original function behavior)
+            dst_arr = np.full((height, width), src_nodata, dtype=dtype)
+
+            resampling_map = {
+                "nearest": Resampling.nearest,
+                "bilinear": Resampling.bilinear,
+                "cubic": Resampling.cubic,
+                "average": Resampling.average,
+                "mode": Resampling.mode,
+                "max": Resampling.max,
+                "min": Resampling.min,
+                "med": Resampling.med,
+                "q1": Resampling.q1,
+                "q3": Resampling.q3,
             }
+            resamp = resampling_map.get(resampling, Resampling.nearest)
 
-            output_path = os.path.join(temp_dir, 'tempfile2.tif')
-            with rasterio.open(output_path, "w", **meta) as dst:
-                dst.write(subarea, 1)
+            # Reproject onto the new grid anchored at (xmin, ymin)
+            reproject(
+                source=rasterio.band(src, 1),
+                destination=dst_arr,
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=dst_transform,
+                dst_crs=src.crs,
+                resampling=resamp,
+                src_nodata=src_nodata,
+                dst_nodata=src_nodata,
+                num_threads=2,
+            )
 
-            file_uri = f"file://{output_path}"
-            query_da = read_geotiff_from_cache(file_uri)
+            # Write the result
+            meta = src.meta.copy()
+            meta.update({
+                "driver": "GTiff",
+                "height": height,
+                "width": width,
+                "transform": dst_transform,
+                "count": 1,
+                "dtype": dtype,
+                "nodata": src_nodata,
+                "crs": src.crs,
+            })
+
+            out_path = os.path.join(temp_dir, "tempfile2.tif")
+            with rasterio.open(out_path, "w", **meta) as dst:
+                dst.write(dst_arr, 1)
+
+            # Load back into your working DA
+            query_da = read_geotiff_from_cache(f"file://{out_path}")
 
         return query_da
+
