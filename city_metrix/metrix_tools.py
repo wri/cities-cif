@@ -195,10 +195,6 @@ def _get_city_part_of_openurban_file_name(s):
     # This pattern matches an underscore followed by one or more digits
     return re.sub(r'_\d+', '', s)
 
-
-
-
-
 def align_raster_array(raster_array, ref_array):
     """
     1. Computes weighted average of raster for the ref grid.
