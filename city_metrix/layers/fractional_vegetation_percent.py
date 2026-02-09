@@ -17,7 +17,7 @@ class FractionalVegetationPercent(Layer):
     MAJOR_NAMING_ATTS = ["min_threshold"]
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, min_threshold=None, year=2024, index_aggregation=True, **kwargs):
+    def __init__(self, min_threshold=None, year=2024, index_aggregation=False, **kwargs):
         super().__init__(**kwargs)
         self.min_threshold = min_threshold
         self.year = year

@@ -1,11 +1,12 @@
 import math
 import os
+import uuid
 from typing import Union
 
 import numpy as np
 import rasterio
-import rioxarray
 import utm
+import xarray as xr
 from pyproj import CRS
 from rasterio.warp import Resampling, reproject
 from shapely.geometry import point
@@ -194,20 +195,21 @@ def _get_city_part_of_openurban_file_name(s):
     # This pattern matches an underscore followed by one or more digits
     return re.sub(r'_\d+', '', s)
 
-
 def align_raster_array(raster_array, ref_array):
     """
     1. Computes weighted average of raster for the ref grid.
     2. Identifies 'gaps' (NoData) that occurred at the edges.
     3. Fills those specific gaps using Nearest Neighbor (taking the pixel it falls under).
     """
-    ref_path = "temp_ref_raster.tif"
+    unique_filename = str(uuid.uuid4())
+
+    ref_path = f"temp_ref_raster_{unique_filename}.tif"
     ref_array.rio.to_raster(raster_path=ref_path, driver="GTiff")
     
-    raster_path = "temp_raster.tif"
+    raster_path = f"temp_raster_{unique_filename}.tif"
     raster_array.rio.to_raster(raster_path=raster_path, driver="GTiff")
 
-    output_path = "temp_output_raster.tif"
+    output_path = f"temp_output_raster_{unique_filename}.tif"
 
     """
     1. Area-Weighted Average of LST into WorldPop grid.
@@ -297,7 +299,7 @@ def align_raster_array(raster_array, ref_array):
         dst.write(final_output, 1)
         print(f"Saved filtered grid (Min Coverage: {MIN_COVERAGE_THRESHOLD*100}%) to: {output_path}")
 
-    arr = rioxarray.open_rasterio(output_path).squeeze()
+    arr = xr.open_dataset(output_path, engine="rasterio").band_data
     if os.path.exists(ref_path):
         os.remove(ref_path)
     if os.path.exists(raster_path):

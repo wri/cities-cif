@@ -19,7 +19,7 @@ class TreeCanopyHeight(Layer):
     Attributes:
         height: minimum tree height used for filtering results
     """
-    def __init__(self, height=None, index_aggregation=True, **kwargs):
+    def __init__(self, height=None, index_aggregation=False, **kwargs):
         super().__init__(**kwargs)
         self.height = height
         self.index_aggregation = index_aggregation
