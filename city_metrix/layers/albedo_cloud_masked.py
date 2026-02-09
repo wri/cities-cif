@@ -1,4 +1,5 @@
 import ee
+import numpy as np
 
 from city_metrix.metrix_model import (
     GeoExtent,
@@ -31,7 +32,7 @@ class AlbedoCloudMasked(Layer):
         zonal_stats: use 'mean' or 'median' for albedo zonal stats
     """
 
-    def __init__(self, start_date:str=None, end_date:str=None, index_aggregation=True, zonal_stats='median', num_seasons=5, **kwargs):
+    def __init__(self, start_date:str=None, end_date:str=None, index_aggregation=True, zonal_stats='median', num_seasons=3, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
@@ -138,7 +139,7 @@ class AlbedoCloudMasked(Layer):
         ).albedo_zonal
 
         # clamping all values ≥ 1 down to exactly 1, and leaving values < 1 untouched
-        result_data = data.where(data < 1, 1)
+        result_data = data.where(data < 1, 1).where(np.logical_not(np.isnan(data)), np.nan)
 
         # Trim back to original AOI
         result_data = extract_bbox_aoi(result_data, bbox)
