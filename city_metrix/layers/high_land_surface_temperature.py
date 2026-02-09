@@ -22,7 +22,7 @@ class HighLandSurfaceTemperature(Layer):
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
     """
-    def __init__(self, start_date="2013-01-01", end_date="2026-01-01", index_aggregation=True, high_lst=False, **kwargs):
+    def __init__(self, start_date="2013-01-01", end_date="2026-01-01", index_aggregation=False, high_lst=False, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
