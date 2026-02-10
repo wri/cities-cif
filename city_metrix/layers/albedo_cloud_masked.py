@@ -1,4 +1,5 @@
 import ee
+import numpy as np
 
 from city_metrix.metrix_model import (
     GeoExtent,
@@ -20,7 +21,7 @@ DEFAULT_RESAMPLING_METHOD = "bilinear"
 
 class AlbedoCloudMasked(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = ["zonal_stats"]
+    MAJOR_NAMING_ATTS = ["zonal_stats", "num_seasons"]
     MINOR_NAMING_ATTS = None
     PROCESSING_TILE_SIDE_M = 5000
 
@@ -31,12 +32,13 @@ class AlbedoCloudMasked(Layer):
         zonal_stats: use 'mean' or 'median' for albedo zonal stats
     """
 
-    def __init__(self, start_date:str=None, end_date:str=None, index_aggregation=False, zonal_stats='median', **kwargs):
+    def __init__(self, start_date:str=None, end_date:str=None, index_aggregation=False, zonal_stats='median', num_seasons=3, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.zonal_stats = zonal_stats
         self.index_aggregation = index_aggregation
+        self.num_seasons = num_seasons
 
     def get_masked_s2_collection(self, bbox_ee, start_date, end_date):
         CLEAR_THRESHOLD = 0.60
@@ -92,7 +94,12 @@ class AlbedoCloudMasked(Layer):
             return albedo
 
         # Get masked S2 collection
-        S2filtered = self.get_masked_s2_collection(ee_rectangle, self.start_date, self.end_date)
+        S2filtered = ee.ImageCollection([])
+        for seasondiff in range(self.num_seasons):
+            start_date = self.start_date.replace(self.start_date.split('-')[0], str(int(self.start_date.split('-')[0]) - seasondiff))
+            end_date = self.end_date.replace(self.end_date.split('-')[0], str(int(self.end_date.split('-')[0]) - seasondiff))
+            S2filtered = S2filtered.merge(self.get_masked_s2_collection(ee_rectangle, start_date, end_date))
+
         # Add albedo
         S2albedo = S2filtered.map(calc_s2_albedo).select("albedo")
 
@@ -132,7 +139,7 @@ class AlbedoCloudMasked(Layer):
         ).albedo_zonal
 
         # clamping all values ≥ 1 down to exactly 1, and leaving values < 1 untouched
-        result_data = data.where(data < 1, 1)
+        result_data = data.where(data < 1, 1).where(np.logical_not(np.isnan(data)), np.nan)
 
         # Trim back to original AOI
         result_data = extract_bbox_aoi(result_data, bbox)
