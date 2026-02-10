@@ -139,5 +139,4 @@ class AlbedoCloudMasked(Layer):
         if self.index_aggregation:
             wp_array =  WorldPop().get_data(bbox)
             return align_raster_array(data, wp_array)
-
         return result_data
