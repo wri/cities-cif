@@ -21,7 +21,7 @@ DEFAULT_RESAMPLING_METHOD = "bilinear"
 
 class AlbedoCloudMasked(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    MAJOR_NAMING_ATTS = ["zonal_stats", "num_seasons"]
+    MAJOR_NAMING_ATTS = ["zonal_stats", "num_seasons", "start_date", "end_date"]
     MINOR_NAMING_ATTS = None
     PROCESSING_TILE_SIDE_M = 5000
 
