@@ -26,7 +26,6 @@ class FractionalVegetationPercent(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
-        stophere
         if resampling_method is not None:
             raise Exception("resampling_method can not be specified.")
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
@@ -80,7 +79,7 @@ class FractionalVegetationPercent(Layer):
             ndvi = S2ndvi.select("NDVI").reduce(ee.Reducer.percentile([90])).rename("NDVI")
 
             if endm_img is not None:
-                print('Using stored endmembers')
+                # Use stored endmembers
                 aoi_centroid = (
                     aoi
                     .intersection(endm_img.geometry(), maxError=1, proj=aoi.projection())
@@ -90,7 +89,7 @@ class FractionalVegetationPercent(Layer):
                 vegNDVI = sample.get('fullveg_ndvi')
                 soilNDVI = sample.get('nonveg_ndvi')
             else:
-                print('Retrieving new endmembers')
+                # Retrieve new endmembers
                 # Filter dynamic world data
                 dwFiltered = dw.filterBounds(aoi).filterDate(date_start, date_end)
 
