@@ -33,6 +33,7 @@ class FractionalVegetationPercent(Layer):
         dw = ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1")
         S2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
         S2CS = ee.ImageCollection("GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED")
+        ENDMEMBERS_IC = ee.ImageCollection("projects/wri-datalab/cities/heat/fracveg_endmembers_bybbox")
         bbox_ee = bbox.to_ee_rectangle()
 
         # Sentinel
@@ -52,6 +53,13 @@ class FractionalVegetationPercent(Layer):
         PCTL_NONVEG = 5
 
         def calcFr(aoi, vegpctl, soilpctl):
+
+            endm_ic = ENDMEMBERS_IC.filterBounds(aoi)
+            if endm_ic.size().gt(0):
+                endm_img = endm_ic.first()
+            else:
+                endm_img = None
+
             # Cloud score+
             S2filtered = (
                 S2.filterBounds(aoi)
@@ -70,52 +78,58 @@ class FractionalVegetationPercent(Layer):
             # Create a 90th percentile NDVI image
             ndvi = S2ndvi.select("NDVI").reduce(ee.Reducer.percentile([90])).rename("NDVI")
 
-            # Filter dynamic world data
-            dwFiltered = dw.filterBounds(aoi).filterDate(date_start, date_end)
+            if endm_img is not None:
+                aoi_centroid = aoi.centroid(maxError=1)
+                sample = endm_img.sampleRegions(collection=ee.FeatureCollection(aoi_centroid)).first()
+                vegNDVI = sample.get('fullveg_ndvi')
+                soilNDVI = sample.get('nonveg_ndvi')
+            else:
+                # Filter dynamic world data
+                dwFiltered = dw.filterBounds(aoi).filterDate(date_start, date_end)
 
-            # choose the most commonly occurring class for each pixel
-            # clip to city area and map to 1 for veg (trees & grass)
-            # and 2 for bare soil
-            dwMode = dwFiltered.select("label").reduce(ee.Reducer.mode()).clip(aoi)
+                # choose the most commonly occurring class for each pixel
+                # clip to city area and map to 1 for veg (trees & grass)
+                # and 2 for bare soil
+                dwMode = dwFiltered.select("label").reduce(ee.Reducer.mode()).clip(aoi)
 
-            dwClass = (
-                dwMode.remap([0, 1, 2, 3, 4, 5, 6, 7, 8], [0, 1, 1, 0, 0, 1, 2, 0, 0])
-                .selfMask()
-                .rename("lc")
-            )
-
-            # Percentile values from:
-            # Zeng, X., Dickinson, R. E., Walker, A., Shaikh, M., DeFries, R. S., & Qi, J. (2000).
-            # Derivation and Evaluation of Global 1-km Fractional Vegetation Cover Data for Land Modeling.
-            # Journal of Applied Meteorology, 39(6), 826–839.
-            # https://doi.org/10.1175/1520-0450(2000)039<0826:DAEOGK>2.0.CO;2
-
-            # Calculates the nth percentile value for vegetation and soil NDVI
-
-            vegNDVI = (
-                ndvi.updateMask(dwClass.eq(1))
-                .reduceRegion(
-                    reducer=ee.Reducer.percentile([vegpctl]),
-                    geometry=aoi,
-                    scale=10,
-                    maxPixels=10e13,
+                dwClass = (
+                    dwMode.remap([0, 1, 2, 3, 4, 5, 6, 7, 8], [0, 1, 1, 0, 0, 1, 2, 0, 0])
+                    .selfMask()
+                    .rename("lc")
                 )
-                .get("NDVI")
-            )
-            soilNDVI = (
-                ndvi.updateMask(dwClass.eq(2))
-                .reduceRegion(
-                    reducer=ee.Reducer.percentile([soilpctl]),
-                    geometry=aoi,
-                    scale=10,
-                    maxPixels=10e13,
+
+                # Percentile values from:
+                # Zeng, X., Dickinson, R. E., Walker, A., Shaikh, M., DeFries, R. S., & Qi, J. (2000).
+                # Derivation and Evaluation of Global 1-km Fractional Vegetation Cover Data for Land Modeling.
+                # Journal of Applied Meteorology, 39(6), 826–839.
+                # https://doi.org/10.1175/1520-0450(2000)039<0826:DAEOGK>2.0.CO;2
+
+                # Calculates the nth percentile value for vegetation and soil NDVI
+
+                vegNDVI = (
+                    ndvi.updateMask(dwClass.eq(1))
+                    .reduceRegion(
+                        reducer=ee.Reducer.percentile([vegpctl]),
+                        geometry=aoi,
+                        scale=10,
+                        maxPixels=10e13,
+                    )
+                    .get("NDVI")
                 )
-                .get("NDVI")
-            )
+                soilNDVI = (
+                    ndvi.updateMask(dwClass.eq(2))
+                    .reduceRegion(
+                        reducer=ee.Reducer.percentile([soilpctl]),
+                        geometry=aoi,
+                        scale=10,
+                        maxPixels=10e13,
+                    )
+                    .get("NDVI")
+                )
 
             return ee.Dictionary({"vegNDVI": vegNDVI, "soilNDVI": soilNDVI, "ndviImage": ndvi})
 
-        calcFr(bbox_ee["ee_geometry"], PCTL_FULLVEG, PCTL_NONVEG)
+        # calcFr(bbox_ee["ee_geometry"], PCTL_FULLVEG, PCTL_NONVEG)
 
         def fracVeg(geom, vegpctl, soilpctl):
             results = calcFr(geom, vegpctl, soilpctl)
