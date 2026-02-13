@@ -26,6 +26,7 @@ class FractionalVegetationPercent(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
+        stophere
         if resampling_method is not None:
             raise Exception("resampling_method can not be specified.")
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
