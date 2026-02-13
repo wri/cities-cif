@@ -2,6 +2,7 @@ import gc
 import math
 import os
 import random
+import re
 import shutil
 import tempfile
 import time
@@ -55,9 +56,12 @@ from city_metrix.metrix_dao import (
     get_city_boundaries,
     get_file_key_from_url,
     get_file_path_from_uri,
+    get_uri_scheme,
     write_file_to_s3,
+    write_geojson,
     write_json,
     write_layer,
+    write_csv,
     write_metric,
     write_tile_grid,
 )
@@ -1132,8 +1136,27 @@ class Layer:
             raise ValueError("Non-city data cannot be cached.")
 
         standard_env = standardize_s3_env(s3_env)
+        target_uri, _, _, _ = build_file_key(
+            s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m
+        )
+        tile_side_m = (
+            self.aggregate.PROCESSING_TILE_SIDE_M
+            if hasattr(self.aggregate, "PROCESSING_TILE_SIDE_M")
+            else None
+        )
+        buffered_bbox = (
+            bbox.buffer_utm_bbox(aoi_buffer_m) if aoi_buffer_m is not None else bbox
+        )
+        buffered_utm_bbox = buffered_bbox.as_utm_bbox()
+        uses_tile_cache = (
+            bbox.geo_type == GeoType.CITY_AREA
+            and tile_side_m is not None
+            and self.aggregate.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION
+            and buffered_utm_bbox.polygon.area > tile_side_m**2
+        )
         if force_data_refresh:
             has_usable_cache = False
+            self._clear_existing_cache(target_uri)
         else:
             has_usable_cache = is_cache_usable(
                 s3_bucket,
@@ -1143,12 +1166,19 @@ class Layer:
                 aoi_buffer_m,
                 aoi_buffer_m,
             )
+        if has_usable_cache and uses_tile_cache:
+            has_usable_cache = not self._has_incomplete_tile_cache(
+                buffered_bbox, tile_side_m, spatial_resolution, target_uri
+            )
 
         if not has_usable_cache:
-            target_uri, _, _, _ = build_file_key(
-                s3_bucket, standard_env, self.aggregate, bbox, aoi_buffer_m
+            self._build_city_cache(
+                bbox,
+                spatial_resolution,
+                target_uri,
+                aoi_buffer_m,
+                force_data_refresh=force_data_refresh,
             )
-            self._build_city_cache(bbox, spatial_resolution, target_uri, aoi_buffer_m)
         else:
             print(f">>>Layer {self.aggregate.__class__.__name__} is already cached ..")
 
@@ -1216,8 +1246,16 @@ class Layer:
         return result_data
 
     def _build_city_cache(
-        self, bbox, spatial_resolution, target_uri, aoi_buffer_m: int = None
+        self,
+        bbox,
+        spatial_resolution,
+        target_uri,
+        aoi_buffer_m: int = None,
+        force_data_refresh: bool = False,
     ):
+        if force_data_refresh and target_uri is not None:
+            self._clear_existing_cache(target_uri)
+
         if bbox.geo_type == GeoType.CITY_AREA or bbox.geo_type == GeoType.CITY_CENTROID:
             if hasattr(self.aggregate, "PROCESSING_TILE_SIDE_M"):
                 tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
@@ -1246,6 +1284,7 @@ class Layer:
                         tile_side_m=tile_side_m,
                         spatial_resolution=spatial_resolution,
                         target_uri=target_uri,
+                        force_refresh=force_data_refresh,
                     )
                 else:
                     result_data = self.aggregate.get_data(
@@ -1259,35 +1298,72 @@ class Layer:
                 f"Data not cached for {self.aggregate.__class__.__name__}. Data can only be cached for CITY_AREA or CITY_CENTROID geo_extent."
             )
 
+    def _clear_existing_cache(self, target_uri: str):
+        if target_uri is None:
+            return
+
+        uri_scheme = get_uri_scheme(target_uri)
+        if uri_scheme == "s3":
+            delete_s3_file_if_exists(target_uri)
+            delete_s3_folder_if_exists(target_uri)
+        else:
+            cache_path = get_file_path_from_uri(target_uri)
+            if os.path.isfile(cache_path):
+                os.remove(cache_path)
+            elif os.path.isdir(cache_path):
+                shutil.rmtree(cache_path)
+
+    def _has_incomplete_tile_cache(
+        self, bbox, tile_side_m, spatial_resolution, target_uri
+    ):
+        if tile_side_m is None or target_uri is None:
+            return False
+
+        utm_box = bbox.as_utm_bbox()
+        fishnet = create_fishnet_grid(
+            bbox=utm_box,
+            tile_side_length=tile_side_m,
+            length_units="meters",
+            spatial_resolution=spatial_resolution,
+            output_as=ProjectionType.UTM,
+        )
+        fishnet["index"] = fishnet.index
+        existing_tile_paths = self._list_existing_tile_filepaths(target_uri)
+        completed_tile_ids = self._get_completed_tile_ids(existing_tile_paths)
+        unretrieved_tiles = fishnet.drop(completed_tile_ids, errors="ignore")
+        return len(unretrieved_tiles) > 0
+
     def _get_completed_tile_ids(self, file_paths):
         results = []
         for path in file_paths:
             filename = os.path.basename(path)
-            id = int(filename.split("_", 1)[1].replace(".tif", ""))
-            results.append(id)
+            match = re.match(r"tile_(\d+)(?:_processing_failed)?\.tif$", filename)
+            if match and "processing_failed" not in filename:
+                tile_id = int(match.group(1))
+                results.append(tile_id)
         return results
+
+    def _list_existing_tile_filepaths(self, target_uri):
+        uri_scheme = get_uri_scheme(target_uri)
+        if uri_scheme == "s3":
+            return self._list_all_tiff_filepaths_in_s3_folder(target_uri)
+        directory = get_file_path_from_uri(target_uri)
+        if os.path.isdir(directory):
+            return self._list_all_tif_filepaths_in_folder(directory)
+        return []
 
     def _compute_aoi_bytes(self, bbox):
         bbox.polygon.area
 
     def _cache_data_by_fishnet_tiles(
-        self, bbox, tile_side_m, spatial_resolution, target_uri
+        self, bbox, tile_side_m, spatial_resolution, target_uri, force_refresh=False
     ):
         # TODO: Code currently only handles raster data
 
-        # Write individual tiles to cache
-        delete_s3_file_if_exists(target_uri)
-        delete_s3_folder_if_exists(target_uri)
-        create_uri_target_folder(target_uri)
+        if force_refresh:
+            self._clear_existing_cache(target_uri)
 
-        # Add notice file to folder
-        processing_notice_file_uri = f"{target_uri}/{CIF_ACTIVE_PROCESSING_FILE_NAME}"
-        write_file_to_s3(
-            pd.DataFrame(),
-            processing_notice_file_uri,
-            CSV_FILE_EXTENSION,
-            keep_index=False,
-        )
+        create_uri_target_folder(target_uri)
 
         output_as = ProjectionType.UTM
         utm_box = bbox.as_utm_bbox()
@@ -1301,28 +1377,31 @@ class Layer:
             output_as=output_as,
         )
         fishnet["index"] = fishnet.index
-        fishnet["download_failed"] = "unknow"
         fishnet = fishnet[["index", "geometry"]].copy()
 
-        # Temporary hack for testing
-        # fishnet = fishnet.iloc[:6]
+        existing_tile_paths = self._list_existing_tile_filepaths(target_uri)
+        completed_tile_ids = self._get_completed_tile_ids(existing_tile_paths)
+        unretrieved_tiles = fishnet.drop(completed_tile_ids, errors="ignore")
 
-        # Write grid to S3
+        processing_notice_file_uri = f"{target_uri}/{CIF_ACTIVE_PROCESSING_FILE_NAME}"
+        notice_written = False
+        if len(unretrieved_tiles) > 0:
+            self._write_processing_notice(processing_notice_file_uri)
+            notice_written = True
+
         fishnet["tile_name"] = "tile_" + fishnet["index"].astype(str).str.zfill(
             TILE_NUMBER_PADCOUNT
         )
-        fishnet["success"] = "unknown"
+        fishnet["success"] = fishnet["index"].isin(completed_tile_ids)
         fishnet = fishnet[["index", "tile_name", "success", "geometry"]].copy()
         grid_file_uri = f"{target_uri}/fishnet_grid.json"
-        write_file_to_s3(fishnet, grid_file_uri, GEOJSON_FILE_EXTENSION)
+        write_geojson(fishnet, grid_file_uri)
 
-        # Write index
         _write_grid_index_to_cache(fishnet, target_uri, crs)
 
+        unretrieved_tile_records = []
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Read from source and write to local temp directory
             retry_count = 0
-            unretrieved_tiles = fishnet
             while len(unretrieved_tiles) > 0 and retry_count < 3:
                 tasks = []
 
@@ -1340,7 +1419,6 @@ class Layer:
                 except Exception as e:
                     print(f"Failed to process a tile fo {target_uri}: {e}. Retrying.")
 
-                # Note this check only accounts for tiles that were missed due to dask failures and not download errors
                 unretrieved_tile_records = [
                     (k, v)
                     for error in retrieval_errors
@@ -1350,9 +1428,9 @@ class Layer:
                 if len(unretrieved_tile_records) == 0:
                     unretrieved_tiles = gpd.GeoDataFrame(geometry=[])
                 else:
-                    file_paths = self._list_all_tiff_filepaths_in_s3_folder(target_uri)
+                    file_paths = self._list_existing_tile_filepaths(target_uri)
                     completed_tile_ids = self._get_completed_tile_ids(file_paths)
-                    unretrieved_tiles = fishnet.drop(completed_tile_ids)
+                    unretrieved_tiles = fishnet.drop(completed_tile_ids, errors="ignore")
 
                 retry_count += 1
 
@@ -1375,7 +1453,7 @@ class Layer:
 
             # write failures
             uri = f"{target_uri}/failed_downloads.csv"
-            write_file_to_s3(df_joined, uri, CSV_FILE_EXTENSION, keep_index=False)
+            write_csv(df_joined, uri)
 
             # create updated fishnet grid showing download failures
             new_fishnet_grid = fishnet.merge(
@@ -1390,10 +1468,39 @@ class Layer:
             result_df = new_fishnet_grid[
                 ["tile_name", "success", "geometry"]
             ].reset_index(drop=True)
-            write_file_to_s3(result_df, grid_file_uri, GEOJSON_FILE_EXTENSION)
+            write_geojson(result_df, grid_file_uri)
 
-        # remove the notice file
-        delete_s3_file_if_exists(processing_notice_file_uri)
+        final_tile_paths = self._list_existing_tile_filepaths(target_uri)
+        final_completed_tile_ids = self._get_completed_tile_ids(final_tile_paths)
+        final_fishnet_grid = fishnet.copy()
+        final_fishnet_grid["success"] = final_fishnet_grid["index"].isin(
+            final_completed_tile_ids
+        )
+        write_geojson(
+            final_fishnet_grid[["tile_name", "success", "geometry"]], grid_file_uri
+        )
+
+        self._remove_processing_notice(processing_notice_file_uri)
+
+    def _write_processing_notice(self, processing_notice_file_uri):
+        empty_df = pd.DataFrame()
+        if get_uri_scheme(processing_notice_file_uri) == "s3":
+            write_file_to_s3(
+                empty_df,
+                processing_notice_file_uri,
+                CSV_FILE_EXTENSION,
+                keep_index=False,
+            )
+        else:
+            write_csv(empty_df, processing_notice_file_uri)
+
+    def _remove_processing_notice(self, processing_notice_file_uri):
+        if get_uri_scheme(processing_notice_file_uri) == "s3":
+            delete_s3_file_if_exists(processing_notice_file_uri)
+        else:
+            notice_path = get_file_path_from_uri(processing_notice_file_uri)
+            if os.path.exists(notice_path):
+                os.remove(notice_path)
 
     def _write_data_to_cache(self, source_file_path, target_tile_uri):
         if target_tile_uri.startswith("s3://"):
@@ -1526,10 +1633,14 @@ class Layer:
             file_name = construct_tile_name(index, processing_had_failure=True)
             target_tile_uri = f"{target_uri}/{file_name}"
 
-            # write empty placeholder file to s3
-            bucket = get_bucket_name_from_s3_uri(target_tile_uri)
-            file_key = get_file_key_from_url(target_tile_uri)
-            s3_client.put_object(Bucket=bucket, Key=file_key, Body="")
+            if get_uri_scheme(target_tile_uri) == "s3":
+                bucket = get_bucket_name_from_s3_uri(target_tile_uri)
+                file_key = get_file_key_from_url(target_tile_uri)
+                s3_client.put_object(Bucket=bucket, Key=file_key, Body="")
+            else:
+                target_file_path = get_file_path_from_uri(target_tile_uri)
+                os.makedirs(os.path.dirname(target_file_path), exist_ok=True)
+                Path(target_file_path).touch()
 
             retrieval_errors = {index: failure_message}
 
