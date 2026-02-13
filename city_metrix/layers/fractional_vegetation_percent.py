@@ -26,6 +26,7 @@ class FractionalVegetationPercent(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
+        print('HERE')
         if resampling_method is not None:
             raise Exception("resampling_method can not be specified.")
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
@@ -79,7 +80,11 @@ class FractionalVegetationPercent(Layer):
             ndvi = S2ndvi.select("NDVI").reduce(ee.Reducer.percentile([90])).rename("NDVI")
 
             if endm_img is not None:
-                aoi_centroid = aoi.centroid(maxError=1)
+                aoi_centroid = (
+                    aoi
+                    .intersection(endm_img.geometry(), maxError=1, proj=aoi.projection())
+                    .centroid(maxError=1)
+                )
                 sample = endm_img.sampleRegions(collection=ee.FeatureCollection(aoi_centroid)).first()
                 vegNDVI = sample.get('fullveg_ndvi')
                 soilNDVI = sample.get('nonveg_ndvi')
