@@ -1,10 +1,10 @@
-import ee
 import numpy as np
-from scipy.signal import find_peaks
 import xarray as xr
+from scipy.signal import find_peaks
 
-from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
 from city_metrix.layers import NdwiSentinel2
+from city_metrix.metrix_model import GeoExtent, Layer
+
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
@@ -32,7 +32,8 @@ class SurfaceWater(Layer):
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
         ndwi_data = NdwiSentinel2(year=self.year).get_data(bbox)
 
