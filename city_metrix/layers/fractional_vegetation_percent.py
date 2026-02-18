@@ -13,7 +13,7 @@ DEFAULT_SPATIAL_RESOLUTION = 10
 
 class FractionalVegetationPercent(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    PROCESSING_TILE_SIDE_M = 5000
+    PROCESSING_TILE_SIDE_M = 500000
     MAJOR_NAMING_ATTS = ["min_threshold"]
     MINOR_NAMING_ATTS = None
 
@@ -184,6 +184,8 @@ class FractionalVegetationPercent(Layer):
             if self.min_threshold is not None:
                 print("Masking")
                 data = xr.where(data >= self.min_threshold, 1, np.nan).rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
+            else:
+                print("Not masking")
         if self.index_aggregation:
             wp_array =  WorldPop().get_data(bbox)
             return align_raster_array(data, wp_array)
