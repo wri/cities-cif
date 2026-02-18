@@ -1107,7 +1107,6 @@ class Layer:
                         spatial_resolution=spatial_resolution,
                         resampling_method=resampling_method,
                     )
-                    print(f"Line 1110 metrix_model {np.isnan(layer_data).sum()}")
                     write_layer(layer_data, file_path, file_format)
 
     def cache_city_data(

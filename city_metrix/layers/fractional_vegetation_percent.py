@@ -182,10 +182,8 @@ class FractionalVegetationPercent(Layer):
             ).astype(np.uint8).Fr
 
             if self.min_threshold is not None:
-                print("Masking")
                 data = xr.where(data >= self.min_threshold, 1, np.nan).rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
-            else:
-                print("Not masking")
+
         if self.index_aggregation:
             wp_array =  WorldPop().get_data(bbox)
             return align_raster_array(data, wp_array)
