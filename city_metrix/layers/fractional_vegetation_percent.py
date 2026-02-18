@@ -13,11 +13,11 @@ DEFAULT_SPATIAL_RESOLUTION = 10
 
 class FractionalVegetationPercent(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
-    PROCESSING_TILE_SIDE_M = 5000
+    PROCESSING_TILE_SIDE_M = None#5000
     MAJOR_NAMING_ATTS = ["min_threshold"]
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, min_threshold=None, year=2024, index_aggregation=False, **kwargs):
+    def __init__(self, min_threshold=None, year=2025, index_aggregation=False, **kwargs):
         super().__init__(**kwargs)
         self.min_threshold = min_threshold
         self.year = year
