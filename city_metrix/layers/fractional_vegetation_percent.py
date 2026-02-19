@@ -173,13 +173,15 @@ class FractionalVegetationPercent(Layer):
                 ).label * np.nan
             )
             data.rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
+            
         else:
             data = get_image_collection(
                 ee.ImageCollection([Fr]),
                 bbox_ee,
                 spatial_resolution,
                 "fractional vegetation",
-            ).astype(np.uint8).Fr
+            ).astype(np.float64).Fr  # Cast to float64 so nodata can be np.nan.
+            data.rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
 
             if self.min_threshold is not None:
                 data = xr.where(data >= self.min_threshold, 1, np.nan).rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
