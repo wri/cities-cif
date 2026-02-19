@@ -1275,7 +1275,6 @@ class Layer:
         self, bbox, tile_side_m, spatial_resolution, target_uri
     ):
         # TODO: Code currently only handles raster data
-
         # Write individual tiles to cache
         delete_s3_file_if_exists(target_uri)
         delete_s3_folder_if_exists(target_uri)
