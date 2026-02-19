@@ -650,6 +650,8 @@ def extract_bbox_aoi(tif_da, bbox, resampling="nearest"):
             src_nodata = src.nodatavals[0]
             if src_nodata is None:
                 # If nodata is missing, pick a safe default
+                # BE CAREFUL lest src_nodata be set to a value that legitimately appears,
+                # like zero if dtype is uint.
                 if np.issubdtype(np.dtype(dtype), np.integer):
                     src_nodata = np.iinfo(dtype).min
                 else:

@@ -1273,8 +1273,6 @@ class Layer:
     def _cache_data_by_fishnet_tiles(
         self, bbox, tile_side_m, spatial_resolution, target_uri
     ):
-        from dask.distributed import print as dprint
-        dprint(f"target uri {target_uri}")
         # TODO: Code currently only handles raster data
         # Write individual tiles to cache
         delete_s3_file_if_exists(target_uri)
