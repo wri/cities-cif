@@ -1,6 +1,7 @@
 import ee
 
 from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
+
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 1113.1949  # 10 degrees of earth circumference
@@ -48,11 +49,12 @@ class CamsGhg(Layer):
         self.co2e = co2e  # Want results in CO2e? If so, multiplies by 100-year GWP.
         self.year = year  # Currently supported: 2010, 2015, 2020, 2023
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution: float = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_cache_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
         ee_rectangle = bbox.to_ee_rectangle()
 

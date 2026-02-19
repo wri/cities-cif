@@ -1,6 +1,7 @@
 import xarray as xr
 
-from city_metrix.metrix_model import Layer, GeoExtent
+from city_metrix.metrix_model import GeoExtent, Layer
+
 from ..constants import GTIFF_FILE_EXTENSION
 from .tree_canopy_height import TreeCanopyHeight
 
@@ -28,7 +29,8 @@ class TreeCanopyCoverMask(Layer):
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
         canopy_ht = TreeCanopyHeight(height=self.height).get_data(bbox, spatial_resolution)
         canopy_ht = canopy_ht.notnull().astype(int)
