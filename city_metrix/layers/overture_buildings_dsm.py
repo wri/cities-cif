@@ -1,15 +1,18 @@
 # optimized batch with max footprint
 # overture_buildings_dsm_without_gpu5
-import xarray as xr
 import numpy as np
+import xarray as xr
 from rasterio.features import rasterize
 
-from city_metrix.metrix_model import Layer, GeoExtent, validate_raster_resampling_method
 from city_metrix.metrix_dao import extract_bbox_aoi
+from city_metrix.metrix_model import GeoExtent, Layer, validate_raster_resampling_method
+
 from ..constants import GTIFF_FILE_EXTENSION
+from ..ut_globus_city_handler.ut_globus_city_handler import (
+    search_for_ut_globus_city_by_contained_polygon,
+)
 from .fab_dem import FabDEM
 from .overture_buildings_w_height import OvertureBuildingsHeight
-from ..ut_globus_city_handler.ut_globus_city_handler import search_for_ut_globus_city_by_contained_polygon
 
 DEFAULT_SPATIAL_RESOLUTION = 1
 DEFAULT_RESAMPLING_METHOD = 'bilinear'
@@ -36,7 +39,8 @@ class OvertureBuildingsDSM(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method:str=DEFAULT_RESAMPLING_METHOD):
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 

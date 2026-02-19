@@ -1,7 +1,13 @@
 import ee
 
-from city_metrix.metrix_model import (Layer, get_image_collection, set_resampling_for_continuous_raster,
-                                      validate_raster_resampling_method, GeoExtent)
+from city_metrix.metrix_model import (
+    GeoExtent,
+    Layer,
+    get_image_collection,
+    set_resampling_for_continuous_raster,
+    validate_raster_resampling_method,
+)
+
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
@@ -18,7 +24,9 @@ class AlosDSM(Layer):
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method:str=DEFAULT_RESAMPLING_METHOD):
 
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
+
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 

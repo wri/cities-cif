@@ -39,7 +39,7 @@ class AlbedoCloudMasked(Layer):
         self.zonal_stats = zonal_stats
         self.index_aggregation = index_aggregation
         self.num_seasons = num_seasons
-
+        
     def get_masked_s2_collection(self, bbox_ee, start_date, end_date):
         CLEAR_THRESHOLD = 0.60
 
@@ -58,7 +58,9 @@ class AlbedoCloudMasked(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method: str = DEFAULT_RESAMPLING_METHOD):
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
+
         resampling_method = DEFAULT_RESAMPLING_METHOD if resampling_method is None else resampling_method
         validate_raster_resampling_method(resampling_method)
 

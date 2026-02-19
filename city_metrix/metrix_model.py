@@ -988,12 +988,13 @@ class LayerGroupBy:
 
 
 class Layer:
-    def __init__(self, aggregate=None, masks=[]):
+    def __init__(self, aggregate=None, masks=[], **kwargs):
         self.aggregate = aggregate
         if aggregate is None:
             self.aggregate = self
 
         self.masks = masks
+        self.resolution = kwargs.get('resolution')
 
     @abstractmethod
     def get_data(

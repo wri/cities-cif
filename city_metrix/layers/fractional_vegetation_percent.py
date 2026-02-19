@@ -28,7 +28,8 @@ class FractionalVegetationPercent(Layer):
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception("resampling_method can not be specified.")
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
         dw = ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1")
         S2 = ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
