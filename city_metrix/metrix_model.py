@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 import shapely
 import xarray as xr
-from dask.diagnostics import ProgressBar
 from ee import ImageCollection
 from geopandas import GeoDataFrame
 from pandas import Series
@@ -1651,9 +1650,9 @@ def get_image_collection(
             geometry=ee_rectangle["ee_geometry"],
             chunks={"X": 512, "Y": 512},
         )
-        with ProgressBar():
-            print(f"Extracting layer {name} from Google Earth Engine for bbox :")
-            data = ds.compute()
+        # with ProgressBar():
+        #     print(f"Extracting layer {name} from Google Earth Engine for bbox :")
+        #     data = ds.compute()
     except Exception as ex_msg:
         raise ValueError(f"GEE download failed with exception: {ex_msg}")
 
