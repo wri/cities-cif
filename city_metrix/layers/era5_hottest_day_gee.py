@@ -40,43 +40,37 @@ class Era5HottestDay(Layer):
         geographic_centroid = geographic_bbox.centroid
         center_lon = geographic_centroid.x
         center_lat = geographic_centroid.y
-
+        
+        dataset_daily = ee.ImageCollection("ECMWF/ERA5_LAND/DAILY_AGGR")
         dataset_land = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY")
         dataset_general = ee.ImageCollection("ECMWF/ERA5/HOURLY")
 
-        # Function to find the city mean temperature of each hour
-        def hourly_mean_temperature(image):
-            hourly_mean = image.select('temperature_2m').reduceRegion(
+        era5_daily = (dataset_daily
+                      .filterDate(self.start_date, self.end_date)
+                      .select('temperature_2m')
+                      )
+        # Function to find the city daily max temperature of each hour
+        def daily_max_temperature(image):
+            daily_max = image.select('temperature_2m').reduceRegion(
                 reducer=ee.Reducer.mean(),
                 geometry=ee.Geometry.Point([center_lon, center_lat]),
-                crs=WGS_CRS,
                 scale=spatial_resolution,
                 bestEffort=True
             ).values().get(0)
 
-            return image.set('hourly_mean_temperature', hourly_mean)
+            return image.set('daily_max_temperature', daily_max)
 
-        ee_rectangle = geographic_bbox.to_ee_rectangle()
-        era5 = ee.ImageCollection(dataset_land
-                                  .filterBounds(ee_rectangle['ee_geometry'])
-                                  .filterDate(self.start_date, self.end_date)
-                                  .select('temperature_2m')
-                                  )
-
-        era5_hourly_mean = era5.map(hourly_mean_temperature)
+        era5_daily_max = era5_daily.map(daily_max_temperature).filter(ee.Filter.notNull(['daily_max_temperature']))
 
         # Sort the collection based on the highest temperature and get the first image
-        highest_temperature_day = era5_hourly_mean.sort(
-            'hourly_mean_temperature', False).first()
+        highest_temperature_day = era5_daily_max.sort(
+            'daily_max_temperature', False).first()
         highest_temperature_day = highest_temperature_day.get(
             'system:index').getInfo()
 
-        # system:index in format 20230101T00
-        # Define the UTC time
-        utc_time = datetime.strptime(highest_temperature_day, "%Y%m%dT%H")
-        # apply utc offset to utc time to get local date
-        local_date = (
-            utc_time + timedelta(hours=self.seasonal_utc_offset)).date()
+        # system:index in format 20230101
+        # Get the date of the highest temperature day
+        local_date = datetime.strptime(highest_temperature_day, "%Y%m%d").date()
 
         utc_times = []
         start_local = datetime.combine(local_date, time(0, 0))
@@ -117,7 +111,7 @@ class Era5HottestDay(Layer):
         # ERA5-Land hourly data at 0.1 degree lat/lon resolution
         center_ee_rectangle = GeoExtent(bbox=(
             center_lon-0.1, center_lat-0.1, center_lon+0.1, center_lat+0.1), crs=WGS_CRS).to_ee_rectangle()
-        
+
         era5_land = ee.ImageCollection(dataset_land
                                        .filterDate(utc_times_list[0], utc_times_list[-1])
                                        .select(variable_land)
