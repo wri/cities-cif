@@ -1,10 +1,9 @@
-from datetime import datetime, time, timedelta
-
 import ee
 import pytz
 import xarray as xr
+from datetime import datetime, time, timedelta
 
-from city_metrix.constants import NETCDF_FILE_EXTENSION, WGS_CRS
+from city_metrix.constants import NETCDF_FILE_EXTENSION
 from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
 from city_metrix.metrix_tools import is_date
 
@@ -38,32 +37,33 @@ class Era5HottestDay(Layer):
             raise Exception(
                 f"Invalid date specification: start_date:{self.start_date}, end_date:{self.end_date}.")
 
-        geographic_bbox = bbox.as_geographic_bbox()
+        # Buffer the bbox by half the spatial resolution to ensure we capture data
+        # for small cities where the grid cell size may be larger than the city itself.
+        buffered_utm_bbox = bbox.buffer_utm_bbox(spatial_resolution/2)
+        buffered_ee_rectangle = buffered_utm_bbox.to_ee_rectangle()
 
-        geographic_centroid = geographic_bbox.centroid
-        center_lon = geographic_centroid.x
-        center_lat = geographic_centroid.y
-        
         dataset_daily = ee.ImageCollection("ECMWF/ERA5_LAND/DAILY_AGGR")
         dataset_land = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY")
         dataset_general = ee.ImageCollection("ECMWF/ERA5/HOURLY")
 
         era5_daily = (dataset_daily
                       .filterDate(self.start_date, self.end_date)
-                      .select('temperature_2m')
+                      .select('temperature_2m_max')
                       )
-        # Function to find the city daily max temperature of each hour
+        # Function to calculate the daily max temperature for the AOI
+
         def daily_max_temperature(image):
-            daily_max = image.select('temperature_2m').reduceRegion(
+            daily_max = image.select('temperature_2m_max').reduceRegion(
                 reducer=ee.Reducer.mean(),
-                geometry=ee.Geometry.Point([center_lon, center_lat]),
+                geometry=buffered_ee_rectangle['ee_geometry'],
                 scale=spatial_resolution,
                 bestEffort=True
             ).values().get(0)
 
             return image.set('daily_max_temperature', daily_max)
 
-        era5_daily_max = era5_daily.map(daily_max_temperature).filter(ee.Filter.notNull(['daily_max_temperature']))
+        era5_daily_max = era5_daily.map(daily_max_temperature).filter(
+            ee.Filter.notNull(['daily_max_temperature']))
 
         # Sort the collection based on the highest temperature and get the first image
         highest_temperature_day = era5_daily_max.sort(
@@ -73,7 +73,8 @@ class Era5HottestDay(Layer):
 
         # system:index in format 20230101
         # Get the date of the highest temperature day
-        local_date = datetime.strptime(highest_temperature_day, "%Y%m%d").date()
+        local_date = datetime.strptime(
+            highest_temperature_day, "%Y%m%d").date()
 
         utc_times = []
         start_local = datetime.combine(local_date, time(0, 0))
@@ -111,17 +112,13 @@ class Era5HottestDay(Layer):
             "surface_solar_radiation_downward_clear_sky",
         ]
 
-        # ERA5-Land hourly data at 0.1 degree lat/lon resolution
-        center_ee_rectangle = GeoExtent(bbox=(
-            center_lon-0.1, center_lat-0.1, center_lon+0.1, center_lat+0.1), crs=WGS_CRS).to_ee_rectangle()
-
         era5_land = ee.ImageCollection(dataset_land
                                        .filterDate(utc_times_list[0], utc_times_list[-1])
                                        .select(variable_land)
                                        )
         data_land = get_image_collection(
             era5_land,
-            center_ee_rectangle,
+            buffered_ee_rectangle,
             spatial_resolution,
             "ERA5 Land Hourly",
         )
@@ -132,22 +129,23 @@ class Era5HottestDay(Layer):
                                           )
         data_general = get_image_collection(
             era5_general,
-            center_ee_rectangle,
+            buffered_ee_rectangle,
             spatial_resolution,
             "ERA5 Hourly",
         )
 
         data = xr.merge([data_land, data_general])
 
-        # Find the exact (y, x, time) where temperature_2m is globally max
-        flat = data['temperature_2m'].stack(points=('y', 'x', 'time'))          # shape (points,)
-        imax = flat.argmax('points').item()
-        y0, x0, t0 = flat['points'].to_index()[imax]      # coordinate values
-        # Keep the whole time series at max temperature_2m pixel
-        data = data.sel(y=y0, x=x0)
-
+        # Calculate mean over y and x dimensions to get a single value for the city for each variable at each time step
+        mean_ds = data.mean(dim=("y", "x"), skipna=True).load()
         # Add WGS84 lat/lon coords
-        data = data.assign_coords(lat=[center_lat], lon=[center_lon])
-        data = data.to_array()
+        if hasattr(bbox, "latitude") and hasattr(bbox, "longitude"):
+            mean_ds = mean_ds.expand_dims(
+                lat=[bbox.latitude], lon=[bbox.longitude])
+        else:
+            mean_ds = mean_ds.expand_dims(
+                lat=[bbox.centroid.y], lon=[bbox.centroid.x])
 
-        return data
+        mean_data = mean_ds.to_array()
+
+        return mean_data
