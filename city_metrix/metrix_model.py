@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 import shapely
 import xarray as xr
-from dask.diagnostics import ProgressBar
 from ee import ImageCollection
 from geopandas import GeoDataFrame
 from pandas import Series
@@ -987,12 +986,13 @@ class LayerGroupBy:
 
 
 class Layer:
-    def __init__(self, aggregate=None, masks=[]):
+    def __init__(self, aggregate=None, masks=[], **kwargs):
         self.aggregate = aggregate
         if aggregate is None:
             self.aggregate = self
 
         self.masks = masks
+        self.resolution = kwargs.get("resolution")
 
     @abstractmethod
     def get_data(
@@ -1045,13 +1045,16 @@ class Layer:
 
         if bbox.geo_type == GeoType.CITY_CENTROID:
             result_data = self.aggregate.get_data(
-                bbox=bbox, spatial_resolution=spatial_resolution)
+                bbox=bbox, spatial_resolution=spatial_resolution
+            )
             delete_s3_file_if_exists(target_file_path)
             delete_s3_folder_if_exists(target_file_path)
             write_layer(result_data, target_file_path, file_format)
         else:
             if tile_side_length is None:
-                utm_geo_extent = bbox.as_utm_bbox()  # currently only support output as utm
+                utm_geo_extent = (
+                    bbox.as_utm_bbox()
+                )  # currently only support output as utm
                 clipped_data = self.aggregate.get_data(
                     bbox=bbox,
                     spatial_resolution=spatial_resolution,
@@ -1088,7 +1091,10 @@ class Layer:
                 write_tile_grid(tile_grid_gdf, target_file_path, "tile_grid.geojson")
 
                 # if tiles were buffered, also write unbuffered tile grid to geojson file
-                if buffered_tile_grid_gdf is not None and len(buffered_tile_grid_gdf) > 0:
+                if (
+                    buffered_tile_grid_gdf is not None
+                    and len(buffered_tile_grid_gdf) > 0
+                ):
                     write_tile_grid(
                         buffered_tile_grid_gdf,
                         target_file_path,
@@ -1127,7 +1133,10 @@ class Layer:
         :param force_data_refresh: whether to force data refresh from source
         """
 
-        if bbox.geo_type != GeoType.CITY_AREA and bbox.geo_type != GeoType.CITY_CENTROID:
+        if (
+            bbox.geo_type != GeoType.CITY_AREA
+            and bbox.geo_type != GeoType.CITY_CENTROID
+        ):
             raise ValueError("Non-city data cannot be cached.")
 
         standard_env = standardize_s3_env(s3_env)
@@ -1252,7 +1261,9 @@ class Layer:
                     )
                     delete_s3_file_if_exists(target_uri)
                     delete_s3_folder_if_exists(target_uri)
-                    write_layer(result_data, target_uri, self.aggregate.OUTPUT_FILE_FORMAT)
+                    write_layer(
+                        result_data, target_uri, self.aggregate.OUTPUT_FILE_FORMAT
+                    )
         else:
             raise ValueError(
                 f"Data not cached for {self.aggregate.__class__.__name__}. Data can only be cached for CITY_AREA or CITY_CENTROID geo_extent."
@@ -1273,7 +1284,6 @@ class Layer:
         self, bbox, tile_side_m, spatial_resolution, target_uri
     ):
         # TODO: Code currently only handles raster data
-
         # Write individual tiles to cache
         delete_s3_file_if_exists(target_uri)
         delete_s3_folder_if_exists(target_uri)
@@ -1642,7 +1652,7 @@ def get_image_collection(
         )
 
     try:
-        ds = xr.open_dataset(
+        data = xr.open_dataset(
             image_collection,
             engine="ee",
             scale=scale,
@@ -1650,9 +1660,9 @@ def get_image_collection(
             geometry=ee_rectangle["ee_geometry"],
             chunks={"X": 512, "Y": 512},
         )
-        with ProgressBar():
-            print(f"Extracting layer {name} from Google Earth Engine for bbox :")
-            data = ds.compute()
+        # with ProgressBar():
+        #     print(f"Extracting layer {name} from Google Earth Engine for bbox :")
+        #     data = ds.compute()
     except Exception as ex_msg:
         raise ValueError(f"GEE download failed with exception: {ex_msg}")
 

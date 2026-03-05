@@ -1,8 +1,9 @@
 from xrspatial.classify import reclassify
 
-from city_metrix.metrix_model import Layer, GeoExtent
+from city_metrix.metrix_model import GeoExtent, Layer
+
+from ..constants import GTIFF_FILE_EXTENSION
 from .esa_world_cover import EsaWorldCover, EsaWorldCoverClass
-from ..constants import GTIFF_FILE_EXTENSION, DEFAULT_PRODUCTION_ENV, CIF_CACHE_S3_BUCKET_URI
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
@@ -19,7 +20,8 @@ class NaturalAreas(Layer):
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
         esa_world_cover = EsaWorldCover(year=self.year).get_data(bbox=bbox, spatial_resolution=spatial_resolution)
         reclass_map = {

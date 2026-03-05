@@ -33,8 +33,9 @@ class HighLandSurfaceTemperature(Layer):
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
+   
         geographic_bbox = bbox.as_geographic_bbox()
 
         hottest_date = self.get_hottest_date(geographic_bbox)

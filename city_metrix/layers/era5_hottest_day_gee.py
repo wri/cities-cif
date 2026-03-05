@@ -1,10 +1,11 @@
+from datetime import datetime, time, timedelta
+
 import ee
-from datetime import datetime, timedelta, time
 import pytz
 import xarray as xr
 
-from city_metrix.constants import WGS_CRS, NETCDF_FILE_EXTENSION
-from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
+from city_metrix.constants import NETCDF_FILE_EXTENSION, WGS_CRS
+from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
 from city_metrix.metrix_tools import is_date
 
 DEFAULT_SPATIAL_RESOLUTION = 11132
@@ -30,7 +31,9 @@ class Era5HottestDay(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION, resampling_method=None,
                  force_data_refresh=False):
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
+
         if not is_date(self.start_date) or not is_date(self.end_date):
             raise Exception(
                 f"Invalid date specification: start_date:{self.start_date}, end_date:{self.end_date}.")
