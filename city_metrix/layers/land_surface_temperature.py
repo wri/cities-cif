@@ -6,6 +6,7 @@ from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
+HOT_PERCENTILE = 95
 
 class LandSurfaceTemperature(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
@@ -17,7 +18,7 @@ class LandSurfaceTemperature(Layer):
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
     """
-    def __init__(self, start_date="2013-01-01", end_date="2023-01-01", hot_season_length=None, **kwargs):
+    def __init__(self, start_date="2023-01-01", end_date="2026-01-01", hot_season_length=None, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
@@ -30,23 +31,39 @@ class LandSurfaceTemperature(Layer):
         # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
         
+
+        era5_ic = ee.ImageCollection("ECMWF/ERA5_LAND/DAILY_AGGR")
+        coarse_era5 = ee.ImageCollection("ECMWF/ERA5/DAILY") # Using ERA5-Land at full resolution causes memory limit errors
+
         def get_hottest_date(bbox, start_year, end_year):
-            era5_ic = ee.ImageCollection("ECMWF/ERA5/DAILY")
             centroid = ee.Geometry.Point(*list(bbox.centroid.coords), proj=bbox.crs)
-            tempdata = (era5_ic
-                        .filterDate(f"{start_year}-01-01", f"{end_year+1}-01-01")
-                        .select("maximum_2m_air_temperature")
-                        .getRegion(centroid, era5_ic.geometry().projection().nominalScale(), era5_ic.geometry().projection().crs())
-                        .getInfo()
-            )
-            dates = [f"{i[0][:4]}-{i[0][4:6]}-{i[0][6:]}" for i in tempdata[1:]]
-            temps = np.array([i[4] for i in tempdata[1:]])
-            maxtemp_idx = np.argmax(temps)
-            hottest_date = dates[maxtemp_idx]
+            hottest_dates = []
+            for year in range(start_year, end_year+1):
+                tempdata = era5_ic.filterDate(f"{year}-01-01", f"{year+1}-01-01")
+                if tempdata.size().getInfo() > 0:
+                    tempdata = (tempdata
+                                .select("temperature_2m_max")#("maximum_2m_air_temperature")
+                                .getRegion(centroid, coarse_era5.geometry().projection().nominalScale(), coarse_era5.geometry().projection().crs())
+                                .getInfo()
+                    )
+                    dates = [f"{i[0][:4]}-{i[0][4:6]}-{i[0][6:]}" for i in tempdata[1:]]
+                    temps = np.array([i[4] for i in tempdata[1:]])
+                    maxtemp_idx = np.argmax(temps)
+                    hottest_date = dates[maxtemp_idx]
+                    hottest_dates.append(datetime.strptime(hottest_date, "%Y-%m-%d"))
+            months = [hd.month for hd in hottest_dates]
+            if (1 in months) and (12 in months):
+                for idx in range(len(hottest_dates)):
+                    if hottest_dates[idx].month >= 10:
+                        hottest_dates[idx] = hottest_dates[idx] - timedelta(years=1)
+            hottest_ordinals = [d.toordinal() for d in hottest_dates]
+            median_hottest_ordinal = round(np.median(hottest_ordinals))
+            median_hottest = datetime.fromordinal(median_hottest_ordinal)
+            
             result = {
-                "year": hottest_date.split("-")[0],
-                "month": hottest_date.split("-")[1],
-                "day": hottest_date.split("-")[2],
+                "year": median_hottest.year,
+                "month": median_hottest.month,
+                "day": median_hottest.day,
                 }
             return result
         
@@ -66,7 +83,7 @@ class LandSurfaceTemperature(Layer):
 
         if self.hot_season_length is not None:
             season_half_length = self.hot_season_length // 2
-            hottest_date_dict = get_hottest_date(bbox, now.year-10, now.year-1)
+            hottest_date_dict = get_hottest_date(bbox, now.year-3, now.year-1)
             window_enddate = datetime.strptime(f"2002-{hottest_date_dict['month']}-{hottest_date_dict['day']}", "%Y-%m-%d") + timedelta(days=season_half_length)
             window_startdate = datetime.strptime(f"2002-{hottest_date_dict['month']}-{hottest_date_dict['day']}", "%Y-%m-%d") - timedelta(days=season_half_length)
         else:
@@ -99,13 +116,14 @@ class LandSurfaceTemperature(Layer):
 
                 l8_st_ic = l8_st_ic.merge(l8_st)
 
-        mean = l8_st_ic.toBands().reduce(ee.Reducer.median()).rename('median_lst')
+        pctl = [HOT_PERCENTILE, 50][int(self.hot_season_length is None)]
+        reduced = l8_st_ic.toBands().reduce(ee.Reducer.percentile([pctl])).select(f'p{pctl}').rename(f'lst_pctl{pctl}')
 
         data = get_image_collection(
-            mean,
+            reduced,
             ee_rectangle,
             spatial_resolution,
-            "LST_median"
-        ).median_lst
+            f"LST pctl_{pctl}"
+        )[f"lst_pctl{pctl}"]
 
         return data
