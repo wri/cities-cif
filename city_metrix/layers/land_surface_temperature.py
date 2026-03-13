@@ -55,7 +55,7 @@ class LandSurfaceTemperature(Layer):
             if (1 in months) and (12 in months):
                 for idx in range(len(hottest_dates)):
                     if hottest_dates[idx].month >= 10:
-                        hottest_dates[idx] = hottest_dates[idx] - timedelta(years=1)
+                        hottest_dates[idx] = hottest_dates[idx] - timedelta(days=365)
             hottest_ordinals = [d.toordinal() for d in hottest_dates]
             median_hottest_ordinal = round(np.median(hottest_ordinals))
             median_hottest = datetime.fromordinal(median_hottest_ordinal)
