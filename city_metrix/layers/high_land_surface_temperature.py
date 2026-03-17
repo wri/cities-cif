@@ -32,7 +32,7 @@ class HighLandSurfaceTemperature(Layer):
         self.high_lst = high_lst
         self.use_modis = use_modis
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION_LANDSAT,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')

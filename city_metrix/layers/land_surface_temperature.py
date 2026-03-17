@@ -6,7 +6,7 @@ from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION_LANDSAT = 30
-EFAULT_SPATIAL_RESOLUTION_MODIS = 1000
+DEFAULT_SPATIAL_RESOLUTION_MODIS = 1000
 HOT_PERCENTILE = 95
 
 class LandSurfaceTemperature(Layer):
@@ -26,7 +26,7 @@ class LandSurfaceTemperature(Layer):
         self.hot_season_length = hot_season_length
         self.use_modis = use_modis
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION_LANDSAT,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
