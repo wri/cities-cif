@@ -5,7 +5,8 @@ from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
 
 from ..constants import GTIFF_FILE_EXTENSION
 
-DEFAULT_SPATIAL_RESOLUTION = 30
+DEFAULT_SPATIAL_RESOLUTION_LANDSAT = 30
+EFAULT_SPATIAL_RESOLUTION_MODIS = 1000
 HOT_PERCENTILE = 95
 
 class LandSurfaceTemperature(Layer):
@@ -30,9 +31,7 @@ class LandSurfaceTemperature(Layer):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
-        if self.use_modis:
-            spatial_resolution = 1000
+        spatial_resolution = self.resolution or spatial_resolution or [DEFAULT_SPATIAL_RESOLUTION_LANDSAT, DEFAULT_SPATIAL_RESOLUTION_MODIS][int(self.use_modis)]
 
         era5_ic = ee.ImageCollection("ECMWF/ERA5_LAND/DAILY_AGGR")
         coarse_era5 = ee.ImageCollection("ECMWF/ERA5/DAILY") # Using ERA5-Land at full resolution causes memory limit errors

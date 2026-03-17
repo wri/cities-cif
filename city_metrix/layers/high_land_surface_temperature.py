@@ -9,7 +9,8 @@ from ..constants import GTIFF_FILE_EXTENSION
 from .land_surface_temperature import LandSurfaceTemperature
 from .world_pop import WorldPop
 
-DEFAULT_SPATIAL_RESOLUTION = 30
+DEFAULT_SPATIAL_RESOLUTION_LANDSAT = 30
+DEFAULT_SPATIAL_RESOLUTION_MODIS = 1000
 HOT_SEASON_LENGTH = 90
 
 class HighLandSurfaceTemperature(Layer):
@@ -36,7 +37,7 @@ class HighLandSurfaceTemperature(Layer):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
+        spatial_resolution = self.resolution or spatial_resolution or [DEFAULT_SPATIAL_RESOLUTION_LANDSAT, DEFAULT_SPATIAL_RESOLUTION_MODIS][int(self.use_modis)]
    
         geographic_bbox = bbox.as_geographic_bbox()
 
