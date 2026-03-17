@@ -18,11 +18,12 @@ class LandSurfaceTemperature(Layer):
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
     """
-    def __init__(self, start_date="2023-01-01", end_date="2026-01-01", hot_season_length=None, **kwargs):
+    def __init__(self, start_date="2023-01-01", end_date="2026-01-01", hot_season_length=None, use_modis=False, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.hot_season_length = hot_season_length
+        self.use_modis = use_modis
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -30,7 +31,8 @@ class LandSurfaceTemperature(Layer):
             raise Exception('resampling_method can not be specified.')
         # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
-        
+        if self.use_modis:
+            spatial_resolution = 1000
 
         era5_ic = ee.ImageCollection("ECMWF/ERA5_LAND/DAILY_AGGR")
         coarse_era5 = ee.ImageCollection("ECMWF/ERA5/DAILY") # Using ERA5-Land at full resolution causes memory limit errors
@@ -96,7 +98,10 @@ class LandSurfaceTemperature(Layer):
         requested_enddate = datetime.strptime(self.end_date, "%Y-%m-%d")
 
         l8_st_ic = ee.ImageCollection([])
-        l8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
+        if self.use_modis:
+            l8 = ee.ImageCollection("MODIS/061/MOD11A2")
+        else:
+            l8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
         ee_rectangle = bbox.to_ee_rectangle()
         
         for year in range(requested_startdate.year, requested_enddate.year+1):
@@ -106,13 +111,21 @@ class LandSurfaceTemperature(Layer):
             end_date_obj = min(requested_enddate, datetime.strptime(f"{year}-{window_enddate.month}-{window_enddate.day}", "%Y-%m-%d"))
             end_date = end_date_obj.strftime("%Y-%m-%d")
             if end_date_obj > start_date_obj:
-                l8_st = (l8
-                        .select('ST_B10', 'QA_PIXEL')
-                        .filter(ee.Filter.date(start_date, end_date))
-                        .filterBounds(ee_rectangle['ee_geometry'])
-                        .map(cloud_mask)
-                        .map(apply_scale_factors)
-                        )
+                if self.use_modis:
+                    l8_st = (l8
+                            .select('LST_Day_1km')
+                            .filter(ee.Filter.date(start_date, end_date))
+                            .filterBounds(ee_rectangle['ee_geometry'])
+                            .map(lambda img: img.multiply(0.02).subtract(273.15))
+                            )
+                else:
+                    l8_st = (l8
+                            .select('ST_B10', 'QA_PIXEL')
+                            .filter(ee.Filter.date(start_date, end_date))
+                            .filterBounds(ee_rectangle['ee_geometry'])
+                            .map(cloud_mask)
+                            .map(apply_scale_factors)
+                            )
 
                 l8_st_ic = l8_st_ic.merge(l8_st)
 
@@ -125,5 +138,6 @@ class LandSurfaceTemperature(Layer):
             spatial_resolution,
             f"LST pctl_{pctl}"
         )[f"lst_pctl{pctl}"]
+
 
         return data
