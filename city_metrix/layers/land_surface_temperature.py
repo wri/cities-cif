@@ -5,7 +5,8 @@ from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
 
 from ..constants import GTIFF_FILE_EXTENSION
 
-DEFAULT_SPATIAL_RESOLUTION = 30
+DEFAULT_SPATIAL_RESOLUTION_LANDSAT = 30
+DEFAULT_SPATIAL_RESOLUTION_MODIS = 1000
 HOT_PERCENTILE = 95
 
 class LandSurfaceTemperature(Layer):
@@ -18,18 +19,19 @@ class LandSurfaceTemperature(Layer):
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
     """
-    def __init__(self, start_date="2023-01-01", end_date="2026-01-01", hot_season_length=None, **kwargs):
+    def __init__(self, start_date="2023-01-01", end_date="2026-01-01", hot_season_length=None, use_modis=False, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.hot_season_length = hot_season_length
+        self.use_modis = use_modis
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
+    def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION_LANDSAT,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
         # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
+        spatial_resolution = self.resolution or spatial_resolution or [DEFAULT_SPATIAL_RESOLUTION_LANDSAT, DEFAULT_SPATIAL_RESOLUTION_MODIS][int(self.use_modis)]
         
 
         era5_ic = ee.ImageCollection("ECMWF/ERA5_LAND/DAILY_AGGR")
