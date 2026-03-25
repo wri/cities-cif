@@ -279,10 +279,10 @@ def read_netcdf_from_cache(file_uri):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_file_path = os.path.join(temp_dir, "tempfile")
             s3_client.download_file(s3_bucket, file_key, temp_file_path)
-            result_data = xr.open_dataarray(temp_file_path)
+            result_data = xr.open_dataarray(temp_file_path).load()
     else:
         file_path = os.path.normpath(get_file_path_from_uri(file_uri))
-        result_data = xr.open_dataarray(file_path)
+        result_data = xr.open_dataarray(file_path).load()
 
     return result_data
 
