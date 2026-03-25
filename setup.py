@@ -12,7 +12,7 @@ setup(
         "geocube",
         "odc-stac",
         "geemap>=0.35.2",
-        "setuptools",
+        "setuptools<81",
         "pystac-client",
         "xarray",
         "xarray-spatial",
@@ -39,4 +39,3 @@ setup(
         'city_metrix': ['ut_globus_city_handler/global_ut_globus_cities.gpkg']
     },
 )
-
