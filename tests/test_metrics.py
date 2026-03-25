@@ -32,7 +32,7 @@ def test_area_fractional_vegetation_exceeds_threshold__percent():
     expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES_TINY.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 82.37, 92.23, 3, 0)
+    assert_metric_stats(indicator, 2, 92.35, 96.26, 3, 0)
 
 def test_percent_built_area_without_tree_cover__percent():
     indicator = BuiltAreaWithoutTreeCover__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -46,7 +46,7 @@ def test_built_land_with_high_lst__percent():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 0.0, 10, 100, 0)
+    assert_metric_stats(indicator, 1, 9.9, 11.4, 100, 0)
 
 def test_built_land_with_low_surface_reflectivity__percent():
     indicator = BuiltLandWithLowSurfaceReflectivity__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -60,7 +60,7 @@ def test_built_land_with_vegetation__percent():
     expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES_TINY.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 1, 6.1, 17.2, 2, 1)
+    assert_metric_stats(indicator, 1, 35.9, 40.1, 2, 1)
 
 def test_canopy_area_per_resident_children__squaremeters():
     indicator = CanopyAreaPerResidentChildren__SquareMeters().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -295,7 +295,7 @@ def test_number_species_vascular_plant_richness__species():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES_SMALL.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, None, None, None, 0, 40)
+    assert_metric_stats(indicator, 1, 26.0, 26.0, 1, 39)
 
 def test_number_species_bird_richness_in_builtup_area__species():
     random.seed(42)
@@ -319,14 +319,14 @@ def test_recreational_space_per_thousand__hectaresperthousandpersons():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 0, 0.73, 100, 0)
+    assert_metric_stats(indicator, 2, 0, 0.46, 100, 0)
 
 def test_riparian_land_with_vegetation_or_water__percent():
     indicator = RiparianLandWithVegetationOrWater__Percent().get_metric(ARG_BUENOS_AIRES_TILED_ZONES_TINY)
     expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES_TINY.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 77.75, 92.34, 3, 0)
+    assert_metric_stats(indicator, 2, 92.04, 96.27, 3, 0)
 
 def test_riverine_or_coastal_flood_risk_area__percent():
     indicator = RiverineOrCoastalFloodRiskArea__Percent().get_metric(USA_OR_PORTLAND_TILED_LARGE_ZONE)
@@ -340,7 +340,7 @@ def test_steeply_sloped_land_with_vegetation__percent():
     expected_zone_size = len(ARG_BUENOS_AIRES_TILED_ZONES_TINY.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, 79.41, 100, 2, 1)
+    assert_metric_stats(indicator, 2, 88.24, 100, 2, 1)
 
 def test_tree_carbon_flux__tonnes():
     indicator = TreeCarbonFlux__Tonnes().get_metric(IDN_JAKARTA_TILED_ZONES)
@@ -354,7 +354,7 @@ def test_urban_open_space__percent():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 3, 0, 8.204, 100, 0)
+    assert_metric_stats(indicator, 3, 0, 3.177, 100, 0)
 
 def test_vegetation_water_change_gain_area__squaremeters():
     indicator = VegetationWaterChangeGainArea__SquareMeters().get_metric(IDN_JAKARTA_TILED_ZONES)

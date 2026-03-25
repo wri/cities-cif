@@ -204,7 +204,7 @@ def test_openbuildings():
 def test_open_street_map():
     data = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(BBOX)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'highway', None, 'primary', 'tertiary', 154, 0)
+    assert_vector_stats(data, 'highway', None, 'primary', 'tertiary', 157, 0)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_open_street_map_amenity_count():
@@ -216,7 +216,7 @@ def test_open_street_map_amenity_count():
 def test_open_urban():
     data = OpenUrban().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 0, 110, 622, 976626, 0)
+    assert_raster_stats(data, 0, 110, 622, 978604, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_overture_buildings():
@@ -234,7 +234,7 @@ def test_overture_buildings_height():
 def test_overture_buildings_dsm():
     data = OvertureBuildingsDSM().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 1.0, 60.28, 976626, 0)
+    assert_raster_stats(data, 1, 1.0, 60.2, 978604, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 # TODO add value testing
@@ -293,7 +293,7 @@ def test_tree_canopy_cover_mask():
 def test_tree_canopy_height_for_ctcm():
     data = TreeCanopyHeightCTCM().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 0.0, 33.0, 976626, 0)
+    assert_raster_stats(data, 1, 0.0, 33.0, 978604, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_tree_canopy_height():

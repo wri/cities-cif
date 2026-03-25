@@ -1679,7 +1679,7 @@ def get_image_collection(
     west, south, east, north = ee_rectangle["bounds"]
     longitude_range = slice(west, east)
     latitude_range = slice(south, north)
-    result_data = data.sel(x=longitude_range, y=latitude_range)
+    result_data = data.sel(x=longitude_range, y=latitude_range).load()
 
     return result_data
 
