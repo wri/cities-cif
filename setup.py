@@ -12,6 +12,7 @@ setup(
         "geocube",
         "odc-stac",
         "geemap>=0.35.2",
+        "setuptools",
         "pystac-client",
         "xarray",
         "xarray-spatial",

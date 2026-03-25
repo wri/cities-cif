@@ -23,6 +23,7 @@ dependencies:
   - jupyterlab=4.3.6
   - s3fs=2025.3.2
   - geemap=0.35.3
+  - setuptools
   - pip=25.0.1
   - boto3=1.37.1
   - cdsapi=0.7.5
