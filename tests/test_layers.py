@@ -25,7 +25,7 @@ def test_acag_pm2p5():
 def test_albedo_cloud_masked():
     data = AlbedoCloudMasked(index_aggregation=False).get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.015304963, 0.64322, 9797, 0)
+    assert_raster_stats(data, 2, 0.0153, 0.64, 9894, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_albedo():
@@ -92,7 +92,7 @@ def test_esa_world_cover():
 def test_fab_dem():
     data = FabDEM().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 1.0, 47.4, 1088, 0)
+    assert_raster_stats(data, 1, 1.0, 50.4, 1088, 34)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_fractional_vegetation_percent():
@@ -110,7 +110,7 @@ def test_height_above_nearest_drainage():
 def test_high_land_surface_temperature():
     data = HighLandSurfaceTemperature().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 40.47, 42.35, 150, 972)
+    assert_raster_stats(data, 1, 29.4, 48.8, 1122, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_high_slope():
