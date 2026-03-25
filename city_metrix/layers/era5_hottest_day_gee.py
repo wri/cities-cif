@@ -148,4 +148,9 @@ class Era5HottestDay(Layer):
 
         mean_data = mean_ds.to_array()
 
+        # xarray metadata propagation through merge/mean/to_array is version-sensitive.
+        # Reattach the CRS explicitly so downstream tests and writers can rely on `data.crs`.
+        utm_crs = buffered_utm_bbox.crs
+        mean_data.attrs["crs"] = utm_crs
+
         return mean_data
