@@ -6,7 +6,7 @@ from city_metrix.metrix_tools import align_raster_array
 from ..constants import GTIFF_FILE_EXTENSION
 from .world_pop import WorldPop
 
-DEFAULT_SPATIAL_RESOLUTION = 1
+DEFAULT_SPATIAL_RESOLUTION = 10
 
 class TreeCanopyHeight(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION

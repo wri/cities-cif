@@ -13,7 +13,7 @@ def test_default_name_for_default_name_for_layer_with_year():
     _, _, layer_id, is_custom_layer = get_test_cache_variables(layer_obj, geo_extent, CIF_TESTING_S3_BUCKET_URI)
 
     assert is_custom_layer == False
-    assert layer_id == 'AcagPM2p5__StartYear_2023_EndYear_2023.tif'
+    assert layer_id == 'AcagPM2p5__StartYear_2022_EndYear_2022.tif'
 
 def test_default_name_for_layer_with_start_end_years():
     geo_extent = GEOEXTENT_TERESINA

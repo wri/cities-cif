@@ -9,7 +9,7 @@ from city_metrix.layers import HighLandSurfaceTemperature, EsaWorldCoverClass, E
 class BuiltLandWithHighLST__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["year"]
 
     def __init__(self, year=datetime.datetime.now().year,  **kwargs):
         super().__init__(**kwargs)
@@ -30,7 +30,7 @@ class BuiltLandWithHighLST__Percent(Metric):
         built_land_counts = (built_up_land
                              .groupby(geo_zone)
                              .count())
-        built_high_lst_counts = (high_lst.mask(built_up_land)
+        built_high_lst_counts = (built_up_land.mask(high_lst)
                                  .groupby(geo_zone)
                                  .count())
 

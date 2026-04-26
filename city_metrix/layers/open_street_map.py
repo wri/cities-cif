@@ -1,6 +1,7 @@
 import osmnx as ox
 import geopandas as gpd
 import pandas as pd
+import datetime
 from enum import Enum
 from functools import partial
 from geocube.api.core import make_geocube
@@ -150,6 +151,20 @@ class OpenStreetMap(Layer):
 
         return osm_feature
 
+
+class OsmHospitals(Layer):
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["year"]
+
+    def __init__(self, year=datetime.datetime.now().year, **kwargs):
+        super().__init__(**kwargs)
+        self.year = year
+
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 force_data_refresh=False):
+        hospitals = OpenStreetMap(osm_class=OpenStreetMapClass.HOSPITAL).get_data(bbox)
+        return hospitals.dissolve().explode()
 
 def _rasterize_gdf(data_gdf, like_ras, measurement_name):
     empty_ras = like_ras * 0

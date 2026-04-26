@@ -1,9 +1,8 @@
 from city_metrix.metrix_model import GeoExtent, Layer
-
 from ..constants import GTIFF_FILE_EXTENSION
 from .acag_pm2p5 import AcagPM2p5
 from .world_pop import WorldPop, WorldPopClass
-
+import numpy as np
 DEFAULT_SPATIAL_RESOLUTION = 100
 
 
@@ -40,7 +39,5 @@ class PopWeightedPM2p5(Layer):
                      .get_data(bbox, spatial_resolution=spatial_resolution))
         pm2p5 = (AcagPM2p5(year=self.acag_year, return_above=self.acag_return_above)
                  .get_data(bbox, spatial_resolution=spatial_resolution))
-
-        data = pm2p5 * (world_pop / world_pop.mean()).rio.write_crs(bbox.as_utm_bbox().crs)
-
+        data = pm2p5 * (world_pop / world_pop.sum()).rio.write_crs(bbox.as_utm_bbox().crs)
         return data

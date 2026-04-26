@@ -9,7 +9,7 @@ from city_metrix.metrix_model import Metric, GeoZone
 class UrbanOpenSpace__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["year"]
 
     def __init__(self, year=datetime.datetime.now().year, **kwargs):
         super().__init__(**kwargs)
