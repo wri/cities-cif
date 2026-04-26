@@ -1,8 +1,7 @@
 import ee
 import numpy as np
 import xarray as xr
-
-from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 100
@@ -22,7 +21,8 @@ class ImperviousSurface(Layer):
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
         # load impervious_surface
         # change_year_index is zero if permeable as of 2018

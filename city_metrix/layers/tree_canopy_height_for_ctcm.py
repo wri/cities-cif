@@ -1,6 +1,7 @@
 import ee
 
-from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
+
 from ..constants import GTIFF_FILE_EXTENSION
 from ..metrix_dao import extract_bbox_aoi
 
@@ -25,7 +26,8 @@ class TreeCanopyHeightCTCM(Layer):
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
         buffered_utm_bbox = bbox.buffer_utm_bbox(10)
         ee_rectangle  = buffered_utm_bbox.to_ee_rectangle()

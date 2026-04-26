@@ -1,7 +1,8 @@
 import xarray as xr
 import numpy as np
 
-from city_metrix.metrix_model import Layer, GeoExtent
+from city_metrix.metrix_model import GeoExtent, Layer
+
 from ..constants import GTIFF_FILE_EXTENSION
 from .tree_canopy_height import TreeCanopyHeight
 
@@ -25,13 +26,22 @@ class TreeCanopyCoverMask(Layer):
         self.height = height
         self.percentage = percentage
 
-    def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
-                 resampling_method=None):
+    def get_data(
+        self,
+        bbox: GeoExtent,
+        spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
+        resampling_method=None,
+    ):
         if resampling_method is not None:
-            raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+            raise Exception("resampling_method can not be specified.")
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = (
+            self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
+        )
 
-        canopy_ht = TreeCanopyHeight(height=self.height).get_data(bbox, spatial_resolution)
+        canopy_ht = TreeCanopyHeight(height=self.height).get_data(
+            bbox, spatial_resolution
+        )
         canopy_ht = canopy_ht.notnull().astype(int)
 
         canopy_ht_repojected = canopy_ht.coarsen(x=100, y=100, boundary="pad").mean() # 256 * 256 = 65536

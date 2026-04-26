@@ -26,13 +26,13 @@ setup(
         "boto3",
         "cdsapi",
         "scikit-image>=0.25.2",
-        "exactextract>=0.2.0",
         "cfgrib",
         "scipy",
         "numpy",
-        "overturemaps>=0.17",
+        "overturemaps>=0.18",
         "ipython",
-        "pvlib"
+        "pyarrow>=19.0.1",
+        "pvlib",
     ],
     package_data={
         'city_metrix': ['ut_globus_city_handler/global_ut_globus_cities.gpkg']

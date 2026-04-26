@@ -43,8 +43,9 @@ PROCESSING_KNOWN_ISSUE_FLAG = '**KNOWN_ISSUE**'
 
 
 class GeoType(Enum):
-    CITY = 0
-    GEOMETRY = 1
+    GEOMETRY = 0
+    CITY_AREA = 1
+    CITY_CENTROID = 2
 
 
 class ProjectionType(Enum):

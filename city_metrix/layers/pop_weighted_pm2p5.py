@@ -1,9 +1,8 @@
-from city_metrix.metrix_model import Layer, GeoExtent
-from .world_pop import WorldPop, WorldPopClass
-from .acag_pm2p5 import AcagPM2p5
-import numpy as np
+from city_metrix.metrix_model import GeoExtent, Layer
 from ..constants import GTIFF_FILE_EXTENSION
-
+from .acag_pm2p5 import AcagPM2p5
+from .world_pop import WorldPop, WorldPopClass
+import numpy as np
 DEFAULT_SPATIAL_RESOLUTION = 100
 
 
@@ -33,7 +32,8 @@ class PopWeightedPM2p5(Layer):
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
         world_pop = (WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year)
                      .get_data(bbox, spatial_resolution=spatial_resolution))

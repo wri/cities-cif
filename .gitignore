@@ -169,3 +169,8 @@ wri-gee-358d958ce7c6.json
 
 research_folder
 old_folder
+
+*.tif
+*.aux.xml
+main.py
+requirements.txt

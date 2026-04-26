@@ -26,7 +26,7 @@ from .ndvi_sentinel2_gee import NdviSentinel2
 from .ndwi_sentinel2_gee import NdwiSentinel2
 from .nex_gddp_cmip6 import NexGddpCmip6, NexGddpCmip6Variables
 from .open_buildings import OpenBuildings
-from .open_street_map import OpenStreetMap, OpenStreetMapClass, OsmHospitals
+from .open_street_map import OpenStreetMap, OpenStreetMapClass, OpenStreetMapAmenityCount, OpenStreetMapClass, OsmHospitals
 from .open_urban import OpenUrban
 from .overture_buildings_dsm import OvertureBuildingsDSM
 from .overture_buildings_w_height import OvertureBuildingsHeight
@@ -39,7 +39,7 @@ from .sentinel_2_level_2 import Sentinel2Level2
 from .slope import Slope
 from .smart_surface_lulc import SmartSurfaceLULC
 from .species_observations import SpeciesObservations, GBIFTaxonClass
-# from .species_richness import SpeciesRichness, GBIFTaxonClass
+from .species_richness import SpeciesRichness, GBIFTaxonClass
 from .surface_water import SurfaceWater
 from .tree_canopy_cover_mask import TreeCanopyCoverMask
 from .tree_canopy_height import TreeCanopyHeight

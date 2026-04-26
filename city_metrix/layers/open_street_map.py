@@ -1,11 +1,33 @@
-from enum import Enum
 import osmnx as ox
 import geopandas as gpd
 import pandas as pd
 import datetime
+from enum import Enum
+from functools import partial
+from geocube.api.core import make_geocube
+from geocube.rasterize import rasterize_image
+from rasterio.enums import MergeAlg
 
-from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GeoType
-from city_metrix.metrix_model import Layer, GeoExtent
+from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GTIFF_FILE_EXTENSION
+from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
+from .world_pop import WorldPop
+
+
+def _merge_osm_classes(class_list):
+    result = {}
+    keys = {key for class_item in class_list for key in class_item}
+
+    for key in keys:
+        values = []
+        for class_item in class_list:
+            value = class_item.get(key)
+            if value is True:
+                values.append(True)
+            elif value:
+                values.extend(value)
+        result[key] = True if True in values else list(set(values))
+
+    return result
 
 
 class OpenStreetMapClass(Enum):
@@ -67,6 +89,8 @@ class OpenStreetMapClass(Enum):
                     'public_transport': ['platform', 'stop_position', 'stop_area'],
                     'station': ['subway'],
                     'aerialway': ['station']}
+    ECONOMIC = _merge_osm_classes(
+        [COMMERCE, HEALTHCARE_SOCIAL, AGRICULTURE, GOVERNMENT, INDUSTRY, TRANSPORTATION_LOGISTICS, EDUCATION])
 
 
 class OpenStreetMap(Layer):
@@ -78,7 +102,8 @@ class OpenStreetMap(Layer):
     Attributes:
         osm_class: OSM class
     """
-    def __init__(self, osm_class:OpenStreetMapClass=OpenStreetMapClass.ALL, **kwargs):
+
+    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
 
@@ -92,13 +117,15 @@ class OpenStreetMap(Layer):
         # Set the OSMnx configuration to disable caching
         ox.settings.use_cache = False
         try:
-            osm_feature = ox.features_from_bbox(bbox=(min_lon, min_lat, max_lon, max_lat), tags=self.osm_class.value)
+            osm_feature = ox.features_from_bbox(
+                bbox=(min_lon, min_lat, max_lon, max_lat), tags=self.osm_class.value)
         # When no feature in bbox, return an empty gdf
         except ox._errors.InsufficientResponseError as e:
-            osm_feature = gpd.GeoDataFrame(pd.DataFrame(columns=['id', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
+            osm_feature = gpd.GeoDataFrame(pd.DataFrame(
+                columns=['id', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
             osm_feature.crs = WGS_CRS
 
-        # Filter by geo_type
+        # Filter by geom_type
         if self.osm_class == OpenStreetMapClass.ROAD:
             # Filter out Point
             osm_feature = osm_feature[osm_feature.geom_type != 'Point']
@@ -107,7 +134,8 @@ class OpenStreetMap(Layer):
             osm_feature = osm_feature[osm_feature.geom_type == 'Point']
         else:
             # Filter out LineString
-            osm_feature = osm_feature[osm_feature.geom_type.isin(['Point', 'Polygon', 'MultiPolygon'])]
+            osm_feature = osm_feature[osm_feature.geom_type.isin(
+                ['Point', 'Polygon', 'MultiPolygon'])]
 
         # keep only columns desired to reduce file size
         keep_col = ['id', 'geometry']
@@ -137,3 +165,64 @@ class OsmHospitals(Layer):
                  force_data_refresh=False):
         hospitals = OpenStreetMap(osm_class=OpenStreetMapClass.HOSPITAL).get_data(bbox)
         return hospitals.dissolve().explode()
+
+def _rasterize_gdf(data_gdf, like_ras, measurement_name):
+    empty_ras = like_ras * 0
+
+    # Check for empty gdf
+    if len(data_gdf) == 0:
+        return empty_ras
+
+    data_ras = make_geocube(
+        vector_data=data_gdf,
+        like=like_ras,
+        fill=0,
+        measurements=[measurement_name],
+        rasterize_function=partial(
+            rasterize_image, all_touched=True, merge_alg=MergeAlg.add)
+    ).to_dataarray()
+
+    # Use NaNs in like_ras to mask out oceans, etc, in result
+    result_arr = data_ras[0].data + empty_ras.data
+    result_ras = empty_ras.copy()
+    result_ras.data = result_arr
+
+    result_ras = result_ras.rio.write_crs(like_ras.rio.crs)
+    return result_ras
+
+
+class OpenStreetMapAmenityCount(Layer):
+    OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = ["osm_class"]
+    MINOR_NAMING_ATTS = None
+
+    """
+    Attributes:
+        osm_class: OSM class
+    """
+
+    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, **kwargs):
+        super().__init__(**kwargs)
+        self.osm_class = osm_class
+
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 force_data_refresh=False):
+        # Note: spatial_resolution and resampling_method arguments are ignored.
+
+        # Get OSM amenity data
+        download_data = OpenStreetMap(osm_class=self.osm_class).get_data(bbox)
+        amenities_gdf = gpd.GeoDataFrame(
+            {
+                "id": list(range(len(download_data))),
+                "amenitycount": [1] * len(download_data),
+                "geometry": download_data.geometry
+            }
+        )
+
+        # Get Worldpop raster for grid template
+        worldpop_ras = WorldPop().get_data(bbox)
+
+        amenities_ras = _rasterize_gdf(
+            amenities_gdf, worldpop_ras, "amenitycount")
+
+        return amenities_ras
