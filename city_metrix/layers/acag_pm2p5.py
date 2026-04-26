@@ -1,6 +1,7 @@
 import ee
 
-from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
+
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 10
@@ -20,11 +21,14 @@ class AcagPM2p5(Layer):
         self.year = year
         self.return_above = return_above
 
+
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None, allow_cache_retrieval=False):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
         acag_data = ee.Image(f'projects/wri-datalab/cities/aq/acag_annual_pm2p5_{self.year}')
 

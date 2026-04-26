@@ -1,6 +1,7 @@
 import ee
 
-from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
+from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
+
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 30
@@ -22,6 +23,7 @@ class CarbonFluxFromTrees(Layer):
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
+
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         # netflux_total_ic = ee.ImageCollection('projects/wri-datalab/gfw-data-lake/net-flux-forest-extent-per-ha-v1-2-2-2001-2021/net-flux-global-forest-extent-per-ha-2001-2021')
         # netflux_total_img = netflux_total_ic.mosaic()
@@ -44,7 +46,7 @@ class CarbonFluxFromTreesPerHectare(Layer):
     MINOR_NAMING_ATTS = None
 
     """
-    Average annual carbon emissions minus removal in tonnes CO2e over 21-yer period 2001-2021. Not a time series. Model 1.2.2.
+    Average annual carbon emissions minus removal in tonnes CO2e over 23-year period 2001-2023. Not a time series. Model 1.3.2.
     See Harris et al. 2021 Nature Climate Change (nature.com/articles/s41558-020-00976-6). Contacts: david.gibbs@wri.org and nharris@wri.org
 
     """
@@ -55,11 +57,11 @@ class CarbonFluxFromTreesPerHectare(Layer):
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-        # netflux_total_ic = ee.ImageCollection('projects/wri-datalab/gfw-data-lake/net-flux-forest-extent-per-ha-v1-2-2-2001-2021/net-flux-global-forest-extent-per-ha-2001-2021')
-        # netflux_total_img = netflux_total_ic.mosaic()
-        netflux_total_img = ee.Image('projects/sat-io/open-datasets/forest_carbon_fluxes/net_flux')
-        netflux_annual_img = netflux_total_img.divide(24)  # Divide by 21 years
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
+
+        netflux_total_ic = ee.ImageCollection('projects/wri-datalab/gfw-data-lake/net-flux-forest-extent-per-ha-v1-3-2-2001-2023/net-flux-global-forest-extent-per-ha-2001-2023')
+        netflux_total_img = netflux_total_ic.mosaic()
+        netflux_annual_img = netflux_total_img.divide(23).divide(10000).multiply(spatial_resolution**2)  # Divide by 23 years, convert from per-hectare to per pixel-area
 
         ee_rectangle  = bbox.to_ee_rectangle()
         data = get_image_collection(

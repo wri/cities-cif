@@ -21,6 +21,7 @@ from city_metrix.metrix_dao import (
     read_csv_from_s3,
     read_geojson_from_cache,
     read_geotiff_from_cache,
+    read_geotiff_subarea_from_cache,
     read_netcdf_from_cache,
 )
 from city_metrix.metrix_tools import get_class_from_instance
@@ -395,9 +396,11 @@ def get_file_name(geo_extent, class_obj):
     admin_level = geo_extent.admin_level
     cached_folder, feature_id, file_format, _ = build_cache_name(class_obj)
     feature_base_class_name = class_obj.__class__.__bases__[0].__name__
-    if admin_level == "urban_extent" and FILE_KEY_URBEXTBOUND_MARKER:
-        bound_marker = "__urban_extent"
-    elif FILE_KEY_ADMINBOUND_MARKER:
+    # if admin_level == "urban_extent" and FILE_KEY_URBEXTBOUND_MARKER:
+    #     bound_marker = "__urban_extent"
+    # if admin_level == "city_centroid" and FILE_KEY_CENTROIDBOUND_MARKER:
+    #     bound_marker = "__city_centroid"
+    if FILE_KEY_ADMINBOUND_MARKER:
         bound_marker = f"__{admin_level}"
     else:
         bound_marker = ""

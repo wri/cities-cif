@@ -1,10 +1,12 @@
 import calendar
 import math
-import ee
-import numpy as np
 from enum import Enum
 
-from city_metrix.metrix_model import Layer, GeoExtent
+import ee
+import numpy as np
+
+from city_metrix.metrix_model import GeoExtent, Layer
+
 from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 27830
@@ -405,7 +407,8 @@ class NexGddpCmip6(Layer):
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
         
         latlon = (bbox.as_geographic_bbox().centroid.y,
                   bbox.as_geographic_bbox().centroid.x)

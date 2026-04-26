@@ -1,8 +1,9 @@
 import ee
 
-from city_metrix.metrix_model import Layer, get_image_collection, GeoExtent
-from .albedo import Albedo
+from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
+
 from ..constants import GTIFF_FILE_EXTENSION
+from .albedo import Albedo
 
 DEFAULT_SPATIAL_RESOLUTION = 10
 
@@ -27,7 +28,8 @@ class VegetationWaterMap(Layer):
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
         NDVIthreshold = 0.4  # decimal
         NDWIthreshold = 0.3  # decimal

@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 import shapely
 import xarray as xr
-from dask.diagnostics import ProgressBar
 from ee import ImageCollection
 from geopandas import GeoDataFrame
 from pandas import Series
@@ -132,6 +131,7 @@ class GeoZone:
             self.crs = WGS_CRS
             self.projection_type = get_projection_type(self.crs)
             self.centroid = shapely.Point(self.longitude, self.latitude)
+            self.admin_level = "urban_extent"
         else:
             self.bounds = self.bbox
             self.epsg_code = int(self.crs.split(":")[1])
@@ -737,11 +737,11 @@ class LayerGroupBy:
         joined["geometry"] = joined.intersection(joined["immutable_fishnet_geometry"])
 
         # remove linestring artifacts due to float precision
-        gdf = joined[joined.geometry.type.isin(["Polygon", "MultiPolygon"])]
+        gdf = joined[joined.geometry.type.isin(["Polygon", "MultiPolygon"])].copy()
 
         # separate out zones intersecting to tiles in their own data frames
         tile_gdfs = [
-            tile[["index", "geometry"]] for _, tile in gdf.groupby("index_right")
+            tile[["index", "geometry"]].copy() for _, tile in gdf.groupby("index_right")
         ]
         tile_funcs = LayerGroupBy.get_stats_funcs(stats_func)
 
@@ -793,9 +793,9 @@ class LayerGroupBy:
 
     @staticmethod
     def _merge_tile_geometry_into_query_gdf(tile_gdf, zones):
-        query_gdf = zones
+        query_gdf = zones.copy()
         query_gdf.loc[tile_gdf.index, "geometry"] = tile_gdf["geometry"]
-        adjusted_gdf = query_gdf[query_gdf.index.isin(tile_gdf.index)]
+        adjusted_gdf = query_gdf[query_gdf.index.isin(tile_gdf.index)].copy()
         return adjusted_gdf
 
     @staticmethod
@@ -876,7 +876,7 @@ class LayerGroupBy:
             else:
                 geo_levels = zones["geo_level"].unique()
                 for index, level in enumerate(geo_levels):
-                    level_gdf = tile_gdf[tile_gdf["geo_level"] == level]
+                    level_gdf = tile_gdf[tile_gdf["geo_level"] == level].copy()
 
                     stats = LayerGroupBy._compute_zonal_stats(
                         stats_func,
@@ -987,12 +987,13 @@ class LayerGroupBy:
 
 
 class Layer:
-    def __init__(self, aggregate=None, masks=[]):
+    def __init__(self, aggregate=None, masks=[], **kwargs):
         self.aggregate = aggregate
         if aggregate is None:
             self.aggregate = self
 
         self.masks = masks
+        self.resolution = kwargs.get("resolution")
 
     @abstractmethod
     def get_data(
@@ -1043,63 +1044,76 @@ class Layer:
 
         file_format = self.aggregate.OUTPUT_FILE_FORMAT
 
-        if tile_side_length is None:
-            utm_geo_extent = bbox.as_utm_bbox()  # currently only support output as utm
-            clipped_data = self.aggregate.get_data(
-                bbox=bbox,
-                spatial_resolution=spatial_resolution,
-                resampling_method=resampling_method,
+        if bbox.geo_type == GeoType.CITY_CENTROID:
+            result_data = self.aggregate.get_data(
+                bbox=bbox, spatial_resolution=spatial_resolution
             )
-
             delete_s3_file_if_exists(target_file_path)
             delete_s3_folder_if_exists(target_file_path)
-            write_layer(clipped_data, target_file_path, file_format)
+            write_layer(result_data, target_file_path, file_format)
         else:
-            tile_grid_gdf = create_fishnet_grid(
-                bbox=bbox,
-                tile_side_length=tile_side_length,
-                tile_buffer_size=0,
-                length_units=length_units,
-                spatial_resolution=spatial_resolution,
-            )
-            tile_grid_gdf = Layer._add_tile_name_column(tile_grid_gdf)
-
-            buffered_tile_grid_gdf = None
-            if buffer_size and buffer_size > 0:
-                buffered_tile_grid_gdf = create_fishnet_grid(
+            if tile_side_length is None:
+                utm_geo_extent = (
+                    bbox.as_utm_bbox()
+                )  # currently only support output as utm
+                clipped_data = self.aggregate.get_data(
                     bbox=bbox,
-                    tile_side_length=tile_side_length,
-                    tile_buffer_size=buffer_size,
-                    length_units=length_units,
-                    spatial_resolution=spatial_resolution,
-                )
-                buffered_tile_grid_gdf = Layer._add_tile_name_column(
-                    buffered_tile_grid_gdf
-                )
-
-            # write tile grid to geojson file
-            write_tile_grid(tile_grid_gdf, target_file_path, "tile_grid.geojson")
-
-            # if tiles were buffered, also write unbuffered tile grid to geojson file
-            if buffered_tile_grid_gdf is not None and len(buffered_tile_grid_gdf) > 0:
-                write_tile_grid(
-                    buffered_tile_grid_gdf,
-                    target_file_path,
-                    "tile_grid_unbuffered.geojson",
-                )
-
-            utm_crs = tile_grid_gdf.crs.srs
-            for tile in tile_grid_gdf.itertuples():
-                tile_name = tile.tile_name
-                tile_bbox = GeoExtent(bbox=tile.geometry.bounds, crs=utm_crs)
-
-                file_path = os.path.join(target_file_path, tile_name)
-                layer_data = self.aggregate.get_data(
-                    bbox=tile_bbox,
                     spatial_resolution=spatial_resolution,
                     resampling_method=resampling_method,
                 )
-                write_layer(layer_data, file_path, file_format)
+
+                delete_s3_file_if_exists(target_file_path)
+                delete_s3_folder_if_exists(target_file_path)
+                write_layer(clipped_data, target_file_path, file_format)
+            else:
+                tile_grid_gdf = create_fishnet_grid(
+                    bbox=bbox,
+                    tile_side_length=tile_side_length,
+                    tile_buffer_size=0,
+                    length_units=length_units,
+                    spatial_resolution=spatial_resolution,
+                )
+                tile_grid_gdf = Layer._add_tile_name_column(tile_grid_gdf)
+
+                buffered_tile_grid_gdf = None
+                if buffer_size and buffer_size > 0:
+                    buffered_tile_grid_gdf = create_fishnet_grid(
+                        bbox=bbox,
+                        tile_side_length=tile_side_length,
+                        tile_buffer_size=buffer_size,
+                        length_units=length_units,
+                        spatial_resolution=spatial_resolution,
+                    )
+                    buffered_tile_grid_gdf = Layer._add_tile_name_column(
+                        buffered_tile_grid_gdf
+                    )
+
+                # write tile grid to geojson file
+                write_tile_grid(tile_grid_gdf, target_file_path, "tile_grid.geojson")
+
+                # if tiles were buffered, also write unbuffered tile grid to geojson file
+                if (
+                    buffered_tile_grid_gdf is not None
+                    and len(buffered_tile_grid_gdf) > 0
+                ):
+                    write_tile_grid(
+                        buffered_tile_grid_gdf,
+                        target_file_path,
+                        "tile_grid_unbuffered.geojson",
+                    )
+
+                utm_crs = tile_grid_gdf.crs.srs
+                for tile in tile_grid_gdf.itertuples():
+                    tile_name = tile.tile_name
+                    tile_bbox = GeoExtent(bbox=tile.geometry.bounds, crs=utm_crs)
+
+                    file_path = os.path.join(target_file_path, tile_name)
+                    layer_data = self.aggregate.get_data(
+                        bbox=tile_bbox,
+                        spatial_resolution=spatial_resolution,
+                        resampling_method=resampling_method,
+                    )
+                    write_layer(layer_data, file_path, file_format)
 
     def cache_city_data(
         self,
@@ -1120,7 +1134,10 @@ class Layer:
         :param force_data_refresh: whether to force data refresh from source
         """
 
-        if bbox.geo_type != GeoType.CITY_AREA:
+        if (
+            bbox.geo_type != GeoType.CITY_AREA
+            and bbox.geo_type != GeoType.CITY_CENTROID
+        ):
             raise ValueError("Non-city data cannot be cached.")
 
         standard_env = standardize_s3_env(s3_env)
@@ -1210,7 +1227,7 @@ class Layer:
     def _build_city_cache(
         self, bbox, spatial_resolution, target_uri, aoi_buffer_m: int = None
     ):
-        if bbox.geo_type == GeoType.CITY_AREA:
+        if bbox.geo_type == GeoType.CITY_AREA or bbox.geo_type == GeoType.CITY_CENTROID:
             if hasattr(self.aggregate, "PROCESSING_TILE_SIDE_M"):
                 tile_side_m = self.aggregate.PROCESSING_TILE_SIDE_M
             else:
@@ -1219,28 +1236,38 @@ class Layer:
             if aoi_buffer_m is not None:
                 bbox = bbox.buffer_utm_bbox(aoi_buffer_m)
 
-            bbox_area = bbox.as_utm_bbox().polygon.area
-            if (
-                tile_side_m is not None
-                and bbox_area > tile_side_m**2
-                and self.aggregate.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION
-            ):
-                self._cache_data_by_fishnet_tiles(
-                    bbox=bbox,
-                    tile_side_m=tile_side_m,
-                    spatial_resolution=spatial_resolution,
-                    target_uri=target_uri,
-                )
-            else:
+            if bbox.geo_type == GeoType.CITY_CENTROID:
                 result_data = self.aggregate.get_data(
                     bbox=bbox, spatial_resolution=spatial_resolution
                 )
                 delete_s3_file_if_exists(target_uri)
                 delete_s3_folder_if_exists(target_uri)
                 write_layer(result_data, target_uri, self.aggregate.OUTPUT_FILE_FORMAT)
+            else:
+                bbox_area = bbox.as_utm_bbox().polygon.area
+                if (
+                    tile_side_m is not None
+                    and bbox_area > tile_side_m**2
+                    and self.aggregate.OUTPUT_FILE_FORMAT == GTIFF_FILE_EXTENSION
+                ):
+                    self._cache_data_by_fishnet_tiles(
+                        bbox=bbox,
+                        tile_side_m=tile_side_m,
+                        spatial_resolution=spatial_resolution,
+                        target_uri=target_uri,
+                    )
+                else:
+                    result_data = self.aggregate.get_data(
+                        bbox=bbox, spatial_resolution=spatial_resolution
+                    )
+                    delete_s3_file_if_exists(target_uri)
+                    delete_s3_folder_if_exists(target_uri)
+                    write_layer(
+                        result_data, target_uri, self.aggregate.OUTPUT_FILE_FORMAT
+                    )
         else:
             raise ValueError(
-                f"Data not cached for {self.aggregate.__class__.__name__}. Data can only be cached for CITY_AREA geo_extent."
+                f"Data not cached for {self.aggregate.__class__.__name__}. Data can only be cached for CITY_AREA or CITY_CENTROID geo_extent."
             )
 
     def _get_completed_tile_ids(self, file_paths):
@@ -1258,7 +1285,6 @@ class Layer:
         self, bbox, tile_side_m, spatial_resolution, target_uri
     ):
         # TODO: Code currently only handles raster data
-
         # Write individual tiles to cache
         delete_s3_file_if_exists(target_uri)
         delete_s3_folder_if_exists(target_uri)
@@ -1286,7 +1312,7 @@ class Layer:
         )
         fishnet["index"] = fishnet.index
         fishnet["download_failed"] = "unknow"
-        fishnet = fishnet[["index", "geometry"]]
+        fishnet = fishnet[["index", "geometry"]].copy()
 
         # Temporary hack for testing
         # fishnet = fishnet.iloc[:6]
@@ -1296,7 +1322,7 @@ class Layer:
             TILE_NUMBER_PADCOUNT
         )
         fishnet["success"] = "unknown"
-        fishnet = fishnet[["index", "tile_name", "success", "geometry"]]
+        fishnet = fishnet[["index", "tile_name", "success", "geometry"]].copy()
         grid_file_uri = f"{target_uri}/fishnet_grid.json"
         write_file_to_s3(fishnet, grid_file_uri, GEOJSON_FILE_EXTENSION)
 
@@ -1627,7 +1653,7 @@ def get_image_collection(
         )
 
     try:
-        ds = xr.open_dataset(
+        data = xr.open_dataset(
             image_collection,
             engine="ee",
             scale=scale,
@@ -1635,9 +1661,9 @@ def get_image_collection(
             geometry=ee_rectangle["ee_geometry"],
             chunks={"X": 512, "Y": 512},
         )
-        with ProgressBar():
-            print(f"Extracting layer {name} from Google Earth Engine for bbox :")
-            data = ds.compute()
+        # with ProgressBar():
+        #     print(f"Extracting layer {name} from Google Earth Engine for bbox :")
+        #     data = ds.compute()
     except Exception as ex_msg:
         raise ValueError(f"GEE download failed with exception: {ex_msg}")
 
