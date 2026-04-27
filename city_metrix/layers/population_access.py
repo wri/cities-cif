@@ -164,11 +164,11 @@ class AccessibleCountPopWeighted(Layer):
             informal_layer = UrbanLandUse(return_value=INFORMAL_CLASS)
             population_layer.masks.append(informal_layer)
 
-        population_data = population_layer.get_data(bbox.buffer_utm_bbox(500), spatial_resolution=DEFAULT_SPATIAL_RESOLUTION)
+        population_data = population_layer.get_data(bbox.buffer_utm_bbox(500), spatial_resolution=spatial_resolution)
         count_layer = AccessibleCount(amenity=self.amenity, city_id=self.city_id, level=self.level,
                                       travel_mode=self.travel_mode, threshold=self.threshold, unit=self.unit, project=self.project)
         count_data = count_layer.get_data(
-            bbox, spatial_resolution=DEFAULT_SPATIAL_RESOLUTION).fillna(0)
+            bbox, spatial_resolution=spatial_resolution).fillna(0)
 
         aligned_population_data = _get_aligned_dataarray(
             count_data, population_data)
