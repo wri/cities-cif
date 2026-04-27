@@ -306,6 +306,20 @@ def test_number_species_bird_richness_in_builtup_area__species():
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 1, 48, 100, 2, 137)
 
+def test_permeable_area__percent():
+    indicator = PermeableArea__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 0.0, 100, 0)
+
+def test_permeable_surface_on_urbanized_land__percent():
+    indicator = PermeableSurfaceOnUrbanizedLand__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, 0.0, 40.9091, 100, 0)
+
 def test_protected_area__percent():
     indicator = ProtectedArea__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
@@ -349,6 +363,13 @@ def test_tree_carbon_flux__tonnes():
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
     assert_metric_stats(indicator, 2, -71.29, -0.53, 100, 0)
+
+def test_tree_carbon_flux__tonnesperhectare():
+    indicator = TreeCarbonFlux__TonnesPerHectare().get_metric(IDN_JAKARTA_TILED_ZONES)
+    expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
+    actual_indicator_size = len(indicator)
+    assert expected_zone_size == actual_indicator_size
+    assert_metric_stats(indicator, 2, -0.579, -0.004296, 100, 0)
 
 def test_urban_open_space__percent():
     indicator = UrbanOpenSpace__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)
