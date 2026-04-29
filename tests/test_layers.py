@@ -1,11 +1,11 @@
 import math
 import pytest
 import numpy as np
-import random
 
 from city_metrix.constants import ProjectionType
 from city_metrix.layers import *
 from city_metrix.metrix_tools import get_projection_type
+from city_metrix.metrix_model import GeoExtent
 from tests.conftest import EXECUTE_IGNORED_TESTS
 from tests.resources.bbox_constants import BBOX_USA_OR_PORTLAND_1, BBOX_ARG_BUENOS_AIRES, GEOEXTENT_DURBAN
 from tests.tools.spatial_tools import get_rounded_gdf_geometry
@@ -271,13 +271,13 @@ def test_slope():
     assert_raster_stats(data, 2, 0, 24.76, 1122, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
-# def test_species_richness():
-#     taxon = GBIFTaxonClass.BIRDS
-#     random.seed(42)
-#     data = SpeciesRichness(taxon=taxon).get_data(BBOX)
-#     assert np.size(data) > 0
-#     assert_vector_stats(data, "species_count", 1, 59, 59, 1, 0)
-#     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
+def test_species_observations():
+    taxon = GBIFTaxonClass.BIRDS
+    data = SpeciesObservations().get_data(GeoExtent('{"city_id":"ARG-Buenos_Aires","aoi_id":"city_admin_level"}'))
+    assert np.size(data) > 0
+    assert data['species'].notnull().sum() == 87560
+    assert data['species'].isnull().sum() == 0
+    assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_surface_water():
     data = SurfaceWater().get_data(BBOX)
