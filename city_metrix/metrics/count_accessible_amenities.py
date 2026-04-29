@@ -1,3 +1,4 @@
+import datetime
 import pandas as pd
 from typing import Union
 
@@ -11,14 +12,14 @@ INFORMAL_CLASS = 3
 
 
 class _CountAccessiblePopWeighted(Metric):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_agesex_classes, worldpop_year, informal_only, pixelmean=False, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_agesex_classes, worldpop_year, informal_only, pixelmean=False, **kwargs):
         super().__init__(**kwargs)
         self.amenity = amenity
         self.travel_mode = travel_mode
         self.threshold = threshold
         self.unit = unit
         self.project = project
-        self.osm_year = 2025
+        self.osm_year = osm_year
         self.worldpop_agesex_classes = worldpop_agesex_classes
         self.worldpop_year = worldpop_year
         self.informal_only = informal_only
@@ -45,14 +46,14 @@ class _CountAccessiblePopWeighted(Metric):
         return popweighted_count
 
 class _CountAccessiblePerCapita(Metric):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_agesex_classes, worldpop_year, informal_only, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_agesex_classes, worldpop_year, informal_only, **kwargs):
         super().__init__(**kwargs)
         self.amenity = amenity
         self.travel_mode = travel_mode
         self.threshold = threshold
         self.unit = unit
         self.project = project
-        self.osm_year = 2025
+        self.osm_year = osm_year
         self.worldpop_agesex_classes = worldpop_agesex_classes
         self.worldpop_year = worldpop_year
         self.informal_only = informal_only
@@ -86,64 +87,64 @@ class _CountAccessiblePerCapita(Metric):
 
 
 class _CountAccessiblePopWeightedAll(_CountAccessiblePopWeighted):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, pixelmean=False, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_year=2020, pixelmean=False, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold,
-                         unit=unit, project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=False, pixelmean=pixelmean, **kwargs)
+                         unit=unit, osm_year=osm_year, project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=False, pixelmean=pixelmean, **kwargs)
 
 class _CountAccessiblePopWeightedAdults(_CountAccessiblePopWeighted):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, pixelmean=False, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_year=2020, pixelmean=False, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit,
-                         project=project, worldpop_agesex_classes=WorldPopClass.ADULT, worldpop_year=worldpop_year, informal_only=False, pixelmean=pixelmean, **kwargs)
+                         osm_year=osm_year, project=project, worldpop_agesex_classes=WorldPopClass.ADULT, worldpop_year=worldpop_year, informal_only=False, pixelmean=pixelmean, **kwargs)
 
 class _CountAccessiblePopWeightedChildren(_CountAccessiblePopWeighted):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, pixelmean=False, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_year=2020, pixelmean=False, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit,
-                         project=project, worldpop_agesex_classes=WorldPopClass.CHILDREN, worldpop_year=worldpop_year, informal_only=False, pixelmean=pixelmean, **kwargs)
+                         osm_year=osm_year, project=project, worldpop_agesex_classes=WorldPopClass.CHILDREN, worldpop_year=worldpop_year, informal_only=False, pixelmean=pixelmean, **kwargs)
 
 class _CountAccessiblePopWeightedElderly(_CountAccessiblePopWeighted):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, pixelmean=False, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_year=2020, pixelmean=False, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit,
-                         project=project, worldpop_agesex_classes=WorldPopClass.ELDERLY, worldpop_year=worldpop_year, informal_only=False, pixelmean=pixelmean, **kwargs)
+                         osm_year=osm_year, project=project, worldpop_agesex_classes=WorldPopClass.ELDERLY, worldpop_year=worldpop_year, informal_only=False, pixelmean=pixelmean, **kwargs)
 
 class _CountAccessiblePopWeightedFemale(_CountAccessiblePopWeighted):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, pixelmean=False, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_year=2020, pixelmean=False, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit,
-                         project=project, worldpop_agesex_classes=WorldPopClass.FEMALE, worldpop_year=worldpop_year, informal_only=False, pixelmean=pixelmean, **kwargs)
+                         osm_year=osm_year, project=project, worldpop_agesex_classes=WorldPopClass.FEMALE, worldpop_year=worldpop_year, informal_only=False, pixelmean=pixelmean, **kwargs)
 
 class _CountAccessiblePopWeightedInformal(_CountAccessiblePopWeighted):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, pixelmean=False, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_year=2020, pixelmean=False, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold,
-                         unit=unit, project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=True, pixelmean=pixelmean, **kwargs)
+                         unit=unit, osm_year=osm_year, project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=True, pixelmean=pixelmean, **kwargs)
 
 class _CountAccessiblePerCapitaAll(_CountAccessiblePerCapita):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_year=2020, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold,
-                         unit=unit, project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=False, **kwargs)
+                         unit=unit, osm_year=osm_year, project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=False, **kwargs)
 
 class _CountAccessiblePerCapitaAdults(_CountAccessiblePerCapita):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_year=2020, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit,
-                         project=project, worldpop_agesex_classes=WorldPopClass.ADULT, worldpop_year=worldpop_year, informal_only=False, **kwargs)
+                         osm_year=osm_year, project=project, worldpop_agesex_classes=WorldPopClass.ADULT, worldpop_year=worldpop_year, informal_only=False, **kwargs)
 
 class _CountAccessiblePerCapitaChildren(_CountAccessiblePerCapita):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_year=2020, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit,
-                         project=project, worldpop_agesex_classes=WorldPopClass.CHILDREN, worldpop_year=worldpop_year, informal_only=False, **kwargs)
+                         osm_year=osm_year, project=project, worldpop_agesex_classes=WorldPopClass.CHILDREN, worldpop_year=worldpop_year, informal_only=False, **kwargs)
 
 class _CountAccessiblePerCapitaElderly(_CountAccessiblePerCapita):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_year=2020, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit,
-                         project=project, worldpop_agesex_classes=WorldPopClass.ELDERLY, worldpop_year=worldpop_year, informal_only=False, **kwargs)
+                         osm_year=osm_year, project=project, worldpop_agesex_classes=WorldPopClass.ELDERLY, worldpop_year=worldpop_year, informal_only=False, **kwargs)
 
 class _CountAccessiblePerCapitaFemale(_CountAccessiblePerCapita):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_year=2020, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold, unit=unit,
-                         project=project, worldpop_agesex_classes=WorldPopClass.FEMALE, worldpop_year=worldpop_year, informal_only=False, **kwargs)
+                         osm_year=osm_year, project=project, worldpop_agesex_classes=WorldPopClass.FEMALE, worldpop_year=worldpop_year, informal_only=False, **kwargs)
 
 class _CountAccessiblePerCapitaInformal(_CountAccessiblePerCapita):
-    def __init__(self, amenity, travel_mode, threshold, unit, project, worldpop_year=2020, **kwargs):
+    def __init__(self, amenity, travel_mode, threshold, unit, osm_year, project, worldpop_year=2020, **kwargs):
         super().__init__(amenity=amenity, travel_mode=travel_mode, threshold=threshold,
-                         unit=unit, project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=True, **kwargs)
+                         unit=unit, osm_year=osm_year, project=project, worldpop_agesex_classes=[], worldpop_year=worldpop_year, informal_only=True, **kwargs)
 
 
 # ************************************************
@@ -152,9 +153,9 @@ class CountPotentialEmployersTotalPopulationPopWeighted__Count(_CountAccessibleP
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, pixelmean=False, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, pixelmean=False, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 class CountPotentialEmployersAdultsPopWeighted__Count(_CountAccessiblePopWeightedAdults):
@@ -162,9 +163,9 @@ class CountPotentialEmployersAdultsPopWeighted__Count(_CountAccessiblePopWeighte
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, pixelmean=False, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, pixelmean=False, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 class CountPotentialEmployersChildrenPopWeighted__Count(_CountAccessiblePopWeightedChildren):
@@ -172,9 +173,9 @@ class CountPotentialEmployersChildrenPopWeighted__Count(_CountAccessiblePopWeigh
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 class CountPotentialEmployersElderlyPopWeighted__Count(_CountAccessiblePopWeightedElderly):
@@ -182,9 +183,9 @@ class CountPotentialEmployersElderlyPopWeighted__Count(_CountAccessiblePopWeight
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 class CountPotentialEmployersFemalePopWeighted__Count(_CountAccessiblePopWeightedFemale):
@@ -192,9 +193,9 @@ class CountPotentialEmployersFemalePopWeighted__Count(_CountAccessiblePopWeighte
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 class CountPotentialEmployersInformalPopWeighted__Count(_CountAccessiblePopWeightedInformal):
@@ -202,9 +203,9 @@ class CountPotentialEmployersInformalPopWeighted__Count(_CountAccessiblePopWeigh
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, **kwargs)
 
 # ************************** PIXELMEAN ***********************************
 
@@ -214,9 +215,9 @@ class AverageCountPotentialEmployersTotalPopulationPopWeighted__Count(_CountAcce
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, pixelmean=True, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, pixelmean=True, **kwargs)
 
 
 class AverageCountPotentialEmployersAdultsPopWeighted__Count(_CountAccessiblePopWeightedAdults):
@@ -224,9 +225,9 @@ class AverageCountPotentialEmployersAdultsPopWeighted__Count(_CountAccessiblePop
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, pixelmean=True, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, pixelmean=True, **kwargs)
 
 
 class AverageCountPotentialEmployersChildrenPopWeighted__Count(_CountAccessiblePopWeightedChildren):
@@ -234,9 +235,9 @@ class AverageCountPotentialEmployersChildrenPopWeighted__Count(_CountAccessibleP
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, pixelmean=True, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, pixelmean=True, **kwargs)
 
 
 class AverageCountPotentialEmployersElderlyPopWeighted__Count(_CountAccessiblePopWeightedElderly):
@@ -244,9 +245,9 @@ class AverageCountPotentialEmployersElderlyPopWeighted__Count(_CountAccessiblePo
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, pixelmean=True, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, pixelmean=True, **kwargs)
 
 
 class AverageCountPotentialEmployersFemalePopWeighted__Count(_CountAccessiblePopWeightedFemale):
@@ -254,18 +255,18 @@ class AverageCountPotentialEmployersFemalePopWeighted__Count(_CountAccessiblePop
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, pixelmean=True, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, pixelmean=True, **kwargs)
 
 class AverageCountPotentialEmployersInformalPopWeighted__Count(_CountAccessiblePopWeightedInformal):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, pixelmean=True, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, pixelmean=True, **kwargs)
 
 # ************************** PER CAPITA ***********************************
 
@@ -275,9 +276,9 @@ class CountPotentialEmployersPerCapitaTotalPopulation__CountPerPerson(_CountAcce
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 class CountPotentialEmployersPerCapitaAdult__CountPerPerson(_CountAccessiblePerCapitaAdults):
@@ -285,9 +286,9 @@ class CountPotentialEmployersPerCapitaAdult__CountPerPerson(_CountAccessiblePerC
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 class CountPotentialEmployersPerCapitaChildren__CountPerPerson(_CountAccessiblePerCapitaChildren):
@@ -295,9 +296,9 @@ class CountPotentialEmployersPerCapitaChildren__CountPerPerson(_CountAccessibleP
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 class CountPotentialEmployersPerCapitaElderly__CountPerPerson(_CountAccessiblePerCapitaElderly):
@@ -305,9 +306,9 @@ class CountPotentialEmployersPerCapitaElderly__CountPerPerson(_CountAccessiblePe
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 class CountPotentialEmployersPerCapitaFemale__CountPerPerson(_CountAccessiblePerCapitaFemale):
@@ -315,9 +316,9 @@ class CountPotentialEmployersPerCapitaFemale__CountPerPerson(_CountAccessiblePer
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, **kwargs)
 
 
 class CountPotentialEmployersPerCapitaInformal__CountPerPerson(_CountAccessiblePerCapitaInformal):
@@ -325,6 +326,6 @@ class CountPotentialEmployersPerCapitaInformal__CountPerPerson(_CountAccessibleP
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["travel_mode", "threshold", "unit"]
 
-    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", project=None, worldpop_year=2020, **kwargs):
+    def __init__(self, travel_mode="walk", threshold=15, unit="minutes", osm_year=datetime.datetime.now().year, project=None, worldpop_year=2020, **kwargs):
         super().__init__(amenity='economic', travel_mode=travel_mode,
-                         threshold=threshold, unit=unit, project=project, worldpop_year=worldpop_year, **kwargs)
+                         threshold=threshold, unit=unit, osm_year=osm_year, project=project, worldpop_year=worldpop_year, **kwargs)
