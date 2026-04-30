@@ -82,6 +82,10 @@ class OpenStreetMapClass(Enum):
                                    'school': True}
     HIGHER_EDUCATION = {'amenity': ['college', 'university', 'research_institute'],
                         'building': ['college', 'university']}
+    SUBWAY_STATION = {
+                      'railway': ['subway_entrance'],
+                    #   'station': ['subway']  This tag is supposed to be for center of station, not access points
+                      }
     TRANSIT_STOP = {'amenity': ['ferry_terminal'],
                     'railway': ['stop', 'platform', 'halt', 'tram_stop', 'subway_entrance', 'station'],
                     'highway': ['bus_stop', 'platform'],
