@@ -1,13 +1,14 @@
 import osmnx as ox
 import geopandas as gpd
 import pandas as pd
+import datetime
 from enum import Enum
 from functools import partial
 from geocube.api.core import make_geocube
 from geocube.rasterize import rasterize_image
 from rasterio.enums import MergeAlg
 
-from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GTIFF_FILE_EXTENSION
+from city_metrix.constants import WGS_CRS, GEOJSON_FILE_EXTENSION, GTIFF_FILE_EXTENSION, GeoType
 from city_metrix.metrix_model import Layer, GeoExtent, get_image_collection
 from .world_pop import WorldPop
 
@@ -128,7 +129,7 @@ class OpenStreetMap(Layer):
                 columns=['id', 'geometry']+list(self.osm_class.value.keys())), geometry='geometry')
             osm_feature.crs = WGS_CRS
 
-        # Filter by geom_type
+        # Filter by geo_type
         if self.osm_class == OpenStreetMapClass.ROAD:
             # Filter out Point
             osm_feature = osm_feature[osm_feature.geom_type != 'Point']
@@ -154,6 +155,20 @@ class OpenStreetMap(Layer):
 
         return osm_feature
 
+
+class OsmHospitals(Layer):
+    OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["year"]
+
+    def __init__(self, year=datetime.datetime.now().year, **kwargs):
+        super().__init__(**kwargs)
+        self.year = year
+
+    def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
+                 force_data_refresh=False):
+        hospitals = OpenStreetMap(osm_class=OpenStreetMapClass.HOSPITAL).get_data(bbox)
+        return hospitals.dissolve().explode()
 
 def _rasterize_gdf(data_gdf, like_ras, measurement_name):
     empty_ras = like_ras * 0
