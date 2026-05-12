@@ -313,12 +313,12 @@ def write_metric(data, uri, file_format):
     gc.collect()
 
 
-def write_layer(data, uri, file_format):
+def write_layer(data, uri, file_format, use_bigtiff=False):
     if data is None:
         raise Exception(f"Result dataset is empty and not written to: {uri}")
 
     if isinstance(data, xr.DataArray) and file_format == GTIFF_FILE_EXTENSION:
-        _write_geotiff(data, uri)
+        _write_geotiff(data, uri, use_bigtiff=use_bigtiff)
     elif isinstance(data, xr.Dataset) and file_format == GTIFF_FILE_EXTENSION:
         raise NotImplementedError(
             f"Write function does not support format: {type(data).__name__}"
@@ -406,7 +406,7 @@ def write_json(data, uri):
             json.dump(data, json_file, indent=4)
 
 
-def _write_geotiff(data, uri):
+def _write_geotiff(data, uri, use_bigtiff=False):
     _verify_datatype("write_geotiff()", data, [xr.DataArray], is_spatial=True)
     _, standardized_array = standardize_y_dimension_direction(data)
     if get_uri_scheme(uri) == "s3":
@@ -415,17 +415,30 @@ def _write_geotiff(data, uri):
         uri_path = os.path.normpath(get_file_path_from_uri(uri))
         _create_local_target_folder(uri_path)
         with ProgressBar():
-            standardized_array.rio.to_raster(
-                raster_path=uri_path,
-                driver="GTiff",
-                # tiled=True,
-                # windowed=True,
-                # compress="LZW",
-                BIGTIFF="YES",
-                # blockxsize=512,
-                # blockysize=512,
-                lock=Lock(),
-            )
+            if use_bigtiff:
+                standardized_array.rio.to_raster(
+                    raster_path=uri_path,
+                    driver="GTiff",
+                    tiled=True,
+                    windowed=True,
+                    compress="LZW",
+                    BIGTIFF="YES",
+                    blockxsize=512,
+                    blockysize=512,
+                    lock=Lock(),
+                )
+            else:
+                standardized_array.rio.to_raster(
+                    raster_path=uri_path,
+                    driver="GTiff",
+                    # tiled=True,
+                    # windowed=True,
+                    # compress="LZW",
+                    # BIGTIFF="YES",
+                    # blockxsize=512,
+                    # blockysize=512,
+                    lock=Lock(),
+                )
 
 
 def _write_netcdf(data, uri):
