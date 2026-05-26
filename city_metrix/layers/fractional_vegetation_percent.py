@@ -56,7 +56,7 @@ class FractionalVegetationPercent(Layer):
         def calcFr(aoi, vegpctl, soilpctl):
 
             endm_ic = ENDMEMBERS_IC.filterBounds(aoi)
-            if endm_ic.size().gt(0):
+            if endm_ic.size().getInfo() > 0:
                 endm_img = endm_ic.first()
             else:
                 endm_img = None

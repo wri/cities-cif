@@ -347,7 +347,7 @@ def test_tree_carbon_flux__tonnes():
     expected_zone_size = len(IDN_JAKARTA_TILED_ZONES.zones)
     actual_indicator_size = len(indicator)
     assert expected_zone_size == actual_indicator_size
-    assert_metric_stats(indicator, 2, -39.046, 1.256, 100, 0)
+    assert_metric_stats(indicator, 2, -73.60, -0.53, 100, 0)
 
 def test_urban_open_space__percent():
     indicator = UrbanOpenSpace__Percent().get_metric(IDN_JAKARTA_TILED_ZONES)

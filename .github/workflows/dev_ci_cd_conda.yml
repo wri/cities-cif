@@ -39,4 +39,4 @@ jobs:
         GOOGLE_APPLICATION_USER: ${{ secrets.GOOGLE_APPLICATION_USER }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
-          pytest -n auto --dist loadscope --durations=10
+          pytest --dist loadscope --durations=10
