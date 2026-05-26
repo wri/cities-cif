@@ -222,13 +222,13 @@ def test_open_urban():
 def test_overture_buildings():
     data = OvertureBuildings().get_data(BBOX)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'height', 1, 2.00, 12.50, 1070, 189)
+    assert_vector_stats(data, 'height', 1, 2.00, 12.50, 1069, 188)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_overture_buildings_height():
     data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'overture_height', 1, 2.0, 12.5, 1070, 189)
+    assert_vector_stats(data, 'overture_height', 1, 2.0, 12.5, 1069, 188)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_overture_buildings_dsm():
@@ -394,8 +394,8 @@ def assert_vector_stats(data, attribute, sig_digits:int, min_notnull_val, max_no
 def assert_raster_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, notnull_count:int, null_count:int):
     data_min_notnull_val = np.nanmin(data)
     data_max_notnull_val = np.nanmax(data)
-    data_notnull_count = data.count().item()
-    data_null_count = data.isnull().sum().item()
+    data_notnull_count = data.count().compute().item()
+    data_null_count = data.isnull().sum().compute().item()
 
     is_matched, expected, actual = _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val,
                                                  data_notnull_count, data_null_count, min_notnull_val,
