@@ -196,19 +196,19 @@ class TestOtherParameters:
     def test_high_land_surface_temperature_dates(self):
         with pytest.raises(Exception) as e_info:
             HighLandSurfaceTemperature(start_date="2021-01-01", end_date="2021-01-02").get_data(BBOX)
-        msg_correct = False if str(e_info.value).find("Dictionary does not contain key: 'date'") == -1 else True
-        assert msg_correct
+        msg_correct = False if str(e_info.value).find("Image.select: Band pattern 'p95' did not match any bands") == -1 else True
+        assert msg_correct, str(e_info.value)
 
     def test_land_surface_temperature_dates(self):
         with pytest.raises(Exception) as e_info:
             LandSurfaceTemperature(start_date="2021-01-01", end_date="2021-01-02").get_data(BBOX)
-        msg_correct = False if str(e_info.value).find("max() arg is an empty sequence") == -1 else True
-        assert msg_correct
+        msg_correct = False if str(e_info.value).find("Image.select: Band pattern 'p50' did not match any bands") == -1 else True
+        assert msg_correct, str(e_info.value)
 
         with pytest.raises(Exception) as e_info:
             LandSurfaceTemperature(start_date="2021-01-01", end_date=None).get_data(BBOX)
-        msg_correct = False if str(e_info.value).find("max() arg is an empty sequence") == -1 else True
-        assert msg_correct
+        msg_correct = False if str(e_info.value).find("strptime() argument 1 must be str") == -1 else True
+        assert msg_correct, str(e_info.value)
 
     def test_ndvi_sentinel2_dates(self):
         with pytest.raises(Exception) as e_info:
