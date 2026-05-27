@@ -51,21 +51,20 @@ class FabDEM(Layer):
             radius=3, sigma=1, units='pixels', normalize=True
         )
         fab_dem_elev = (ee.ImageCollection(fab_dem)
-                         .filterBounds(ee_rectangle['ee_geometry'])
-                         .select('b1')
-                         .map(lambda x:
-                              set_resampling_for_continuous_raster(x,
-                                                                   resampling_method,
-                                                                   spatial_resolution,
-                                                                   DEFAULT_SPATIAL_RESOLUTION,
-                                                                   kernel,
-                                                                   ee_rectangle['crs']
-                                                                   )
-                              )
-                         .mean()
-                         )
-
-        fab_dem_elev_ic = ee.ImageCollection(fab_dem_elev)
+                 .filterBounds(ee_rectangle['ee_geometry'])
+                 .select('b1')
+                 .mean()
+                 .reproject(crs=ee_rectangle['crs'], scale=DEFAULT_SPATIAL_RESOLUTION)
+                 )
+        fab_dem_elev = set_resampling_for_continuous_raster(
+            fab_dem_elev,
+            resampling_method,
+            spatial_resolution,
+            DEFAULT_SPATIAL_RESOLUTION,
+            kernel,
+            ee_rectangle['crs']
+        )
+        fab_dem_elev = ee.ImageCollection(fab_dem_elev)
         data = get_image_collection(
             fab_dem_elev_ic,
             ee_rectangle,
