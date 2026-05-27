@@ -99,7 +99,7 @@ def test_fractional_vegetation_percent():
     data = FractionalVegetationPercent().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 0, 100, 9797, 0)
-    assert get_projection_type(data.crs) == ProjectionType.UTM
+    assert get_projection_type(data.rio.crs) == ProjectionType.UTM
 
 def test_height_above_nearest_drainage():
     data = HeightAboveNearestDrainage().get_data(BBOX)
