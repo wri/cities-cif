@@ -12,7 +12,7 @@ class CarbonFluxFromTrees(Layer):
     MINOR_NAMING_ATTS = None
 
     """
-    Average annual carbon emissions minus removal in tonnes CO2e over 21-yer period 2001-2021. Not a time series. Model 1.2.2.
+    Average annual carbon emissions minus removal in tonnes CO2e over 23-year period 2001-2023. Not a time series. Model 1.3.2.
     See Harris et al. 2021 Nature Climate Change (nature.com/articles/s41558-020-00976-6). Contacts: david.gibbs@wri.org and nharris@wri.org
 
     """
@@ -26,9 +26,10 @@ class CarbonFluxFromTrees(Layer):
         # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
-        netflux_total_ic = ee.ImageCollection('projects/wri-datalab/gfw-data-lake/net-flux-forest-extent-per-ha-v1-2-2-2001-2021/net-flux-global-forest-extent-per-ha-2001-2021')
+        # old asset version: 'projects/wri-datalab/gfw-data-lake/net-flux-forest-extent-per-ha-v1-2-2-2001-2021/net-flux-global-forest-extent-per-ha-2001-2021'
+        netflux_total_ic = ee.ImageCollection('projects/wri-datalab/gfw-data-lake/net-flux-forest-extent-per-ha-v1-3-2-2001-2023/net-flux-global-forest-extent-per-ha-2001-2023')
         netflux_total_img = netflux_total_ic.mosaic()
-        netflux_annual_img = netflux_total_img.divide(21).divide(10000).multiply(spatial_resolution**2)  # Divide by 21 years, convert from per-hectare to per pixel-area
+        netflux_annual_img = netflux_total_img.divide(23).divide(10000).multiply(spatial_resolution**2)  # Divide by 23 years, convert from per-hectare to per pixel-area
 
         ee_rectangle  = bbox.to_ee_rectangle()
         data = get_image_collection(

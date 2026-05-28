@@ -418,12 +418,12 @@ def _write_geotiff(data, uri):
             standardized_array.rio.to_raster(
                 raster_path=uri_path,
                 driver="GTiff",
-                tiled=True,
-                windowed=True,
-                compress="LZW",
+                # tiled=True,
+                # windowed=True,
+                # compress="LZW",
                 BIGTIFF="YES",
-                blockxsize=512,
-                blockysize=512,
+                # blockxsize=512,
+                # blockysize=512,
                 lock=Lock(),
             )
 
