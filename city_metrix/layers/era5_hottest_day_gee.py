@@ -147,7 +147,7 @@ class Era5HottestDay(Layer):
 
         # Find the exact (y, x, time) where temperature_2m is globally max
         flat = data['temperature_2m'].stack(points=('y', 'x', 'time'))          # shape (points,)
-        imax = flat.argmax('points').item()
+        imax = int(flat.argmax('points').compute().values)
         y0, x0, t0 = flat['points'].to_index()[imax]      # coordinate values
         # Keep the whole time series at max temperature_2m pixel
         data = data.sel(y=y0, x=x0)
