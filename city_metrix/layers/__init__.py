@@ -44,6 +44,7 @@ from .tree_canopy_height_for_ctcm import TreeCanopyHeightCTCM
 from .tree_cover import TreeCover
 from .urban_extents import UrbanExtents
 from .urban_land_use import UrbanLandUse
+from .global_building_atlas import GlobalBuildingAtlas
 from .ut_globus import UtGlobus
 from .vegetation_water_map import VegetationWaterMap
 from .world_pop import WorldPop, WorldPopClass
