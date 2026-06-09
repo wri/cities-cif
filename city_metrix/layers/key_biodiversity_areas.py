@@ -36,9 +36,10 @@ class KeyBiodiversityAreas(Layer):
         country_code_iso3 must be one of the countries currently supported in Cities Data (plus USA for testing)
     """
 
-    def __init__(self, country_code_iso3=None, **kwargs):
+    def __init__(self, country_code_iso3=None, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.country_code_iso3 = country_code_iso3
+        self.worldpop_version = worldpop_version
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  force_data_refresh=False):
@@ -57,7 +58,7 @@ class KeyBiodiversityAreas(Layer):
         country_kba_data = GeoDataFrame.from_file(f'{AWS_STEM}/{S3_KBA_PREFIX}/KBA_{country_code}.geojson')
         city_kba_data = country_kba_data.loc[country_kba_data.intersects(bbox.as_geographic_bbox().polygon)]
 
-        worldpop_data = WorldPop().get_data(bbox)
+        worldpop_data = WorldPop(version=self.worldpop_version).get_data(bbox)
         if len(city_kba_data) > 0:
             dissolved_kba_data = city_kba_data.dissolve()
             data = GeoDataFrame({'id': [0], 'is_kba': 1, 'geometry': dissolved_kba_data.geometry}).to_crs(utm_crs)

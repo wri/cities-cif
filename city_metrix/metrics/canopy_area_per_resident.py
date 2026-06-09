@@ -15,12 +15,14 @@ class CanopyAreaPerResident__SquareMeters(Metric):
 
     def __init__(self,
                  agesex_classes=[],
+                 worldpop_version=1,
                  height=3,
                  informal_only=False,
                  year=2025,
                  **kwargs):
         super().__init__(**kwargs)
         self.agesex_classes = agesex_classes
+        self.worldpop_version = worldpop_version
         self.height = height
         self.informal_only = informal_only
         self.year = year
@@ -30,7 +32,7 @@ class CanopyAreaPerResident__SquareMeters(Metric):
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
-        world_pop = WorldPop(agesex_classes=self.agesex_classes)
+        world_pop = WorldPop(agesex_classes=self.agesex_classes, version=self.worldpop_version)
         # tree canopy height has default spatial resolution of 1, count equals area
         tree_canopy_height = TreeCanopyHeight(height=self.height)
 

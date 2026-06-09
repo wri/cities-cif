@@ -106,9 +106,10 @@ class OpenStreetMap(Layer):
         osm_class: OSM class
     """
 
-    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, **kwargs):
+    def __init__(self, osm_class: OpenStreetMapClass=OpenStreetMapClass.ALL, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
+        self.worldpop_version = worldpop_version
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  force_data_refresh=False):
@@ -190,9 +191,10 @@ class OpenStreetMapAmenityCount(Layer):
         osm_class: OSM class
     """
 
-    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, **kwargs):
+    def __init__(self, osm_class: OpenStreetMapClass = OpenStreetMapClass.ALL, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.osm_class = osm_class
+        self.worldpop_version = worldpop_version
 
     def get_data(self, bbox: GeoExtent, spatial_resolution=None, resampling_method=None,
                  force_data_refresh=False):
@@ -209,7 +211,7 @@ class OpenStreetMapAmenityCount(Layer):
         )
 
         # Get Worldpop raster for grid template
-        worldpop_ras = WorldPop().get_data(bbox)
+        worldpop_ras = WorldPop(version=self.worldpop_version).get_data(bbox)
 
         amenities_ras = _rasterize_gdf(
             amenities_gdf, worldpop_ras, "amenitycount")

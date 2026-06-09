@@ -24,13 +24,14 @@ class HighLandSurfaceTemperature(Layer):
         start_date: starting date for data retrieval
         end_date: ending date for data retrieval
     """
-    def __init__(self, start_date="2023-01-01", end_date="2026-01-01", index_aggregation=False, high_lst=False, use_modis=False, **kwargs):
+    def __init__(self, start_date="2023-01-01", end_date="2026-01-01", index_aggregation=False, high_lst=False, use_modis=False, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.index_aggregation = index_aggregation
         self.high_lst = high_lst
         self.use_modis = use_modis
+        self.worldpop_version = worldpop_version
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION_LANDSAT,
                  resampling_method=None):
@@ -51,6 +52,6 @@ class HighLandSurfaceTemperature(Layer):
         else:
             lst_array = lst
         if self.index_aggregation:
-            wp_array =  WorldPop().get_data(bbox)
+            wp_array =  WorldPop(version=self.worldpop_version).get_data(bbox)
             lst_array = align_raster_array(lst_array, wp_array)
         return lst_array

@@ -32,13 +32,14 @@ class AlbedoCloudMasked(Layer):
         zonal_stats: use 'mean' or 'median' for albedo zonal stats
     """
 
-    def __init__(self, start_date:str=None, end_date:str=None, index_aggregation=False, zonal_stats='median', num_seasons=3, **kwargs):
+    def __init__(self, start_date:str=None, end_date:str=None, index_aggregation=False, zonal_stats='median', num_seasons=3, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.start_date = start_date
         self.end_date = end_date
         self.zonal_stats = zonal_stats
         self.index_aggregation = index_aggregation
         self.num_seasons = num_seasons
+        self.worldpop_version = worldpop_version
         
     def get_masked_s2_collection(self, bbox_ee, start_date, end_date):
         CLEAR_THRESHOLD = 0.60
@@ -146,6 +147,6 @@ class AlbedoCloudMasked(Layer):
         # Trim back to original AOI
         result_data = extract_bbox_aoi(result_data, bbox)
         if self.index_aggregation:
-            wp_array =  WorldPop().get_data(bbox)
+            wp_array =  WorldPop(version=self.worldpop_version).get_data(bbox)
             return align_raster_array(data, wp_array)
         return result_data

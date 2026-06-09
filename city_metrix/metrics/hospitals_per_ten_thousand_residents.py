@@ -12,22 +12,23 @@ class HospitalsPerTenThousandResidents__Hospitals(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, year=datetime.datetime.now().year, **kwargs):
+    def __init__(self, year=datetime.datetime.now().year, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.year = year
         self.unit = 'hospitals'
+        self.worldpop_version = worldpop_version
 
     def get_metric(self,
                  geo_zone: GeoZone,
                  spatial_resolution:int = None) -> Union[pd.DataFrame | pd.Series]:
 
-        hospitals = OpenStreetMap(osm_class=OpenStreetMapClass.HOSPITAL).get_data(GeoExtent(geo_zone))
+        hospitals = OpenStreetMap(osm_class=OpenStreetMapClass.HOSPITAL, worldpop_version=self.worldpop_version).get_data(GeoExtent(geo_zone))
         hospital_counts_per_zone = [
                 hospitals.geometry.intersects(zone).sum()
                 for zone in geo_zone.zones.geometry
             ]
 
-        world_pop = WorldPop()
+        world_pop = WorldPop(version=self.worldpop_version)
         world_pop_sum = world_pop.groupby(geo_zone).sum()
 
         if isinstance(world_pop_sum, pd.DataFrame):

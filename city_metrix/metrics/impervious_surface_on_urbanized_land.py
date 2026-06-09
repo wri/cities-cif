@@ -11,10 +11,11 @@ class ImperviousSurfaceOnUrbanizedLand__Percent(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = None
 
-    def __init__(self, year=2015, **kwargs):
+    def __init__(self, year=2015, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.year = year
         self.unit = 'percent'
+        self.worldpop_version = worldpop_version
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -22,7 +23,7 @@ class ImperviousSurfaceOnUrbanizedLand__Percent(Metric):
 
         impervious_layer = ImperviousSurface(year=self.year)
         urban_layer = UrbanExtents()
-        area_layer = WorldPop()
+        area_layer = WorldPop(version=self.worldpop_vesion)
 
         impervious_area = area_layer.mask(urban_layer).mask(impervious_layer).groupby(geo_zone).count()
         urban_area = area_layer.mask(urban_layer).groupby(geo_zone).count()
