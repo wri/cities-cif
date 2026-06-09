@@ -19,11 +19,10 @@ class TreeCanopyHeight(Layer):
     Attributes:
         height: minimum tree height used for filtering results
     """
-    def __init__(self, height=None, index_aggregation=False, version=2, worldpop_version=1, **kwargs):
+    def __init__(self, height=None, index_aggregation=False, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.height = height
         self.index_aggregation = index_aggregation
-        self.version = version
         self.worldpop_version = worldpop_version
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
