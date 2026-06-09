@@ -29,7 +29,7 @@ def _rasterize(gdf, snap_to):
 class KeyBiodiversityAreas(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ['country_code_iso3']
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_version"]
 
     """
     Attributes:

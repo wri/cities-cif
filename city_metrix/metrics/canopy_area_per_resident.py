@@ -11,7 +11,7 @@ class CanopyAreaPerResident__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     CUSTOM_TILE_SIDE_M = 5000
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "agesex_classes", "informal_only"]
+    MINOR_NAMING_ATTS = ["height", "agesex_classes", "informal_only", "worldpop_version"]
 
     def __init__(self,
                  agesex_classes=[],
@@ -62,18 +62,20 @@ class CanopyAreaPerResident__SquareMeters(Metric):
 class CanopyAreaPerResidentChildren__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height"]
+    MINOR_NAMING_ATTS = ["height", "worldpop_version"]
 
-    def __init__(self, height=3, year=2025, **kwargs):
+    def __init__(self, height=3, year=2025, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.height = height
         self.year = year
         self.unit = 'square meters'
+        self.worldpop_version = worldpop_version
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident__SquareMeters(WorldPopClass.CHILDREN,
+                                                    self.worldop_version,
                                                     self.height,
                                                     False)
                 .get_metric(geo_zone))
@@ -82,18 +84,20 @@ class CanopyAreaPerResidentChildren__SquareMeters(Metric):
 class CanopyAreaPerResidentElderly__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height"]
+    MINOR_NAMING_ATTS = ["height", "worldpop_version"]
 
-    def __init__(self, height=3, year=2025, **kwargs):
+    def __init__(self, height=3, year=2025, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.height = height
         self.year = year
         self.unit = 'square meters'
+        self.worldpop_version = worldpop_version
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident__SquareMeters(WorldPopClass.ELDERLY,
+                                                    self.worldpop_version,
                                                     self.height,
                                                     False)
                 .get_metric(geo_zone))
@@ -102,18 +106,20 @@ class CanopyAreaPerResidentElderly__SquareMeters(Metric):
 class CanopyAreaPerResidentFemale__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height"]
+    MINOR_NAMING_ATTS = ["height", "worldpop_version"]
 
-    def __init__(self, height=3, year=2025, **kwargs):
+    def __init__(self, height=3, year=2025, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.height = height
         self.year=year
         self.unit = 'square meters'
+        self.worldpop_version = worldpop_version
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident__SquareMeters(WorldPopClass.FEMALE,
+                                                    self.worldpop_version,
                                                     self.height,
                                                     False)
                 .get_metric(geo_zone))
@@ -122,18 +128,20 @@ class CanopyAreaPerResidentFemale__SquareMeters(Metric):
 class CanopyAreaPerResidentInformal__SquareMeters(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height"]
+    MINOR_NAMING_ATTS = ["height", "worldpop_version"]
 
     def __init__(self, height=3, year=2025, **kwargs):
         super().__init__(**kwargs)
         self.height = height
         self.year = year
         self.unit = 'square meters'
+        self.worldpop_version = worldpop_version
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident__SquareMeters([],
+                                                    self.worldpop_version,
                                                     self.height,
                                                     True)
                 .get_metric(geo_zone))

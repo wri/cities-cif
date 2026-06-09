@@ -22,7 +22,7 @@ class WorldPopClass(Enum):
 class WorldPop(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["agesex_classes"]
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["version"]
 
     """
     Attributes:

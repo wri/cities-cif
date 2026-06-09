@@ -15,7 +15,7 @@ class FractionalVegetationPercent(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     PROCESSING_TILE_SIDE_M = 5000
     MAJOR_NAMING_ATTS = ["min_threshold"]
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_version"]
 
     def __init__(self, min_threshold=None, year=2025, index_aggregation=False, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)

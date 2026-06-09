@@ -9,7 +9,7 @@ from city_metrix.layers import UrbanExtents, ImperviousSurface, WorldPop
 class ImperviousSurfaceOnUrbanizedLand__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_version"]
 
     def __init__(self, year=2015, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)

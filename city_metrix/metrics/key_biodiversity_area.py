@@ -40,7 +40,7 @@ def _resolve_country_iso3(geo_zone: GeoZone, country_code_iso3: Optional[str]) -
 class KeyBiodiversityAreaProtected__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_version"]
 
     def __init__(self, country_code_iso3=None, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
@@ -76,7 +76,7 @@ class KeyBiodiversityAreaProtected__Percent(Metric):
 class KeyBiodiversityAreaUndeveloped__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_version"]
 
     def __init__(self, country_code_iso3=None, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)

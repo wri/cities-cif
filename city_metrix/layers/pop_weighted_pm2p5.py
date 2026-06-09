@@ -10,7 +10,7 @@ DEFAULT_SPATIAL_RESOLUTION = 100
 class PopWeightedPM2p5(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["worldpop_agesex_classes"]
-    MINOR_NAMING_ATTS = ["worldpop_year", "acag_year", "acag_return_above"]
+    MINOR_NAMING_ATTS = ["worldpop_year", "acag_year", "acag_return_above", "worldpop_version"]
 
     """
     Attributes:

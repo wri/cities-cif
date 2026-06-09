@@ -16,7 +16,7 @@ HOT_SEASON_LENGTH = 90
 class HighLandSurfaceTemperature(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_version"]
     THRESHOLD_ADD = 3
 
     """

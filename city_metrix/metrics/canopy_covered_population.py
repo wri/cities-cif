@@ -133,7 +133,7 @@ class CanopyCoveredPopulationFemale__Percent(Metric):
 class CanopyCoveredPopulationInformal__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = ["height", "percentage"]
+    MINOR_NAMING_ATTS = ["height", "percentage", "worldpop_version"]
 
     def __init__(self, height=3, percentage=30, year=2025, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)

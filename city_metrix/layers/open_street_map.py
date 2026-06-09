@@ -99,7 +99,7 @@ class OpenStreetMapClass(Enum):
 class OpenStreetMap(Layer):
     OUTPUT_FILE_FORMAT = GEOJSON_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["osm_class"]
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_version"]
 
     """
     Attributes:
