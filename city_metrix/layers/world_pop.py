@@ -37,7 +37,7 @@ class WorldPop(Layer):
         # F_0, F_1, F_5, F_10, F_15, F_20, F_25, F_30, F_35, F_40, F_45, F_50, F_55, F_60, F_65, F_70, F_75, F_80
         self.agesex_classes = agesex_classes
         self.version=version
-        self.year = year
+        self.year = year if version==1 else str(year)
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
