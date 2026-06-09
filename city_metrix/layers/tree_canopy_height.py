@@ -36,13 +36,8 @@ class TreeCanopyHeight(Layer):
         buffered_utm_bbox = bbox.buffer_utm_bbox(10)
         ee_rectangle  = buffered_utm_bbox.to_ee_rectangle()
 
-        if self.version == 1:
-            canopy_ht = ee.ImageCollection("projects/meta-forest-monitoring-okw37/assets/CanopyHeight")
-        elif self.version == 2:   
-            canopy_ht = ee.ImageCollection("projects/sat-io/open-datasets/facebook/meta-canopy-height");
-        else:
-            raise Exception (f"Tree Canopy Height version {self.version} not supported")
-
+        canopy_ht = ee.ImageCollection("projects/meta-forest-monitoring-okw37/assets/CanopyHeight")
+        
         # aggregate time series into a single image
         canopy_ht_img = (canopy_ht
                          .reduce(ee.Reducer.mean())
