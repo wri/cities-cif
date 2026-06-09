@@ -40,18 +40,19 @@ def _resolve_country_iso3(geo_zone: GeoZone, country_code_iso3: Optional[str]) -
 class KeyBiodiversityAreaProtected__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_version"]
 
-    def __init__(self, country_code_iso3=None, **kwargs):
+    def __init__(self, country_code_iso3=None, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.country_code_iso3 = country_code_iso3
+        self.worldpop_version = worldpop_version
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame, pd.Series]:
         country_code_iso3 = _resolve_country_iso3(geo_zone, self.country_code_iso3)
 
-        worldpop_layer = WorldPop()
+        worldpop_layer = WorldPop(version=self.worldpop_version)
         kba_layer = KeyBiodiversityAreas(country_code_iso3)
         protected_layer = ProtectedAreas()
 
@@ -75,18 +76,19 @@ class KeyBiodiversityAreaProtected__Percent(Metric):
 class KeyBiodiversityAreaUndeveloped__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_version"]
 
-    def __init__(self, country_code_iso3=None, **kwargs):
+    def __init__(self, country_code_iso3=None, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.country_code_iso3 = country_code_iso3
+        self.worldpop_version = worldpop_version
 
     def get_metric(self,
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame, pd.Series]:
         country_code_iso3 = _resolve_country_iso3(geo_zone, self.country_code_iso3)
 
-        worldpop_layer = WorldPop()
+        worldpop_layer = WorldPop(version=self.worldpop_version)
         kba_layer = KeyBiodiversityAreas(country_code_iso3)
         builtup_layer = EsaWorldCover(EsaWorldCoverClass.BUILT_UP)
 
