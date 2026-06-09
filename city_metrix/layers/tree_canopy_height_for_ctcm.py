@@ -18,9 +18,10 @@ class TreeCanopyHeightCTCM(Layer):
     Attributes:
         height: minimum tree height used for filtering results
     """
-    def __init__(self, height=None, **kwargs):
+    def __init__(self, height=None, version=2, **kwargs):
         super().__init__(**kwargs)
         self.height = height
+        self.version = version
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -32,7 +33,12 @@ class TreeCanopyHeightCTCM(Layer):
         buffered_utm_bbox = bbox.buffer_utm_bbox(10)
         ee_rectangle  = buffered_utm_bbox.to_ee_rectangle()
 
-        canopy_ht = ee.ImageCollection("projects/meta-forest-monitoring-okw37/assets/CanopyHeight")
+        if self.version == 1:
+            canopy_ht = ee.ImageCollection("projects/meta-forest-monitoring-okw37/assets/CanopyHeight")
+        elif self.version == 2:   
+            canopy_ht = ee.ImageCollection("projects/sat-io/open-datasets/facebook/meta-canopy-height");
+        else:
+            raise Exception (f"Tree Canopy Height version {self.version} not supported")
 
         # aggregate time series into a single image
         canopy_ht_img = (canopy_ht
