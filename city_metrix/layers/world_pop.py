@@ -105,11 +105,11 @@ class WorldPop(Layer):
 
             if self.version != 1:
                 # Interpolate to WorldPop v1 grid
-                
+
                 wp_v1_ee = ee.ImageCollection(
                     ee.ImageCollection('WorldPop/GP/100m/pop')
                     .filterBounds(ee_rectangle['ee_geometry'])
-                    .filter(ee.Filter.inList('year', [self.year]))
+                    .filter(ee.Filter.eq('year', 2020))
                     .select('population')
                     .mean()
                 )
