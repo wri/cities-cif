@@ -130,7 +130,7 @@ class CanopyAreaPerResidentInformal__SquareMeters(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["height", "worldpop_version"]
 
-    def __init__(self, height=3, year=2025, **kwargs):
+    def __init__(self, height=3, year=2025, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.height = height
         self.year = year
