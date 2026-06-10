@@ -15,13 +15,14 @@ class FractionalVegetationPercent(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     PROCESSING_TILE_SIDE_M = 5000
     MAJOR_NAMING_ATTS = ["min_threshold"]
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_version"]
 
-    def __init__(self, min_threshold=None, year=2025, index_aggregation=False, **kwargs):
+    def __init__(self, min_threshold=None, year=2025, index_aggregation=False, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.min_threshold = min_threshold
         self.year = year
         self.index_aggregation = index_aggregation
+        self.worldpop_version = worldpop_version
 
 
     def get_data(self, bbox: GeoExtent, spatial_resolution: int = DEFAULT_SPATIAL_RESOLUTION,
@@ -188,6 +189,6 @@ class FractionalVegetationPercent(Layer):
                 data = xr.where(data >= self.min_threshold, 1, np.nan).rio.write_crs(bbox.as_utm_bbox().crs, inplace=True)
 
         if self.index_aggregation:
-            wp_array =  WorldPop().get_data(bbox)
+            wp_array =  WorldPop(version=self.worldpop_version).get_data(bbox)
             return align_raster_array(data, wp_array)
         return data

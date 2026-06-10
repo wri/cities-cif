@@ -12,12 +12,13 @@ DEFAULT_SPATIAL_RESOLUTION = 100
 class RecreationalSpacePerThousand__HectaresPerThousandPersons(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_version"]
 
-    def __init__(self, year=datetime.datetime.now().year, **kwargs):
+    def __init__(self, year=datetime.datetime.now().year, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.year = year
         self.unit = 'hectares per thousand persons'
+        self.worldpop_version = worldpop_version
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -25,7 +26,7 @@ class RecreationalSpacePerThousand__HectaresPerThousandPersons(Metric):
                    ) -> Union[pd.DataFrame | pd.Series]:
         spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
 
-        world_pop = WorldPop()
+        world_pop = WorldPop(version=self.worldpop_version)
         open_space = OpenStreetMap(osm_class=OpenStreetMapClass.OPEN_SPACE)
 
         # per 1000 people
