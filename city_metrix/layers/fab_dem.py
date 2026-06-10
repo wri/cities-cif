@@ -64,7 +64,7 @@ class FabDEM(Layer):
             kernel,
             ee_rectangle['crs']
         )
-        fab_dem_elev = ee.ImageCollection(fab_dem_elev)
+        fab_dem_elev_ic = ee.ImageCollection(fab_dem_elev)
         data = get_image_collection(
             fab_dem_elev_ic,
             ee_rectangle,
