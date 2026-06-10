@@ -75,7 +75,7 @@ class CanopyAreaPerResidentChildren__SquareMeters(Metric):
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident__SquareMeters(WorldPopClass.CHILDREN,
-                                                    self.worldop_version,
+                                                    self.worldpop_version,
                                                     self.height,
                                                     False)
                 .get_metric(geo_zone))
