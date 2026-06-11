@@ -30,7 +30,7 @@ class WorldPop(Layer):
                         list of age-sex classes to retrieve (see https://airtable.com/appDWCVIQlVnLLaW2/tblYpXsxxuaOk3PaZ/viwExxAgTQKZnRfWU/recFjH7WngjltFMGi?blocks=hide)
         year: year used for data retrieval
     """
-    def __init__(self, agesex_classes:WorldPopClass=[], version=1, year=2020, **kwargs):
+    def __init__(self, agesex_classes:WorldPopClass=[], version=1, year=2020, want_v1grid=True, **kwargs):
         super().__init__(**kwargs)
         # agesex_classes options:
         # M_0, M_1, M_5, M_10, M_15, M_20, M_25, M_30, M_35, M_40, M_45, M_50, M_55, M_60, M_65, M_70, M_75, M_80
@@ -38,6 +38,7 @@ class WorldPop(Layer):
         self.agesex_classes = agesex_classes
         self.version=version
         self.year = year if version==1 else str(year)
+        self.want_v1grid = want_v1grid
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -103,7 +104,7 @@ class WorldPop(Layer):
                 "world pop age sex"
             ).sum_age_sex_group
 
-        if (self.version != 1):
+        if False and (self.version != 1) and (self.want_v1grid):
             # Interpolate to WorldPop v1 grid
 
             wp_v1_ee = ee.ImageCollection(
