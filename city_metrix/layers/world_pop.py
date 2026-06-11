@@ -103,22 +103,22 @@ class WorldPop(Layer):
                 "world pop age sex"
             ).sum_age_sex_group
 
-            if self.version != 1:
-                # Interpolate to WorldPop v1 grid
+        if (self.version != 1):
+            # Interpolate to WorldPop v1 grid
 
-                wp_v1_ee = ee.ImageCollection(
-                    ee.ImageCollection('WorldPop/GP/100m/pop')
-                    .filterBounds(ee_rectangle['ee_geometry'])
-                    .filter(ee.Filter.eq('year', 2020))
-                    .select('population')
-                    .mean()
-                )
-                wp_v1_xr = get_image_collection(
-                    wp_v1_ee,
-                    ee_rectangle,
-                    spatial_resolution,
-                    "world pop grid"
-                ).population
-                data = data.interp_like(wp_v1_xr)
+            wp_v1_ee = ee.ImageCollection(
+                ee.ImageCollection('WorldPop/GP/100m/pop')
+                .filterBounds(ee_rectangle['ee_geometry'])
+                .filter(ee.Filter.eq('year', 2020))
+                .select('population')
+                .mean()
+            )
+            wp_v1_xr = get_image_collection(
+                wp_v1_ee,
+                ee_rectangle,
+                spatial_resolution,
+                "world pop grid"
+            ).population
+            data = data.interp_like(wp_v1_xr)
 
         return data
