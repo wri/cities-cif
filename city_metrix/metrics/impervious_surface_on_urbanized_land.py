@@ -23,7 +23,7 @@ class ImperviousSurfaceOnUrbanizedLand__Percent(Metric):
 
         impervious_layer = ImperviousSurface(year=self.year)
         urban_layer = UrbanExtents()
-        area_layer = WorldPop(version=self.worldpop_vesion)
+        area_layer = WorldPop(version=self.worldpop_version)
 
         impervious_area = area_layer.mask(urban_layer).mask(impervious_layer).groupby(geo_zone).count()
         urban_area = area_layer.mask(urban_layer).groupby(geo_zone).count()

@@ -75,7 +75,7 @@ class CanopyAreaPerResidentChildren__SquareMeters(Metric):
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
         return (CanopyAreaPerResident__SquareMeters(WorldPopClass.CHILDREN,
-                                                    self.worldop_version,
+                                                    self.worldpop_version,
                                                     self.height,
                                                     False)
                 .get_metric(geo_zone))
@@ -130,7 +130,7 @@ class CanopyAreaPerResidentInformal__SquareMeters(Metric):
     MAJOR_NAMING_ATTS = None
     MINOR_NAMING_ATTS = ["height", "worldpop_version"]
 
-    def __init__(self, height=3, year=2025, **kwargs):
+    def __init__(self, height=3, year=2025, worldpop_version=1, **kwargs):
         super().__init__(**kwargs)
         self.height = height
         self.year = year
