@@ -41,7 +41,7 @@ class CanopyCoveredPopulation__Percent(Metric):
             pop_layer = WorldPop(agesex_classes=self.worldpop_agesex_classes, masks=[coverage_mask], version=self.worldpop_version)
 
         access_pop = pop_layer.groupby(geo_zone).sum()
-        total_pop = WorldPop(agesex_classes=self.worldpop_agesex_classes, version=self.woldpop_version).groupby(geo_zone).sum()
+        total_pop = WorldPop(agesex_classes=self.worldpop_agesex_classes, version=self.worldpop_version).groupby(geo_zone).sum()
 
         if not isinstance(access_pop, (int, float)):
             access_pop = access_pop.fillna(0)
