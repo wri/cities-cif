@@ -8,6 +8,13 @@ from ..constants import GTIFF_FILE_EXTENSION
 
 DEFAULT_SPATIAL_RESOLUTION = 100
 
+def _awesome_format(i):
+    res = i.lower()
+    res_split = res.split('_')
+    if len(res_split[1]) < 2:
+        res = '_'.join([res_split[0], f'0{res_split[1]}'])
+    return res
+
 class WorldPopClass(Enum):
     ADULT = ['F_20', 'F_25', 'F_30', 'F_35', 'F_40', 'F_45', 'F_50', 'F_55', 'F_60', 'F_65', 'F_70', 'F_75', 'F_80',
             'M_20', 'M_25', 'M_30', 'M_35', 'M_40', 'M_45', 'M_50', 'M_55', 'M_60', 'M_65', 'M_70', 'M_75', 'M_80']
@@ -37,7 +44,7 @@ class WorldPop(Layer):
         # F_0, F_1, F_5, F_10, F_15, F_20, F_25, F_30, F_35, F_40, F_45, F_50, F_55, F_60, F_65, F_70, F_75, F_80
         self.agesex_classes = agesex_classes
         self.version=version
-        self.year = year if version==1 else str(year)
+        self.year = year if ((version==1) or agesex_classes) else str(year) # Awesome GEE Community Data stores year as string only for non-agesexclass data
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
@@ -82,7 +89,10 @@ class WorldPop(Layer):
                 agesex_value = self.agesex_classes.value
             else:
                 agesex_value = self.agesex_classes
-            
+
+            if self.version == 2:  # Awesome GEE Community Data stores aggesex classes as 'f_00', 'f_01', 'f_05', 'f_10', etc.
+                agesex_value = [_awesome_format(i) for i in agesex_value]
+
             world_pop_age_sex_year = (world_pop_age_sex
                                       .filterBounds(ee_rectangle['ee_geometry'])
                                       .filter(ee.Filter.inList('year', [self.year]))
