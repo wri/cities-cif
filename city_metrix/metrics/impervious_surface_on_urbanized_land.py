@@ -9,14 +9,15 @@ from city_metrix.layers import UrbanExtents, ImperviousSurface, WorldPop
 class ImperviousSurfaceOnUrbanizedLand__Percent(Metric):
     OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
     MAJOR_NAMING_ATTS = None
-    MINOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = ["worldpop_version"]
 
-    def __init__(self, year=2015, **kwargs):
+    def __init__(self, year=2015, worldpop_version=1, **kwargs):
         if not year in [1990, 2000, 2005, 2010, 2015]:
             raise Exception('Only supported years are 1990, 2000, 2005, 2010, 2015.')
         super().__init__(**kwargs)
         self.year = year
         self.unit = 'percent'
+        self.worldpop_version = worldpop_version
 
     def get_metric(self,
                    geo_zone: GeoZone,
@@ -24,7 +25,7 @@ class ImperviousSurfaceOnUrbanizedLand__Percent(Metric):
 
         impervious_layer = ImperviousSurface(year=self.year)
         urban_layer = UrbanExtents(year=self.year)
-        area_layer = WorldPop()
+        area_layer = WorldPop(version=self.worldpop_version)
 
         impervious_area = area_layer.mask(urban_layer).mask(impervious_layer).groupby(geo_zone).count()
         urban_area = area_layer.mask(urban_layer).groupby(geo_zone).count()

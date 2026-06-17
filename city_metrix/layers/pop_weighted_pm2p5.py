@@ -10,7 +10,7 @@ DEFAULT_SPATIAL_RESOLUTION = 100
 class PopWeightedPM2p5(Layer):
     OUTPUT_FILE_FORMAT = GTIFF_FILE_EXTENSION
     MAJOR_NAMING_ATTS = ["worldpop_agesex_classes"]
-    MINOR_NAMING_ATTS = ["worldpop_year", "acag_year", "acag_return_above"]
+    MINOR_NAMING_ATTS = ["worldpop_year", "acag_year", "acag_return_above", "worldpop_version"]
 
     """
     Attributes:
@@ -22,10 +22,11 @@ class PopWeightedPM2p5(Layer):
     """
     # get_data() for this class returns DataArray with pm2.5 concentration multiplied by (pixelpop/meanpop)
 
-    def __init__(self, worldpop_agesex_classes:WorldPopClass=[], worldpop_year=2020, acag_year=2023, acag_return_above=0, **kwargs):
+    def __init__(self, worldpop_agesex_classes:WorldPopClass=[], worldpop_year=2020, worldpop_version=1, acag_year=2023, acag_return_above=0, **kwargs):
         super().__init__(**kwargs)
         self.worldpop_agesex_classes = worldpop_agesex_classes
         self.worldpop_year = worldpop_year
+        self.worldpop_version = worldpop_version
         self.acag_year = acag_year
         self.acag_return_above = acag_return_above
 
@@ -36,7 +37,7 @@ class PopWeightedPM2p5(Layer):
         # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
         spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
-        world_pop = (WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year)
+        world_pop = (WorldPop(agesex_classes=self.worldpop_agesex_classes, year=self.worldpop_year, version=self.worldpop_version)
                      .get_data(bbox, spatial_resolution=spatial_resolution))
         pm2p5 = (AcagPM2p5(year=self.acag_year, return_above=self.acag_return_above)
                  .get_data(bbox, spatial_resolution=spatial_resolution))

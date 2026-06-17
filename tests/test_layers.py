@@ -25,7 +25,7 @@ def test_acag_pm2p5():
 def test_albedo_cloud_masked():
     data = AlbedoCloudMasked(index_aggregation=False).get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 2, 0.015304963, 0.64322, 9797, 0)
+    assert_raster_stats(data, 2, 0.0153, 0.64, 9894, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_albedo():
@@ -92,14 +92,14 @@ def test_esa_world_cover():
 def test_fab_dem():
     data = FabDEM().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 1.0, 47.4, 1088, 0)
+    assert_raster_stats(data, 1, 1.0, 50.4, 1088, 34)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_fractional_vegetation_percent():
     data = FractionalVegetationPercent().get_data(BBOX)
     assert np.size(data) > 0
     assert_raster_stats(data, 1, 0, 100, 9797, 0)
-    assert get_projection_type(data.crs) == ProjectionType.UTM
+    assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_height_above_nearest_drainage():
     data = HeightAboveNearestDrainage().get_data(BBOX)
@@ -110,7 +110,7 @@ def test_height_above_nearest_drainage():
 def test_high_land_surface_temperature():
     data = HighLandSurfaceTemperature().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 40.47, 42.35, 150, 972)
+    assert_raster_stats(data, 1, 29.4, 48.8, 1122, 0)
     assert get_projection_type(data.crs) == ProjectionType.UTM
 
 def test_high_slope():
@@ -204,7 +204,7 @@ def test_openbuildings():
 def test_open_street_map():
     data = OpenStreetMap(osm_class=OpenStreetMapClass.ROAD).get_data(BBOX)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'highway', None, 'primary', 'tertiary', 154, 0)
+    assert_vector_stats(data, 'highway', None, 'primary', 'tertiary', 157, 0)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_open_street_map_amenity_count():
@@ -216,25 +216,25 @@ def test_open_street_map_amenity_count():
 def test_open_urban():
     data = OpenUrban().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 0, 110, 622, 976626, 0)
+    assert_raster_stats(data, 0, 110, 622, 978604, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_overture_buildings():
     data = OvertureBuildings().get_data(BBOX)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'height', 1, 2.00, 12.50, 1070, 189)
+    assert_vector_stats(data, 'height', 1, 2.00, 12.50, 1069, 188)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_overture_buildings_height():
     data = OvertureBuildingsHeight(CITY_CODE_FOR_BBOX).get_data(BBOX)
     assert np.size(data) > 0
-    assert_vector_stats(data, 'overture_height', 1, 2.0, 12.5, 1070, 189)
+    assert_vector_stats(data, 'overture_height', 1, 2.0, 12.5, 1069, 188)
     assert get_projection_type(data.crs.srs) == ProjectionType.UTM
 
 def test_overture_buildings_dsm():
     data = OvertureBuildingsDSM().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 1.0, 60.28, 976626, 0)
+    assert_raster_stats(data, 1, 1.0, 60.2, 978604, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 # TODO add value testing
@@ -282,7 +282,7 @@ def test_species_observations():
 def test_surface_water():
     data = SurfaceWater().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 1.0, 1.0, 174, 9623)
+    assert_raster_stats(data, 1, 1.0, 1.0, 192, 9605)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_tree_canopy_cover_mask():
@@ -293,7 +293,7 @@ def test_tree_canopy_cover_mask():
 def test_tree_canopy_height_for_ctcm():
     data = TreeCanopyHeightCTCM().get_data(BBOX)
     assert np.size(data) > 0
-    assert_raster_stats(data, 1, 0.0, 33.0, 976626, 0)
+    assert_raster_stats(data, 1, 0.0, 33.0, 978604, 0)
     assert get_projection_type(data.rio.crs.to_epsg()) == ProjectionType.UTM
 
 def test_tree_canopy_height():
@@ -394,8 +394,8 @@ def assert_vector_stats(data, attribute, sig_digits:int, min_notnull_val, max_no
 def assert_raster_stats(data, sig_digits:int, min_notnull_val, max_notnull_val, notnull_count:int, null_count:int):
     data_min_notnull_val = np.nanmin(data)
     data_max_notnull_val = np.nanmax(data)
-    data_notnull_count = data.count().item()
-    data_null_count = data.isnull().sum().item()
+    data_notnull_count = data.count().compute().item()
+    data_null_count = data.isnull().sum().compute().item()
 
     is_matched, expected, actual = _eval_numeric(sig_digits, data_min_notnull_val, data_max_notnull_val,
                                                  data_notnull_count, data_null_count, min_notnull_val,

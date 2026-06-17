@@ -12,7 +12,7 @@ class CarbonFluxFromTrees(Layer):
     MINOR_NAMING_ATTS = None
 
     """
-    Average annual carbon emissions minus removal in tonnes CO2e over 21-yer period 2001-2024. Not a time series. Model 1.4.2.
+    Average annual carbon emissions minus removal in tonnes CO2e over 24-year period 2001-2024. Not a time series. Model 1.4.2.
     See Harris et al. 2021 Nature Climate Change (nature.com/articles/s41558-020-00976-6). Contacts: david.gibbs@wri.org and nharris@wri.org
 
     """
