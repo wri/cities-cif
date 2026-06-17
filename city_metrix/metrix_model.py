@@ -600,10 +600,10 @@ class LayerGroupBy:
         spatial_resolution=None,
         layer=None,
         custom_tile_size_m=None,
-        masks=[],
+        masks=None,
     ):
         self.aggregate = aggregate
-        self.masks = masks
+        self.masks = [] if masks is None else masks
         self.geo_zone = geo_zone
         self.custom_tile_size_m = custom_tile_size_m
         self.spatial_resolution = spatial_resolution
@@ -992,12 +992,12 @@ class LayerGroupBy:
 
 
 class Layer:
-    def __init__(self, aggregate=None, masks=[], **kwargs):
+    def __init__(self, aggregate=None, masks=None, **kwargs):
         self.aggregate = aggregate
         if aggregate is None:
             self.aggregate = self
 
-        self.masks = masks
+        self.masks = [] if masks is None else masks
         self.resolution = kwargs.get("resolution")
 
     @abstractmethod
