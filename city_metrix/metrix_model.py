@@ -687,6 +687,12 @@ class LayerGroupBy:
 
             return stats
 
+        # # Ensure all zones are represented, even those that produced no raster pixels
+        # # (e.g. polygons too small to capture a pixel center, or dropped as degenerate
+        # # geometry after fishnet intersection)
+        # all_zone_ids = pd.DataFrame({"zone": np.arange(len(zones), dtype=float)})
+        # stats = pd.merge(all_zone_ids, stats, on="zone", how="left")
+
         if "geo_level" in zones.columns:
             result_stats = stats[["zone", stats_func]]
             result_stats = result_stats.rename(columns={stats_func: "value"})
