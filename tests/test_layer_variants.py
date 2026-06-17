@@ -35,10 +35,8 @@ def test_read_image_collection():
     actual_y_size = data['y'].size
 
     assert expected_crs == actual_crs
-    assert (
-        pytest.approx(expected_x_size, rel=EE_IMAGE_DIMENSION_TOLERANCE) == actual_x_size,
-        pytest.approx(expected_y_size, rel=EE_IMAGE_DIMENSION_TOLERANCE) == actual_y_size
-    )
+    assert pytest.approx(expected_x_size, rel=EE_IMAGE_DIMENSION_TOLERANCE) == actual_x_size
+    assert pytest.approx(expected_y_size, rel=EE_IMAGE_DIMENSION_TOLERANCE) == actual_y_size
 
 
 def test_read_image_collection_scale():
@@ -51,10 +49,8 @@ def test_read_image_collection_scale():
     actual_x_size = data['x'].size
     actual_y_size = data['y'].size
 
-    assert (
-        pytest.approx(expected_x_size, rel=EE_IMAGE_DIMENSION_TOLERANCE) == actual_x_size,
-        pytest.approx(expected_y_size, rel=EE_IMAGE_DIMENSION_TOLERANCE) == actual_y_size
-    )
+    assert pytest.approx(expected_x_size, rel=EE_IMAGE_DIMENSION_TOLERANCE) == actual_x_size
+    assert pytest.approx(expected_y_size, rel=EE_IMAGE_DIMENSION_TOLERANCE) == actual_y_size
 
 
 def test_albedo_metrics_default_resampling():

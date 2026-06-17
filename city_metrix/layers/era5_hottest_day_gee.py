@@ -4,11 +4,29 @@ import ee
 import pytz
 import xarray as xr
 
-from city_metrix.constants import NETCDF_FILE_EXTENSION, WGS_CRS
+from city_metrix.constants import NETCDF_FILE_EXTENSION
 from city_metrix.metrix_model import GeoExtent, Layer, get_image_collection
 from city_metrix.metrix_tools import is_date
 
 DEFAULT_SPATIAL_RESOLUTION = 11132
+
+ERA5_LAND_VARIABLES = [
+    "u_component_of_wind_10m",
+    "v_component_of_wind_10m",
+    "dewpoint_temperature_2m",
+    "temperature_2m",
+    "total_precipitation",
+    "surface_pressure",
+]
+ERA5_GENERAL_VARIABLES = [
+    "clear_sky_direct_solar_radiation_at_surface",
+    "mean_surface_direct_short_wave_radiation_flux_clear_sky",
+    "mean_surface_downward_long_wave_radiation_flux_clear_sky",
+    "sea_surface_temperature",
+    "total_sky_direct_solar_radiation_at_surface",
+    "surface_solar_radiation_downwards",
+    "surface_solar_radiation_downward_clear_sky",
+]
 
 
 class Era5HottestDay(Layer):
@@ -38,55 +56,57 @@ class Era5HottestDay(Layer):
             raise Exception(
                 f"Invalid date specification: start_date:{self.start_date}, end_date:{self.end_date}.")
 
-        geographic_bbox = bbox.as_geographic_bbox()
+        # ERA5 is coarse enough that very small AOIs may not contain a pixel center.
+        # Expand only undersized AOIs to at least one ERA5 grid cell before querying.
+        utm_bbox = bbox.as_utm_bbox()
+        width = utm_bbox.max_x - utm_bbox.min_x
+        height = utm_bbox.max_y - utm_bbox.min_y
+        buffer_x = max((spatial_resolution - width) / 2, 0)
+        buffer_y = max((spatial_resolution - height) / 2, 0)
+        buffer_m = max(buffer_x, buffer_y)
+        buffered_utm_bbox = utm_bbox.buffer_utm_bbox(buffer_m)
+        buffered_ee_rectangle = buffered_utm_bbox.to_ee_rectangle()
 
-        geographic_centroid = geographic_bbox.centroid
-        center_lon = geographic_centroid.x
-        center_lat = geographic_centroid.y
-
+        dataset_daily = ee.ImageCollection("ECMWF/ERA5_LAND/DAILY_AGGR")
         dataset_land = ee.ImageCollection("ECMWF/ERA5_LAND/HOURLY")
         dataset_general = ee.ImageCollection("ECMWF/ERA5/HOURLY")
 
-        # Function to find the city mean temperature of each hour
-        def hourly_mean_temperature(image):
-            hourly_mean = image.select('temperature_2m').reduceRegion(
+        era5_daily = (dataset_daily
+                      .filterDate(self.start_date, self.end_date)
+                      .select("temperature_2m_max")
+                      )
+        # Function to calculate the daily max temperature for the AOI
+
+        def daily_max_temperature(image):
+            daily_max = image.select("temperature_2m_max").reduceRegion(
                 reducer=ee.Reducer.mean(),
-                geometry=ee.Geometry.Point([center_lon, center_lat]),
-                crs=WGS_CRS,
+                geometry=buffered_ee_rectangle["ee_geometry"],
                 scale=spatial_resolution,
                 bestEffort=True
             ).values().get(0)
 
-            return image.set('hourly_mean_temperature', hourly_mean)
+            return image.set("daily_max_temperature", daily_max)
 
-        ee_rectangle = geographic_bbox.to_ee_rectangle()
-        era5 = ee.ImageCollection(dataset_land
-                                  .filterBounds(ee_rectangle['ee_geometry'])
-                                  .filterDate(self.start_date, self.end_date)
-                                  .select('temperature_2m')
-                                  )
-
-        era5_hourly_mean = era5.map(hourly_mean_temperature)
+        era5_daily_max = era5_daily.map(daily_max_temperature).filter(
+            ee.Filter.notNull(["daily_max_temperature"]))
 
         # Sort the collection based on the highest temperature and get the first image
-        highest_temperature_day = era5_hourly_mean.sort(
-            'hourly_mean_temperature', False).first()
+        highest_temperature_day = era5_daily_max.sort(
+            "daily_max_temperature", False).first()
         highest_temperature_day = highest_temperature_day.get(
-            'system:index').getInfo()
+            "system:index").getInfo()
 
-        # system:index in format 20230101T00
-        # Define the UTC time
-        utc_time = datetime.strptime(highest_temperature_day, "%Y%m%dT%H")
-        # apply utc offset to utc time to get local date
-        local_date = (
-            utc_time + timedelta(hours=self.seasonal_utc_offset)).date()
+        # system:index in format 20230101
+        # Get the date of the highest temperature day
+        local_date = datetime.strptime(
+            highest_temperature_day, "%Y%m%d").date()
 
         utc_times = []
         start_local = datetime.combine(local_date, time(0, 0))
+        inverse_seasonal_utc_offset = -self.seasonal_utc_offset
         for i in range(0, 25):
             local_time_hour = start_local + timedelta(hours=i)
             # Convert local hour back to UTC and cast as UTC time
-            inverse_seasonal_utc_offset = -self.seasonal_utc_offset
             utc_time_hourly = pytz.utc.localize(
                 local_time_hour + timedelta(hours=inverse_seasonal_utc_offset))
             # Rounded due to half hour offset in some cities
@@ -99,61 +119,48 @@ class Era5HottestDay(Layer):
 
         utc_times_list = [dt.strftime("%Y-%m-%dT%H:%M:%S") for dt in utc_times]
 
-        variable_land = [
-            'u_component_of_wind_10m',
-            'v_component_of_wind_10m',
-            'dewpoint_temperature_2m',
-            'temperature_2m',
-            'total_precipitation',
-            "surface_pressure",
-        ]
-        variable_general = [
-            'clear_sky_direct_solar_radiation_at_surface',
-            'mean_surface_direct_short_wave_radiation_flux_clear_sky',
-            'mean_surface_downward_long_wave_radiation_flux_clear_sky',
-            'sea_surface_temperature',
-            "total_sky_direct_solar_radiation_at_surface",
-            "surface_solar_radiation_downwards",
-            "surface_solar_radiation_downward_clear_sky",
-        ]
-
-        # ERA5-Land hourly data at 0.1 degree lat/lon resolution
-        center_ee_rectangle = GeoExtent(bbox=(
-            center_lon-0.1, center_lat-0.1, center_lon+0.1, center_lat+0.1), crs=WGS_CRS).to_ee_rectangle()
-        
-        era5_land = ee.ImageCollection(dataset_land
-                                       .filterDate(utc_times_list[0], utc_times_list[-1])
-                                       .select(variable_land)
-                                       )
+        era5_land = (
+            dataset_land
+            .filterDate(utc_times_list[0], utc_times_list[-1])
+            .select(ERA5_LAND_VARIABLES)
+        )
         data_land = get_image_collection(
             era5_land,
-            center_ee_rectangle,
+            buffered_ee_rectangle,
             spatial_resolution,
             "ERA5 Land Hourly",
         )
 
-        era5_general = ee.ImageCollection(dataset_general
-                                          .filterDate(utc_times_list[0], utc_times_list[-1])
-                                          .select(variable_general)
-                                          )
+        era5_general = (
+            dataset_general
+            .filterDate(utc_times_list[0], utc_times_list[-1])
+            .select(ERA5_GENERAL_VARIABLES)
+        )
         data_general = get_image_collection(
             era5_general,
-            center_ee_rectangle,
+            buffered_ee_rectangle,
             spatial_resolution,
             "ERA5 Hourly",
         )
 
         data = xr.merge([data_land, data_general])
 
-        # Find the exact (y, x, time) where temperature_2m is globally max
-        flat = data['temperature_2m'].stack(points=('y', 'x', 'time'))          # shape (points,)
-        imax = int(flat.argmax('points').compute().values)
-        y0, x0, t0 = flat['points'].to_index()[imax]      # coordinate values
-        # Keep the whole time series at max temperature_2m pixel
-        data = data.sel(y=y0, x=x0)
-
+        # Calculate mean over y and x dimensions to get a single value for the city for each variable at each time step
+        mean_ds = data.mean(dim=("y", "x"), skipna=True).load()
         # Add WGS84 lat/lon coords
-        data = data.assign_coords(lat=[center_lat], lon=[center_lon])
-        data = data.to_array()
+        if hasattr(bbox, "latitude") and hasattr(bbox, "longitude"):
+            mean_ds = mean_ds.expand_dims(
+                lat=[bbox.latitude], lon=[bbox.longitude])
+        else:
+            geographic_centroid = bbox.as_geographic_bbox().centroid
+            mean_ds = mean_ds.expand_dims(
+                lat=[geographic_centroid.y], lon=[geographic_centroid.x])
 
-        return data
+        mean_data = mean_ds.to_array()
+
+        # xarray metadata propagation through merge/mean/to_array is version-sensitive.
+        # Reattach the CRS explicitly so downstream tests and writers can rely on `data.crs`.
+        utm_crs = buffered_utm_bbox.crs
+        mean_data.attrs["crs"] = utm_crs
+
+        return mean_data

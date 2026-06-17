@@ -103,15 +103,17 @@ class GeoZone:
                 self.bbox = geo_zone.total_bounds
             else:
                 self.bbox = geo_zone.bounds
-
             self.crs = crs
+
         else:
             city_json = geo_zone
             self.city_id, self.aoi_id = parse_city_aoi_json(city_json)
+
             # Boundaries from city_id and aoi_id
             city_data = get_city(self.city_id)
             self.latitude = city_data.get("latitude")
             self.longitude = city_data.get("longitude")
+
             if self.geo_type == GeoType.CITY_AREA:
                 if self.aoi_id == "urban_extent":
                     self.admin_level = self.aoi_id
@@ -132,24 +134,21 @@ class GeoZone:
             self.projection_type = get_projection_type(self.crs)
             self.centroid = shapely.Point(self.longitude, self.latitude)
             self.admin_level = "urban_extent"
-        else:
-            self.bounds = self.bbox
-            self.epsg_code = int(self.crs.split(":")[1])
-            self.projection_type = get_projection_type(self.crs)
-            self.units = (
-                "degrees"
-                if self.projection_type == ProjectionType.GEOGRAPHIC
-                else "meters"
-            )
+            return
 
-            self.min_x = self.bbox[0]
-            self.min_y = self.bbox[1]
-            self.max_x = self.bbox[2]
-            self.max_y = self.bbox[3]
+        self.bounds = self.bbox
+        self.epsg_code = int(self.crs.split(":")[1])
+        self.projection_type = get_projection_type(self.crs)
+        self.units = (
+            "degrees"
+            if self.projection_type == ProjectionType.GEOGRAPHIC
+            else "meters"
+        )
 
-            self.coords = (self.min_x, self.min_y, self.max_x, self.max_y)
-            self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
-            self.centroid = self.polygon.centroid
+        self.min_x, self.min_y, self.max_x, self.max_y = self.bbox
+        self.coords = (self.min_x, self.min_y, self.max_x, self.max_y)
+        self.polygon = shapely.box(self.min_x, self.min_y, self.max_x, self.max_y)
+        self.centroid = self.polygon.centroid
 
 
 def _build_aoi_from_city_boundaries(city_id, geo_feature):
@@ -601,10 +600,10 @@ class LayerGroupBy:
         spatial_resolution=None,
         layer=None,
         custom_tile_size_m=None,
-        masks=[],
+        masks=None,
     ):
         self.aggregate = aggregate
-        self.masks = masks
+        self.masks = [] if masks is None else masks
         self.geo_zone = geo_zone
         self.custom_tile_size_m = custom_tile_size_m
         self.spatial_resolution = spatial_resolution
@@ -993,12 +992,12 @@ class LayerGroupBy:
 
 
 class Layer:
-    def __init__(self, aggregate=None, masks=[], **kwargs):
+    def __init__(self, aggregate=None, masks=None, **kwargs):
         self.aggregate = aggregate
         if aggregate is None:
             self.aggregate = self
 
-        self.masks = masks
+        self.masks = [] if masks is None else masks
         self.resolution = kwargs.get("resolution")
 
     @abstractmethod
