@@ -5,6 +5,7 @@ import numpy as np
 from city_metrix.metrix_model import Layer, GeoExtent, get_class_default_spatial_resolution
 from ..constants import GEOJSON_FILE_EXTENSION, DEFAULT_DEVELOPMENT_ENV
 from .average_net_building_height import AverageNetBuildingHeight
+from .global_building_atlas import GlobalBuildingAtlas
 from .overture_buildings import OvertureBuildings
 from .ut_globus import UtGlobus
 
@@ -32,8 +33,9 @@ class OvertureBuildingsHeight(Layer):
         # Load the datasets
         # Specify DEFAULT_DEVELOPMENT_ENV since below are not Dashboard layers
         overture_buildings = OvertureBuildings().get_data(bbox=bbox)
+        gba = GlobalBuildingAtlas().get_data(bbox=bbox)
         ut_globus = UtGlobus(self.city).get_data(bbox=bbox)
-        if len(ut_globus) == 0:
+        if len(gba) == 0 and len(ut_globus) == 0:
             result_building_heights = overture_buildings
             if hasattr(overture_buildings, 'height'):
                 result_building_heights.rename(
@@ -46,13 +48,16 @@ class OvertureBuildingsHeight(Layer):
                 result_building_heights['height'] = None
 
         else:
-            ut_globus = ut_globus.to_crs(overture_buildings.crs)
+            if len(gba) > 0:
+                gba = gba.to_crs(overture_buildings.crs)
+            if len(ut_globus) > 0:
+                ut_globus = ut_globus.to_crs(overture_buildings.crs)
 
             # Use the logic described in this page to determine height settings.
             # https://gfw.atlassian.net/wiki/spaces/CIT/pages/1971912734/Primary+Raster+Layers+for+Thermal+Comfort+Modeling
 
-            # Step 1 and 2 Get heights from UTGlobus and Overture
-            result_building_heights = _join_overture_and_utglobus(overture_buildings, ut_globus)
+            # Step 1 and 2 Get heights from GBA, UTGlobus and Overture
+            result_building_heights = _join_building_heights(overture_buildings, gba, ut_globus)
 
         # Step 3 and 4 Get heights based on two simple assumptions
         empty_height_blgs = result_building_heights[result_building_heights['height'].isna() |
@@ -106,37 +111,43 @@ def _list_to_string(val, delimiter=", "):
     return "" if pd.isna(val) else str(val)
 
 
-def _join_overture_and_utglobus(overture_buildings, ut_globus):
+def _join_building_heights(overture_buildings, gba, ut_globus):
     # Perform spatial join - transferring height values directly during the join
-    # Give preference to UTGlobus heights
-    joined_data = gpd.sjoin(overture_buildings, ut_globus[["geometry", "height"]], how="left")
-
-    if 'height' in overture_buildings.columns.to_list():
-        # Ensure columns are managed correctly after join
-        # If height_right (UTGlobus) is not null, use it; otherwise, use height_left (Overture)
-        joined_data["height"] = joined_data["height_right"].fillna(joined_data["height_left"])
-        joined_data.rename(
-            columns={
-                "height_left": "overture_height",
-                "height_right": "utglobus_height",
-            },
-            inplace=True,
-        )
+    # Give preference to GBA heights, then UTGlobus heights
+    if len(gba) > 0:
+        joined_data = gpd.sjoin(overture_buildings, gba[["geometry", "height"]], how="left")
+        joined_data.drop(columns=["index_right"], inplace=True)
+        if 'height' in overture_buildings.columns.to_list():
+            joined_data.rename(columns={"height_left": "overture_height", "height_right": "gba_height"}, inplace=True)
+        else:
+            joined_data.rename(columns={"height": "gba_height"}, inplace=True)
+            joined_data["overture_height"] = None
     else:
-        joined_data['utglobus_height'] = joined_data['height']
-        joined_data["overture_height"] = None
+        joined_data = overture_buildings.copy()
+        joined_data['gba_height'] = np.nan
+        if 'height' in overture_buildings.columns.to_list():
+            joined_data.rename(columns={"height": "overture_height"}, inplace=True)
+        else:
+            joined_data["overture_height"] = None
 
-        # Remove any index columns potentially misinterpreted
-    joined_data.drop(columns=["index_right"], inplace=True)
+    if len(ut_globus) > 0:
+        joined_data = gpd.sjoin(joined_data, ut_globus[["geometry", "height"]], how="left")
+        joined_data.drop(columns=["index_right"], inplace=True)
+        joined_data.rename(columns={"height": "utglobus_height"}, inplace=True)
+    else:
+        joined_data['utglobus_height'] = np.nan
+
+    # If GBA height is not null, use it; else if UTGlobus height is not null, use it; else use Overture height
+    joined_data["height"] = joined_data["gba_height"].fillna(joined_data["utglobus_height"]).fillna(joined_data["overture_height"])
 
     # Explicitly handle the unique uri_scheme for each row
     joined_data["id"] = joined_data.apply(lambda row: row["id"] if "id" in row else row.name, axis=1)
 
-    # Get mode or median of heights from UT Globus for buildings that overlapped with UTGlobus buildings
-    filtered_data = joined_data.dropna(subset=['utglobus_height'])
-    mode_or_median_df  = filtered_data.groupby('id')['utglobus_height'].apply(mode_or_median).reset_index()
-    merged_gdf = filtered_data.merge(mode_or_median_df.rename(columns={'utglobus_height': 'mode_or_med_utglobus_height'}), on='id')
-    thinned_gdf = merged_gdf.drop(columns=['utglobus_height', 'height'])
+    # Get mode or median of heights from GBA for buildings that overlapped with GBA buildings
+    filtered_data = joined_data.dropna(subset=['gba_height'])
+    mode_or_median_df  = filtered_data.groupby('id')['gba_height'].apply(mode_or_median).reset_index()
+    merged_gdf = filtered_data.merge(mode_or_median_df.rename(columns={'gba_height': 'mode_or_med_gba_height'}), on='id')
+    thinned_gdf = merged_gdf.drop(columns=['gba_height', 'utglobus_height', 'height'], errors='ignore')
 
     # Drop duplicates
     # First flatten multi-valued columns since drop_duplicates() function fails for multi-valued lists and dictionaries
@@ -146,18 +157,41 @@ def _join_overture_and_utglobus(overture_buildings, ut_globus):
     overture_with_globus_height = thinned_gdf.drop_duplicates()
 
     # Initializing the height column
-    overture_with_globus_height['height'] = overture_with_globus_height['mode_or_med_utglobus_height']
-    # Assign source as UTGlobus
-    overture_with_globus_height['height_source'] = 'UTGlobus'
+    overture_with_globus_height['height'] = overture_with_globus_height['mode_or_med_gba_height']
+    # Assign source as GBA
+    overture_with_globus_height['height_source'] = 'GBA'
 
-    # Get buildings that did not overlap with a UTGlobus value
-    overture_without_globus_height = joined_data[~joined_data['id'].isin(mode_or_median_df['id'])]
-    overture_without_globus_height = overture_without_globus_height.drop(columns=['utglobus_height'])
-    overture_without_globus_height['mode_or_med_utglobus_height'] = np.nan
-    overture_without_globus_height['height_source'] = np.where(overture_without_globus_height['overture_height'].notna(), 'Overture', '')
+    # Get buildings that did not overlap with a GBA value
+    overture_without_gba_height = joined_data[~joined_data['id'].isin(mode_or_median_df['id'])]
+    overture_without_gba_height = overture_without_gba_height.drop(columns=['gba_height'])
 
-    # Combine Globus and non-Globus records
-    df_combined = gpd.GeoDataFrame(pd.concat([overture_with_globus_height, overture_without_globus_height], ignore_index=True)).reset_index(drop=True)
+    # Get mode or median of heights from UT Globus for buildings without GBA height
+    filtered_data = overture_without_gba_height.dropna(subset=['utglobus_height'])
+    mode_or_median_utglobus_df = filtered_data.groupby('id')['utglobus_height'].apply(mode_or_median).reset_index()
+    if len(mode_or_median_utglobus_df) > 0:
+        merged_gdf = filtered_data.merge(mode_or_median_utglobus_df.rename(columns={'utglobus_height': 'mode_or_med_utglobus_height'}), on='id')
+        thinned_gdf = merged_gdf.drop(columns=['utglobus_height', 'height'])
+        thinned_gdf['sources'] = thinned_gdf['sources'].apply(_list_to_string)
+        thinned_gdf['names'] = thinned_gdf['names'].apply(_list_to_string)
+        overture_with_utglobus_height = thinned_gdf.drop_duplicates()
+        overture_with_utglobus_height['height'] = overture_with_utglobus_height['mode_or_med_utglobus_height']
+        overture_with_utglobus_height['height_source'] = 'UTGlobus'
+
+        overture_without_utglobus_height = overture_without_gba_height[~overture_without_gba_height['id'].isin(mode_or_median_utglobus_df['id'])]
+        overture_without_utglobus_height = overture_without_utglobus_height.drop(columns=['utglobus_height'])
+        overture_without_utglobus_height['mode_or_med_utglobus_height'] = np.nan
+        overture_without_utglobus_height['height_source'] = np.where(overture_without_utglobus_height['overture_height'].notna(), 'Overture', '')
+
+        df_combined = gpd.GeoDataFrame(pd.concat([overture_with_globus_height, overture_with_utglobus_height, overture_without_utglobus_height], ignore_index=True)).reset_index(drop=True)
+    else:
+        overture_without_gba_height = overture_without_gba_height.drop(columns=['utglobus_height'])
+        overture_without_gba_height['mode_or_med_utglobus_height'] = np.nan
+        overture_without_gba_height['height_source'] = np.where(overture_without_gba_height['overture_height'].notna(), 'Overture', '')
+
+        # Combine GBA and non-GBA records
+        df_combined = gpd.GeoDataFrame(pd.concat([overture_with_globus_height, overture_without_gba_height], ignore_index=True)).reset_index(drop=True)
+
+    df_combined.drop(columns=['mode_or_med_gba_height', 'mode_or_med_utglobus_height'], inplace=True, errors='ignore')
 
     return df_combined
 
