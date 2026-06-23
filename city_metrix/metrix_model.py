@@ -1024,6 +1024,7 @@ class Layer:
         self,
         bbox: GeoExtent,
         target_file_path: str,
+        use_bigtiff: bool = False,
         tile_side_length: int = None,
         buffer_size: int = None,
         length_units: str = None,
@@ -1055,7 +1056,9 @@ class Layer:
             )
             delete_s3_file_if_exists(target_file_path)
             delete_s3_folder_if_exists(target_file_path)
-            write_layer(result_data, target_file_path, file_format)
+            write_layer(
+                result_data, target_file_path, file_format, use_bigtiff=use_bigtiff
+            )
         else:
             if tile_side_length is None:
                 utm_geo_extent = (
@@ -1069,7 +1072,9 @@ class Layer:
 
                 delete_s3_file_if_exists(target_file_path)
                 delete_s3_folder_if_exists(target_file_path)
-                write_layer(clipped_data, target_file_path, file_format)
+                write_layer(
+                    clipped_data, target_file_path, file_format, use_bigtiff=use_bigtiff
+                )
             else:
                 tile_grid_gdf = create_fishnet_grid(
                     bbox=bbox,
@@ -1118,7 +1123,7 @@ class Layer:
                         spatial_resolution=spatial_resolution,
                         resampling_method=resampling_method,
                     )
-                    write_layer(layer_data, file_path, file_format)
+                    write_layer(layer_data, file_path, file_format, use_bigtiff)
 
     def cache_city_data(
         self,
