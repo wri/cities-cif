@@ -25,6 +25,28 @@ class TreeCarbonFlux__Tonnes(Metric):
                    geo_zone: GeoZone,
                    spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
 
-        flux = CarbonFluxFromTrees().groupby(geo_zone).sum()
+        flux = CarbonFluxFromTrees(per_hectare = False).groupby(geo_zone).sum()
 
         return flux
+
+class TreeCarbonFlux__TonnesPerHectare(Metric):
+    OUTPUT_FILE_FORMAT = CSV_FILE_EXTENSION
+    MAJOR_NAMING_ATTS = None
+    MINOR_NAMING_ATTS = None
+
+    def __init__(self,  **kwargs):
+        super().__init__(**kwargs)
+        self.unit = 'tonnes per hectare'
+
+    def get_metric(self,
+                   geo_zone: GeoZone,
+                   spatial_resolution: int = None) -> Union[pd.DataFrame | pd.Series]:
+
+        flux_per_ha = CarbonFluxFromTrees(per_hectare = True).groupby(geo_zone).mean()
+
+        if isinstance(flux_per_ha, pd.DataFrame):
+            result = flux_per_ha.copy()
+        else:
+            result = flux_per_ha
+
+        return result

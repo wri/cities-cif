@@ -12,24 +12,26 @@ class CarbonFluxFromTrees(Layer):
     MINOR_NAMING_ATTS = None
 
     """
-    Average annual carbon emissions minus removal in tonnes CO2e over 23-year period 2001-2023. Not a time series. Model 1.3.2.
+    Average annual carbon emissions minus removal in tonnes CO2e over 24-year period 2001-2024. Not a time series. Model 1.4.2.
     See Harris et al. 2021 Nature Climate Change (nature.com/articles/s41558-020-00976-6). Contacts: david.gibbs@wri.org and nharris@wri.org
 
     """
-    def __init__(self, **kwargs):
+    def __init__(self, per_hectare=False, **kwargs):
         super().__init__(**kwargs)
+        self.per_hectare = per_hectare
 
     def get_data(self, bbox: GeoExtent, spatial_resolution:int=DEFAULT_SPATIAL_RESOLUTION,
                  resampling_method=None):
         if resampling_method is not None:
             raise Exception('resampling_method can not be specified.')
-        # spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
-        spatial_resolution = self.resolution or spatial_resolution or DEFAULT_SPATIAL_RESOLUTION
 
-        # old asset version: 'projects/wri-datalab/gfw-data-lake/net-flux-forest-extent-per-ha-v1-2-2-2001-2021/net-flux-global-forest-extent-per-ha-2001-2021'
-        netflux_total_ic = ee.ImageCollection('projects/wri-datalab/gfw-data-lake/net-flux-forest-extent-per-ha-v1-3-2-2001-2023/net-flux-global-forest-extent-per-ha-2001-2023')
-        netflux_total_img = netflux_total_ic.mosaic()
-        netflux_annual_img = netflux_total_img.divide(23).divide(10000).multiply(spatial_resolution**2)  # Divide by 23 years, convert from per-hectare to per pixel-area
+        spatial_resolution = DEFAULT_SPATIAL_RESOLUTION if spatial_resolution is None else spatial_resolution
+        # netflux_total_ic = ee.ImageCollection('projects/wri-datalab/gfw-data-lake/net-flux-forest-extent-per-ha-v1-2-2-2001-2021/net-flux-global-forest-extent-per-ha-2001-2021')
+        # netflux_total_img = netflux_total_ic.mosaic()
+        netflux_total_img = ee.Image('projects/sat-io/open-datasets/forest_carbon_fluxes/net_flux')
+        netflux_annual_img = netflux_total_img.divide(24)  # Divide by 24 years
+        if not self.per_hectare:
+            netflux_annual_img = netflux_annual_img.divide(10000).multiply(spatial_resolution**2)  # Convert from per-hectare to per-pixel
 
         ee_rectangle  = bbox.to_ee_rectangle()
         data = get_image_collection(
