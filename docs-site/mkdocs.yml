@@ -1,0 +1,85 @@
+site_name: CityMetrix
+site_description: Documentation for city_metrix — extract and compute geospatial layers and urban sustainability metrics for any city or polygon.
+site_url: https://wri.github.io/cities-cif/
+repo_url: https://github.com/wri/cities-cif
+repo_name: wri/cities-cif
+edit_uri: edit/main/docs-site/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: green
+      accent: light green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: green
+      accent: light green
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - content.code.copy
+    - search.suggest
+    - toc.follow
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [".."]
+          options:
+            show_source: false
+            show_root_heading: true
+            show_signature_annotations: true
+            separate_signature: true
+            merge_init_into_class: true
+            docstring_style: sphinx
+            members_order: source
+            show_if_no_docstring: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quickstart: getting-started/quickstart.md
+      - Core Concepts: getting-started/core-concepts.md
+  - User Guide:
+      - Defining an AOI: user-guide/defining-an-aoi.md
+      - Working with Layers: user-guide/working-with-layers.md
+      - Working with Metrics: user-guide/working-with-metrics.md
+      - Caching: user-guide/caching.md
+  - Reference:
+      - Layers:
+          - Overview: reference/layers/index.md
+          - Land Cover & Vegetation: reference/layers/land-cover-vegetation.md
+          - Elevation & Terrain: reference/layers/elevation-terrain.md
+          - Hydrology & Flood Risk: reference/layers/hydrology-flood-risk.md
+          - Climate & Air Quality: reference/layers/climate-air-quality.md
+          - Buildings & Urban Form: reference/layers/buildings-urban-form.md
+          - Biodiversity & Protected Areas: reference/layers/biodiversity-protected-areas.md
+          - Population & Socioeconomic: reference/layers/population-socioeconomic.md
+          - Raw Imagery Collections: reference/layers/raw-imagery-collections.md
+      - Metrics:
+          - Overview: reference/metrics/index.md
+          - All Metrics: reference/metrics/metrics.md
+      - Core API: reference/core-api.md
+  - Contributing: contributing.md

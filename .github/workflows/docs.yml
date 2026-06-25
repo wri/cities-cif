@@ -1,0 +1,53 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs-site/**"
+      - "city_metrix/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Note: mkdocstrings' Python handler (griffe) parses source statically and does
+      # NOT execute city_metrix/__init__.py, so no GEE/AWS credentials or heavy geo
+      # dependencies (geopandas, earthengine-api, ...) are needed to build the docs.
+      - name: Install docs dependencies
+        run: pip install -r docs-site/requirements-docs.txt
+
+      - name: Build site
+        run: mkdocs build -f docs-site/mkdocs.yml -d ../site
+        working-directory: docs-site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
