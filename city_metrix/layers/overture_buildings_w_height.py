@@ -173,8 +173,10 @@ def _join_building_heights(overture_buildings, gba, ut_globus):
     if len(mode_or_median_utglobus_df) > 0:
         merged_gdf = filtered_data.merge(mode_or_median_utglobus_df.rename(columns={'utglobus_height': 'mode_or_med_utglobus_height'}), on='id')
         thinned_gdf = merged_gdf.drop(columns=['utglobus_height', 'height'])
-        thinned_gdf['sources'] = thinned_gdf['sources'].apply(_list_to_string)
-        thinned_gdf['names'] = thinned_gdf['names'].apply(_list_to_string)
+        if 'sources' in thinned_gdf.columns:
+            thinned_gdf['sources'] = thinned_gdf['sources'].apply(_list_to_string)
+        if 'names' in thinned_gdf.columns:
+            thinned_gdf['names'] = thinned_gdf['names'].apply(_list_to_string)
         overture_with_utglobus_height = thinned_gdf.drop_duplicates()
         overture_with_utglobus_height['height'] = overture_with_utglobus_height['mode_or_med_utglobus_height']
         overture_with_utglobus_height['height_source'] = 'UTGlobus'
