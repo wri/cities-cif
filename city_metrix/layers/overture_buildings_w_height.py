@@ -152,8 +152,10 @@ def _join_building_heights(overture_buildings, gba, ut_globus):
     # Drop duplicates
     # First flatten multi-valued columns since drop_duplicates() function fails for multi-valued lists and dictionaries
     # Note: We may be able to simply drop the multi-valued columns, but retaining the content is useful for testing
-    thinned_gdf['sources'] = thinned_gdf['sources'].apply(_list_to_string)
-    thinned_gdf['names'] = thinned_gdf['names'].apply(_list_to_string)
+    if 'sources' in thinned_gdf.columns:
+        thinned_gdf['sources'] = thinned_gdf['sources'].apply(_list_to_string)
+    if 'names' in thinned_gdf.columns:
+        thinned_gdf['names'] = thinned_gdf['names'].apply(_list_to_string)
     overture_with_globus_height = thinned_gdf.drop_duplicates()
 
     # Initializing the height column
