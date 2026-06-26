@@ -1490,7 +1490,7 @@ class Layer:
         retry_count = 0
         tile_data = None
         failure_message = ""
-        while tile_data is None and retry_count < 3:
+        while tile_data is None and retry_count < 10:
             failure_message = ""
             try:
                 # # ---- Use for testing failures

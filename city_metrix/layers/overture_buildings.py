@@ -37,6 +37,6 @@ class OvertureBuildings(Layer):
             utm_crs = bbox.as_utm_bbox().crs
             overture_buildings = overture_buildings.to_crs(utm_crs)
         else:
-            print("Error occurred:", result.stderr)
+            raise Exception(f"overturemaps download failed: {result.stderr}")
 
         return overture_buildings

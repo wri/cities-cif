@@ -62,6 +62,12 @@ class OvertureBuildingsDSM(Layer):
 
         buffered_dem = FabDEM().get_data(buffered_utm_bbox, spatial_resolution=1, resampling_method='bilinear')
 
+        if len(buffered_buildings_gdf) == 0:
+            result_dsm = extract_bbox_aoi(buffered_dem, bbox)
+            result_dsm = result_dsm.rio.write_crs(buffered_dem.rio.crs)
+            result_dsm.attrs["crs"] = buffered_dem.rio.crs
+            return result_dsm
+
         # Ensure CRS matches
         buffered_buildings_gdf = buffered_buildings_gdf.to_crs(buffered_dem.rio.crs)
 
